@@ -259,9 +259,10 @@ fn parse_transaction_prefix<'a>(
     line_number: usize,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(String, String, String), CwrParseError> {
-    let record_type = get_mandatory_field!(safe_slice, 0, 3, line_number, "Transaction", "Record Type")?;
-    let transaction_sequence_num = get_mandatory_field!(safe_slice, 3, 11, line_number, &record_type, "Transaction Sequence #")?;
-    let record_sequence_num = get_mandatory_field!(safe_slice, 11, 19, line_number, &record_type, "Record Sequence #")?;
+    // The macro handles the '?' internally, so we don't need it here.
+    let record_type = get_mandatory_field!(safe_slice, 0, 3, line_number, "Transaction", "Record Type");
+    let transaction_sequence_num = get_mandatory_field!(safe_slice, 3, 11, line_number, &record_type, "Transaction Sequence #");
+    let record_sequence_num = get_mandatory_field!(safe_slice, 11, 19, line_number, &record_type, "Record Sequence #");
     Ok((record_type, transaction_sequence_num, record_sequence_num))
 }
 
