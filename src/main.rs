@@ -113,6 +113,20 @@ fn setup_database(db_filename: &str, schema_path: &str) -> Result<(), Box<dyn st
     Ok(())
 }
 
+/// Logs a CwrParseError to stderr and the cwr_error table.                                                                                                                                                         
+fn log_cwr_error(tx: &mut Transaction, line_number: usize, error: &CwrParseError) -> Result<(), rusqlite::Error> {
+    // Use the Display implementation of the error for the description                                                                                                                                              
+    let description = error.to_string();
+    // Log to stderr for immediate visibility during execution                                                                                                                                                      
+    eprintln!("Error logged on line {}: {}", line_number, description);
+    // Insert into the database table                                                                                                                                                                               
+    tx.execute(
+        "INSERT INTO cwr_error (file_line_number, description) VALUES (?1, ?2)",
+        params![line_number as i64, description],
+    )?;
+    Ok(())
+}
+
 // --- File Processing Logic ---
 fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<usize, CwrParseError> {
     let file = File::open(input_filename)?;
@@ -217,10 +231,34 @@ fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<usiz
                 }
             }
             Err(e) => {
-                // Error occurred, return immediately (transaction will rollback)
-                // Log the specific error causing the rollback
-                eprintln!("Error on line {}: {} - Aborting transaction.", line_number, e);
-                return Err(e);
+                // An error occurred processing this line (e.g., BadFormat from validation, or DB error from macro)                                                                                                 
+
+                // Attempt to log the error first.                                                                                                                                                                  
+                if let Err(log_err) = log_cwr_error(&mut tx, line_number, &e) {
+                    // If logging *itself* fails, we have a serious problem (likely DB issue). Abort immediately.                                                                                                   
+                    eprintln!(
+                        "CRITICAL Error: Failed to log error to database on line {}: {} (Original error was: {})",
+                        line_number, log_err, e
+                    );
+                    // Return the database error that occurred during logging.                                                                                                                                      
+                    return Err(CwrParseError::Db(log_err));
+                }
+
+                // Logging succeeded. Now decide if the *original* error warrants stopping.                                                                                                                         
+                match e {
+                    // BadFormat errors are logged per record, but we continue processing the file.                                                                                                                 
+                    CwrParseError::BadFormat(_) => {
+                        // Logged above. Continue to the next line.                                                                                                                                                 
+                        // No action needed here, the loop will just continue.                                                                                                                                      
+                    }
+                    // IO errors (reading the file) or DB errors (during parsing/insertion, *not* during logging)                                                                                                   
+                    // are usually fatal for the whole process.                                                                                                                                                     
+                    CwrParseError::Io(_) | CwrParseError::Db(_) => {
+                        eprintln!("Aborting transaction due to unrecoverable error: {}", e);
+                        // Propagate the original error to trigger transaction rollback.                                                                                                                            
+                        return Err(e);
+                    }
+                }
             }
         }
     }
@@ -254,8 +292,6 @@ macro_rules! get_mandatory_field {
                     "Line {}: {} missing or empty mandatory field '{}' (Expected at {}-{}). Using fallback ''.",
                     $line_num, $rec_type, $field_name, $start + 1, $end // Use 1-based indexing for user message
                 );
-                // Print a warning to stderr for immediate feedback
-                eprintln!("Warning: {}", error_description);
 
                 // Attempt to log the error to the database
                 match $tx.execute(
