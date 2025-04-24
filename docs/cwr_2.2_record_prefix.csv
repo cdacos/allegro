@@ -1,0 +1,4 @@
+Field,Start,Size,Fmt,Req,Field Description
+Record Type,1,3,L,M,"The three character transaction type or detail record type. These values reside in the Record Type Table."
+Transaction Sequence #,4,8,N,M,"If this is the first transaction within a group, the Transaction Sequence # must be equal to 00000000. Otherwise, for transaction headers, the Transaction Sequence # must be equal to the previous transaction header's Transaction Sequence # incremented by 1. For detail records, the Transaction Sequence # must be equal to the Transaction Sequence # of the previous transaction header."
+Record Sequence #,12,8,N,M,"For transaction headers, always set to 00000000. For detail records, set this field to the Record Sequence # of the previous record written to the file incremented by 1."

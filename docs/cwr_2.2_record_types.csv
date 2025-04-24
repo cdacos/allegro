@@ -1,0 +1,321 @@
+CWR_2.2_record_types
+RecordCode,Field,Start,Size,Fmt,Req,Field Description,CWR_Version
+HDR,Record Type,1,3,A,M,HDR = Transmission Header,2.0
+HDR,Sender Type,4,2,A,M,"Indicates if the sender of the file is a society or a publisher. Values are PB = Publisher, SO = Society, AA = Administrative Agency, WR = Writer. If CWR Sender ID (IPNN) greater than 9 digits (without the 2 leading 0) then use Sender Type field to provide leading numbers of the CWR Sender ID.",2.0
+HDR,Sender ID,6,9,N,M,"If Sender Type is equal to PB, AA, or WR, the sender must enter their assigned CWR IPI # in this field. These values reside in the CWR Sender ID and Codes Table. If Sender Type is equal to SO, the sending society must enter their Society Code. These values reside in the Society Code Table. If CWR Sender ID (IPNN) greater than 9 digits then use Sender ID to provide remaining numbers of the CWR Sender ID.",2.0
+HDR,Sender Name,15,45,A,M,"The name of the sender (publisher, society, agency)",2.0
+HDR,EDI Standard Version Number,60,5,A,M,Indicates which version of the header and trailer records was used to create the data in this file. This field must be set to 01.10 for this version of the standard.,2.0
+HDR,Creation Date,65,8,D,M,The date that this file was created.,2.0
+HDR,Creation Time,73,6,T,M,The time of day that this file was created.,2.0
+HDR,Transmission Date,79,8,D,M,The date that this file was transmitted to all receiving entities.,2.0
+HDR,Character Set,87,15,L,O,To be used if this file contains data in a character set other than ASCII.,2.1
+HDR,Version,102,3,A,O,CWR version (2.2),2.2
+HDR,Revision,105,3,N,O,CWR revision number,2.2
+HDR,Software Package,108,30,A,O,Name of the software package from which the file originated,2.2
+HDR,Software Package Version,138,30,A,O,Version of the software package from which the file originated,2.2
+GRH,Record Type,1,3,A,M,GRH = Group Header,2.0
+GRH,Transaction Type,4,3,L,M,Indicates the type of transactions included in this group. Values for this field reside in the Transaction Type table.,2.0
+GRH,Group ID,7,5,N,M,A unique sequential number for this group within this file. Group ID should start at 00001.,2.0
+GRH,Version Number for this transaction type,12,5,A,M,"Indicates the version of the previously referred to transaction type that will follow within this group. For CWR version 2.1, set to 02.10 (Note: Doc text says 2.1, but the field description implies 2.10 standard. Subsequent edit says 2.2 is 02.20)",2.0
+GRH,Batch request,17,10,N,O,A unique sequential number to identify the group. This number is managed by the submitter to identify the group among multiple submission files.,2.0
+GRH,Submission/ Distribution type,27,2,L,C,Set to blank - Not used for CWR,2.0
+GRT,Record Type,1,3,A,M,GRT = Group Trailer,2.0
+GRT,Group ID,4,5,N,M,The same group id that was present on the preceding GRH record.,2.0
+GRT,Transaction Count,9,8,N,M,The number of transactions included within this group.,2.0
+GRT,Record Count,17,8,N,M,The number of physical records included within this group including GRH and GRT records.,2.0
+GRT,Currency indicator,25,3,L,C,"ISO Code of the currency used for the total monetary value. ISO codes can be found in ISO 4217 table (actually ISO 3166 country codes 2A plus the first letter of the currency of the country: for example, USD for Dollar in US).",2.0
+GRT,Total monetary value,28,10,N,O,Total monetary value represented by the group.,2.0
+TRL,Record Type,1,3,A,M,TRL = Transmission Trailer,2.0
+TRL,Group Count,4,5,N,M,The number of groups included within this file.,2.0
+TRL,Transaction Count,9,8,N,M,The number of transactions included within this file.,2.0
+TRL,Record Count,17,8,N,M,The number of physical records included in this file including HDR and TRL records.,2.0
+AGR,Record Prefix,1,19,A,M,Set Record Type = AGR (Agreement),2.0
+AGR,Submitter Agreement Number,20,14,A,M,The submitter's unique identifier for this agreement.,2.0
+AGR,International Standard Agreement Code,34,14,A,O,The ISAC that has been assigned to this agreement. Note this code is not yet available.,2.0
+AGR,Agreement Type,48,2,L,M,Code defining the category of agreement. The values reside in the Agreement Type Table.,2.0
+AGR,Agreement Start Date,50,8,D,M,The date on which the transfer of rights to the acquiring party becomes effective. This field is mandatory.,2.0
+AGR,Agreement End Date,58,8,D,O,The date on which the transfer of rights to the acquiring party ceases except for the agreed provisions concerning entitlements such as a collection.,2.0
+AGR,Retention End Date,66,8,D,O,The end date of the retention period. This date supersedes the function of the Agreement End Date when a retention period is part of the agreement. The Retention End Date must be equal to or later than the Agreement End Date.,2.0
+AGR,Prior Royalty Status,74,1,A,M,"Indicates whether or not the acquiring party is entitled to collect monies that were accrued before the Agreement Start Date of this agreement but not yet distributed by the societies. Possible values are: ""N""one, or ""A""ll, or ""D""ate (the latter indicating a date is entered in Prior Royalty Start Date).",2.0
+AGR,Prior Royalty Start Date,75,8,D,C,Date before the Agreement Start Date of this agreement from which royalties are accrued to which the acquiring party is entitled to collect monies not yet distributed by societies. This date must be entered if and only if the Prior Royalty Status is 'D'ate.,2.0
+AGR,Post-term Collection Status,83,1,A,M,"Indicates whether the acquiring party is entitled to collect monies that were accrued before the Retention End Date (if it exists), or else the Agreement End Date but not yet distributed by the societies. Possible values are ""N""o, ""O""pen-ended, or ""D""ate (the latter indicating a date is entered in Post-term Collection End Date).",2.0
+AGR,Post-term Collection End Date,84,8,D,C,"The date until which the acquiring party is entitled to collect monies that were accrued before the Retention End Date (if it exists), or else the Agreement End Date but not yet distributed by the societies. This date must be after the Retention End Date (if it exists), or else the Agreement End Date. This date must be entered if and only if the Post-term Collection Status is 'D'ate.",2.0
+AGR,Date of Signature of Agreement,92,8,D,O,The date when the written form of the agreement (the contract) was signed.,2.0
+AGR,Number of Works,100,5,N,M,Number of works registered subject to this agreement specific to this file.,2.0
+AGR,Sales/ Manufacture Clause,105,1,L,C,The S/M-clause-indicator is a marker that shows whether the acquiring party has acquired rights either for products manufactured or for products sold in the territories in agreement. Synonym: Sales/Manufacture Clause. Only two values are allowed according to BIEM/CISAC-rules: S = Sales Clause: A stipulation which lays down that the acquiring party has acquired rights for products sold in the territories in agreement irrespective of the country of manufacture. M = Manufacture Clause: A stipulation which lays down that the acquiring party has acquired rights for products manufactured in the territories in agreement irrespective of the country of sale. This field is mandatory for specific agreements i.e. if Agreement Type = OS or PS.,2.0
+AGR,Shares change,106,1,B,O,"If the shares for the writer interest can change as a result of sub-publication or similar reason, set this field to ""Y"". Default is ""N"".",2.0
+AGR,Advance Given,107,1,B,O,"If there is an advance paid for this agreement, set this field to ""Y"". Default is ""N"".",2.0
+AGR,Society-assigned Agreement Number,108,14,A,O,The agreement number assigned by the society of the sub-publisher. This is generally not known when the AGR is submitted but can be supplied by the societies in the ACK transaction.,2.1
+NWR,Record Prefix,1,19,A,M,"Set Record Type = NWR (New Work Registration) for new registrations, REV (Revised Registration) for revisions, or ISW (Notification of ISWC) or EXC (Existing Work in Conflict) for outgoing notifications.",2.0
+NWR,Work Title,20,60,A,M,Name/Title of the work.,2.0
+NWR,Language Code,80,2,L,O,The code representing the language of this title. These values reside in the Language Code Table.,2.0
+NWR,Submitter Work #,82,14,A,M,Number assigned to the work by the publisher submitting or receiving the file. This number must be unique for the publisher.,2.0
+NWR,ISWC,96,11,A,O,The International Standard Work Code assigned to this work.,2.0
+NWR,Copyright Date,107,8,D,O,Original copyright date of the work.,2.0
+NWR,Copyright Number,115,12,A,O,Original copyright number of the work.,2.0
+NWR,Musical Work Distribution Category,127,3,L,M,Describes the type of music as it applies to special distribution rules. Values for this field reside in the Musical Work Distribution Category Table.,2.0
+NWR,Duration,130,6,T,C,"Duration of the work in hours, minutes, and seconds. This field must be greater than zero if Musical Work Distribution Category is equal to SER. Note that some societies may also require duration for works where the Musical Work Distribution Category is equal to JAZ (e.g. BMI).",2.0
+NWR,Recorded Indicator,136,1,F,M,Indicates whether or not the work has ever been recorded.,2.0
+NWR,Text Music Relationship,137,3,L,O,"Indicates whether this work contains music, text, and/or both. Values reside in the Text Music Relationship Table.",2.0
+NWR,Composite Type,140,3,L,O,"If this is a composite work, this field will indicate the type of composite. Values reside in the Composite Type Table.",2.0
+NWR,Version Type,143,3,L,M,Indicates relationships between this work and other works. Note that this field is used to indicate whether or not this work is an arrangement. Values reside in the Version Type Table.,2.0
+NWR,Excerpt Type,146,3,L,O,"If this is an excerpt, this field will indicate the type of excerpt. Values reside in the Excerpt Type Table.",2.0
+NWR,Music Arrangement,149,3,L,C,"If Version Type is equal to ""MOD"", this field indicates the type of music arrangement. Values reside in the Music Arrangement Table.",2.0
+NWR,Lyric Adaptation,152,3,L,C,"If Version Type is equal to ""MOD"", this field indicates the type of lyric adaptation. Values reside in the Lyric Adaptation Table.",2.0
+NWR,Contact Name,155,30,A,O,The name of a business contact person at the organization that originated this transaction.,2.0
+NWR,Contact ID,185,10,A,O,An identifier associated with the contact person at the organization that originated this transaction.,2.0
+NWR,CWR Work Type,195,2,L,O,These values reside in the CWR Work Type table.,2.0
+NWR,Grand Rights Ind,197,1,B,C,Indicates whether this work is originally intended for performance on stage. Note that this field is mandatory for registrations with the UK societies.,2.0
+NWR,Composite Component Count,198,3,N,C,"If Composite Type is entered, this field represents the number of components contained in this composite. Note that this is required for composite works where ASCAP is represented on the work.",2.0
+NWR,Date of publication of printed edition,201,8,D,O,"For registrations with GEMA: Indicates the date that the printed, new edition published by the submitting publisher appeared. This information is especially relevant for the notification of sub-published works by GEMA-sub-publishers.",2.0
+NWR,Exceptional Clause,209,1,F,O,"For registrations with GEMA: By entering Y (Yes), the submitting GEMA-sub-publisher declares that the exceptional clause of the GEMA distribution rules with regard to printed editions applies (GEMA-Verteilungsplan A Anhang III).",2.0
+NWR,Opus Number,210,25,A,O,"Indicates the number assigned to this work, usually by the composer. Part numbers are to be added with an # e.g. 28#3 (meaning Opus 28 part 3).",2.0
+NWR,Catalogue Number,235,25,A,O,"The work catalogue number. The abbreviated name of the catalogue is to be added (like BWV, KV), without dots. Part numbers are to be added with an # e.g. KV 297#1 (meaning Köchel Verzeichnis Nr.297 part 1).",2.0
+NWR,Priority Flag,260,1,F,O,"Indicates that this work should be processed faster because it is on the charts, is by a well-known composer, etc.",2.1
+ACK,Record Prefix,1,19,A,M,Set Record Type = ACK (Acknowledgement of Transaction),2.0
+ACK,Creation Date,20,8,D,M,The Creation Date of the original file that contained the transaction to which this ACK applies.,2.0
+ACK,Creation Time,28,6,T,M,The Creation Time of the original file that contained the transaction to which this ACK applies.,2.0
+ACK,Original Group ID,34,5,N,M,The Group ID within which the original transaction to which this ACK applies.,2.0
+ACK,Original Transaction Sequence #,39,8,N,M,"The Transaction Sequence # of the original transaction to which this ACK applies. Note that if the ACK is a result of a HDR or TRL record problem, set this field to zeroes.",2.0
+ACK,Original Transaction Type,47,3,L,M,"The Transaction Type of the original transaction to which this ACK applies. Note that if the ACK is a result of a HDR or TRL record problem, set this field to HDR or TRL (whichever is applicable).",2.0
+ACK,Creation Title,50,60,A,C,The creation title as delivered by the submitter (i.e. the title of the musical work or audio visual production...). This field is required if the ACK is in response to an NWR or REV transaction.,2.0
+ACK,Submitter Creation #,110,20,A,C,The unique identifier assigned by the original submitter to this work. This field is required if the ACK is in response to a transaction.,2.0
+ACK,Recipient Creation #,130,20,A,C,The unique identifier assigned by the recipient to this work. This field is required if the ACK is in response to a transaction and if the transaction status indicates that the recipient has accepted the work.,2.0
+ACK,Processing Date,150,8,D,M,The date this transaction or file was formally processed by the recipient.,2.0
+ACK,Transaction Status,158,2,L,M,The current status of this transaction. Values for this field reside in the Transaction Status Table.,2.0
+TER,Record Prefix,1,19,A,M,Set Record Type = TER (Territory in Agreement),2.0
+TER,Inclusion/ Exclusion Indicator,20,1,L,M,This is a marker which shows whether the territory specified in this record is part of the territorial scope of the agreement or not. Possible entries are I (= territory included) and E (= territory excluded).,2.0
+TER,TIS Numeric Code,21,4,L,M,Numeric identifier of a territory according to the new CISAC Territory Standard.,2.0
+IPA,Record Prefix,1,19,A,M,Set Record Type = IPA (Interested Party of Agreement),2.0
+IPA,Agreement Role Code,20,2,L,M,Code defining the role of the interested party in this agreement. The interested party can be either an assigning party or an acquiring party.,2.0
+IPA,Interested Party IPI Name #,22,11,L,O,The IPI name # assigned to this interested party. These values reside in the IPI Database.,2.0
+IPA,IPI Base Number,33,13,L,O,The IPI base number assigned to this interested party.,2.0
+IPA,Interested Party #,46,9,A,M,Submitter's unique identifier for this interested party.,2.0
+IPA,Interested Party Last Name,55,45,A,M,"The last name of this writer or the name of the publisher. Note that if the submitter does not have the ability to split first and last names of writers, the entire name should be entered in this field in the format ""Last Name, First Name"" including the comma after the last name.",2.0
+IPA,Interested Party Writer First Name,100,30,A,O,The first name of this writer along with all qualifying and middle names. An entry is only allowed if the Agreement type is OS or OG and the Agreement Role Code is Assignor.,2.0
+IPA,PR Affiliation Society,130,3,L,C,Number assigned to the performing rights society with which the IP is affiliated. These values reside on the Society Code Table. Required if PR share is greater than zero.,2.0
+IPA,PR Share,133,5,N 999v99,C,"Defines the percentage of the performing rights to the work, claimed by this interested party. Within an individual IPA record, this value can range from 0 to 100%. The PR-shares of all IPA records within an AGR transaction must add up to 100.00 if the agreement covers performing rights or must be 00000 if the agreement does not cover performing rights. At least one of PR share, MR share, or SR share must be greater than 0.",2.0
+IPA,MR Affiliation Society,138,3,L,C,Number assigned to the mechanical rights society with which this interested party is affiliated. These values reside on the Society Code Table. Required if MR share is greater than zero.,2.0
+IPA,MR Share,141,5,N 999v99,C,"Defines the percentage of the mechanical rights to the work, claimed by this interested party. Within an individual IPA record, this value can range from 0 to 100.00. The MR-shares of all IPA records within an AGR transaction must add up to 100.00 if the agreement covers the mechanical rights or to 000.00 if the agreement does not cover the mechanical rights. At least one of PR share, MR share, or SR share must be greater than 0.",2.0
+IPA,SR Affiliation Society,146,3,L,C,Number assigned to the synchronization rights society with which the IP is affiliated. These values reside on the Society Code Table. Required if SR share is greater than zero.,2.0
+IPA,SR Share,149,5,N 999v99,C,"Defines the percentage of the synchronization rights to the work, claimed by this interested party. Within an individual IPA record, this value can range from 0 to 100.00. The SR-shares of all IPA records within an AGR transaction must add up to 100.00 if the agreement covers the synchronization rights or to 000.00 if the agreement does not cover the synchronization rights. At least one of PR share, MR share, or SR share must be greater than 0.",2.0
+NPA,Record Prefix,1,19,A,M,Set Record Type = NPA,2.0
+NPA,Interested Party #,20,9,A,C,Submitting publisher's unique identifier for this Writer.,2.0
+NPA,Interested Party Name,29,160,A,M,The last of a writer or the publisher name.,2.0
+NPA,Interested Party Writer First Name,189,160,A,M,The first name of a writer.,2.0
+NPA,Language Code,349,2,L,O,The Language code of the name – must be a valid code from the Language Code Table.,2.0
+SPU,Record Prefix,1,19,A,M,Set Record Type = SPU (Publisher Controlled by Submitter) or OPU (Other Publisher),2.0
+SPU,Publisher Sequence #,20,2,N,M,A sequential number assigned to the original publishers on this work.,2.0
+SPU,Interested Party #,22,9,A,C,Submitting publisher's unique identifier for this publisher. This field is required for record type SPU and optional for record type OPU.,2.0
+SPU,Publisher Name,31,45,A,C,The name of this publishing company. This field is required for record type SPU and optional for record type OPU.,2.0
+SPU,Publisher Unknown Indicator,76,1,F,C,"Indicates if the name of this publisher is unknown. Note that this field must be left blank for SPU records. For OPU records, this field must be set to ""Y"" if the Publisher Name is blank.",2.0
+SPU,Publisher Type,77,2,L,C,Code defining this publisher's role in the publishing of the work. These values reside on the Publisher Type Table. This field is required for record type SPU and optional for record type OPU.,2.0
+SPU,Tax ID #,79,9,A,O,The number used to identify this publisher for domestic tax reporting.,2.0
+SPU,Publisher IPI Name #,88,11,L,C,"The IPI Name # assigned to this publisher. If the record is of type SPU and followed by an SPT (and hence represents the file submitter), then the IPI Name Number is mandatory.",2.0
+SPU,Submitter Agreement Number,99,14,A,O,Indicates the agreement number unique to the submitter under which this publisher has acquired the rights to this work.,2.0
+SPU,PR Affiliation Society #,113,3,L,C,Number assigned to the Performing Rights Society with which the publisher is affiliated. These values reside on the Society Code Table.,2.0
+SPU,PR Ownership Share,116,5,N 999v99,C,"Defines the percentage of the publisher's ownership of the performance rights to the work. This share does not define the percentage of the total royalty distributed for performance of the work that will be collected by the publisher. Within an individual SPU record, this value can range from 0 to 50.0.",2.0
+SPU,MR Society,121,3,L,C,Number assigned to the Mechanical Rights Society with which the publisher is affiliated. These values reside on the Society Code Table.,2.0
+SPU,MR Ownership Share,124,5,N 999v99,C,"Defines the percentage of the publisher's ownership of the mechanical rights to the work. This share does not define the percentage of the total royalty distributed for sales of CDs, Cassettes, etc. containing the work that will be collected by the publisher. Within an individual SPU record, this value can range from 0 to 100.0.",2.0
+SPU,SR Society,129,3,L,C,Number assigned to the Society with which the publisher is affiliated for administration of synchronization rights. These values reside on the Society Code Table.,2.0
+SPU,SR Ownership Share,132,5,N 999v99,C,"Defines the percentage of the publisher's ownership of the synch rights to the work. This share does not define the percentage of the total money distributed that will be collected by the publisher. Within an individual SPU record, this value can range from 0 to 100.0.",2.0
+SPU,Special Agreements Indicator,137,1,L,O,"Indicates publisher claiming reversionary rights. Note that this flag only applies to societies that recognize reversionary rights (for example, SOCAN).",2.0
+SPU,First Recording Refusal Ind,138,1,F,O,Indicates whether the submitter has refused to give authority for the first recording. Note that this field is mandatory for registrations with the UK societies.,2.0
+SPU,Filler,139,1,A,O,Fill with a blank,2.0
+SPU,Publisher IPI Base Number,140,13,L,O,The IPI base number assigned to this publisher,2.0
+SPU,International Standard Agreement Code,153,14,A,O,The ISAC that has been assigned to the agreement under which this publisher share is to be administered.,2.0
+SPU,Society-assigned Agreement Number,167,14,A,O,The agreement number assigned by the society of the sub-publisher.,2.0
+SPU,Agreement Type,181,2,L,O,Code defining the category of agreement. The values reside in the Agreement Type Table.,2.1
+SPU,USA License Ind,183,1,L,O,Indicates that rights flow through SESAC/BMI/ASCAP/AMRA in the US,2.1
+NPN,Record Prefix,1,19,A,M,Set Record Type =NPN,2.0
+NPN,Publisher Sequence #,20,2,N,M,A sequential number assigned to the original publishers on this work.,2.0
+NPN,Interested Party #,22,9,A,M,Submitting publisher's unique identifier for this publisher.,2.0
+NPN,Publisher Name,31,480,A,M,The name of this publishing company in non-roman alphabet.,2.0
+NPN,Language Code,511,2,L,O,The Language code of the name - must be a valid code from the Language Code Table.,2.0
+SPT,Record Prefix,1,19,A,M,Set Record Type = SPT (Publisher Territory of Control) or OPT (publisher non-controlled collection),2.0
+SPT,Interested Party #,20,9,A,M,Submitting publisher's unique identifier for this Publisher.,2.0
+SPT,Constant,29,6,A,M,Set this field equal to spaces.,2.0
+SPT,PR Collection Share,35,5,N 999v99,C,Defines the percentage of the total royalty distributed for performance of the work which will be collected by (paid to) the publisher within the above Territory. It can be a range from 0 to 50.00.,2.0
+SPT,MR Collection Share,40,5,N 999v99,C,"Defines the percentage of the total royalty distributed for sales of CDs, Cassette Tapes, etc. in which the work is included which will be collected by (paid to) the publisher. It can be a range from 0 to 100.00.",2.0
+SPT,SR Collection Share,45,5,N 999v99,C,Defines the percentage of the total royalty distributed for Synchronization rights to the work which will be collected by (paid to) the publisher. It can be a range from 0 to 100.00.,2.0
+SPT,Inclusion/ Exclusion Indicator,50,1,L,M,This is a marker which shows whether the territory specified in this record is part of the territorial scope of the agreement or not. Possible entries are I (= territory included) and E (= territory excluded).,2.0
+SPT,TIS Numeric Code,51,4,L,M,A territory within which this publisher claims the right to collect payment for performance or use of this work. These values reside in the TIS Code Table.,2.0
+SPT,Shares change,55,1,B,O,"If the shares for the writer interest change as a result of sub-publication in this territory or for a similar reason, set this field to ""Y"".",2.0
+SPT,Sequence #,56,3,N,M,A sequential number assigned to each territory following an SPU.,2.1
+SWR,Record Prefix,1,19,A,M,Set Record Type = SWR (Writer Controlled by Submitter) or OWR (Other Writer),2.0
+SWR,Interested Party #,20,9,A,C,Submitting publisher's unique identifier for this Writer. This field is required for record type SWR and optional for record type OWR.,2.0
+SWR,Writer Last Name,29,45,A,C,"The last name of this writer. Note that if the submitter does not have the ability to split first and last names, the entire name should be entered in this field in the format ""Last Name, First Name"" including the comma after the last name. This field is required for record type SWR and optional for record type OWR.",2.0
+SWR,Writer First Name,74,30,A,O,The first name of this writer along with all qualifying and middle names.,2.0
+SWR,Writer Unknown Indicator,104,1,F,C,"Indicates if the name of this writer is unknown. Note that this field must be left blank for SWR records. For OWR records, this field must be set to ""Y"" if the Writer Last Name is blank.",2.0
+SWR,Writer Designation Code,105,2,L,C,Code defining the role the writer played in the composition of the work. These values reside in the Writer Designation Table. This field is required for record type SWR and optional for record type OWR.,2.0
+SWR,Tax ID #,107,9,A,O,The number used to identify this writer for domestic tax reporting.,2.0
+SWR,Writer IPI Name #,116,11,L,O,The IPI Name # assigned to this writer.,2.0
+SWR,PR Affiliation Society #,127,3,L,O,Number assigned to the Performing Rights Society with which the writer is affiliated. These values reside on the Society Code Table.,2.0
+SWR,PR Ownership Share,130,5,N 999v99,O,"Defines the percentage of the writer's ownership of the performance rights to the work. Within an individual SWR record, this value can range from 0 to 100.0. Note that writers both own and collect the performing right interest.",2.0
+SWR,MR Society,135,3,L,O,Number assigned to the Mechanical Rights Society with which the writer is affiliated. These values reside on the Society Code Table.,2.0
+SWR,MR Ownership Share,138,5,N 999v99,O,"Defines the percentage of the writer's ownership of the mechanical rights to the work. Within an individual SPU record, this value can range from 0 to 100.0.",2.0
+SWR,SR Society,143,3,L,O,Number assigned to the Mechanical Rights Society with which the writer is affiliated. These values reside on the Society Code Table.,2.0
+SWR,SR Ownership Share,146,5,N 999v99,O,"Defines the percentage of the writer's ownership of the synchronization rights to the work. Within an individual SPU record, this value can range from 0 to 100.0.",2.0
+SWR,Reversionary Indicator,151,1,F,O,"Indicates writer involved in the claim. Note that this flag only applies to societies that recognize reversionary rights (for example, SOCAN).",2.0
+SWR,First Recording Refusal Ind,152,1,B,O,Indicates whether the submitter has refused to give authority for the first recording. Note that this field is mandatory for registrations with the UK societies.,2.0
+SWR,Work For Hire Indicator,153,1,B,O,Indicates whether or not this work was written for hire.,2.0
+SWR,Filler,154,1,A,O,,2.0
+SWR,Writer IPI Base Number,155,13,L,O,The IPI base number assigned to this writer. These values reside in the IPI database.,2.0
+SWR,Personal Number,168,12,N,O,The personal number assigned to this writer in the country of his/her residence.,2.0
+SWR,USA License Ind.,180,1,L,O,Indicates that rights flow through SESAC/BMI/ASCAP/AMRA in the US.,2.1
+NWN,Record Prefix,1,19,A,M,Set Record Type = NWN,2.0
+NWN,Interested Party #,20,9,A,C,Submitting publisher's unique identifier for this Writer.,2.0
+NWN,Writer Last Name,29,160,O,M,The last or single name of this writer.,2.0
+NWN,Writer First Name,189,160,O,O,The first name of this writer.,2.0
+NWN,Language Code,349,2,L,O,The Language code of the name must be a valid code from the Language Code Table.,2.0
+SWT,Record Prefix,1,19,A,M,Set Record Type = SWT (writer Territory of Control) or OWT (other writer collection).,2.0
+SWT,Interested Party #,20,9,A,C,Submitting publisher's unique identifier for this Writer.,2.0
+SWT,PR Collection Share,29,5,N 999v99,O,"Defines the percentage of the total royalty distributed for performance of the work which will be collected by (paid to) the writer within the above Territory. Within an SWT record, can be a range from 0 to 100.00.",2.0
+SWT,MR Collection Share,34,5,N 999v99,O,"Defines the percentage of the total royalty distributed for sales of CDs, Cassette Tapes, etc. in which the work is included which will be collected by (paid to) the writer. Within an SWT record, can be a range from 0 to 100.00.",2.0
+SWT,SR Collection Share,39,5,N 999v99,O,"Defines the percentage of the total royalty distributed for Synchronization rights to the work which will be collected by (paid to) the writer. Within an SWT record, can be a range from 0 to 100.00.",2.0
+SWT,Inclusion/ Exclusion Indicator,44,1,L,M,This is a marker which shows whether the territory specified in this record is part of the territorial scope of the agreement or not. Possible entries are I (= territory included) and E (= territory excluded).,2.0
+SWT,TIS Numeric Code,45,4,L,M,A territory within which this writer has the right to collect payment for performance of this work. These values reside in the TIS Code Table.,2.0
+SWT,Shares change,49,1,B,O,"If the shares for the writer interest change as a result of sub-publication in this territory, set this field to “Y”.",2.0
+SWT,Sequence #,50,3,N,M,A sequential number assigned to each territory following an SWR or OWR,2.1
+PWR,Record Prefix,1,19,A,M,Set Record Type = PWR (Publisher for Writer),2.0
+PWR,Publisher IP #,20,9,A,C,The publisher interested party number pointing back to the SPU/OPU record for the original publisher/income participant representing this writer.,2.0
+PWR,Publisher Name,29,45,A,C,The name of the publisher indicated by the Interested Party # field.,2.0
+PWR,Submitter Agreement Number,74,14,A,O,The unique number assigned to this agreement by the submitter.,2.0
+PWR,Society-Assigned Agreement Number,88,14,A,O,The unique number assigned to this agreement by the society,2.0
+PWR,Writer IP #,102,9,A,C,The writer interested party number pointing back to the SWR/OWR record in an explicit link.,2.1
+PWR,Publisher Sequence #,111,2,N,M,Reference to publisher chain this link relates to. This allows the specific original publisher/income participant entry for this relationship to be identified.,2.2
+ALT,Record Prefix,1,19,A,M,Set Record Type = ALT (Alternate Title),2.0
+ALT,Alternate Title,20,60,A,M,AKA or pseudonym of the work title.,2.0
+ALT,Title Type,80,2,L,M,Indicates the type of alternate title presented on this record. These values reside in the Title Type Table.,2.0
+ALT,Language Code,82,2,L,C,"The code representing the language that this alternate title has been translated into. These values reside in the Language Code Table. A language Code Must be entered if the Title Type is equal to ""OL"" or ""AL""",2.0
+NAT,Record Prefix,1,19,A,M,Set Record Type = NAT (Non-Roman Alphabet Title),2.0
+NAT,Title,20,640,A,M,The work title in non-Roman alphabet,2.0
+NAT,Title Type,660,2,L,M,"Indicates the type of title presented on this record (original, alternate etc.). These values reside in the Title Type Table.",2.0
+NAT,Language Code,662,2,L,O,The Language code of the title - must be a valid code from the Language Code Table.,2.0
+EWT,Record Prefix,1,19,A,M,Set Record Type = EWT (Entire Work Title for Excerpts),2.0
+EWT,Entire Work Title,20,60,A,M,The title of the entire work from which this excerpt has been derived.,2.0
+EWT,ISWC of Entire Work,80,11,A,O,The International Standard Work Code assigned to the work from which this excerpt has been derived.,2.0
+EWT,Language Code,91,2,L,O,The code defining the language in which the entire was originally written. These values reside in the Language Code Table.,2.0
+EWT,Writer 1 Last Name,93,45,A,O,"Last name of the original writer/composer of the work from which this excerpt has been taken. Note that if the submitter does not have the ability to split first and last names, the entire name should be entered in this field in the format ""Last Name, First Name"" including the comma after the last name.",2.0
+EWT,Writer 1 First Name,138,30,A,O,First name of the original writer/composer of the work from which this excerpt has been taken.,2.0
+EWT,Source,168,60,A,O,A description of the source from which the work was obtained.,2.0
+EWT,Writer 1 IPI Name #,228,11,L,O,The IPI Name # assigned to the first writer of the entire work.,2.0
+EWT,Writer 1 IPI Base Number,239,13,L,O,The IPI base number assigned to this writer. These values reside in the IPI database.,2.0
+EWT,Writer 2 Last Name,252,45,A,O,"Last name of the second writer of this component. Note that if the submitter does not have the ability to split first and last names, the entire name should be entered in this field in the format ""Last Name, First Name"" including the comma after the last name.",2.0
+EWT,Writer 2 First Name,297,30,A,O,First name of the second writer of this component.,2.0
+EWT,Writer 2 IPI Name #,327,11,L,O,The IPI Name # assigned to the second writer of the entire work.,2.0
+EWT,Writer 2 IPI Base Number,338,13,L,O,The IPI base number assigned to this writer. These values reside in the IPI database.,2.0
+EWT,Submitter Work #,351,14,A,O,Number assigned to the work by the party submitting the file. This number must be unique for the submitter.,2.0
+VER,Record Prefix,1,19,A,M,Set Record Type = VER (Original Work Title for Versions),2.0
+VER,Original Work Title,20,60,A,M,Original title of the work from which this version was derived.,2.0
+VER,ISWC of Original Work,80,11,A,O,The International Standard Work Code assigned to the work from which this version has been derived.,2.0
+VER,Language Code,91,2,L,O,The code defining the language in which the work was originally written. These values reside in the Language Code Table.,2.0
+VER,Writer 1 Last Name,93,45,A,O,"Last name of the original writer/composer of the work from which this version has been derived. Note that if the submitter does not have the ability to split first and last names, the entire name should be entered in this field in the format ""Last Name, First Name"" including the comma after the last name.",2.0
+VER,Writer 1 First Name,138,30,A,O,First name of the original writer/composer of the work from which this version has been derived.,2.0
+VER,Source,168,60,A,O,A description of the source from which the work was obtained.,2.0
+VER,Writer 1 IPI Name #,228,11,L,O,The IPI Name number assigned to the first writer of the original work.,2.0
+VER,Writer 1 IPI Base Number,239,13,L,O,The IPI base number assigned to this writer. These values reside in the IPI database.,2.0
+VER,Writer 2 Last Name,252,45,A,O,"Last name of the second writer of the original work. Note that if the submitter does not have the ability to split first and last names, the entire name should be entered in this field in the format ""Last Name, First Name"" including the comma after the last name.",2.0
+VER,Writer 2 First Name,297,30,A,O,First name of the second writer of the original work.,2.0
+VER,Writer 2 IPI Name #,327,11,L,O,The IPI Name number assigned to the second writer of this original work.,2.0
+VER,Writer 2 IPI Base Number,338,13,L,O,The IPI base number assigned to this writer. These values reside in the IPI database.,2.0
+VER,Submitter Work #,351,14,A,O,Number assigned to the original work by the party submitting the file. This number must be unique for the submitter.,2.0
+PER,Record Prefix,1,19,A,M,Set Record Type = PER (Performing Artist),2.0
+PER,Performing Artist Last Name,20,45,A,M,"Last name of a person or full name of a group that has performed the work on a recording or in public. Note that if the performer is known by a single name, it should be entered in this field.",2.0
+PER,Performing Artist First Name,65,30,A,O,First name associated with the performing artist identified in the previous field.,2.0
+PER,Performing Artist IPI Name #,95,11,L,O,The IPI Name # corresponding to this performing artist. Values reside in the IPI database.,2.0
+PER,Performing Artist IPI Base Number,106,13,L,O,The IPI base number assigned to this performing artist.,2.0
+NPR,Record Prefix,1,19,A,M,Set Record Type = NPR,2.0
+NPR,Performing Artist Name,20,160,A,C,"Name of a person or full name of a group that has performed the work on a recording or in public. Note that if the performer is known by a single name, it should be entered in this field.",2.0
+NPR,Performing Artist First Name,180,160,A,O,First name of a person that has performed the work on a recording or in public. .,2.0
+NPR,Performing Artist IPI Name #,340,11,L,O,The IPI Name # corresponding to this performing artist. Values reside in the IPI database.,2.0
+NPR,Performing Artist IPI Base Number,351,13,L,O,The IPI base number assigned to this performing artist.,2.0
+NPR,Language Code,364,2,L,O,The Language code of the name – must be a valid code from the Language Code Table.,2.0
+NPR,Performance Language,366,2,L,C,The language used in the performance - must be a valid code from the Language Code Table,2.1
+NPR,Performance Dialect,368,3,L,C,"The dialect used in the performance - must be a valid code from ISO 639-2(T) e.g. if the performance is in Mandarin, YUE Cantonese, MIN NAN or HAKKA, then use: CHN, YUH, CFR or HAK",2.1
+REC,Record Prefix,1,19,A,M,Set Record Type = REC (Recording Detail),2.0
+REC,Release Date,20,8,D,O,"Date the work was or will be released for public consumption. This date can be a past, present, or future date.",2.0
+REC,Constant,28,60,A,O,Fill with blanks.,2.0
+REC,Release Duration,88,6,T,O,Duration of the release of the work.,2.0
+REC,Constant,94,5,A,O,Fill with blanks.,2.0
+REC,Album Title,99,60,A,O,The name of the album in which the work was included if the work was released as part of an album.,2.0
+REC,Album Label,159,60,A,O,Name of the organization that produced and released the album in which the release of the work was included.,2.0
+REC,Release Catalog #,219,18,A,O,Number assigned by the organization releasing the album for internal purposes such as sales and distribution tracking.,2.0
+REC,EAN,237,13,L,O,European Article Number of release (EAN-13),2.0
+REC,ISRC,250,12,L,O,International Standard Recording Code of the recording of the work on the release (according to ISO 3901).,2.0
+REC,Recording Format,262,1,L,O,"Code that identifies the content of the recording: ""A"" (audio), ""V"" (video).",2.0
+REC,Recording Technique,263,1,L,O,"Identifies the recording procedure: ""A"" (Analogue), ""D"" (Digital), ""U"" (Unknown).",2.0
+REC,Media Type,264,3,L,O,BIEM/CISAC code for media type.,2.1
+REC,Recording Title,267,60,A,O,Title of the Sound Recording,2.2
+REC,Version Title,327,60,A,O,"Title given to the version of the Sound Recording (for example: ""remixed by"")",2.2
+REC,Display Artist,387,60,A,O,Name of the artist of the Sound Recording,2.2
+REC,Record Label,447,60,A,O,Name of the organisation that produced the Sound Recording of the work,2.2
+REC,ISRC Validity,507,20,L,C,"If an ISRC is supplied, Indicates that the validity of the ISRC:””Y”” is valid, “”U”” the link is invalid, “”N”” the ISRC is invalid",2.2
+REC,Submitter Recording Identifier,527,14,A,O,The submitter's unique identifier for this recording.,2.2
+ORN,Record Prefix,1,19,A,M,Set Record Type = ORN (Work Origin),2.0
+ORN,Intended Purpose,20,3,L,M,Indicates the type of production from which this work originated. These values reside in the Intended Purpose Table.,2.0
+ORN,Production Title,23,60,A,C,"Name of the production from which this work originated. This field is required when CWR Work Type on the NWR record equals ""FM"".",2.0
+ORN,CD Identifier,83,15,A,C,"If Intended Purpose is equal to LIB (Library Work), enter the identifier associated with the CD upon which the work appears.",2.0
+ORN,Cut Number,98,4,N,O,"If Intended Purpose is equal to LIB (Library Work), enter the track number on the CD Identifier where the work appears.",2.0
+ORN,Library,102,60,A,C,The library from which this work originated.,2.1
+ORN,BLTVR,162,1,A,O,An indication of the primary use of the work within the AV production. The definitive source for cue usage is the cue sheet.,2.1
+ORN,Filler,163,25,N,O,Reserved for future use,2.1
+ORN,Production #,188,12,A,O,The number generated by the production company to identify the work.,2.1
+ORN,Episode Title,200,60,A,O,Title of the episode from which this work originated.,2.1
+ORN,Episode #,260,20,A,O,Number assigned to the episode by the producer.,2.1
+ORN,Year of Production,280,4,N,O,The year in which the production of the film or episode was completed.,2.1
+ORN,AVI Society Code,284,3,N,O,The Society code of the society whose audio visual work detail entry is referenced in the AV Index. These values reside on the Society Code Table.,2.1
+ORN,Audio-Visual Number,287,15,A,O,"Unique number used internally by the ""owning"" society to identify the audio-visual work as referenced in the AV Index.",2.1
+ORN,V-ISAN/ISAN,302,12,A,O,Unique identifier for audio-visual production in which this work is first used / Root Segment,2.2
+ORN,V-ISAN/Episode,314,4,A,O,Episode or Part number,2.2
+ORN,V-ISAN/Check Digit 1,318,1,A,O,Check Character for the root and episode segment.,2.2
+ORN,V-ISAN/Version,319,8,A,O,Version Segment,2.2
+ORN,V-ISAN/Check Digit 2,327,1,A,O,Check Character for the Version Segment,2.2
+ORN,EIDR,328,20,A,O,EIDR / Root Number,2.2
+ORN,EIDR/Check Digit,348,1,A,O,Check Character,2.2
+INS,Record Prefix,1,19,A,M,Set Record Type = INS (Instrumentation Summary),2.0
+INS,Number of Voices,20,3,N,O,Indicates the number of independent parts included in this work.,2.0
+INS,Standard Instrumentation Type,23,3,L,C,Describes instrumentation if standard instrumentation is used on this work. Note that this field is required if IND records are not entered and if Instrumentation Description is blank. These values reside in the Standard Instrumentation Table.,2.0
+INS,Instrumentation Description,26,50,A,C,Describes instrumentation if non-standard instrumentation is used on this work. Note that this field is required if IND records are not entered and if Standard Instrumentation Type is blank.,2.0
+IND,Record Prefix,1,19,A,M,Set Record Type = IND (Instrumentation Detail),2.0
+IND,Instrument Code,20,3,L,M,Indicates the use of a specific instrument in this version of instrumentation. These values reside in the Instrument Table.,2.0
+IND,Number of Players,23,3,N,O,Indicates the number of players for the above instrument,2.0
+COM,Record Prefix,1,19,A,M,Set Record Type = COM (Composite Component),2.0
+COM,Title,20,60,A,M,The title of the original work from which a portion was taken and included in the composite work.,2.0
+COM,ISWC of Component,80,11,A,O,The International Standard Work Code assigned to the original work from which a portion was taken and included in this composite work.,2.0
+COM,Submitter Work #,91,14,A,O,The number that the submitting party uses to refer to this composite component.,2.0
+COM,Duration,105,6,T,O,The duration of this composite component.,2.0
+COM,Writer 1 Last Name,111,45,A,M,"Last name of the first writer of this component. Note that if the submitter does not have the ability to split first and last names, the entire name should be entered in this field in the format ""Last Name, First Name"" including the comma after the last name.",2.0
+COM,Writer 1 First Name,156,30,A,O,First name of the first writer of this component.,2.0
+COM,Writer 1 IPI Name #,186,11,L,O,The IPI Name number assigned to the first writer of this component.,2.0
+COM,Writer 2 Last Name,197,45,A,O,"Last name of the second writer of this component. Note that if the submitter does not have the ability to split first and last names, the entire name should be entered in this field in the format ""Last Name, First Name"" including the comma after the last name.",2.0
+COM,Writer 2 First Name,242,30,A,O,First name of the second writer of this component.,2.0
+COM,Writer 2 IPI Name #,272,11,L,O,The IPI Name number assigned to the second writer of this component.,2.0
+COM,Writer 1 IPI Base Number,283,13,L,O,The IPI base number assigned to this writer. These values reside in the IPI database.,2.0
+COM,Writer 2 IPI Base Number,296,13,L,O,The IPI base number assigned to this writer. These values reside in the IPI database.,2.0
+MSG,Record Prefix,1,19,A,M,Set Record Type = MSG (Message),2.0
+MSG,Message Type,20,1,L,M,"Indicates whether this information is a warning, error, or for information only. Values are F = Field Rejected, R = Record Rejected, T = Transaction Rejected, G = Group Rejected, E = Entire File Rejected",2.0
+MSG,Original Record Sequence #,21,8,N,M,The Record Sequence Number within the transaction associated with this acknowledgment that caused the generation of this message.,2.0
+MSG,Record Type,29,3,A,M,The record type within the original transaction that caused generation of this message.,2.0
+MSG,Message Level,32,1,L,M,"The level of editing that was responsible for generation of this message. Values are E = Entire File, G = Group, T = Transaction, R = Record, F = Field.",2.0
+MSG,Validation Number,33,3,A,M,"Identifies the specific edit condition that generated this message. Note that the combination of Record Type, Message Level, and Validation Number points back to a condition within this document.",2.0
+MSG,Message Text,36,150,A,M,The text associated with this message.,2.0
+NET,Record Prefix,1,19,A,M,Set Record Type = NET/NCT/NVT (Non-Roman Alphabet Entire Work Title for Excerpts/ Non-Roman Alphabet Title for Components/ Non-Roman Alphabet Original Title for Versions),2.0
+NET,Title,20,640,A,M,The title in non-Roman alphabet.,2.0
+NET,Language Code,660,2,L,O,The Language code of the title – must be a valid code from the Language Code Table.,2.0
+NOW,Record Prefix,1,19,A,M,Set Record Type = NOW,2.0
+NOW,Writer Name,20,160,O,M,The last or single name of this writer.,2.0
+NOW,Writer First Name,180,160,O,M,The first name of this writer.,2.0
+NOW,Language Code,340,2,L,O,The Language code of the name must be a valid code from the Language Code Table.,2.0
+NOW,Writer Position,342,1,L,O,"The position of the writer in the corresponding EWT, VER, or COM record",2.0
+ARI,Record Prefix,1,19,A,M,Set Record Type = ARI (Additional Related Information),2.0
+ARI,Society #,20,3,L,M,"Number assigned to the Society to which the Note is addressed. These values reside Society Code Table. If the note is addressed to all societies that use the ARI record, use ""000"".",2.0
+ARI,Work #,23,14,A,C,"The Society work # that relates to this registration. It may have been found on an unidentified list, or a website etc.",2.0
+ARI,Type of Right,37,3,L,M,"Indicates that this information relates to performing rights, mechanical rights, sync. rights or all rights (ALL)",2.0
+ARI,Subject Code,40,2,L,C,Subject of the ARI.,2.0
+ARI,Note,42,160,A,C,Free text field pertaining to the type of right and subject specified above.,2.0
+XRF,Record Prefix,1,19,A,M,Set Record Type = XRF (Work ID Cross Reference),2.0
+XRF,Organisation Code,20,3,L,M,"Number assigned to the Organisation (e.g. Society, publisher, DSP etc...) which generated the Work Code. These values reside in the Transmitter Code Table, or can be ""ISW"" for ISWC or ""ISR"" for ISRC. Note: Do not use ""000""or ""099"".",2.0
+XRF,Identifier,23,14,A,M,An identifier that relates to this work Transaction.,2.0
+XRF,Identifier Type,37,1,L,M,"The type of identifier (""W"" for Work, ""R"" for Recording, ""P"" for Product, ""V"" for Video)",2.0
+XRF,Validity,38,1,F,M,"Indicates whether the Identifier is valid or not: ""Y"" is valid, ""U"" the link is invalid, ""N"" the identifier is invalid",2.0
