@@ -1,49 +1,80 @@
-use std::collections::HashMap;
+// --- START OF FILE main.rs.txt ---
+
 use std::env;
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader};
 use std::path::Path;
 use std::process;
 
-use rusqlite::Connection;
+// Import rusqlite features
+// Added Transaction explicitly for clarity in function signatures
+use rusqlite::{params, Connection, Transaction};
 
 // --- Configuration ---
-const KEY_WIDTH: usize = 4; // Width for the 3-char key column ("ABC      ")
-const VALUE_WIDTH: usize = 15; // Width for the count column ("      1,234,567")
-// Define the path to the schema file relative to the project root
 const SCHEMA_FILE_PATH: &str = "docs/cwr_2.2_schema_sqlite.sql";
 // ---------------------
 
+// Define a custom error type (same as before)
+#[derive(Debug)]
+enum CwrParseError {
+    Io(io::Error),
+    Db(rusqlite::Error),
+    BadFormat(String),
+}
+
+impl From<io::Error> for CwrParseError {
+    fn from(err: io::Error) -> CwrParseError {
+        CwrParseError::Io(err)
+    }
+}
+
+impl From<rusqlite::Error> for CwrParseError {
+    fn from(err: rusqlite::Error) -> CwrParseError {
+        CwrParseError::Db(err)
+    }
+}
+
+impl std::fmt::Display for CwrParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CwrParseError::Io(err) => write!(f, "IO Error: {}", err),
+            CwrParseError::Db(err) => write!(f, "Database Error: {}", err),
+            CwrParseError::BadFormat(msg) => write!(f, "Bad Format: {}", msg),
+        }
+    }
+}
+
+impl std::error::Error for CwrParseError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            CwrParseError::Io(err) => Some(err),
+            CwrParseError::Db(err) => Some(err),
+            CwrParseError::BadFormat(_) => None,
+        }
+    }
+}
+
+
 fn main() {
-    // 1. Get input filename from command line arguments
+    // 1. Get input filename
     let args: Vec<String> = env::args().collect();
     if args.len() != 2 {
         eprintln!("Usage: {} <input_filename>", args[0]);
-        eprintln!("This will create a database named <input_filename>.db");
+        eprintln!("This will create or use a database named <input_filename>.db (or .N.db if needed)");
         process::exit(1);
     }
     let input_filename = &args[1];
 
-    // 2. Determine the database filename, avoiding existing files
-    let mut n = 0;
-    let mut db_filename = format!("{}.db", input_filename);
-
-    // Loop to find the next available filename like <input>.db, <input>.1.db, <input>.2.db ...
-    while Path::new(&db_filename).exists() {
-        n += 1;
-        db_filename = format!("{}.{}.db", input_filename, n);
-    }
+    // 2. Determine database filename
+    let db_filename = determine_db_filename(input_filename);
     println!("Using database filename: '{}'", db_filename);
-
 
     // 3. Set up the database
     match setup_database(&db_filename, SCHEMA_FILE_PATH) {
-        Ok(_) => {
-            println!(
-                "Successfully created database '{}' and applied schema from '{}'.",
-                db_filename, SCHEMA_FILE_PATH
-            );
-        }
+        Ok(_) => println!(
+            "Database '{}' ready, schema applied if needed.",
+            db_filename
+        ),
         Err(e) => {
             eprintln!(
                 "Error setting up database '{}' with schema '{}': {}",
@@ -53,129 +84,181 @@ fn main() {
         }
     }
 
-    // 2. Process the file
-    match process_file(input_filename) {
-        Ok(stats) => {
-            // 3. Print the results
-            print_stats(&stats);
+    // 4. Process the file and load into DB
+    match process_and_load_file(input_filename, &db_filename) {
+        Ok(count) => {
+            println!(
+                "Successfully processed {} lines from '{}' into '{}'.",
+                count, input_filename, db_filename
+            );
         }
         Err(e) => {
-            eprintln!("Error processing file '{}': {}", input_filename, e);
+            eprintln!(
+                "Error processing file '{}' into '{}': {}",
+                input_filename, db_filename, e
+            );
+            // Attempt to delete the potentially partially filled DB on error
+            // This might fail, but it's often good practice
+            match std::fs::remove_file(&db_filename) {
+                Ok(_) => eprintln!("Removed incomplete database file '{}'.", db_filename),
+                Err(remove_err) => eprintln!("Failed to remove incomplete database file '{}': {}", db_filename, remove_err),
+            }
             process::exit(1);
         }
     }
 }
 
-fn process_file(filename: &str) -> io::Result<HashMap<String, usize>> {
-    // Open the file
-    let file = File::open(filename)?;
-    // Use a BufReader for efficient line-by-line reading
+fn determine_db_filename(input_filename: &str) -> String {
+    let mut n = 0;
+    let mut db_filename = format!("{}.db", input_filename);
+
+    while Path::new(&db_filename).exists() {
+        n += 1;
+        db_filename = format!("{}.{}.db", input_filename, n);
+    }
+    db_filename
+}
+
+/// Reads the CWR file line by line and inserts data into the database using a single transaction.
+fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<usize, CwrParseError> {
+    let file = File::open(input_filename)?;
     let reader = BufReader::new(file);
+    // Open connection mutable because we need to start a transaction
+    let mut conn = Connection::open(db_filename)?;
 
-    let mut stats: HashMap<String, usize> = HashMap::new();
+    // Start a single transaction for the entire file load
+    // `tx` needs to be mutable because execute methods on it take `&mut self` implicitly
+    let mut tx = conn.transaction()?;
 
-    // Iterate through lines, handling potential I/O errors
+    let mut line_number = 0;
+    let mut processed_lines = 0; // Count only lines that were successfully parsed and inserted
+
     for line_result in reader.lines() {
+        line_number += 1;
         let line = line_result?; // Propagate I/O errors
 
-        // Ignore '\r' (implicitly handled by .lines())
-
-        // Check if line has at least 3 characters
-        if line.len() >= 3 {
-            // Extract the first three characters
-            // Using .get() is safer than slicing directly as it returns Option<&str>
-            // but we already checked length, so slicing is fine here.
-            let prefix = &line[0..3];
-
-            // Update the count in the HashMap
-            // The entry API is efficient: finds or inserts, then allows modification
-            *stats.entry(prefix.to_string()).or_insert(0) += 1;
+        if line.is_empty() {
+            continue;
         }
-        // Lines shorter than 3 chars are implicitly skipped
-    }
 
-    Ok(stats)
-}
-
-fn print_stats(stats: &HashMap<String, usize>) {
-    println!("RECORD STATISTICS");
-    println!("--------------------------"); // 26 dashes
-
-    // For potentially nicer output, sort by key before printing
-    let mut sorted_stats: Vec<_> = stats.iter().collect();
-    sorted_stats.sort_by(|a, b| a.0.cmp(b.0)); // Sort alphabetically by key (prefix)
-
-    for (key, count) in sorted_stats {
-        let formatted_count = format_count(*count);
-        // Print formatted line: Key left-aligned, Count right-aligned
-        println!(
-            "{:<key_width$} | {:>value_width$}",
-            key,
-            formatted_count,
-            key_width = KEY_WIDTH,
-            value_width = VALUE_WIDTH
-        );
-    }
-}
-
-
-// Helper function to format numbers with commas
-fn format_count(n: usize) -> String {
-    let s = n.to_string();
-    let bytes = s.as_bytes();
-    let len = bytes.len();
-    let mut result = Vec::with_capacity(len + (len - 1) / 3);
-
-    let first_digit_index = len % 3;
-    if first_digit_index != 0 {
-        result.extend_from_slice(&bytes[0..first_digit_index]);
-    }
-
-    for (i, chunk) in bytes[first_digit_index..].chunks(3).enumerate() {
-        if i > 0 || first_digit_index != 0 {
-            result.push(b',');
+        if line.len() < 3 {
+            eprintln!("Warning: Line {} is too short (less than 3 chars), skipping.", line_number);
+            continue;
         }
-        result.extend_from_slice(chunk);
+
+        let record_type = &line[0..3];
+
+        // Pass a mutable reference to the transaction (&mut tx) to the parsing functions
+        match record_type {
+            "HDR" => {
+                // Use block to limit scope of borrow if needed, although not strictly necessary here
+                parse_and_insert_hdr(&line, line_number, &mut tx)?;
+                processed_lines += 1;
+            }
+            // --- Add cases for other record types later ---
+            // "GRH" => {
+            //     parse_and_insert_grh(&line, line_number, &mut tx)?;
+            //     processed_lines += 1;
+            // }
+            // ... etc.
+            _ => {
+                // eprintln!("Warning: Line {}: Unrecognized record type '{}', skipping.", line_number, record_type);
+            }
+        }
     }
 
-    // Convert the byte vector back to a String
-    // Since we started with digits and added commas, this is safe.
-    String::from_utf8(result).unwrap()
+    // Commit the transaction *only if* all lines were processed without error
+    // If any `?` propagated an error, `tx.commit()` will not be reached,
+    // and the transaction will be automatically rolled back when `tx` goes out of scope.
+    tx.commit()?;
+
+    // Return the count of successfully processed lines
+    Ok(processed_lines)
 }
 
-/// Creates an SQLite database file and executes the schema definition script.
-///
-/// # Arguments
-///
-/// * `db_filename` - The path where the SQLite database file should be created.
-/// * `schema_path` - The path to the SQL file containing the schema definition.
-///
-/// # Errors
-///
-/// Returns an error if:
-/// - The schema file cannot be read.
-/// - The database connection cannot be established.
-/// - The schema SQL cannot be executed successfully.
+/// Parses a HDR line and inserts it into the cwr_hdr table within the provided transaction.
+// Takes a mutable reference to the Transaction
+fn parse_and_insert_hdr(line: &str, line_number: usize, tx: &mut Transaction) -> Result<(), CwrParseError> {
+    // Helper closure for safe slicing (same as before)
+    let safe_slice = |start: usize, end: usize| -> Option<&str> {
+        if end > line.len() {
+            None
+        } else {
+            let slice = line.get(start..end)?;
+            if slice.is_empty() { None } else { Some(slice) }
+        }
+    };
+
+    // Define field positions (0-based start, end=start+size)
+    let record_type = safe_slice(0, 3).ok_or_else(|| CwrParseError::BadFormat(format!("Line {}: HDR missing record_type", line_number)))?;
+    let sender_type = safe_slice(3, 5).ok_or_else(|| CwrParseError::BadFormat(format!("Line {}: HDR missing sender_type", line_number)))?;
+    let sender_id = safe_slice(5, 14).ok_or_else(|| CwrParseError::BadFormat(format!("Line {}: HDR missing sender_id", line_number)))?;
+    let sender_name = safe_slice(14, 59).ok_or_else(|| CwrParseError::BadFormat(format!("Line {}: HDR missing sender_name", line_number)))?;
+    let edi_version = safe_slice(59, 64).ok_or_else(|| CwrParseError::BadFormat(format!("Line {}: HDR missing edi_standard_version_number", line_number)))?;
+    let creation_date = safe_slice(64, 72).ok_or_else(|| CwrParseError::BadFormat(format!("Line {}: HDR missing creation_date", line_number)))?;
+    let creation_time = safe_slice(72, 78).ok_or_else(|| CwrParseError::BadFormat(format!("Line {}: HDR missing creation_time", line_number)))?;
+    let transmission_date = safe_slice(78, 86).ok_or_else(|| CwrParseError::BadFormat(format!("Line {}: HDR missing transmission_date", line_number)))?;
+    let character_set = safe_slice(86, 101);
+    let version = safe_slice(101, 104);
+    let revision = safe_slice(104, 107);
+    let software_package = safe_slice(107, 137);
+    let software_package_version = safe_slice(137, 167);
+
+    // Basic Validation
+    if record_type != "HDR" {
+        return Err(CwrParseError::BadFormat(format!(
+            "Line {}: Expected record type HDR but found '{}'", line_number, record_type
+        )));
+    }
+
+    // --- More Validation Examples (Optional but Recommended) ---
+    // Date format check (YYYYMMDD)
+    if creation_date.len() != 8 || !creation_date.chars().all(|c| c.is_ascii_digit()) {
+        // Note: This is a basic check. A regex or date parsing library offers more robust validation.
+        // Consider adding validation for transmission_date as well.
+        return Err(CwrParseError::BadFormat(format!("Line {}: Invalid Creation Date format '{}'", line_number, creation_date)));
+    }
+    // Time format check (HHMMSS)
+    if creation_time.len() != 6 || !creation_time.chars().all(|c| c.is_ascii_digit()) {
+        return Err(CwrParseError::BadFormat(format!("Line {}: Invalid Creation Time format '{}'", line_number, creation_time)));
+    }
+    // Could add checks for Sender Type against allowed values ('PB', 'SO', etc.) if needed
+
+    // Insert into the database *using the transaction*
+    tx.execute( // Changed from conn.execute to tx.execute
+                "INSERT INTO cwr_hdr (
+            file_line_number, record_type, sender_type, sender_id, sender_name,
+            edi_standard_version_number, creation_date, creation_time, transmission_date,
+            character_set, version, revision, software_package, software_package_version
+        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+                params![
+            line_number as i64, // Store line number as integer
+            record_type,
+            sender_type,
+            sender_id,
+            sender_name,
+            edi_version,
+            creation_date,
+            creation_time,
+            transmission_date,
+            character_set,
+            version,
+            revision,
+            software_package,
+            software_package_version
+        ],
+    )?; // Propagate DB errors
+
+    Ok(())
+}
+
 fn setup_database(db_filename: &str, schema_path: &str) -> Result<(), Box<dyn std::error::Error>> {
-    // Check if schema file exists before proceeding
     if !Path::new(schema_path).exists() {
         return Err(format!("Schema file not found: {}", schema_path).into());
     }
-
-    // Read the schema SQL from the file
     let schema_sql = fs::read_to_string(schema_path)?;
-    println!("Read schema from '{}'", schema_path);
-
-    // Open (or create) the SQLite database connection
-    // `Connection::open` creates the file if it doesn't exist.
     let conn = Connection::open(db_filename)?;
-    println!("Opened/Created database file '{}'", db_filename);
-
-    // Execute the schema SQL script
-    // `execute_batch` is suitable for running multiple SQL statements from a string
     conn.execute_batch(&schema_sql)?;
-    println!("Successfully executed schema SQL.");
-
-    // Connection will be closed automatically when `conn` goes out of scope.
     Ok(())
 }
+// --- END OF FILE main.rs.txt ---
