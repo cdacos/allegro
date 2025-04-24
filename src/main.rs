@@ -1,31 +1,66 @@
 use std::collections::HashMap;
 use std::env;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader};
+use std::path::Path;
 use std::process;
 
+use rusqlite::Connection;
+
 // --- Configuration ---
-const KEY_WIDTH: usize = 9; // Width for the 3-char key column ("ABC      ")
+const KEY_WIDTH: usize = 4; // Width for the 3-char key column ("ABC      ")
 const VALUE_WIDTH: usize = 15; // Width for the count column ("      1,234,567")
+// Define the path to the schema file relative to the project root
+const SCHEMA_FILE_PATH: &str = "docs/cwr_2.2_schema_sqlite.sql";
 // ---------------------
 
 fn main() {
-    // 1. Get filename from command line arguments
+    // 1. Get input filename from command line arguments
     let args: Vec<String> = env::args().collect();
     if args.len() != 2 {
-        eprintln!("Usage: {} <filename>", args[0]);
+        eprintln!("Usage: {} <input_filename>", args[0]);
+        eprintln!("This will create a database named <input_filename>.db");
         process::exit(1);
     }
-    let filename = &args[1];
+    let input_filename = &args[1];
+
+    // 2. Determine the database filename, avoiding existing files
+    let mut n = 0;
+    let mut db_filename = format!("{}.db", input_filename);
+
+    // Loop to find the next available filename like <input>.db, <input>.1.db, <input>.2.db ...
+    while Path::new(&db_filename).exists() {
+        n += 1;
+        db_filename = format!("{}.{}.db", input_filename, n);
+    }
+    println!("Using database filename: '{}'", db_filename);
+
+
+    // 3. Set up the database
+    match setup_database(&db_filename, SCHEMA_FILE_PATH) {
+        Ok(_) => {
+            println!(
+                "Successfully created database '{}' and applied schema from '{}'.",
+                db_filename, SCHEMA_FILE_PATH
+            );
+        }
+        Err(e) => {
+            eprintln!(
+                "Error setting up database '{}' with schema '{}': {}",
+                db_filename, SCHEMA_FILE_PATH, e
+            );
+            process::exit(1);
+        }
+    }
 
     // 2. Process the file
-    match process_file(filename) {
+    match process_file(input_filename) {
         Ok(stats) => {
             // 3. Print the results
             print_stats(&stats);
         }
         Err(e) => {
-            eprintln!("Error processing file '{}': {}", filename, e);
+            eprintln!("Error processing file '{}': {}", input_filename, e);
             process::exit(1);
         }
     }
@@ -83,6 +118,7 @@ fn print_stats(stats: &HashMap<String, usize>) {
     }
 }
 
+
 // Helper function to format numbers with commas
 fn format_count(n: usize) -> String {
     let s = n.to_string();
@@ -105,4 +141,41 @@ fn format_count(n: usize) -> String {
     // Convert the byte vector back to a String
     // Since we started with digits and added commas, this is safe.
     String::from_utf8(result).unwrap()
+}
+
+/// Creates an SQLite database file and executes the schema definition script.
+///
+/// # Arguments
+///
+/// * `db_filename` - The path where the SQLite database file should be created.
+/// * `schema_path` - The path to the SQL file containing the schema definition.
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - The schema file cannot be read.
+/// - The database connection cannot be established.
+/// - The schema SQL cannot be executed successfully.
+fn setup_database(db_filename: &str, schema_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    // Check if schema file exists before proceeding
+    if !Path::new(schema_path).exists() {
+        return Err(format!("Schema file not found: {}", schema_path).into());
+    }
+
+    // Read the schema SQL from the file
+    let schema_sql = fs::read_to_string(schema_path)?;
+    println!("Read schema from '{}'", schema_path);
+
+    // Open (or create) the SQLite database connection
+    // `Connection::open` creates the file if it doesn't exist.
+    let conn = Connection::open(db_filename)?;
+    println!("Opened/Created database file '{}'", db_filename);
+
+    // Execute the schema SQL script
+    // `execute_batch` is suitable for running multiple SQL statements from a string
+    conn.execute_batch(&schema_sql)?;
+    println!("Successfully executed schema SQL.");
+
+    // Connection will be closed automatically when `conn` goes out of scope.
+    Ok(())
 }
