@@ -5,6 +5,13 @@ PRAGMA synchronous = NORMAL;
 PRAGMA cache_size = -64000; -- 64MB
 PRAGMA mmap_size = 268435456; -- 256MB
 
+CREATE TABLE cwr_error (
+    cwr_error_id INTEGER PRIMARY KEY,
+    file_line_number INTEGER,
+    file_line TEXT,
+    description TEXT
+);
+
 -- SQLITE DDL for CWR 2.2 Record Types
 
 -- Transmission Header
@@ -235,7 +242,7 @@ CREATE TABLE cwr_spt (
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
     interested_party_num VARCHAR(9) NOT NULL,
-    constant_spaces VARCHAR(6) NOT NULL,
+    constant_spaces VARCHAR(6),
     pr_collection_share VARCHAR(5),
     mr_collection_share VARCHAR(5),
     sr_collection_share VARCHAR(5),
