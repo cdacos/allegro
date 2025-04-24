@@ -24,8 +24,17 @@ fn main() {
     }
     let input_filename = &args[1];
 
-    // 2. Construct the database filename
-    let db_filename = format!("{}.db", input_filename);
+    // 2. Determine the database filename, avoiding existing files
+    let mut n = 0;
+    let mut db_filename = format!("{}.db", input_filename);
+
+    // Loop to find the next available filename like <input>.db, <input>.1.db, <input>.2.db ...
+    while Path::new(&db_filename).exists() {
+        n += 1;
+        db_filename = format!("{}.{}.db", input_filename, n);
+    }
+    println!("Using database filename: '{}'", db_filename);
+
 
     // 3. Set up the database
     match setup_database(&db_filename, SCHEMA_FILE_PATH) {
