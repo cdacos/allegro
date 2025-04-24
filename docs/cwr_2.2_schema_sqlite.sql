@@ -235,7 +235,7 @@ CREATE TABLE cwr_spt (
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
     interested_party_num VARCHAR(9) NOT NULL,
-    constant_spaces VARCHAR(6) NOT NULL,
+    constant_spaces VARCHAR(6),
     pr_collection_share VARCHAR(5),
     mr_collection_share VARCHAR(5),
     sr_collection_share VARCHAR(5),
