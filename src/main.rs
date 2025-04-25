@@ -66,12 +66,24 @@ fn main() {
         }
     }
 
-    match process_and_load_file(input_filename, &db_filename) {
+    let start_time = Instant::now(); // Record start time
+
+    let result = process_and_load_file(input_filename, &db_filename);
+
+    let elapsed_time = start_time.elapsed(); // Calculate elapsed time
+
+    match result {
         Ok(count) => {
-            println!("Successfully processed {} CWR records from '{}' into '{}'.", count, input_filename, db_filename);
+            println!(
+                "Successfully processed {} CWR records from '{}' into '{}' in {:.2?}.",
+                count, input_filename, db_filename, elapsed_time
+            );
         }
         Err(e) => {
-            eprintln!("Error processing file '{}' into '{}': {}", input_filename, db_filename, e);
+            eprintln!(
+                "Error processing file '{}' into '{}' after {:.2?}: {}",
+                input_filename, db_filename, elapsed_time, e
+            );
             process::exit(1);
         }
     }
