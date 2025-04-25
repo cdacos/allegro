@@ -93,10 +93,10 @@ fn main() {
         Err(e) => eprintln!("Error generating report from database '{}': {}", db_filename, e),
     }
 
-    // Print success message *before* the report
+    // Print success message *after* the report, using formatted count
     println!(
         "Successfully processed {} CWR records from '{}' into '{}' in {:.2?}.",
-        count, input_filename, db_filename, elapsed_time
+        format_int_with_commas(count as i64), input_filename, db_filename, elapsed_time // Use i64 for format func
     );
 }
 
@@ -121,7 +121,7 @@ fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
         } else {
             description
         };
-        println!("{:<60} | {}", desc_display, count); // Formatted line
+        println!("{:<60} | {}", desc_display, format_int_with_commas(count)); // Formatted line with commas
     }
     if !error_found {
         println!("  No errors recorded.");
@@ -138,7 +138,7 @@ fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
         record_found = true;
         let record_type: String = row.get(0)?;
         let count: i64 = row.get(1)?;
-        println!("{:<5} | {}", record_type, count); // Formatted line
+        println!("{:<5} | {}", record_type, format_int_with_commas(count)); // Formatted line with commas
     }
      if !record_found {
         println!("  No records loaded into 'file' table.");
@@ -147,6 +147,21 @@ fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     Ok(())
+}
+
+/// Formats an integer with commas as thousands separators.
+fn format_int_with_commas(num: i64) -> String {
+    let s = num.to_string();
+    let mut result = String::new();
+    let len = s.len();
+    for (i, c) in s.chars().enumerate() {
+        result.push(c);
+        let pos = len - 1 - i;
+        if pos > 0 && pos % 3 == 0 {
+            result.push(',');
+        }
+    }
+    result
 }
 
 
