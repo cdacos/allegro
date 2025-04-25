@@ -106,8 +106,8 @@ fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
 
     // Error Report
     println!();
-    println!("{:<60} | {}", "Error", "Count"); // Header
-    println!("{:-<60}-+-{:-<7}", "", "");      // Separator
+    println!("{:<60} | {:>7}", "Error", "Count"); // Header (Right-align Count)
+    println!("{:-<60}-+-{:-<7}", "", "");      // Separator (No change needed here)
     let mut stmt_err = conn.prepare("SELECT description, count(*) FROM error GROUP BY description ORDER BY count(*) DESC")?;
     let mut rows_err = stmt_err.query([])?;
     let mut error_found = false;
@@ -121,7 +121,7 @@ fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
         } else {
             description
         };
-        println!("{:<60} | {}", desc_display, format_int_with_commas(count)); // Formatted line with commas
+        println!("{:<60} | {:>7}", desc_display, format_int_with_commas(count)); // Right-align count
     }
     if !error_found {
         println!("  No errors recorded.");
@@ -129,8 +129,8 @@ fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
 
     // Record Type Report
     println!();
-    println!("{:<5} | {}", "Type", "Count"); // Header
-    println!("{:-<5}-+-{:-<7}", "", "");   // Separator
+    println!("{:<5} | {:>7}", "Type", "Count"); // Header (Right-align Count)
+    println!("{:-<5}-+-{:-<7}", "", "");   // Separator (No change needed here)
     let mut stmt_rec = conn.prepare("SELECT record_type, count(*) FROM file GROUP BY record_type ORDER BY record_type")?;
     let mut rows_rec = stmt_rec.query([])?;
     let mut record_found = false;
@@ -138,7 +138,7 @@ fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
         record_found = true;
         let record_type: String = row.get(0)?;
         let count: i64 = row.get(1)?;
-        println!("{:<5} | {}", record_type, format_int_with_commas(count)); // Formatted line with commas
+        println!("{:<5} | {:>7}", record_type, format_int_with_commas(count)); // Right-align count
     }
      if !record_found {
         println!("  No records loaded into 'file' table.");
