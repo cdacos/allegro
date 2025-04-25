@@ -5,6 +5,7 @@ use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader};
 use std::path::Path;
 use std::process;
+use std::time::Instant; // Import Instant
 
 use rusqlite::{params, Connection, Transaction};
 
