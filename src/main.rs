@@ -82,7 +82,7 @@ fn main() {
                 "Error processing file '{}' into '{}' after {:.2?}: {}",
                 input_filename, db_filename, elapsed_time, e
             );
-            );
+            // Removed extra ); here
             process::exit(1);
         }
     };
