@@ -88,7 +88,52 @@ fn main() {
             process::exit(1);
         }
     }
+
+    // --- Reporting ---
+    println!("\n--- Processing Report ---");
+    match report_summary(&db_filename) {
+        Ok(_) => println!("--- End Report ---"),
+        Err(e) => eprintln!("Error generating report from database '{}': {}", db_filename, e),
+    }
 }
+
+/// Generates and prints summary reports from the database.
+fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let conn = Connection::open(db_filename)?;
+
+    // Error Report
+    println!("\nError Summary:");
+    let mut stmt_err = conn.prepare("SELECT description, count(*) FROM error GROUP BY description ORDER BY count(*) DESC")?;
+    let mut rows_err = stmt_err.query([])?;
+    let mut error_found = false;
+    while let Some(row) = rows_err.next()? {
+        error_found = true;
+        let description: String = row.get(0)?;
+        let count: i64 = row.get(1)?;
+        println!("  - Count: {:<5} | Error: {}", count, description);
+    }
+    if !error_found {
+        println!("  No errors recorded.");
+    }
+
+    // Record Type Report
+    println!("\nRecord Type Summary:");
+    let mut stmt_rec = conn.prepare("SELECT record_type, count(*) FROM file GROUP BY record_type ORDER BY record_type")?;
+    let mut rows_rec = stmt_rec.query([])?;
+    let mut record_found = false;
+    while let Some(row) = rows_rec.next()? {
+        record_found = true;
+        let record_type: String = row.get(0)?;
+        let count: i64 = row.get(1)?;
+        println!("  - Type: {} | Count: {}", record_type, count);
+    }
+     if !record_found {
+        println!("  No records loaded into 'file' table.");
+    }
+
+    Ok(())
+}
+
 
 // --- Helper Functions ---
 fn determine_db_filename(input_filename: &str) -> String {
