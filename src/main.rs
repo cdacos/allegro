@@ -73,21 +73,25 @@ fn main() {
 
     let elapsed_time = start_time.elapsed(); // Calculate elapsed time
 
-    match result {
-        Ok(count) => {
-            println!(
-                "Successfully processed {} CWR records from '{}' into '{}' in {:.2?}.",
-                count, input_filename, db_filename, elapsed_time
-            );
-        }
+    // Handle the result of file processing
+    let count = match result {
+        Ok(c) => c, // Store the count on success
         Err(e) => {
+            // Print error message including elapsed time before exiting
             eprintln!(
                 "Error processing file '{}' into '{}' after {:.2?}: {}",
                 input_filename, db_filename, elapsed_time, e
             );
+            );
             process::exit(1);
         }
-    }
+    };
+
+    // Print success message *before* the report
+    println!(
+        "Successfully processed {} CWR records from '{}' into '{}' in {:.2?}.",
+        count, input_filename, db_filename, elapsed_time
+    );
 
     // --- Reporting ---
     println!("\n--- Processing Report ---");
@@ -103,6 +107,8 @@ fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
 
     // Error Report
     println!("\nError Summary:");
+    println!("  {:<60} | {}", "Error", "Count"); // Header
+    println!("  {:-<60}-+-{:-<7}", "", "");      // Separator
     let mut stmt_err = conn.prepare("SELECT description, count(*) FROM error GROUP BY description ORDER BY count(*) DESC")?;
     let mut rows_err = stmt_err.query([])?;
     let mut error_found = false;
@@ -110,7 +116,13 @@ fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
         error_found = true;
         let description: String = row.get(0)?;
         let count: i64 = row.get(1)?;
-        println!("  - Count: {:<5} | Error: {}", count, description);
+        // Truncate description if too long for alignment
+        let desc_display = if description.len() > 60 {
+             &description[..57].to_string().to_owned() + "..."
+        } else {
+            description
+        };
+        println!("  {:<60} | {}", desc_display, count); // Formatted line
     }
     if !error_found {
         println!("  No errors recorded.");
@@ -118,6 +130,8 @@ fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
 
     // Record Type Report
     println!("\nRecord Type Summary:");
+    println!("  {:<5} | {}", "Type", "Count"); // Header
+    println!("  {:-<5}-+-{:-<7}", "", "");   // Separator
     let mut stmt_rec = conn.prepare("SELECT record_type, count(*) FROM file GROUP BY record_type ORDER BY record_type")?;
     let mut rows_rec = stmt_rec.query([])?;
     let mut record_found = false;
@@ -125,7 +139,7 @@ fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
         record_found = true;
         let record_type: String = row.get(0)?;
         let count: i64 = row.get(1)?;
-        println!("  - Type: {} | Count: {}", record_type, count);
+        println!("  {:<5} | {}", record_type, count); // Formatted line
     }
      if !record_found {
         println!("  No records loaded into 'file' table.");
