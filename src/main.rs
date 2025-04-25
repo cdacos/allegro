@@ -60,7 +60,7 @@ fn main() {
     println!("Using database filename: '{}'", db_filename);
 
     match setup_database(&db_filename, SCHEMA_FILE_PATH) {
-        Ok(_) => println!("Database '{}' ready, schema applied if needed.", db_filename),
+        Ok(_) => {},
         Err(e) => {
             eprintln!("Error setting up database '{}': {}", db_filename, e);
             process::exit(1);
@@ -87,18 +87,17 @@ fn main() {
         }
     };
 
+    // --- Reporting ---
+    match report_summary(&db_filename) {
+        Ok(_) => {},
+        Err(e) => eprintln!("Error generating report from database '{}': {}", db_filename, e),
+    }
+
     // Print success message *before* the report
     println!(
         "Successfully processed {} CWR records from '{}' into '{}' in {:.2?}.",
         count, input_filename, db_filename, elapsed_time
     );
-
-    // --- Reporting ---
-    println!("\n--- Processing Report ---");
-    match report_summary(&db_filename) {
-        Ok(_) => println!("--- End Report ---"),
-        Err(e) => eprintln!("Error generating report from database '{}': {}", db_filename, e),
-    }
 }
 
 /// Generates and prints summary reports from the database.
@@ -106,9 +105,9 @@ fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
     let conn = Connection::open(db_filename)?;
 
     // Error Report
-    println!("\nError Summary:");
-    println!("  {:<60} | {}", "Error", "Count"); // Header
-    println!("  {:-<60}-+-{:-<7}", "", "");      // Separator
+    println!();
+    println!("{:<60} | {}", "Error", "Count"); // Header
+    println!("{:-<60}-+-{:-<7}", "", "");      // Separator
     let mut stmt_err = conn.prepare("SELECT description, count(*) FROM error GROUP BY description ORDER BY count(*) DESC")?;
     let mut rows_err = stmt_err.query([])?;
     let mut error_found = false;
@@ -118,20 +117,20 @@ fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
         let count: i64 = row.get(1)?;
         // Truncate description if too long for alignment
         let desc_display = if description.len() > 60 {
-             &description[..57].to_string().to_owned() + "..."
+             description[..57].to_string().to_owned() + "..."
         } else {
             description
         };
-        println!("  {:<60} | {}", desc_display, count); // Formatted line
+        println!("{:<60} | {}", desc_display, count); // Formatted line
     }
     if !error_found {
         println!("  No errors recorded.");
     }
 
     // Record Type Report
-    println!("\nRecord Type Summary:");
-    println!("  {:<5} | {}", "Type", "Count"); // Header
-    println!("  {:-<5}-+-{:-<7}", "", "");   // Separator
+    println!();
+    println!("{:<5} | {}", "Type", "Count"); // Header
+    println!("{:-<5}-+-{:-<7}", "", "");   // Separator
     let mut stmt_rec = conn.prepare("SELECT record_type, count(*) FROM file GROUP BY record_type ORDER BY record_type")?;
     let mut rows_rec = stmt_rec.query([])?;
     let mut record_found = false;
@@ -139,11 +138,13 @@ fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
         record_found = true;
         let record_type: String = row.get(0)?;
         let count: i64 = row.get(1)?;
-        println!("  {:<5} | {}", record_type, count); // Formatted line
+        println!("{:<5} | {}", record_type, count); // Formatted line
     }
      if !record_found {
         println!("  No records loaded into 'file' table.");
     }
+
+    println!();
 
     Ok(())
 }
@@ -177,7 +178,6 @@ fn setup_database(db_filename: &str, schema_path: &str) -> Result<(), Box<dyn st
     if table_count == 0 {
         println!("Schema not found in DB, applying schema from '{}'...", schema_path);
         conn.execute_batch(&schema_sql)?;
-        println!("Schema applied successfully.");
     } else {
         println!("Database schema already exists.");
     }
