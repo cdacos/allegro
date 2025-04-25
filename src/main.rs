@@ -117,8 +117,6 @@ fn setup_database(db_filename: &str, schema_path: &str) -> Result<(), Box<dyn st
 fn log_error(tx: &mut Transaction, line_number: usize, error: &CwrParseError) -> Result<(), rusqlite::Error> {
     // Use the Display implementation of the error for the description                                                                                                                                              
     let description = error.to_string();
-    // Log to stderr for immediate visibility during execution                                                                                                                                                      
-    eprintln!("Error logged on line {}: {}", line_number, description);
     // Insert into the database table                                                                                                                                                                               
     tx.execute(
         "INSERT INTO error (line_number, description) VALUES (?1, ?2)",
