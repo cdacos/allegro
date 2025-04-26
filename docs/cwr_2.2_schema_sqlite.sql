@@ -1,11 +1,8 @@
 -- noinspection SqlNoDataSourceInspectionForFile
 
-PRAGMA foreign_keys = ON;
 PRAGMA journal_mode = OFF;
+PRAGMA synchronous = OFF;
 PRAGMA temp_store = MEMORY;
-PRAGMA synchronous = NORMAL;
-PRAGMA cache_size = -64000; -- 64MB
-PRAGMA mmap_size = 268435456; -- 256MB
 
 CREATE TABLE error (
     error_id INTEGER PRIMARY KEY,

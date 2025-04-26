@@ -232,6 +232,11 @@ fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<usiz
     let file = File::open(input_filename)?;
     let reader = BufReader::new(file);
     let mut conn = Connection::open(db_filename)?;
+
+    conn.pragma_update(None, "journal_mode", "OFF")?;
+    conn.pragma_update(None, "synchronous", "OFF")?;
+    conn.pragma_update(None, "temp_store", "MEMORY")?;
+
     let mut tx = conn.transaction()?;
     let mut line_number = 0;
     let mut processed_records = 0; // Count successfully processed CWR records
