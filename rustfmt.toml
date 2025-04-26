@@ -1,0 +1,7 @@
+# $ cargo fmt
+max_width = 320 # Yes, I'm fine with long lines
+tab_spaces = 4
+fn_params_layout = "Compressed"
+use_small_heuristics = "Max"
+newline_style = "Unix"
+use_try_shorthand = true
