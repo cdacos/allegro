@@ -1,5 +1,5 @@
 use crate::error::CwrParseError;
-use rusqlite::{params, Connection, Statement, Transaction};
+use rusqlite::{Connection, Statement, Transaction, params};
 use std::path::Path;
 
 // Structure to hold all prepared statements
@@ -41,7 +41,6 @@ pub struct PreparedStatements<'conn> {
     pub xrf_stmt: Statement<'conn>,
 }
 
-
 pub fn determine_db_filename(input_filename: &str) -> String {
     let mut n = 0;
     let mut db_filename = format!("{}.db", input_filename);
@@ -58,11 +57,7 @@ pub fn setup_database(db_filename: &str) -> Result<(), Box<dyn std::error::Error
     let conn = Connection::open(db_filename)?;
 
     // Check if tables already exist to avoid erroring on re-runs
-    let table_count: i64 = conn.query_row(
-        "SELECT count(*) FROM sqlite_master WHERE type='table' AND name LIKE 'cwr_%'",
-        [],
-        |row| row.get(0),
-    )?;
+    let table_count: i64 = conn.query_row("SELECT count(*) FROM sqlite_master WHERE type='table' AND name LIKE 'cwr_%'", [], |row| row.get(0))?;
 
     if table_count == 0 {
         println!("Applying embedded schema...");
@@ -83,7 +78,6 @@ pub fn log_error(
     error_stmt.execute(params![line_number as i64, description])?;
     Ok(())
 }
-
 
 /// Inserts a record into the 'file' table using a prepared statement.
 pub fn insert_file_record(

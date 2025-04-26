@@ -1,5 +1,5 @@
-use rusqlite::Connection;
 use crate::util::format_int_with_commas;
+use rusqlite::Connection;
 
 /// Generates and prints summary reports from the database.
 pub fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
@@ -8,7 +8,7 @@ pub fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error
     // Record Type Report
     println!();
     println!("{:<5} | {:>10}", "Type", "Count"); // Header (Right-align Count)
-    println!("{:-<5}-+-{:-<10}", "", "");   // Separator (No change needed here)
+    println!("{:-<5}-+-{:-<10}", "", ""); // Separator (No change needed here)
     let mut stmt_rec = conn.prepare("SELECT record_type, count(*) FROM file GROUP BY record_type ORDER BY record_type")?;
     let mut rows_rec = stmt_rec.query([])?;
     let mut record_found = false;
@@ -25,7 +25,7 @@ pub fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error
     // Error Report
     println!();
     println!("{:<60} | {:>10}", "Error", "Count"); // Header (Right-align Count)
-    println!("{:-<60}-+-{:-<10}", "", "");      // Separator (No change needed here)
+    println!("{:-<60}-+-{:-<10}", "", ""); // Separator (No change needed here)
     let mut stmt_err = conn.prepare("SELECT description, count(*) FROM error GROUP BY description ORDER BY count(*) DESC")?;
     let mut rows_err = stmt_err.query([])?;
     let mut error_found = false;
@@ -34,11 +34,7 @@ pub fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error
         let description: String = row.get(0)?;
         let count: i64 = row.get(1)?;
         // Truncate description if too long for alignment
-        let desc_display = if description.len() > 60 {
-            description[..57].to_string().to_owned() + "..."
-        } else {
-            description
-        };
+        let desc_display = if description.len() > 60 { description[..57].to_string().to_owned() + "..." } else { description };
         println!("{:<60} | {:>10}", desc_display, format_int_with_commas(count)); // Right-align count
     }
     if !error_found {

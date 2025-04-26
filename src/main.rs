@@ -4,10 +4,10 @@ use std::time::Instant;
 
 mod db;
 mod error;
+mod parser;
+mod record_handlers;
 mod report;
 mod util;
-mod record_handlers;
-mod parser;
 
 // Use specific items from modules
 use crate::db::{determine_db_filename, setup_database};
@@ -26,7 +26,7 @@ fn main() {
     println!("Using database filename: '{}'", db_filename);
 
     match setup_database(&db_filename) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(e) => {
             eprintln!("Error setting up database '{}': {}", db_filename, e);
             process::exit(1);
@@ -47,22 +47,16 @@ fn main() {
     let count = match result {
         Ok(c) => c,
         Err(e) => {
-            eprintln!(
-                "Error processing file '{}' into '{}' after {:.2?}: {}",
-                input_filename, db_filename, elapsed_time, e
-            );
+            eprintln!("Error processing file '{}' into '{}' after {:.2?}: {}", input_filename, db_filename, elapsed_time, e);
             process::exit(1);
         }
     };
 
     // --- Reporting ---
     match report_summary(&db_filename) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(e) => eprintln!("Error generating report from database '{}': {}", db_filename, e),
     }
 
-    println!(
-        "Successfully processed {} CWR records from '{}' into '{}' in {:.2?}.",
-        format_int_with_commas(count as i64), input_filename, db_filename, elapsed_time // Use i64 for format func
-    );
+    println!("Successfully processed {} CWR records from '{}' into '{}' in {:.2?}.", format_int_with_commas(count as i64), input_filename, db_filename, elapsed_time);
 }
