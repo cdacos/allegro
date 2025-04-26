@@ -1,22 +1,17 @@
+use rusqlite::{params, Connection, Statement, Transaction};
 use std::env;
 use std::fs::File;
-use std::io::{self, BufRead, BufReader};
+use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::process;
 use std::time::Instant;
-use rusqlite::{params, Connection, Statement, Transaction};
 
-// Declare modules
-mod db;
 mod error;
-mod parser;
 mod report;
 mod util;
 
 // Use specific items from modules
-use crate::db::{determine_db_filename, setup_database};
 use crate::error::CwrParseError;
-use crate::parser::process_and_load_file;
 use crate::report::report_summary;
 use crate::util::format_int_with_commas;
 
