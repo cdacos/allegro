@@ -8,7 +8,7 @@ use std::time::Instant;
 use rusqlite::{params, Connection, Statement, Transaction};
 
 // --- Configuration ---
-const SCHEMA_FILE_PATH: &str = "docs/cwr_2.2_schema_sqlite.sql";
+// Schema is now embedded using include_str!
 // ---------------------
 
 #[derive(Debug)]
@@ -96,7 +96,7 @@ fn main() {
     let db_filename = determine_db_filename(input_filename);
     println!("Using database filename: '{}'", db_filename);
 
-    match setup_database(&db_filename, SCHEMA_FILE_PATH) {
+    match setup_database(&db_filename) {
         Ok(_) => {},
         Err(e) => {
             eprintln!("Error setting up database '{}': {}", db_filename, e);
@@ -212,11 +212,9 @@ fn determine_db_filename(input_filename: &str) -> String {
     db_filename
 }
 
-fn setup_database(db_filename: &str, schema_path: &str) -> Result<(), Box<dyn std::error::Error>> {
-    if !Path::new(schema_path).exists() {
-        return Err(format!("Schema file not found: {}", schema_path).into());
-    }
-    let schema_sql = fs::read_to_string(schema_path)?;
+fn setup_database(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
+    // Schema is embedded directly into the binary at compile time
+    const SCHEMA_SQL: &str = include_str!("../docs/cwr_2.2_schema_sqlite.sql");
     let conn = Connection::open(db_filename)?;
 
     // Check if tables already exist to avoid erroring on re-runs
@@ -227,8 +225,8 @@ fn setup_database(db_filename: &str, schema_path: &str) -> Result<(), Box<dyn st
     )?;
 
     if table_count == 0 {
-        println!("Applying schema from '{}'", schema_path);
-        conn.execute_batch(&schema_sql)?;
+        println!("Applying embedded schema...");
+        conn.execute_batch(SCHEMA_SQL)?;
     } else {
         println!("Database schema already exists.");
     }
