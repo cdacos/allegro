@@ -1,23 +1,25 @@
 use rusqlite::{params, Transaction};
 use crate::{db, get_mandatory_field};
+use crate::parser::ParsingContext; // Import the context struct
 use crate::db::log_error;
 use crate::error::CwrParseError;
 
 
 // Helper for parsing the standard transaction prefix (Type 1-3, TransSeq 4-11, RecSeq 12-19)
+// Note: Context is NOT passed here yet, needs update if prefix parsing becomes version-dependent
 fn parse_transaction_prefix(
     line_number: usize,
     stmts: &mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(String, String, String), CwrParseError> {
-    let record_type = crate::get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "Transaction", "Record Type");
-    let transaction_sequence_num = crate::get_mandatory_field!(stmts, safe_slice, 3, 11, line_number, &record_type, "Transaction Sequence #");
-    let record_sequence_num = crate::get_mandatory_field!(stmts, safe_slice, 11, 19, line_number, &record_type, "Record Sequence #");
+    let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "Transaction", "Record Type");
+    let transaction_sequence_num = get_mandatory_field!(stmts, safe_slice, 3, 11, line_number, &record_type, "Transaction Sequence #");
+    let record_sequence_num = get_mandatory_field!(stmts, safe_slice, 11, 19, line_number, &record_type, "Record Sequence #");
     Ok((record_type, transaction_sequence_num, record_sequence_num))
 }
 
 // GRH - Group Header
-pub fn parse_and_insert_grh<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_grh<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,) -> Result<(), CwrParseError> {
     let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "GRH", "Record Type");
     if record_type != "GRH" { return Err(CwrParseError::BadFormat(format!("Expected GRH, found {}", record_type))); }
     let transaction_type = get_mandatory_field!(stmts, safe_slice, 3, 6, line_number, "GRH", "Transaction Type");
@@ -38,6 +40,7 @@ pub fn parse_and_insert_hdr<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "HDR", "Record Type");
@@ -79,6 +82,7 @@ pub fn parse_and_insert_grt<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "GRT", "Record Type");
@@ -101,6 +105,7 @@ pub fn parse_and_insert_trl<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "TRL", "Record Type");
@@ -117,7 +122,7 @@ pub fn parse_and_insert_trl<'a>(
 }
 
 // AGR - Agreement Transaction
-pub fn parse_and_insert_agr<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_agr<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
     if record_type != "AGR" { return Err(CwrParseError::BadFormat(format!("Expected AGR, found {}", record_type))); }
 
@@ -164,6 +169,7 @@ pub fn parse_and_insert_nwr<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -223,6 +229,7 @@ pub fn parse_and_insert_ack<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -267,6 +274,7 @@ pub fn parse_and_insert_ter<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -283,7 +291,7 @@ pub fn parse_and_insert_ter<'a>(
 }
 
 // IPA - Interested Party of Agreement
-pub fn parse_and_insert_ipa<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_ipa<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
     if record_type != "IPA" { return Err(CwrParseError::BadFormat(format!("Expected IPA, found {}", record_type))); }
 
@@ -332,6 +340,7 @@ pub fn parse_and_insert_npa<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -357,6 +366,7 @@ pub fn parse_and_insert_spu<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -417,6 +427,7 @@ pub fn parse_and_insert_npn<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -439,6 +450,7 @@ pub fn parse_and_insert_spt<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -472,6 +484,7 @@ pub fn parse_and_insert_swr<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -500,7 +513,9 @@ pub fn parse_and_insert_swr<'a>(
 
     // Conditional Validation
     if record_type == "SWR" {
-        if interested_party_num.is_none() { return Err(CwrParseError::BadFormat("SWR Interested Party # is mandatory".to_string())); }
+        if interested_party_num.is_none() {
+            return Err(CwrParseError::BadFormat("SWR Interested Party # is mandatory".to_string()));
+        }
         if writer_last_name.is_none() { return Err(CwrParseError::BadFormat("SWR Writer Last Name is mandatory".to_string())); }
         if writer_designation_code.is_none() { return Err(CwrParseError::BadFormat("SWR Writer Designation Code is mandatory".to_string())); }
         if writer_unknown_indicator.is_some() && writer_unknown_indicator != Some("".to_string()) {
@@ -529,6 +544,7 @@ pub fn parse_and_insert_nwn<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -551,6 +567,7 @@ pub fn parse_and_insert_swt<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -578,6 +595,7 @@ pub fn parse_and_insert_pwr<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -603,6 +621,7 @@ pub fn parse_and_insert_alt<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -629,6 +648,7 @@ pub fn parse_and_insert_nat<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -650,6 +670,7 @@ pub fn parse_and_insert_ewt<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -681,6 +702,7 @@ pub fn parse_and_insert_ver<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -712,6 +734,7 @@ pub fn parse_and_insert_per<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -734,6 +757,7 @@ pub fn parse_and_insert_npr<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -763,6 +787,7 @@ pub fn parse_and_insert_rec<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -807,6 +832,7 @@ pub fn parse_and_insert_orn<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -855,6 +881,7 @@ pub fn parse_and_insert_ins<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -884,6 +911,7 @@ pub fn parse_and_insert_ind<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -904,6 +932,7 @@ pub fn parse_and_insert_com<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -934,6 +963,7 @@ pub fn parse_and_insert_msg<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -958,6 +988,7 @@ pub fn parse_and_insert_net<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -978,6 +1009,7 @@ pub fn parse_and_insert_now<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -1001,6 +1033,7 @@ pub fn parse_and_insert_ari<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -1027,6 +1060,7 @@ pub fn parse_and_insert_xrf<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
