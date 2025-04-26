@@ -1,9 +1,5 @@
 -- noinspection SqlNoDataSourceInspectionForFile
 
-PRAGMA journal_mode = OFF;
-PRAGMA synchronous = OFF;
-PRAGMA temp_store = MEMORY;
-
 CREATE TABLE error (
     error_id INTEGER PRIMARY KEY,
     line_number INTEGER NOT NULL,
