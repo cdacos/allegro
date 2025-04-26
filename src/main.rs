@@ -6,53 +6,17 @@ use std::path::Path;
 use std::process;
 use std::time::Instant;
 
+mod db;
 mod error;
 mod report;
 mod util;
 
 // Use specific items from modules
+use crate::db::{determine_db_filename, insert_file_record, log_error, PreparedStatements, setup_database};
 use crate::error::CwrParseError;
 use crate::report::report_summary;
 use crate::util::format_int_with_commas;
 
-// Structure to hold all prepared statements
-struct PreparedStatements<'conn> {
-    error_stmt: Statement<'conn>,
-    file_stmt: Statement<'conn>,
-    hdr_stmt: Statement<'conn>,
-    grh_stmt: Statement<'conn>,
-    grt_stmt: Statement<'conn>,
-    trl_stmt: Statement<'conn>,
-    agr_stmt: Statement<'conn>,
-    nwr_stmt: Statement<'conn>, // Covers NWR, REV, ISW, EXC
-    ack_stmt: Statement<'conn>,
-    ter_stmt: Statement<'conn>,
-    ipa_stmt: Statement<'conn>,
-    npa_stmt: Statement<'conn>,
-    spu_stmt: Statement<'conn>, // Covers SPU, OPU
-    npn_stmt: Statement<'conn>,
-    spt_stmt: Statement<'conn>, // Covers SPT, OPT
-    swr_stmt: Statement<'conn>, // Covers SWR, OWR
-    nwn_stmt: Statement<'conn>,
-    swt_stmt: Statement<'conn>, // Covers SWT, OWT
-    pwr_stmt: Statement<'conn>,
-    alt_stmt: Statement<'conn>,
-    nat_stmt: Statement<'conn>,
-    ewt_stmt: Statement<'conn>,
-    ver_stmt: Statement<'conn>,
-    per_stmt: Statement<'conn>,
-    npr_stmt: Statement<'conn>,
-    rec_stmt: Statement<'conn>,
-    orn_stmt: Statement<'conn>,
-    ins_stmt: Statement<'conn>,
-    ind_stmt: Statement<'conn>,
-    com_stmt: Statement<'conn>,
-    msg_stmt: Statement<'conn>,
-    net_stmt: Statement<'conn>, // Covers NET, NCT, NVT
-    now_stmt: Statement<'conn>,
-    ari_stmt: Statement<'conn>,
-    xrf_stmt: Statement<'conn>,
-}
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -107,68 +71,17 @@ fn main() {
     );
 }
 
-fn determine_db_filename(input_filename: &str) -> String {
-    let mut n = 0;
-    let mut db_filename = format!("{}.db", input_filename);
-    while Path::new(&db_filename).exists() {
-        n += 1;
-        db_filename = format!("{}.{}.db", input_filename, n);
-    }
-    db_filename
-}
-
-fn setup_database(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
-    // Schema is embedded directly into the binary at compile time
-    const SCHEMA_SQL: &str = include_str!("../docs/cwr_2.2_schema_sqlite.sql");
-    let conn = Connection::open(db_filename)?;
-
-    // Check if tables already exist to avoid erroring on re-runs
-    let table_count: i64 = conn.query_row(
-        "SELECT count(*) FROM sqlite_master WHERE type='table' AND name LIKE 'cwr_%'",
-        [],
-        |row| row.get(0),
-    )?;
-
-    if table_count == 0 {
-        println!("Applying embedded schema...");
-        conn.execute_batch(SCHEMA_SQL)?;
-    } else {
-        println!("Database schema already exists.");
-    }
-
-    Ok(())
-}
-
-/// Inserts a record into the 'error' table using a prepared statement.
-fn log_error(
-    error_stmt: &mut Statement,
-    line_number: usize,
-    description: String,
-) -> Result<(), rusqlite::Error> {
-    error_stmt.execute(params![line_number as i64, description])?;
-    Ok(())
-}
 
 /// Logs a CwrParseError to stderr and the error table using prepared statements.
 fn log_cwr_parse_error(
-    stmts: &mut PreparedStatements,
+    stmts: &mut db::PreparedStatements,
     line_number: usize,
     error: &CwrParseError,
 ) -> Result<(), rusqlite::Error> {
     let description = error.to_string();
-    log_error(&mut stmts.error_stmt, line_number, description)
+    db::log_error(&mut stmts.error_stmt, line_number, description)
 }
 
-/// Inserts a record into the 'file' table using a prepared statement.
-fn insert_file_record(
-    stmts: &mut PreparedStatements,
-    line_number: usize,
-    record_type: &str,
-    record_id: i64,
-) -> Result<(), CwrParseError> {
-    stmts.file_stmt.execute(params![line_number as i64, record_type, record_id])?;
-    Ok(())
-}
 
 fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<usize, CwrParseError> {
     let file = File::open(input_filename)?;
@@ -187,7 +100,7 @@ fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<usiz
 
     {
         // Prepare all statements *using the transaction* and make the struct mutable
-        let mut prepared_statements = PreparedStatements {
+        let mut prepared_statements = db::PreparedStatements {
             error_stmt: tx.prepare("INSERT INTO error (line_number, description) VALUES (?1, ?2)")?,
             file_stmt: tx.prepare("INSERT INTO file (line_number, record_type, record_id) VALUES (?1, ?2, ?3)")?,
             hdr_stmt: tx.prepare("INSERT INTO cwr_hdr (record_type, sender_type, sender_id, sender_name, edi_standard_version_number, creation_date, creation_time, transmission_date, character_set, version, revision, software_package, software_package_version) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)")?,
@@ -393,7 +306,7 @@ macro_rules! get_mandatory_field {
 // Helper for parsing the standard transaction prefix (Type 1-3, TransSeq 4-11, RecSeq 12-19)
 fn parse_transaction_prefix(
     line_number: usize,
-    stmts: &mut PreparedStatements,
+    stmts: &mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(String, String, String), CwrParseError> {
     let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "Transaction", "Record Type");
@@ -406,7 +319,7 @@ fn parse_transaction_prefix(
 fn parse_and_insert_hdr<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "HDR", "Record Type");
@@ -439,12 +352,12 @@ fn parse_and_insert_hdr<'a>(
     stmts.hdr_stmt.execute(params![&record_type, sender_type, sender_id, sender_name, edi_version, creation_date, creation_time, transmission_date, character_set, version, revision, software_package, software_package_version])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
 // GRH - Group Header
-fn parse_and_insert_grh<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,) -> Result<(), CwrParseError> {
+fn parse_and_insert_grh<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,) -> Result<(), CwrParseError> {
     let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "GRH", "Record Type");
     if record_type != "GRH" { return Err(CwrParseError::BadFormat(format!("Expected GRH, found {}", record_type))); }
     let transaction_type = get_mandatory_field!(stmts, safe_slice, 3, 6, line_number, "GRH", "Transaction Type");
@@ -456,7 +369,7 @@ fn parse_and_insert_grh<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a 
     stmts.grh_stmt.execute(params![&record_type, transaction_type, group_id, version_number, batch_request, submission_distribution_type])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -464,7 +377,7 @@ fn parse_and_insert_grh<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a 
 fn parse_and_insert_grt<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "GRT", "Record Type");
@@ -478,7 +391,7 @@ fn parse_and_insert_grt<'a>(
     stmts.grt_stmt.execute(params![&record_type, group_id, transaction_count, record_count, currency_indicator, total_monetary_value])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -486,7 +399,7 @@ fn parse_and_insert_grt<'a>(
 fn parse_and_insert_trl<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "TRL", "Record Type");
@@ -498,12 +411,12 @@ fn parse_and_insert_trl<'a>(
     stmts.trl_stmt.execute(params![&record_type, group_count, transaction_count, record_count])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
 // AGR - Agreement Transaction
-fn parse_and_insert_agr<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,) -> Result<(), CwrParseError> {
+fn parse_and_insert_agr<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
     if record_type != "AGR" { return Err(CwrParseError::BadFormat(format!("Expected AGR, found {}", record_type))); }
 
@@ -540,7 +453,7 @@ fn parse_and_insert_agr<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a 
     stmts.agr_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, submitter_agreement_number, international_standard_agreement_code, agreement_type, agreement_start_date, agreement_end_date, retention_end_date, prior_royalty_status, prior_royalty_start_date, post_term_collection_status, post_term_collection_end_date, date_of_signature_of_agreement, number_of_works, sales_manufacture_clause, shares_change, advance_given, society_assigned_agreement_number])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -549,7 +462,7 @@ fn parse_and_insert_agr<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a 
 fn parse_and_insert_nwr<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -600,7 +513,7 @@ fn parse_and_insert_nwr<'a>(
     stmts.nwr_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, work_title, language_code, submitter_work_num, iswc, copyright_date, copyright_number, musical_work_distribution_category, duration, recorded_indicator, text_music_relationship, composite_type, version_type, excerpt_type, music_arrangement, lyric_adaptation, contact_name, contact_id, cwr_work_type, grand_rights_ind, composite_component_count, date_of_publication_of_printed_edition, exceptional_clause, opus_number, catalogue_number, priority_flag])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -608,7 +521,7 @@ fn parse_and_insert_nwr<'a>(
 fn parse_and_insert_ack<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -644,7 +557,7 @@ fn parse_and_insert_ack<'a>(
     stmts.ack_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, creation_date, creation_time, original_group_id, original_transaction_sequence_num, original_transaction_type, creation_title, submitter_creation_num, recipient_creation_num, processing_date, transaction_status])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -652,7 +565,7 @@ fn parse_and_insert_ack<'a>(
 fn parse_and_insert_ter<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -664,12 +577,12 @@ fn parse_and_insert_ter<'a>(
     stmts.ter_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, inclusion_exclusion_indicator, tis_numeric_code])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
 // IPA - Interested Party of Agreement
-fn parse_and_insert_ipa<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,) -> Result<(), CwrParseError> {
+fn parse_and_insert_ipa<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
     if record_type != "IPA" { return Err(CwrParseError::BadFormat(format!("Expected IPA, found {}", record_type))); }
 
@@ -709,7 +622,7 @@ fn parse_and_insert_ipa<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a 
     stmts.ipa_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, agreement_role_code, interested_party_ipi_name_num, ipi_base_number, interested_party_num, interested_party_last_name, interested_party_writer_first_name, pr_affiliation_society, pr_share, mr_affiliation_society, mr_share, sr_affiliation_society, sr_share])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -717,7 +630,7 @@ fn parse_and_insert_ipa<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a 
 fn parse_and_insert_npa<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -734,7 +647,7 @@ fn parse_and_insert_npa<'a>(
     stmts.npa_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, interested_party_num, interested_party_name, interested_party_writer_first_name, language_code])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -742,7 +655,7 @@ fn parse_and_insert_npa<'a>(
 fn parse_and_insert_spu<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -794,7 +707,7 @@ fn parse_and_insert_spu<'a>(
     stmts.spu_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, publisher_sequence_num, interested_party_num, publisher_name, publisher_unknown_indicator, publisher_type, tax_id_num, publisher_ipi_name_num, submitter_agreement_number, pr_affiliation_society_num, pr_ownership_share, mr_society, mr_ownership_share, sr_society, sr_ownership_share, special_agreements_indicator, first_recording_refusal_ind, filler, publisher_ipi_base_number, international_standard_agreement_code, society_assigned_agreement_number, agreement_type, usa_license_ind])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -802,7 +715,7 @@ fn parse_and_insert_spu<'a>(
 fn parse_and_insert_npn<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -816,7 +729,7 @@ fn parse_and_insert_npn<'a>(
     stmts.npn_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, publisher_sequence_num, interested_party_num, publisher_name, language_code])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -824,7 +737,7 @@ fn parse_and_insert_npn<'a>(
 fn parse_and_insert_spt<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -849,7 +762,7 @@ fn parse_and_insert_spt<'a>(
     stmts.spt_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, interested_party_num, constant_spaces, pr_collection_share, mr_collection_share, sr_collection_share, inclusion_exclusion_indicator, tis_numeric_code, shares_change, sequence_num])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -857,7 +770,7 @@ fn parse_and_insert_spt<'a>(
 fn parse_and_insert_swr<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -906,7 +819,7 @@ fn parse_and_insert_swr<'a>(
     stmts.swr_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, interested_party_num, writer_last_name, writer_first_name, writer_unknown_indicator, writer_designation_code, tax_id_num, writer_ipi_name_num, pr_affiliation_society_num, pr_ownership_share, mr_society, mr_ownership_share, sr_society, sr_ownership_share, reversionary_indicator, first_recording_refusal_ind, work_for_hire_indicator, filler, writer_ipi_base_number, personal_number, usa_license_ind])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -914,7 +827,7 @@ fn parse_and_insert_swr<'a>(
 fn parse_and_insert_nwn<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -928,7 +841,7 @@ fn parse_and_insert_nwn<'a>(
     stmts.nwn_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, interested_party_num, writer_last_name, writer_first_name, language_code])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -936,7 +849,7 @@ fn parse_and_insert_nwn<'a>(
 fn parse_and_insert_swt<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -955,7 +868,7 @@ fn parse_and_insert_swt<'a>(
     stmts.swt_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, interested_party_num, pr_collection_share, mr_collection_share, sr_collection_share, inclusion_exclusion_indicator, tis_numeric_code, shares_change, sequence_num])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -963,7 +876,7 @@ fn parse_and_insert_swt<'a>(
 fn parse_and_insert_pwr<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -980,7 +893,7 @@ fn parse_and_insert_pwr<'a>(
     stmts.pwr_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, publisher_ip_num, publisher_name, submitter_agreement_number, society_assigned_agreement_number, writer_ip_num, publisher_sequence_num])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -988,7 +901,7 @@ fn parse_and_insert_pwr<'a>(
 fn parse_and_insert_alt<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -1006,7 +919,7 @@ fn parse_and_insert_alt<'a>(
     stmts.alt_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, alternate_title, title_type, language_code])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -1014,7 +927,7 @@ fn parse_and_insert_alt<'a>(
 fn parse_and_insert_nat<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -1027,7 +940,7 @@ fn parse_and_insert_nat<'a>(
     stmts.nat_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, title, title_type, language_code])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -1035,7 +948,7 @@ fn parse_and_insert_nat<'a>(
 fn parse_and_insert_ewt<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -1058,7 +971,7 @@ fn parse_and_insert_ewt<'a>(
     stmts.ewt_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, entire_work_title, iswc_of_entire_work, language_code, writer_1_last_name, writer_1_first_name, source, writer_1_ipi_name_num, writer_1_ipi_base_number, writer_2_last_name, writer_2_first_name, writer_2_ipi_name_num, writer_2_ipi_base_number, submitter_work_num])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -1066,7 +979,7 @@ fn parse_and_insert_ewt<'a>(
 fn parse_and_insert_ver<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -1089,7 +1002,7 @@ fn parse_and_insert_ver<'a>(
     stmts.ver_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, original_work_title, iswc_of_original_work, language_code, writer_1_last_name, writer_1_first_name, source, writer_1_ipi_name_num, writer_1_ipi_base_number, writer_2_last_name, writer_2_first_name, writer_2_ipi_name_num, writer_2_ipi_base_number, submitter_work_num])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -1097,7 +1010,7 @@ fn parse_and_insert_ver<'a>(
 fn parse_and_insert_per<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -1111,7 +1024,7 @@ fn parse_and_insert_per<'a>(
     stmts.per_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, performing_artist_last_name, performing_artist_first_name, performing_artist_ipi_name_num, performing_artist_ipi_base_number])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -1119,7 +1032,7 @@ fn parse_and_insert_per<'a>(
 fn parse_and_insert_npr<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -1140,7 +1053,7 @@ fn parse_and_insert_npr<'a>(
     stmts.npr_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, performing_artist_name, performing_artist_first_name, performing_artist_ipi_name_num, performing_artist_ipi_base_number, language_code, performance_language, performance_dialect])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -1148,7 +1061,7 @@ fn parse_and_insert_npr<'a>(
 fn parse_and_insert_rec<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -1184,7 +1097,7 @@ fn parse_and_insert_rec<'a>(
     stmts.rec_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, release_date, constant_blanks_1, release_duration, constant_blanks_2, album_title, album_label, release_catalog_num, ean, isrc, recording_format, recording_technique, media_type, recording_title, version_title, display_artist, record_label, isrc_validity, submitter_recording_identifier])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -1192,7 +1105,7 @@ fn parse_and_insert_rec<'a>(
 fn parse_and_insert_orn<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -1232,7 +1145,7 @@ fn parse_and_insert_orn<'a>(
     stmts.orn_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, intended_purpose, production_title, cd_identifier, cut_number, library, bltvr, filler_reserved, production_num, episode_title, episode_num, year_of_production, avi_society_code, audio_visual_number, v_isan_isan, v_isan_episode, v_isan_check_digit_1, v_isan_version, v_isan_check_digit_2, eidr, eidr_check_digit])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -1240,7 +1153,7 @@ fn parse_and_insert_orn<'a>(
 fn parse_and_insert_ins<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -1261,7 +1174,7 @@ fn parse_and_insert_ins<'a>(
     stmts.ins_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, number_of_voices, standard_instrumentation_type, instrumentation_description])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -1269,7 +1182,7 @@ fn parse_and_insert_ins<'a>(
 fn parse_and_insert_ind<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -1281,7 +1194,7 @@ fn parse_and_insert_ind<'a>(
     stmts.ind_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, instrument_code, number_of_players])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -1289,7 +1202,7 @@ fn parse_and_insert_ind<'a>(
 fn parse_and_insert_com<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -1311,7 +1224,7 @@ fn parse_and_insert_com<'a>(
     stmts.com_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, title, iswc_of_component, submitter_work_num, duration, writer_1_last_name, writer_1_first_name, writer_1_ipi_name_num, writer_2_last_name, writer_2_first_name, writer_2_ipi_name_num, writer_1_ipi_base_number, writer_2_ipi_base_number])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -1319,7 +1232,7 @@ fn parse_and_insert_com<'a>(
 fn parse_and_insert_msg<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -1335,7 +1248,7 @@ fn parse_and_insert_msg<'a>(
     stmts.msg_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, message_type, original_record_sequence_num, msg_record_type, message_level, validation_number, message_text])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -1343,7 +1256,7 @@ fn parse_and_insert_msg<'a>(
 fn parse_and_insert_net<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -1355,7 +1268,7 @@ fn parse_and_insert_net<'a>(
     stmts.net_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, title, language_code])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -1363,7 +1276,7 @@ fn parse_and_insert_net<'a>(
 fn parse_and_insert_now<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -1378,7 +1291,7 @@ fn parse_and_insert_now<'a>(
     stmts.now_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, writer_name, writer_first_name, language_code, writer_position])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -1386,7 +1299,7 @@ fn parse_and_insert_now<'a>(
 fn parse_and_insert_ari<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -1404,7 +1317,7 @@ fn parse_and_insert_ari<'a>(
     stmts.ari_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, society_num, work_num, type_of_right, subject_code, note])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
 
@@ -1412,7 +1325,7 @@ fn parse_and_insert_ari<'a>(
 fn parse_and_insert_xrf<'a>(
     line_number: usize,
     tx: &'a Transaction,
-    stmts: &'a mut PreparedStatements,
+    stmts: &'a mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
@@ -1426,6 +1339,6 @@ fn parse_and_insert_xrf<'a>(
     stmts.xrf_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, organisation_code, identifier, identifier_type, validity])?;
 
     let record_id = tx.last_insert_rowid();
-    insert_file_record(stmts, line_number, &record_type, record_id)?;
+    db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
     Ok(())
 }
