@@ -1,9 +1,9 @@
-use std::fs::File;
-use std::io::{BufRead, BufReader};
-use rusqlite::Connection;
-use crate::{db, error, record_handlers};
 use crate::db::log_error;
 use crate::error::CwrParseError;
+use crate::{db, error, record_handlers};
+use rusqlite::Connection;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 
 pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<usize, CwrParseError> {
     let file = File::open(input_filename)?;
@@ -189,4 +189,37 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
     tx.commit()?;
 
     Ok(processed_records)
+}
+
+// Helper macro for mandatory fields. Logs error to DB (using prepared statement) and returns "" if missing/empty.
+// Propagates DB errors or fundamental slice errors.
+#[macro_export]
+macro_rules! get_mandatory_field {
+    ($stmts:expr, $slice_fn:expr, $start:expr, $end:expr, $line_num:expr, $rec_type:expr, $field_name:expr) => {
+        // Match on the result of the slice function
+        match $slice_fn($start, $end) {
+            // Case 1: Slice function itself returned an error (rare with current safe_slice, but good practice)
+            Err(slice_err) => Err(slice_err), // Propagate the underlying error
+
+            // Case 2: Slice succeeded and found a non-empty value
+            Ok(Some(value)) => Ok(value), // Return the found value
+
+            // Case 3: Slice succeeded but returned None (missing or empty/whitespace field)
+            Ok(None) => {
+                // Construct the error description
+                let error_description = format!(
+                    "{} missing or empty mandatory field '{}' (Expected at {}-{}). Using fallback ''.",
+                    $rec_type, $field_name, $start + 1, $end // Use 1-based indexing for user message
+                );
+
+                match $stmts.error_stmt.execute(params![$line_num as i64, error_description]) {
+                    // Subcase 3a: Database insertion failed
+                    Err(db_err) => Err(CwrParseError::Db(db_err)), // Propagate the DB error
+                    // Subcase 3b: Database insertion succeeded
+                    Ok(_) => Ok(String::new()), // Return the fallback empty string
+                }
+            }
+        }? // Use '?' *after* the match block to propagate any Err returned from the match arms
+          // This ensures the macro returns Result<String, CwrParseError>
+    };
 }

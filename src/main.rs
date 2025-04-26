@@ -33,7 +33,7 @@ fn main() {
         }
     }
 
-    println!("Processing input file: {} ...", input_filename);
+    println!("Processing input file: {}...", input_filename);
 
     let start_time = Instant::now();
 

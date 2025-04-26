@@ -1,40 +1,8 @@
 use rusqlite::{params, Transaction};
-use crate::db;
+use crate::{db, get_mandatory_field};
 use crate::db::log_error;
 use crate::error::CwrParseError;
 
-// Helper macro for mandatory fields. Logs error to DB (using prepared statement) and returns "" if missing/empty.
-// Propagates DB errors or fundamental slice errors.
-#[macro_export]
-macro_rules! get_mandatory_field {
-    ($stmts:expr, $slice_fn:expr, $start:expr, $end:expr, $line_num:expr, $rec_type:expr, $field_name:expr) => {
-        // Match on the result of the slice function
-        match $slice_fn($start, $end) {
-            // Case 1: Slice function itself returned an error (rare with current safe_slice, but good practice)
-            Err(slice_err) => Err(slice_err), // Propagate the underlying error
-
-            // Case 2: Slice succeeded and found a non-empty value
-            Ok(Some(value)) => Ok(value), // Return the found value
-
-            // Case 3: Slice succeeded but returned None (missing or empty/whitespace field)
-            Ok(None) => {
-                // Construct the error description
-                let error_description = format!(
-                    "{} missing or empty mandatory field '{}' (Expected at {}-{}). Using fallback ''.",
-                    $rec_type, $field_name, $start + 1, $end // Use 1-based indexing for user message
-                );
-
-                match $stmts.error_stmt.execute(params![$line_num as i64, error_description]) {
-                    // Subcase 3a: Database insertion failed
-                    Err(db_err) => Err(CwrParseError::Db(db_err)), // Propagate the DB error
-                    // Subcase 3b: Database insertion succeeded
-                    Ok(_) => Ok(String::new()), // Return the fallback empty string
-                }
-            }
-        }? // Use '?' *after* the match block to propagate any Err returned from the match arms
-          // This ensures the macro returns Result<String, CwrParseError>
-    };
-}
 
 // Helper for parsing the standard transaction prefix (Type 1-3, TransSeq 4-11, RecSeq 12-19)
 fn parse_transaction_prefix(
@@ -42,9 +10,9 @@ fn parse_transaction_prefix(
     stmts: &mut db::PreparedStatements,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(String, String, String), CwrParseError> {
-    let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "Transaction", "Record Type");
-    let transaction_sequence_num = get_mandatory_field!(stmts, safe_slice, 3, 11, line_number, &record_type, "Transaction Sequence #");
-    let record_sequence_num = get_mandatory_field!(stmts, safe_slice, 11, 19, line_number, &record_type, "Record Sequence #");
+    let record_type = crate::get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "Transaction", "Record Type");
+    let transaction_sequence_num = crate::get_mandatory_field!(stmts, safe_slice, 3, 11, line_number, &record_type, "Transaction Sequence #");
+    let record_sequence_num = crate::get_mandatory_field!(stmts, safe_slice, 11, 19, line_number, &record_type, "Record Sequence #");
     Ok((record_type, transaction_sequence_num, record_sequence_num))
 }
 
