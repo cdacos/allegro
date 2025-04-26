@@ -1,15 +1,11 @@
 use std::env;
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::path::Path;
 use std::process;
 use std::time::Instant;
 
 use rusqlite::{params, Connection, Statement, Transaction};
-
-// --- Configuration ---
-// Schema is now embedded using include_str!
-// ---------------------
 
 #[derive(Debug)]
 enum CwrParseError {
