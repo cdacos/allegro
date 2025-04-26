@@ -274,7 +274,7 @@ fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<usiz
     // Start transaction *before* preparing statements
     let tx = conn.transaction()?;
     let mut line_number = 0;
-    let mut processed_records = 0; // Count successfully processed CWR records
+    let mut processed_records = 0;
 
     {
         // Prepare all statements *using the transaction* and make the struct mutable
