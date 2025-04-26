@@ -1,6 +1,6 @@
-use std::io;
-use rusqlite;
 use crate::db;
+use rusqlite;
+use std::io;
 
 #[derive(Debug)]
 pub enum CwrParseError {
@@ -10,11 +10,15 @@ pub enum CwrParseError {
 }
 
 impl From<io::Error> for CwrParseError {
-    fn from(err: io::Error) -> CwrParseError { CwrParseError::Io(err) }
+    fn from(err: io::Error) -> CwrParseError {
+        CwrParseError::Io(err)
+    }
 }
 
 impl From<rusqlite::Error> for CwrParseError {
-    fn from(err: rusqlite::Error) -> CwrParseError { CwrParseError::Db(err) }
+    fn from(err: rusqlite::Error) -> CwrParseError {
+        CwrParseError::Db(err)
+    }
 }
 
 impl std::fmt::Display for CwrParseError {
@@ -38,11 +42,7 @@ impl std::error::Error for CwrParseError {
 }
 
 /// Logs a CwrParseError to stderr and the error table using prepared statements.
-pub fn log_cwr_parse_error(
-    stmts: &mut db::PreparedStatements,
-    line_number: usize,
-    error: &CwrParseError,
-) -> Result<(), rusqlite::Error> {
+pub fn log_cwr_parse_error(stmts: &mut db::PreparedStatements, line_number: usize, error: &CwrParseError) -> Result<(), rusqlite::Error> {
     let description = error.to_string();
     db::log_error(&mut stmts.error_stmt, line_number, description)
 }

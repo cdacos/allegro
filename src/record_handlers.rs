@@ -1,17 +1,12 @@
-use rusqlite::{params, Transaction};
-use crate::{db, get_mandatory_field};
-use crate::parser::ParsingContext; // Import the context struct
 use crate::db::log_error;
 use crate::error::CwrParseError;
-
+use crate::parser::ParsingContext; // Import the context struct
+use crate::{db, get_mandatory_field};
+use rusqlite::{Transaction, params};
 
 // Helper for parsing the standard transaction prefix (Type 1-3, TransSeq 4-11, RecSeq 12-19)
 // Note: Context is NOT passed here yet, needs update if prefix parsing becomes version-dependent
-fn parse_transaction_prefix(
-    line_number: usize,
-    stmts: &mut db::PreparedStatements,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(String, String, String), CwrParseError> {
+fn parse_transaction_prefix(line_number: usize, stmts: &mut db::PreparedStatements, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(String, String, String), CwrParseError> {
     let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "Transaction", "Record Type");
     let transaction_sequence_num = get_mandatory_field!(stmts, safe_slice, 3, 11, line_number, &record_type, "Transaction Sequence #");
     let record_sequence_num = get_mandatory_field!(stmts, safe_slice, 11, 19, line_number, &record_type, "Record Sequence #");
@@ -19,9 +14,11 @@ fn parse_transaction_prefix(
 }
 
 // GRH - Group Header
-pub fn parse_and_insert_grh<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_grh<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "GRH", "Record Type");
-    if record_type != "GRH" { return Err(CwrParseError::BadFormat(format!("Expected GRH, found {}", record_type))); }
+    if record_type != "GRH" {
+        return Err(CwrParseError::BadFormat(format!("Expected GRH, found {}", record_type)));
+    }
     let transaction_type = get_mandatory_field!(stmts, safe_slice, 3, 6, line_number, "GRH", "Transaction Type");
     let group_id = get_mandatory_field!(stmts, safe_slice, 6, 11, line_number, "GRH", "Group ID");
     let version_number = get_mandatory_field!(stmts, safe_slice, 11, 16, line_number, "GRH", "Version Number for this transaction type");
@@ -36,15 +33,11 @@ pub fn parse_and_insert_grh<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 }
 
 // HDR - Transmission Header
-pub fn parse_and_insert_hdr<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_hdr<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "HDR", "Record Type");
-    if record_type != "HDR" { return Err(CwrParseError::BadFormat(format!("Expected HDR, found {}", record_type))); }
+    if record_type != "HDR" {
+        return Err(CwrParseError::BadFormat(format!("Expected HDR, found {}", record_type)));
+    }
 
     let sender_type = get_mandatory_field!(stmts, safe_slice, 3, 5, line_number, "HDR", "Sender Type");
     let sender_id = get_mandatory_field!(stmts, safe_slice, 5, 14, line_number, "HDR", "Sender ID");
@@ -78,15 +71,11 @@ pub fn parse_and_insert_hdr<'a>(
 }
 
 // GRT - Group Trailer
-pub fn parse_and_insert_grt<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_grt<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "GRT", "Record Type");
-    if record_type != "GRT" { return Err(CwrParseError::BadFormat(format!("Expected GRT, found {}", record_type))); }
+    if record_type != "GRT" {
+        return Err(CwrParseError::BadFormat(format!("Expected GRT, found {}", record_type)));
+    }
     let group_id = get_mandatory_field!(stmts, safe_slice, 3, 8, line_number, "GRT", "Group ID");
     let transaction_count = get_mandatory_field!(stmts, safe_slice, 8, 16, line_number, "GRT", "Transaction Count");
     let record_count = get_mandatory_field!(stmts, safe_slice, 16, 24, line_number, "GRT", "Record Count");
@@ -101,15 +90,11 @@ pub fn parse_and_insert_grt<'a>(
 }
 
 // TRL - Transmission Trailer
-pub fn parse_and_insert_trl<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_trl<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "TRL", "Record Type");
-    if record_type != "TRL" { return Err(CwrParseError::BadFormat(format!("Expected TRL, found {}", record_type))); }
+    if record_type != "TRL" {
+        return Err(CwrParseError::BadFormat(format!("Expected TRL, found {}", record_type)));
+    }
     let group_count = get_mandatory_field!(stmts, safe_slice, 3, 8, line_number, "TRL", "Group Count");
     let transaction_count = get_mandatory_field!(stmts, safe_slice, 8, 16, line_number, "TRL", "Transaction Count");
     let record_count = get_mandatory_field!(stmts, safe_slice, 16, 24, line_number, "TRL", "Record Count");
@@ -122,9 +107,11 @@ pub fn parse_and_insert_trl<'a>(
 }
 
 // AGR - Agreement Transaction
-pub fn parse_and_insert_agr<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_agr<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "AGR" { return Err(CwrParseError::BadFormat(format!("Expected AGR, found {}", record_type))); }
+    if record_type != "AGR" {
+        return Err(CwrParseError::BadFormat(format!("Expected AGR, found {}", record_type)));
+    }
 
     let submitter_agreement_number = get_mandatory_field!(stmts, safe_slice, 19, 33, line_number, "AGR", "Submitter Agreement Number");
     let international_standard_agreement_code = safe_slice(33, 47)?; // Opt
@@ -156,7 +143,27 @@ pub fn parse_and_insert_agr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
     // Date validation
     // ... add checks for start_date, end_date etc. format ...
 
-    stmts.agr_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, submitter_agreement_number, international_standard_agreement_code, agreement_type, agreement_start_date, agreement_end_date, retention_end_date, prior_royalty_status, prior_royalty_start_date, post_term_collection_status, post_term_collection_end_date, date_of_signature_of_agreement, number_of_works, sales_manufacture_clause, shares_change, advance_given, society_assigned_agreement_number])?;
+    stmts.agr_stmt.execute(params![
+        &record_type,
+        transaction_sequence_num,
+        record_sequence_num,
+        submitter_agreement_number,
+        international_standard_agreement_code,
+        agreement_type,
+        agreement_start_date,
+        agreement_end_date,
+        retention_end_date,
+        prior_royalty_status,
+        prior_royalty_start_date,
+        post_term_collection_status,
+        post_term_collection_end_date,
+        date_of_signature_of_agreement,
+        number_of_works,
+        sales_manufacture_clause,
+        shares_change,
+        advance_given,
+        society_assigned_agreement_number
+    ])?;
 
     let record_id = tx.last_insert_rowid();
     db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
@@ -165,13 +172,7 @@ pub fn parse_and_insert_agr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 
 //noinspection ALL
 // NWR - New Work Registration / REV / ISW / EXC
-pub fn parse_and_insert_nwr<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_nwr<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
     // No need to check exact type, handled by caller match
 
@@ -217,7 +218,36 @@ pub fn parse_and_insert_nwr<'a>(
     // ASCAP composite count check - requires context
     // GEMA date/exceptional clause info noted in spec
 
-    stmts.nwr_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, work_title, language_code, submitter_work_num, iswc, copyright_date, copyright_number, musical_work_distribution_category, duration, recorded_indicator, text_music_relationship, composite_type, version_type, excerpt_type, music_arrangement, lyric_adaptation, contact_name, contact_id, cwr_work_type, grand_rights_ind, composite_component_count, date_of_publication_of_printed_edition, exceptional_clause, opus_number, catalogue_number, priority_flag])?;
+    stmts.nwr_stmt.execute(params![
+        &record_type,
+        transaction_sequence_num,
+        record_sequence_num,
+        work_title,
+        language_code,
+        submitter_work_num,
+        iswc,
+        copyright_date,
+        copyright_number,
+        musical_work_distribution_category,
+        duration,
+        recorded_indicator,
+        text_music_relationship,
+        composite_type,
+        version_type,
+        excerpt_type,
+        music_arrangement,
+        lyric_adaptation,
+        contact_name,
+        contact_id,
+        cwr_work_type,
+        grand_rights_ind,
+        composite_component_count,
+        date_of_publication_of_printed_edition,
+        exceptional_clause,
+        opus_number,
+        catalogue_number,
+        priority_flag
+    ])?;
 
     let record_id = tx.last_insert_rowid();
     db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
@@ -225,15 +255,11 @@ pub fn parse_and_insert_nwr<'a>(
 }
 
 // ACK - Acknowledgement of Transaction
-pub fn parse_and_insert_ack<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_ack<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "ACK" { return Err(CwrParseError::BadFormat(format!("Expected ACK, found {}", record_type))); }
+    if record_type != "ACK" {
+        return Err(CwrParseError::BadFormat(format!("Expected ACK, found {}", record_type)));
+    }
 
     let creation_date = get_mandatory_field!(stmts, safe_slice, 19, 27, line_number, "ACK", "Creation Date");
     let creation_time = get_mandatory_field!(stmts, safe_slice, 27, 33, line_number, "ACK", "Creation Time");
@@ -270,15 +296,11 @@ pub fn parse_and_insert_ack<'a>(
 }
 
 // TER - Territory in Agreement
-pub fn parse_and_insert_ter<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_ter<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "TER" { return Err(CwrParseError::BadFormat(format!("Expected TER, found {}", record_type))); }
+    if record_type != "TER" {
+        return Err(CwrParseError::BadFormat(format!("Expected TER, found {}", record_type)));
+    }
 
     let inclusion_exclusion_indicator = get_mandatory_field!(stmts, safe_slice, 19, 20, line_number, "TER", "Inclusion/Exclusion Indicator");
     let tis_numeric_code = get_mandatory_field!(stmts, safe_slice, 20, 24, line_number, "TER", "TIS Numeric Code");
@@ -291,9 +313,11 @@ pub fn parse_and_insert_ter<'a>(
 }
 
 // IPA - Interested Party of Agreement
-pub fn parse_and_insert_ipa<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_ipa<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "IPA" { return Err(CwrParseError::BadFormat(format!("Expected IPA, found {}", record_type))); }
+    if record_type != "IPA" {
+        return Err(CwrParseError::BadFormat(format!("Expected IPA, found {}", record_type)));
+    }
 
     let agreement_role_code = get_mandatory_field!(stmts, safe_slice, 19, 21, line_number, "IPA", "Agreement Role Code");
     let interested_party_ipi_name_num = safe_slice(21, 32)?; // Opt
@@ -328,7 +352,23 @@ pub fn parse_and_insert_ipa<'a>(line_number: usize, tx: &'a Transaction, stmts: 
     }
     // Add check for writer first name allowed only for specific agreement types/roles (needs AGR context)
 
-    stmts.ipa_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, agreement_role_code, interested_party_ipi_name_num, ipi_base_number, interested_party_num, interested_party_last_name, interested_party_writer_first_name, pr_affiliation_society, pr_share, mr_affiliation_society, mr_share, sr_affiliation_society, sr_share])?;
+    stmts.ipa_stmt.execute(params![
+        &record_type,
+        transaction_sequence_num,
+        record_sequence_num,
+        agreement_role_code,
+        interested_party_ipi_name_num,
+        ipi_base_number,
+        interested_party_num,
+        interested_party_last_name,
+        interested_party_writer_first_name,
+        pr_affiliation_society,
+        pr_share,
+        mr_affiliation_society,
+        mr_share,
+        sr_affiliation_society,
+        sr_share
+    ])?;
 
     let record_id = tx.last_insert_rowid();
     db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
@@ -336,15 +376,11 @@ pub fn parse_and_insert_ipa<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 }
 
 // NPA - Non-Roman Alphabet Interested Party Name (associated with IPA)
-pub fn parse_and_insert_npa<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_npa<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "NPA" { return Err(CwrParseError::BadFormat(format!("Expected NPA, found {}", record_type))); }
+    if record_type != "NPA" {
+        return Err(CwrParseError::BadFormat(format!("Expected NPA, found {}", record_type)));
+    }
 
     // Schema shows Interested Party # as Optional (VARCHAR(9)) but spec shows (A,C) - Conditional?
     // Let's assume optional based on schema. If Mandatory, change to get_mandatory_field!
@@ -362,13 +398,7 @@ pub fn parse_and_insert_npa<'a>(
 }
 
 // SPU - Publisher Controlled by Submitter / OPU - Other Publisher
-pub fn parse_and_insert_spu<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_spu<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
     // record_type will be "SPU" or "OPU"
 
@@ -397,14 +427,21 @@ pub fn parse_and_insert_spu<'a>(
 
     // Conditional Validation
     if record_type == "SPU" {
-        if interested_party_num.is_none() { return Err(CwrParseError::BadFormat("SPU Interested Party # is mandatory".to_string())); }
-        if publisher_name.is_none() { return Err(CwrParseError::BadFormat("SPU Publisher Name is mandatory".to_string())); }
-        if publisher_type.is_none() { return Err(CwrParseError::BadFormat("SPU Publisher Type is mandatory".to_string())); }
+        if interested_party_num.is_none() {
+            return Err(CwrParseError::BadFormat("SPU Interested Party # is mandatory".to_string()));
+        }
+        if publisher_name.is_none() {
+            return Err(CwrParseError::BadFormat("SPU Publisher Name is mandatory".to_string()));
+        }
+        if publisher_type.is_none() {
+            return Err(CwrParseError::BadFormat("SPU Publisher Type is mandatory".to_string()));
+        }
         if publisher_unknown_indicator.is_some() && publisher_unknown_indicator != Some("".to_string()) {
             return Err(CwrParseError::BadFormat("SPU Publisher Unknown Indicator must be blank".to_string()));
         }
         // Mandatory IPI Name # if followed by SPT representing submitter requires lookahead or state - complex, skip for now
-    } else { // OPU
+    } else {
+        // OPU
         if publisher_name.is_none() && publisher_unknown_indicator != Some("Y".to_string()) {
             return Err(CwrParseError::BadFormat("OPU Publisher Unknown Indicator must be 'Y' if Publisher Name is blank".to_string()));
         }
@@ -415,7 +452,33 @@ pub fn parse_and_insert_spu<'a>(
     // Share/Society validation similar to IPA (if share > 0, society required)
     // ... add checks for PR/MR/SR shares vs societies ...
 
-    stmts.spu_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, publisher_sequence_num, interested_party_num, publisher_name, publisher_unknown_indicator, publisher_type, tax_id_num, publisher_ipi_name_num, submitter_agreement_number, pr_affiliation_society_num, pr_ownership_share, mr_society, mr_ownership_share, sr_society, sr_ownership_share, special_agreements_indicator, first_recording_refusal_ind, filler, publisher_ipi_base_number, international_standard_agreement_code, society_assigned_agreement_number, agreement_type, usa_license_ind])?;
+    stmts.spu_stmt.execute(params![
+        &record_type,
+        transaction_sequence_num,
+        record_sequence_num,
+        publisher_sequence_num,
+        interested_party_num,
+        publisher_name,
+        publisher_unknown_indicator,
+        publisher_type,
+        tax_id_num,
+        publisher_ipi_name_num,
+        submitter_agreement_number,
+        pr_affiliation_society_num,
+        pr_ownership_share,
+        mr_society,
+        mr_ownership_share,
+        sr_society,
+        sr_ownership_share,
+        special_agreements_indicator,
+        first_recording_refusal_ind,
+        filler,
+        publisher_ipi_base_number,
+        international_standard_agreement_code,
+        society_assigned_agreement_number,
+        agreement_type,
+        usa_license_ind
+    ])?;
 
     let record_id = tx.last_insert_rowid();
     db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
@@ -423,15 +486,11 @@ pub fn parse_and_insert_spu<'a>(
 }
 
 // NPN - Non-Roman Alphabet Publisher Name
-pub fn parse_and_insert_npn<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_npn<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "NPN" { return Err(CwrParseError::BadFormat(format!("Expected NPN, found {}", record_type))); }
+    if record_type != "NPN" {
+        return Err(CwrParseError::BadFormat(format!("Expected NPN, found {}", record_type)));
+    }
 
     let publisher_sequence_num = get_mandatory_field!(stmts, safe_slice, 19, 21, line_number, "NPN", "Publisher Sequence #");
     let interested_party_num = get_mandatory_field!(stmts, safe_slice, 21, 30, line_number, "NPN", "Interested Party #");
@@ -446,13 +505,7 @@ pub fn parse_and_insert_npn<'a>(
 }
 
 // SPT - Publisher Territory of Control / OPT - Other Publisher Territory
-pub fn parse_and_insert_spt<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_spt<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
     // record_type will be "SPT" or "OPT"
 
@@ -480,13 +533,7 @@ pub fn parse_and_insert_spt<'a>(
 }
 
 // SWR - Writer Controlled by Submitter / OWR - Other Writer
-pub fn parse_and_insert_swr<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_swr<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
     // record_type is SWR or OWR
 
@@ -516,12 +563,17 @@ pub fn parse_and_insert_swr<'a>(
         if interested_party_num.is_none() {
             return Err(CwrParseError::BadFormat("SWR Interested Party # is mandatory".to_string()));
         }
-        if writer_last_name.is_none() { return Err(CwrParseError::BadFormat("SWR Writer Last Name is mandatory".to_string())); }
-        if writer_designation_code.is_none() { return Err(CwrParseError::BadFormat("SWR Writer Designation Code is mandatory".to_string())); }
+        if writer_last_name.is_none() {
+            return Err(CwrParseError::BadFormat("SWR Writer Last Name is mandatory".to_string()));
+        }
+        if writer_designation_code.is_none() {
+            return Err(CwrParseError::BadFormat("SWR Writer Designation Code is mandatory".to_string()));
+        }
         if writer_unknown_indicator.is_some() && writer_unknown_indicator != Some("".to_string()) {
             return Err(CwrParseError::BadFormat("SWR Writer Unknown Indicator must be blank".to_string()));
         }
-    } else { // OWR
+    } else {
+        // OWR
         if writer_last_name.is_none() && writer_unknown_indicator != Some("Y".to_string()) {
             return Err(CwrParseError::BadFormat("OWR Writer Unknown Indicator must be 'Y' if Writer Last Name is blank".to_string()));
         }
@@ -532,7 +584,31 @@ pub fn parse_and_insert_swr<'a>(
     // Share/Society validation
     // ... add checks for PR/MR/SR shares vs societies ...
 
-    stmts.swr_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, interested_party_num, writer_last_name, writer_first_name, writer_unknown_indicator, writer_designation_code, tax_id_num, writer_ipi_name_num, pr_affiliation_society_num, pr_ownership_share, mr_society, mr_ownership_share, sr_society, sr_ownership_share, reversionary_indicator, first_recording_refusal_ind, work_for_hire_indicator, filler, writer_ipi_base_number, personal_number, usa_license_ind])?;
+    stmts.swr_stmt.execute(params![
+        &record_type,
+        transaction_sequence_num,
+        record_sequence_num,
+        interested_party_num,
+        writer_last_name,
+        writer_first_name,
+        writer_unknown_indicator,
+        writer_designation_code,
+        tax_id_num,
+        writer_ipi_name_num,
+        pr_affiliation_society_num,
+        pr_ownership_share,
+        mr_society,
+        mr_ownership_share,
+        sr_society,
+        sr_ownership_share,
+        reversionary_indicator,
+        first_recording_refusal_ind,
+        work_for_hire_indicator,
+        filler,
+        writer_ipi_base_number,
+        personal_number,
+        usa_license_ind
+    ])?;
 
     let record_id = tx.last_insert_rowid();
     db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
@@ -540,15 +616,11 @@ pub fn parse_and_insert_swr<'a>(
 }
 
 // NWN - Non-Roman Alphabet Writer Name
-pub fn parse_and_insert_nwn<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_nwn<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "NWN" { return Err(CwrParseError::BadFormat(format!("Expected NWN, found {}", record_type))); }
+    if record_type != "NWN" {
+        return Err(CwrParseError::BadFormat(format!("Expected NWN, found {}", record_type)));
+    }
 
     let interested_party_num = safe_slice(19, 28)?; // Cond? Schema allows NULL
     let writer_last_name = get_mandatory_field!(stmts, safe_slice, 28, 188, line_number, "NWN", "Writer Last Name");
@@ -563,13 +635,7 @@ pub fn parse_and_insert_nwn<'a>(
 }
 
 // SWT - Writer Territory of Control / OWT - Other Writer Territory
-pub fn parse_and_insert_swt<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_swt<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
     // record_type is SWT or OWT
 
@@ -591,15 +657,11 @@ pub fn parse_and_insert_swt<'a>(
 }
 
 // PWR - Publisher for Writer relationship
-pub fn parse_and_insert_pwr<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_pwr<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "PWR" { return Err(CwrParseError::BadFormat(format!("Expected PWR, found {}", record_type))); }
+    if record_type != "PWR" {
+        return Err(CwrParseError::BadFormat(format!("Expected PWR, found {}", record_type)));
+    }
 
     let publisher_ip_num = safe_slice(19, 28)?; // Cond? Schema allows NULL, Spec says C
     let publisher_name = safe_slice(28, 73)?; // Cond? Schema allows NULL, Spec says C
@@ -617,15 +679,11 @@ pub fn parse_and_insert_pwr<'a>(
 }
 
 // ALT - Alternate Title
-pub fn parse_and_insert_alt<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_alt<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "ALT" { return Err(CwrParseError::BadFormat(format!("Expected ALT, found {}", record_type))); }
+    if record_type != "ALT" {
+        return Err(CwrParseError::BadFormat(format!("Expected ALT, found {}", record_type)));
+    }
 
     let alternate_title = get_mandatory_field!(stmts, safe_slice, 19, 79, line_number, "ALT", "Alternate Title");
     let title_type = get_mandatory_field!(stmts, safe_slice, 79, 81, line_number, "ALT", "Title Type");
@@ -644,15 +702,11 @@ pub fn parse_and_insert_alt<'a>(
 }
 
 // NAT - Non-Roman Alphabet Title
-pub fn parse_and_insert_nat<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_nat<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "NAT" { return Err(CwrParseError::BadFormat(format!("Expected NAT, found {}", record_type))); }
+    if record_type != "NAT" {
+        return Err(CwrParseError::BadFormat(format!("Expected NAT, found {}", record_type)));
+    }
 
     let title = get_mandatory_field!(stmts, safe_slice, 19, 659, line_number, "NAT", "Title");
     let title_type = get_mandatory_field!(stmts, safe_slice, 659, 661, line_number, "NAT", "Title Type");
@@ -666,15 +720,11 @@ pub fn parse_and_insert_nat<'a>(
 }
 
 // EWT - Entire Work Title for Excerpts
-pub fn parse_and_insert_ewt<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_ewt<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "EWT" { return Err(CwrParseError::BadFormat(format!("Expected EWT, found {}", record_type))); }
+    if record_type != "EWT" {
+        return Err(CwrParseError::BadFormat(format!("Expected EWT, found {}", record_type)));
+    }
 
     let entire_work_title = get_mandatory_field!(stmts, safe_slice, 19, 79, line_number, "EWT", "Entire Work Title");
     let iswc_of_entire_work = safe_slice(79, 90)?; // Opt
@@ -690,7 +740,24 @@ pub fn parse_and_insert_ewt<'a>(
     let writer_2_ipi_base_number = safe_slice(337, 350)?; // Opt
     let submitter_work_num = safe_slice(350, 364)?; // Opt
 
-    stmts.ewt_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, entire_work_title, iswc_of_entire_work, language_code, writer_1_last_name, writer_1_first_name, source, writer_1_ipi_name_num, writer_1_ipi_base_number, writer_2_last_name, writer_2_first_name, writer_2_ipi_name_num, writer_2_ipi_base_number, submitter_work_num])?;
+    stmts.ewt_stmt.execute(params![
+        &record_type,
+        transaction_sequence_num,
+        record_sequence_num,
+        entire_work_title,
+        iswc_of_entire_work,
+        language_code,
+        writer_1_last_name,
+        writer_1_first_name,
+        source,
+        writer_1_ipi_name_num,
+        writer_1_ipi_base_number,
+        writer_2_last_name,
+        writer_2_first_name,
+        writer_2_ipi_name_num,
+        writer_2_ipi_base_number,
+        submitter_work_num
+    ])?;
 
     let record_id = tx.last_insert_rowid();
     db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
@@ -698,15 +765,11 @@ pub fn parse_and_insert_ewt<'a>(
 }
 
 // VER - Original Work Title for Versions
-pub fn parse_and_insert_ver<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_ver<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "VER" { return Err(CwrParseError::BadFormat(format!("Expected VER, found {}", record_type))); }
+    if record_type != "VER" {
+        return Err(CwrParseError::BadFormat(format!("Expected VER, found {}", record_type)));
+    }
 
     let original_work_title = get_mandatory_field!(stmts, safe_slice, 19, 79, line_number, "VER", "Original Work Title");
     let iswc_of_original_work = safe_slice(79, 90)?; // Opt
@@ -722,7 +785,24 @@ pub fn parse_and_insert_ver<'a>(
     let writer_2_ipi_base_number = safe_slice(337, 350)?; // Opt
     let submitter_work_num = safe_slice(350, 364)?; // Opt
 
-    stmts.ver_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, original_work_title, iswc_of_original_work, language_code, writer_1_last_name, writer_1_first_name, source, writer_1_ipi_name_num, writer_1_ipi_base_number, writer_2_last_name, writer_2_first_name, writer_2_ipi_name_num, writer_2_ipi_base_number, submitter_work_num])?;
+    stmts.ver_stmt.execute(params![
+        &record_type,
+        transaction_sequence_num,
+        record_sequence_num,
+        original_work_title,
+        iswc_of_original_work,
+        language_code,
+        writer_1_last_name,
+        writer_1_first_name,
+        source,
+        writer_1_ipi_name_num,
+        writer_1_ipi_base_number,
+        writer_2_last_name,
+        writer_2_first_name,
+        writer_2_ipi_name_num,
+        writer_2_ipi_base_number,
+        submitter_work_num
+    ])?;
 
     let record_id = tx.last_insert_rowid();
     db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
@@ -730,15 +810,11 @@ pub fn parse_and_insert_ver<'a>(
 }
 
 // PER - Performing Artist
-pub fn parse_and_insert_per<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_per<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "PER" { return Err(CwrParseError::BadFormat(format!("Expected PER, found {}", record_type))); }
+    if record_type != "PER" {
+        return Err(CwrParseError::BadFormat(format!("Expected PER, found {}", record_type)));
+    }
 
     let performing_artist_last_name = get_mandatory_field!(stmts, safe_slice, 19, 64, line_number, "PER", "Performing Artist Last Name");
     let performing_artist_first_name = safe_slice(64, 94)?; // Opt
@@ -753,15 +829,11 @@ pub fn parse_and_insert_per<'a>(
 }
 
 // NPR - Non-Roman Alphabet Performing Artist Name
-pub fn parse_and_insert_npr<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_npr<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "NPR" { return Err(CwrParseError::BadFormat(format!("Expected NPR, found {}", record_type))); }
+    if record_type != "NPR" {
+        return Err(CwrParseError::BadFormat(format!("Expected NPR, found {}", record_type)));
+    }
 
     // Schema allows NULL, Spec says C for Name
     let performing_artist_name = safe_slice(19, 179)?; // Cond? Schema allows NULL
@@ -783,15 +855,11 @@ pub fn parse_and_insert_npr<'a>(
 }
 
 // REC - Recording Detail
-pub fn parse_and_insert_rec<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_rec<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "REC" { return Err(CwrParseError::BadFormat(format!("Expected REC, found {}", record_type))); }
+    if record_type != "REC" {
+        return Err(CwrParseError::BadFormat(format!("Expected REC, found {}", record_type)));
+    }
 
     let release_date = safe_slice(19, 27)?; // Opt
     let constant_blanks_1 = safe_slice(27, 87)?; // Opt
@@ -820,7 +888,29 @@ pub fn parse_and_insert_rec<'a>(
         log_error(&mut stmts.error_stmt, line_number, "REC ISRC Validity is expected when ISRC is present.".to_string())?;
     }
 
-    stmts.rec_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, release_date, constant_blanks_1, release_duration, constant_blanks_2, album_title, album_label, release_catalog_num, ean, isrc, recording_format, recording_technique, media_type, recording_title, version_title, display_artist, record_label, isrc_validity, submitter_recording_identifier])?;
+    stmts.rec_stmt.execute(params![
+        &record_type,
+        transaction_sequence_num,
+        record_sequence_num,
+        release_date,
+        constant_blanks_1,
+        release_duration,
+        constant_blanks_2,
+        album_title,
+        album_label,
+        release_catalog_num,
+        ean,
+        isrc,
+        recording_format,
+        recording_technique,
+        media_type,
+        recording_title,
+        version_title,
+        display_artist,
+        record_label,
+        isrc_validity,
+        submitter_recording_identifier
+    ])?;
 
     let record_id = tx.last_insert_rowid();
     db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
@@ -828,15 +918,11 @@ pub fn parse_and_insert_rec<'a>(
 }
 
 // ORN - Work Origin
-pub fn parse_and_insert_orn<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_orn<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "ORN" { return Err(CwrParseError::BadFormat(format!("Expected ORN, found {}", record_type))); }
+    if record_type != "ORN" {
+        return Err(CwrParseError::BadFormat(format!("Expected ORN, found {}", record_type)));
+    }
 
     let intended_purpose = get_mandatory_field!(stmts, safe_slice, 19, 22, line_number, "ORN", "Intended Purpose");
     let production_title = safe_slice(22, 82)?; // Cond
@@ -865,11 +951,36 @@ pub fn parse_and_insert_orn<'a>(
     if intended_purpose == "LIB" && cd_identifier.is_none() {
         return Err(CwrParseError::BadFormat("ORN CD Identifier required when Intended Purpose is 'LIB'".to_string()));
     }
-    if intended_purpose == "LIB" && library.is_none() { // Assuming library name also required for LIB
+    if intended_purpose == "LIB" && library.is_none() {
+        // Assuming library name also required for LIB
         return Err(CwrParseError::BadFormat("ORN Library required when Intended Purpose is 'LIB'".to_string()));
     }
 
-    stmts.orn_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, intended_purpose, production_title, cd_identifier, cut_number, library, bltvr, filler_reserved, production_num, episode_title, episode_num, year_of_production, avi_society_code, audio_visual_number, v_isan_isan, v_isan_episode, v_isan_check_digit_1, v_isan_version, v_isan_check_digit_2, eidr, eidr_check_digit])?;
+    stmts.orn_stmt.execute(params![
+        &record_type,
+        transaction_sequence_num,
+        record_sequence_num,
+        intended_purpose,
+        production_title,
+        cd_identifier,
+        cut_number,
+        library,
+        bltvr,
+        filler_reserved,
+        production_num,
+        episode_title,
+        episode_num,
+        year_of_production,
+        avi_society_code,
+        audio_visual_number,
+        v_isan_isan,
+        v_isan_episode,
+        v_isan_check_digit_1,
+        v_isan_version,
+        v_isan_check_digit_2,
+        eidr,
+        eidr_check_digit
+    ])?;
 
     let record_id = tx.last_insert_rowid();
     db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
@@ -877,15 +988,11 @@ pub fn parse_and_insert_orn<'a>(
 }
 
 // INS - Instrumentation Summary
-pub fn parse_and_insert_ins<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_ins<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "INS" { return Err(CwrParseError::BadFormat(format!("Expected INS, found {}", record_type))); }
+    if record_type != "INS" {
+        return Err(CwrParseError::BadFormat(format!("Expected INS, found {}", record_type)));
+    }
 
     let number_of_voices = safe_slice(19, 22)?; // Opt
     let standard_instrumentation_type = safe_slice(22, 25)?; // Cond
@@ -907,15 +1014,11 @@ pub fn parse_and_insert_ins<'a>(
 }
 
 // IND - Instrumentation Detail
-pub fn parse_and_insert_ind<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_ind<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "IND" { return Err(CwrParseError::BadFormat(format!("Expected IND, found {}", record_type))); }
+    if record_type != "IND" {
+        return Err(CwrParseError::BadFormat(format!("Expected IND, found {}", record_type)));
+    }
 
     let instrument_code = get_mandatory_field!(stmts, safe_slice, 19, 22, line_number, "IND", "Instrument Code");
     let number_of_players = safe_slice(22, 25)?; // Opt
@@ -928,15 +1031,11 @@ pub fn parse_and_insert_ind<'a>(
 }
 
 // COM - Composite Component
-pub fn parse_and_insert_com<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_com<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "COM" { return Err(CwrParseError::BadFormat(format!("Expected COM, found {}", record_type))); }
+    if record_type != "COM" {
+        return Err(CwrParseError::BadFormat(format!("Expected COM, found {}", record_type)));
+    }
 
     let title = get_mandatory_field!(stmts, safe_slice, 19, 79, line_number, "COM", "Title");
     let iswc_of_component = safe_slice(79, 90)?; // Opt
@@ -951,7 +1050,23 @@ pub fn parse_and_insert_com<'a>(
     let writer_1_ipi_base_number = safe_slice(282, 295)?; // Opt
     let writer_2_ipi_base_number = safe_slice(295, 308)?; // Opt
 
-    stmts.com_stmt.execute(params![&record_type, transaction_sequence_num, record_sequence_num, title, iswc_of_component, submitter_work_num, duration, writer_1_last_name, writer_1_first_name, writer_1_ipi_name_num, writer_2_last_name, writer_2_first_name, writer_2_ipi_name_num, writer_1_ipi_base_number, writer_2_ipi_base_number])?;
+    stmts.com_stmt.execute(params![
+        &record_type,
+        transaction_sequence_num,
+        record_sequence_num,
+        title,
+        iswc_of_component,
+        submitter_work_num,
+        duration,
+        writer_1_last_name,
+        writer_1_first_name,
+        writer_1_ipi_name_num,
+        writer_2_last_name,
+        writer_2_first_name,
+        writer_2_ipi_name_num,
+        writer_1_ipi_base_number,
+        writer_2_ipi_base_number
+    ])?;
 
     let record_id = tx.last_insert_rowid();
     db::insert_file_record(&mut stmts.file_stmt, line_number, &record_type, record_id)?;
@@ -959,15 +1074,11 @@ pub fn parse_and_insert_com<'a>(
 }
 
 // MSG - Message (Part of ACK Transaction usually)
-pub fn parse_and_insert_msg<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_msg<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "MSG" { return Err(CwrParseError::BadFormat(format!("Expected MSG, found {}", record_type))); }
+    if record_type != "MSG" {
+        return Err(CwrParseError::BadFormat(format!("Expected MSG, found {}", record_type)));
+    }
 
     let message_type = get_mandatory_field!(stmts, safe_slice, 19, 20, line_number, "MSG", "Message Type");
     let original_record_sequence_num = get_mandatory_field!(stmts, safe_slice, 20, 28, line_number, "MSG", "Original Record Sequence #");
@@ -984,13 +1095,7 @@ pub fn parse_and_insert_msg<'a>(
 }
 
 // NET - Non-Roman Alphabet Title (for EWT/COM/VER) / NCT / NVT
-pub fn parse_and_insert_net<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_net<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
     // record_type is NET, NCT, or NVT
 
@@ -1005,15 +1110,11 @@ pub fn parse_and_insert_net<'a>(
 }
 
 // NOW - Non-Roman Alphabet Writer Name (for EWT/VER/COM)
-pub fn parse_and_insert_now<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_now<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "NOW" { return Err(CwrParseError::BadFormat(format!("Expected NOW, found {}", record_type))); }
+    if record_type != "NOW" {
+        return Err(CwrParseError::BadFormat(format!("Expected NOW, found {}", record_type)));
+    }
 
     let writer_name = get_mandatory_field!(stmts, safe_slice, 19, 179, line_number, "NOW", "Writer Name");
     // Spec says O,M for First Name - assume Mandatory based on schema
@@ -1029,15 +1130,11 @@ pub fn parse_and_insert_now<'a>(
 }
 
 // ARI - Additional Related Information
-pub fn parse_and_insert_ari<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_ari<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "ARI" { return Err(CwrParseError::BadFormat(format!("Expected ARI, found {}", record_type))); }
+    if record_type != "ARI" {
+        return Err(CwrParseError::BadFormat(format!("Expected ARI, found {}", record_type)));
+    }
 
     let society_num = get_mandatory_field!(stmts, safe_slice, 19, 22, line_number, "ARI", "Society #");
     let work_num = safe_slice(22, 36)?; // Cond? Schema allows NULL
@@ -1056,15 +1153,11 @@ pub fn parse_and_insert_ari<'a>(
 }
 
 // XRF - Work ID Cross Reference
-pub fn parse_and_insert_xrf<'a>(
-    line_number: usize,
-    tx: &'a Transaction,
-    stmts: &'a mut db::PreparedStatements,
-    _context: &ParsingContext,
-    safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
-) -> Result<(), CwrParseError> {
+pub fn parse_and_insert_xrf<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut db::PreparedStatements, _context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, stmts, safe_slice)?;
-    if record_type != "XRF" { return Err(CwrParseError::BadFormat(format!("Expected XRF, found {}", record_type))); }
+    if record_type != "XRF" {
+        return Err(CwrParseError::BadFormat(format!("Expected XRF, found {}", record_type)));
+    }
 
     let organisation_code = get_mandatory_field!(stmts, safe_slice, 19, 22, line_number, "XRF", "Organisation Code");
     let identifier = get_mandatory_field!(stmts, safe_slice, 22, 36, line_number, "XRF", "Identifier");
