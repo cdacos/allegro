@@ -1,11 +1,9 @@
-// --- START OF FILE main.rs.txt ---
-
 use std::env;
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader};
 use std::path::Path;
 use std::process;
-use std::time::Instant; // Import Instant
+use std::time::Instant;
 
 use rusqlite::{params, Connection, Transaction};
 
@@ -32,7 +30,7 @@ impl std::fmt::Display for CwrParseError {
         match self {
             CwrParseError::Io(err) => write!(f, "IO Error: {}", err),
             CwrParseError::Db(err) => write!(f, "Database Error: {}", err),
-            CwrParseError::BadFormat(msg) => write!(f, "Bad Format: {}", msg),
+            CwrParseError::BadFormat(msg) => write!(f, "{}", msg),
         }
     }
 }
@@ -67,6 +65,8 @@ fn main() {
         }
     }
 
+    println!("Processing input file: {} ...", input_filename);
+
     let start_time = Instant::now(); // Record start time
 
     let result = process_and_load_file(input_filename, &db_filename);
@@ -87,13 +87,14 @@ fn main() {
         }
     };
 
+    println!("Done!");
+
     // --- Reporting ---
     match report_summary(&db_filename) {
         Ok(_) => {},
         Err(e) => eprintln!("Error generating report from database '{}': {}", db_filename, e),
     }
 
-    // Print success message *after* the report, using formatted count
     println!(
         "Successfully processed {} CWR records from '{}' into '{}' in {:.2?}.",
         format_int_with_commas(count as i64), input_filename, db_filename, elapsed_time // Use i64 for format func
@@ -104,10 +105,27 @@ fn main() {
 fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
     let conn = Connection::open(db_filename)?;
 
+    // Record Type Report
+    println!();
+    println!("{:<5} | {:>10}", "Type", "Count"); // Header (Right-align Count)
+    println!("{:-<5}-+-{:-<10}", "", "");   // Separator (No change needed here)
+    let mut stmt_rec = conn.prepare("SELECT record_type, count(*) FROM file GROUP BY record_type ORDER BY record_type")?;
+    let mut rows_rec = stmt_rec.query([])?;
+    let mut record_found = false;
+    while let Some(row) = rows_rec.next()? {
+        record_found = true;
+        let record_type: String = row.get(0)?;
+        let count: i64 = row.get(1)?;
+        println!("{:<5} | {:>10}", record_type, format_int_with_commas(count)); // Right-align count
+    }
+     if !record_found {
+        println!("  No records loaded into 'file' table.");
+    }
+
     // Error Report
     println!();
-    println!("{:<60} | {:>7}", "Error", "Count"); // Header (Right-align Count)
-    println!("{:-<60}-+-{:-<7}", "", "");      // Separator (No change needed here)
+    println!("{:<60} | {:>10}", "Error", "Count"); // Header (Right-align Count)
+    println!("{:-<60}-+-{:-<10}", "", "");      // Separator (No change needed here)
     let mut stmt_err = conn.prepare("SELECT description, count(*) FROM error GROUP BY description ORDER BY count(*) DESC")?;
     let mut rows_err = stmt_err.query([])?;
     let mut error_found = false;
@@ -117,31 +135,14 @@ fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
         let count: i64 = row.get(1)?;
         // Truncate description if too long for alignment
         let desc_display = if description.len() > 60 {
-             description[..57].to_string().to_owned() + "..."
+            description[..57].to_string().to_owned() + "..."
         } else {
             description
         };
-        println!("{:<60} | {:>7}", desc_display, format_int_with_commas(count)); // Right-align count
+        println!("{:<60} | {:>10}", desc_display, format_int_with_commas(count)); // Right-align count
     }
     if !error_found {
         println!("  No errors recorded.");
-    }
-
-    // Record Type Report
-    println!();
-    println!("{:<5} | {:>7}", "Type", "Count"); // Header (Right-align Count)
-    println!("{:-<5}-+-{:-<7}", "", "");   // Separator (No change needed here)
-    let mut stmt_rec = conn.prepare("SELECT record_type, count(*) FROM file GROUP BY record_type ORDER BY record_type")?;
-    let mut rows_rec = stmt_rec.query([])?;
-    let mut record_found = false;
-    while let Some(row) = rows_rec.next()? {
-        record_found = true;
-        let record_type: String = row.get(0)?;
-        let count: i64 = row.get(1)?;
-        println!("{:<5} | {:>7}", record_type, format_int_with_commas(count)); // Right-align count
-    }
-     if !record_found {
-        println!("  No records loaded into 'file' table.");
     }
 
     println!();
@@ -191,7 +192,7 @@ fn setup_database(db_filename: &str, schema_path: &str) -> Result<(), Box<dyn st
     )?;
 
     if table_count == 0 {
-        println!("Schema not found in DB, applying schema from '{}'...", schema_path);
+        println!("Applying schema from '{}'", schema_path);
         conn.execute_batch(&schema_sql)?;
     } else {
         println!("Database schema already exists.");
