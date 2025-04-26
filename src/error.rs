@@ -1,5 +1,6 @@
 use std::io;
 use rusqlite;
+use crate::db;
 
 #[derive(Debug)]
 pub enum CwrParseError {
@@ -34,4 +35,14 @@ impl std::error::Error for CwrParseError {
             CwrParseError::BadFormat(_) => None,
         }
     }
+}
+
+/// Logs a CwrParseError to stderr and the error table using prepared statements.
+pub fn log_cwr_parse_error(
+    stmts: &mut db::PreparedStatements,
+    line_number: usize,
+    error: &CwrParseError,
+) -> Result<(), rusqlite::Error> {
+    let description = error.to_string();
+    db::log_error(&mut stmts.error_stmt, line_number, description)
 }
