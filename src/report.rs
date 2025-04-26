@@ -1,3 +1,6 @@
+use rusqlite::Connection;
+use crate::util::format_int_with_commas;
+
 /// Generates and prints summary reports from the database.
 pub fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
     let conn = Connection::open(db_filename)?;
