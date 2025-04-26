@@ -9,11 +9,11 @@ use std::io::{BufRead, BufReader, Seek};
 // Context struct to hold file-level metadata like CWR version
 #[derive(Debug, Clone)]
 pub struct ParsingContext {
-    pub cwr_version: f64, // e.g., 2.0, 2.1, 2.2
+    pub cwr_version: f32, // e.g., 2.0, 2.1, 2.2
     // Add other metadata like charset later if needed
 }
 
-fn get_cwr_version(hdr_line: &str) -> Result<f64, CwrParseError> {
+fn get_cwr_version(hdr_line: &str) -> Result<f32, CwrParseError> {
     // Define valid CWR versions
     let valid_cwr_versions = vec![2.0, 2.1, 2.2];
 
@@ -23,7 +23,7 @@ fn get_cwr_version(hdr_line: &str) -> Result<f64, CwrParseError> {
     } else if hdr_line.len() > 104 {
         // Try to parse version from specific position in header
         if let Some(version_str) = hdr_line.get(101..104) {
-            match version_str.trim().parse::<f64>() {
+            match version_str.trim().parse::<f32>() {
                 Ok(version) => version,
                 Err(_) => return Err(CwrParseError::BadFormat(
                     format!("Invalid CWR version value: {}", version_str)
@@ -31,7 +31,7 @@ fn get_cwr_version(hdr_line: &str) -> Result<f64, CwrParseError> {
             }
         } else {
             return Err(CwrParseError::BadFormat(
-                format!("Unable to extract CWR version from header")
+                "Unable to extract CWR version from header".to_string()
             ));
         }
     } else {
@@ -139,38 +139,38 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
                 match record_type {
                     // Apply the pattern: call handler, set flag on success
                     "HDR" => { record_handlers::parse_and_insert_hdr(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
-                    "GRH" => { record_handlers::parse_and_insert_grh(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "GRT" => { record_handlers::parse_and_insert_grt(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "TRL" => { record_handlers::parse_and_insert_trl(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "AGR" => { record_handlers::parse_and_insert_agr(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "NWR" | "REV" | "ISW" | "EXC" => { record_handlers::parse_and_insert_nwr(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "ACK" => { record_handlers::parse_and_insert_ack(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "TER" => { record_handlers::parse_and_insert_ter(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "IPA" => { record_handlers::parse_and_insert_ipa(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "NPA" => { record_handlers::parse_and_insert_npa(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "SPU" | "OPU" => { record_handlers::parse_and_insert_spu(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "NPN" => { record_handlers::parse_and_insert_npn(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "SPT" | "OPT" => { record_handlers::parse_and_insert_spt(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "SWR" | "OWR" => { record_handlers::parse_and_insert_swr(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "NWN" => { record_handlers::parse_and_insert_nwn(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "SWT" | "OWT" => { record_handlers::parse_and_insert_swt(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "PWR" => { record_handlers::parse_and_insert_pwr(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "ALT" => { record_handlers::parse_and_insert_alt(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "NAT" => { record_handlers::parse_and_insert_nat(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "EWT" => { record_handlers::parse_and_insert_ewt(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "VER" => { record_handlers::parse_and_insert_ver(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "PER" => { record_handlers::parse_and_insert_per(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "NPR" => { record_handlers::parse_and_insert_npr(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "REC" => { record_handlers::parse_and_insert_rec(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "ORN" => { record_handlers::parse_and_insert_orn(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "INS" => { record_handlers::parse_and_insert_ins(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "IND" => { record_handlers::parse_and_insert_ind(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "COM" => { record_handlers::parse_and_insert_com(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "MSG" => { record_handlers::parse_and_insert_msg(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "NET" | "NCT" | "NVT" => { record_handlers::parse_and_insert_net(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "NOW" => { record_handlers::parse_and_insert_now(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "ARI" => { record_handlers::parse_and_insert_ari(line_number, &tx, &mut prepared_statements, &safe_slice) },
-                    "XRF" => { record_handlers::parse_and_insert_xrf(line_number, &tx, &mut prepared_statements, &safe_slice) },
+                    "GRH" => { record_handlers::parse_and_insert_grh(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "GRT" => { record_handlers::parse_and_insert_grt(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "TRL" => { record_handlers::parse_and_insert_trl(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "AGR" => { record_handlers::parse_and_insert_agr(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "NWR" | "REV" | "ISW" | "EXC" => { record_handlers::parse_and_insert_nwr(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "ACK" => { record_handlers::parse_and_insert_ack(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "TER" => { record_handlers::parse_and_insert_ter(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "IPA" => { record_handlers::parse_and_insert_ipa(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "NPA" => { record_handlers::parse_and_insert_npa(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "SPU" | "OPU" => { record_handlers::parse_and_insert_spu(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "NPN" => { record_handlers::parse_and_insert_npn(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "SPT" | "OPT" => { record_handlers::parse_and_insert_spt(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "SWR" | "OWR" => { record_handlers::parse_and_insert_swr(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "NWN" => { record_handlers::parse_and_insert_nwn(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "SWT" | "OWT" => { record_handlers::parse_and_insert_swt(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "PWR" => { record_handlers::parse_and_insert_pwr(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "ALT" => { record_handlers::parse_and_insert_alt(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "NAT" => { record_handlers::parse_and_insert_nat(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "EWT" => { record_handlers::parse_and_insert_ewt(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "VER" => { record_handlers::parse_and_insert_ver(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "PER" => { record_handlers::parse_and_insert_per(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "NPR" => { record_handlers::parse_and_insert_npr(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "REC" => { record_handlers::parse_and_insert_rec(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "ORN" => { record_handlers::parse_and_insert_orn(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "INS" => { record_handlers::parse_and_insert_ins(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "IND" => { record_handlers::parse_and_insert_ind(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "COM" => { record_handlers::parse_and_insert_com(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "MSG" => { record_handlers::parse_and_insert_msg(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "NET" | "NCT" | "NVT" => { record_handlers::parse_and_insert_net(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "NOW" => { record_handlers::parse_and_insert_now(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "ARI" => { record_handlers::parse_and_insert_ari(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
+                    "XRF" => { record_handlers::parse_and_insert_xrf(line_number, &tx, &mut prepared_statements, &context, &safe_slice) },
                     _ => { // Unrecognized record type
                         log_error(&mut prepared_statements.error_stmt, line_number, format!("Unrecognized record type '{}', skipping.", record_type))?;
                         // known_record_processed remains false
