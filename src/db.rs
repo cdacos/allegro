@@ -1,7 +1,6 @@
-use std::path::Path;
-use rusqlite::{params, Connection, Statement, Transaction};
 use crate::error::CwrParseError;
-use crate::util::format_int_with_commas;
+use rusqlite::{params, Connection, Statement};
+use std::path::Path;
 
 // Structure to hold all prepared statements
 pub struct PreparedStatements<'conn> {

@@ -1,8 +1,7 @@
-use rusqlite::{params, Connection, Statement, Transaction};
+use rusqlite::{params, Connection, Transaction};
 use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::path::Path;
 use std::process;
 use std::time::Instant;
 
@@ -12,7 +11,7 @@ mod report;
 mod util;
 
 // Use specific items from modules
-use crate::db::{determine_db_filename, insert_file_record, log_error, PreparedStatements, setup_database};
+use crate::db::{determine_db_filename, log_error, setup_database};
 use crate::error::CwrParseError;
 use crate::report::report_summary;
 use crate::util::format_int_with_commas;
