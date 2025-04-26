@@ -1,8 +1,6 @@
 use rusqlite::{params, Transaction};
 use crate::{db, get_mandatory_field};
 use crate::parser::ParsingContext; // Import the context struct
-use rusqlite::{params, Transaction};
-use crate::{db, get_mandatory_field};
 use crate::db::log_error;
 use crate::error::CwrParseError;
 
@@ -42,13 +40,9 @@ pub fn parse_and_insert_hdr<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
-    context: &ParsingContext, // Add context
+    _context: &ParsingContext,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
-    // Context is now available if needed for version-specific logic
-    // e.g., let version_field_start = if context.cwr_version == "2.2" { 101 } else { ... };
-    println!("Processing HDR with context: {:?}", context); // Example usage
-
     let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "HDR", "Record Type");
     if record_type != "HDR" { return Err(CwrParseError::BadFormat(format!("Expected HDR, found {}", record_type))); }
 
@@ -509,7 +503,9 @@ pub fn parse_and_insert_swr<'a>(
 
     // Conditional Validation
     if record_type == "SWR" {
-        if interested_party_num.is_none() { return Err(CwrParseError::BadFormat("SWR Interested Party # is mandatory".to_string())); }
+        if interested_party_num.is_none() { 
+            return Err(CwrParseError::BadFormat("SWR Interested Party # is mandatory".to_string()));
+        }
         if writer_last_name.is_none() { return Err(CwrParseError::BadFormat("SWR Writer Last Name is mandatory".to_string())); }
         if writer_designation_code.is_none() { return Err(CwrParseError::BadFormat("SWR Writer Designation Code is mandatory".to_string())); }
         if writer_unknown_indicator.is_some() && writer_unknown_indicator != Some("".to_string()) {
