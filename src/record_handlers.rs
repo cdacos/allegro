@@ -1,10 +1,14 @@
 use rusqlite::{params, Transaction};
 use crate::{db, get_mandatory_field};
+use crate::parser::ParsingContext; // Import the context struct
+use rusqlite::{params, Transaction};
+use crate::{db, get_mandatory_field};
 use crate::db::log_error;
 use crate::error::CwrParseError;
 
 
 // Helper for parsing the standard transaction prefix (Type 1-3, TransSeq 4-11, RecSeq 12-19)
+// Note: Context is NOT passed here yet, needs update if prefix parsing becomes version-dependent
 fn parse_transaction_prefix(
     line_number: usize,
     stmts: &mut db::PreparedStatements,
@@ -38,8 +42,13 @@ pub fn parse_and_insert_hdr<'a>(
     line_number: usize,
     tx: &'a Transaction,
     stmts: &'a mut db::PreparedStatements,
+    context: &ParsingContext, // Add context
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(), CwrParseError> {
+    // Context is now available if needed for version-specific logic
+    // e.g., let version_field_start = if context.cwr_version == "2.2" { 101 } else { ... };
+    println!("Processing HDR with context: {:?}", context); // Example usage
+
     let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, "HDR", "Record Type");
     if record_type != "HDR" { return Err(CwrParseError::BadFormat(format!("Expected HDR, found {}", record_type))); }
 

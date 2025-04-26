@@ -1,30 +1,79 @@
 use crate::db::log_error;
 use crate::error::CwrParseError;
 use crate::{db, error, record_handlers};
-use rusqlite::Connection;
+use rusqlite::{Connection, params}; // Added params
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::{self, BufRead, BufReader}; // Added io
+
+// Context struct to hold file-level metadata like CWR version
+#[derive(Debug, Clone)] // Added Clone for easier use if needed later
+pub struct ParsingContext {
+    pub cwr_version: String, // e.g., "2.0", "2.1", "2.2"
+    // Add other metadata like charset later if needed
+}
+
 
 pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<usize, CwrParseError> {
     let file = File::open(input_filename)?;
-    let reader = BufReader::new(file);
-    let mut conn = Connection::open(db_filename)?;
+    // Use BufReader::new directly, we need to consume the first line separately
+    let mut reader = BufReader::new(file);
 
+    // --- Read the first line to determine CWR version ---
+    let mut first_line = String::new();
+    let bytes_read = reader.read_line(&mut first_line)?;
+    if bytes_read == 0 {
+        return Err(CwrParseError::BadFormat("File is empty".to_string()));
+    }
+    let hdr_line = first_line.trim_end(); // Remove trailing newline chars
+
+    if !hdr_line.starts_with("HDR") {
+        return Err(CwrParseError::BadFormat(format!(
+            "File does not start with HDR record. Found: '{}'",
+            hdr_line.get(0..std::cmp::min(hdr_line.len(), 50)).unwrap_or("") // Show first 50 chars
+        )));
+    }
+
+    // Determine version (Default to 2.0)
+    let mut cwr_version = "2.0".to_string();
+    // Check for explicit v2.2 version field (positions 101-104, 0-based)
+    if let Some(version_str) = hdr_line.get(101..104) {
+        if version_str == "022" { // CWR 2.2 spec uses "022"
+             cwr_version = "2.2".to_string();
+        } else if version_str == "021" { // Allow for explicit 2.1
+             cwr_version = "2.1".to_string();
+        }
+        // Ignore other values for now, stick with default or length check
+    }
+
+    // If not explicitly 2.2 or 2.1, check length for implicit 2.1 (charset field starts at 86)
+    // If length >= 87 (0-based index 86), it implies at least v2.1 structure
+    if cwr_version == "2.0" && hdr_line.len() >= 87 {
+         cwr_version = "2.1".to_string();
+    }
+
+    let context = ParsingContext { cwr_version };
+    println!("Determined CWR Version: {}", context.cwr_version); // Log detected version
+
+    // --- Setup Database and Transaction ---
+    let mut conn = Connection::open(db_filename)?;
     // Set PRAGMAs before transaction
     conn.pragma_update(None, "journal_mode", "OFF")?;
     conn.pragma_update(None, "synchronous", "OFF")?;
     conn.pragma_update(None, "temp_store", "MEMORY")?;
 
+    conn.pragma_update(None, "synchronous", "OFF")?;
+    conn.pragma_update(None, "temp_store", "MEMORY")?;
+
     // Start transaction *before* preparing statements
     let tx = conn.transaction()?;
-    let mut line_number = 0;
-    let mut processed_records = 0;
+    let mut line_number: usize = 0; // Start at 0, HDR is line 1
+    let mut processed_records: usize = 0;
 
-    {
-        // Prepare all statements *using the transaction* and make the struct mutable
-        let mut prepared_statements = db::PreparedStatements {
-            error_stmt: tx.prepare("INSERT INTO error (line_number, description) VALUES (?1, ?2)")?,
-            file_stmt: tx.prepare("INSERT INTO file (line_number, record_type, record_id) VALUES (?1, ?2, ?3)")?,
+    // Prepare all statements *using the transaction*
+    // Keep the struct mutable as inserts happen within the handlers
+    let mut prepared_statements = db::PreparedStatements {
+        error_stmt: tx.prepare("INSERT INTO error (line_number, description) VALUES (?1, ?2)")?,
+        file_stmt: tx.prepare("INSERT INTO file (line_number, record_type, record_id) VALUES (?1, ?2, ?3)")?,
             hdr_stmt: tx.prepare("INSERT INTO cwr_hdr (record_type, sender_type, sender_id, sender_name, edi_standard_version_number, creation_date, creation_time, transmission_date, character_set, version, revision, software_package, software_package_version) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)")?,
             grh_stmt: tx.prepare("INSERT INTO cwr_grh (record_type, transaction_type, group_id, version_number_for_this_transaction_type, batch_request, submission_distribution_type) VALUES (?1, ?2, ?3, ?4, ?5, ?6)")?,
             grt_stmt: tx.prepare("INSERT INTO cwr_grt (record_type, group_id, transaction_count, record_count, currency_indicator, total_monetary_value) VALUES (?1, ?2, ?3, ?4, ?5, ?6)")?,
@@ -60,9 +109,61 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
             xrf_stmt: tx.prepare("INSERT INTO cwr_xrf (record_type, transaction_sequence_num, record_sequence_num, organisation_code, identifier, identifier_type, validity) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)")?,
         };
 
+    // --- Process the first HDR line ---
+    line_number = 1; // First line is line 1
+    { // Scope for hdr_safe_slice
+        // Define safe_slice specifically for the HDR line we already read
+        let hdr_safe_slice = |start: usize, end: usize| -> Result<Option<String>, CwrParseError> {
+             let slice_opt = if end > hdr_line.len() {
+                 if start >= hdr_line.len() { None } else { hdr_line.get(start..hdr_line.len()) }
+             } else {
+                 hdr_line.get(start..end)
+             };
+             match slice_opt {
+                 Some(slice) => {
+                     let trimmed = slice.trim();
+                     if trimmed.is_empty() { Ok(None) } else { Ok(Some(trimmed.to_string())) }
+                 },
+                 None => Ok(None)
+             }
+        };
+
+        // Call the HDR handler for the first line, passing the context
+        match record_handlers::parse_and_insert_hdr(line_number, &tx, &mut prepared_statements, &context, &hdr_safe_slice) {
+            Ok(_) => processed_records += 1,
+            Err(e) => {
+                // Log the error for the HDR line
+                if let Err(log_err) = error::log_cwr_parse_error(&mut prepared_statements, line_number, &e) {
+                     eprintln!("CRITICAL Error: Failed to log HDR error to database on line {}: {} (Original error was: {})", line_number, log_err, e);
+                     return Err(CwrParseError::Db(log_err)); // Fatal DB error during logging
+                }
+                // If the error was BadFormat, we logged it but might continue if desired (though HDR error is usually fatal)
+                // If it was DB or IO, it's fatal anyway. We return the original error to rollback.
+                eprintln!("Error processing HDR record (line {}): {}. Aborting.", line_number, e);
+                return Err(e); // Abort on any HDR processing error
+            }
+        }
+    } // End scope for hdr_safe_slice
+
+    // --- Process remaining lines ---
+    // Note: The loop starts from the second line because the first was consumed by read_line earlier.
+    { // Scope for the main processing loop and prepared statements
         for line_result in reader.lines() {
-            line_number += 1;
-            let line = line_result?;
+            line_number += 1; // Increment for subsequent lines
+            let line = match line_result {
+                Ok(l) => l,
+                Err(io_err) => {
+                    // Log IO error reading the line
+                    let parse_err = CwrParseError::Io(io_err);
+                     if let Err(log_err) = error::log_cwr_parse_error(&mut prepared_statements, line_number, &parse_err) {
+                         eprintln!("CRITICAL Error: Failed to log IO error to database on line {}: {} (Original error was: {})", line_number, log_err, parse_err);
+                         return Err(CwrParseError::Db(log_err));
+                     }
+                     eprintln!("Aborting transaction due to IO error reading line {}: {}", line_number, parse_err);
+                     return Err(parse_err); // Abort on IO Error
+                }
+            };
+
 
             if line.is_empty() || line.trim().is_empty() {
                 continue;
@@ -75,82 +176,85 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
 
             let record_type = &line[0..3];
 
-            // --- Define the Safe Slice Helper Closure ---
-            // It's defined here to capture `line` and `line_number` for error messages if needed
+            // --- Define the Safe Slice Helper Closure for the current line ---
             let safe_slice = |start: usize, end: usize| -> Result<Option<String>, CwrParseError> {
                 let slice_opt = if end > line.len() {
-                    if start >= line.len() {
-                        None // Start is already out of bounds
-                    } else {
-                        // Slice what's available up to the end
-                        line.get(start..line.len())
-                    }
+                    if start >= line.len() { None } else { line.get(start..line.len()) }
                 } else {
-                    // Slice normally
                     line.get(start..end)
                 };
-
                 match slice_opt {
                     Some(slice) => {
                         let trimmed = slice.trim();
-                        if trimmed.is_empty() {
-                            Ok(None) // Treat empty or all-whitespace as None (NULL)
-                        } else {
-                            Ok(Some(trimmed.to_string())) // Return trimmed, owned string
-                        }
+                        if trimmed.is_empty() { Ok(None) } else { Ok(Some(trimmed.to_string())) }
                     },
-                    None => Ok(None) // Slice failed (e.g., start >= line.len())
+                    None => Ok(None)
                 }
             };
             // --- End of Safe Slice Definition ---
 
-            let process_result: Result<(), CwrParseError> = match record_type {
-                "HDR" => record_handlers::parse_and_insert_hdr(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "GRH" => record_handlers::parse_and_insert_grh(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "GRT" => record_handlers::parse_and_insert_grt(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "TRL" => record_handlers::parse_and_insert_trl(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "AGR" => record_handlers::parse_and_insert_agr(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "NWR" | "REV" | "ISW" | "EXC" => record_handlers::parse_and_insert_nwr(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "ACK" => record_handlers::parse_and_insert_ack(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "TER" => record_handlers::parse_and_insert_ter(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "IPA" => record_handlers::parse_and_insert_ipa(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "NPA" => record_handlers::parse_and_insert_npa(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "SPU" | "OPU" => record_handlers::parse_and_insert_spu(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "NPN" => record_handlers::parse_and_insert_npn(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "SPT" | "OPT" => record_handlers::parse_and_insert_spt(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "SWR" | "OWR" => record_handlers::parse_and_insert_swr(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "NWN" => record_handlers::parse_and_insert_nwn(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "SWT" | "OWT" => record_handlers::parse_and_insert_swt(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "PWR" => record_handlers::parse_and_insert_pwr(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "ALT" => record_handlers::parse_and_insert_alt(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "NAT" => record_handlers::parse_and_insert_nat(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "EWT" => record_handlers::parse_and_insert_ewt(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "VER" => record_handlers::parse_and_insert_ver(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "PER" => record_handlers::parse_and_insert_per(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "NPR" => record_handlers::parse_and_insert_npr(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "REC" => record_handlers::parse_and_insert_rec(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "ORN" => record_handlers::parse_and_insert_orn(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "INS" => record_handlers::parse_and_insert_ins(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "IND" => record_handlers::parse_and_insert_ind(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "COM" => record_handlers::parse_and_insert_com(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "MSG" => record_handlers::parse_and_insert_msg(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "NET" | "NCT" | "NVT" => record_handlers::parse_and_insert_net(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "NOW" => record_handlers::parse_and_insert_now(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "ARI" => record_handlers::parse_and_insert_ari(line_number, &tx, &mut prepared_statements, &safe_slice),
-                "XRF" => record_handlers::parse_and_insert_xrf(line_number, &tx, &mut prepared_statements, &safe_slice),
-                _ => {
-                    log_error(&mut prepared_statements.error_stmt, line_number, format!("Unrecognized record type '{}', skipping.", record_type))?;
-                    Ok(()) // Don't treat unknown as an error for the whole file
+            // Use a separate scope to handle the result processing cleanly
+            let mut known_record_processed = false; // Flag to track if a known handler was called
+            let process_result: Result<(), CwrParseError> = {
+                match record_type {
+                    // HDR should not appear again, treat as error or skip? Skipping for now.
+                    "HDR" => { // This case should ideally not be hit in the loop
+                        log_error(&mut prepared_statements.error_stmt, line_number, "Unexpected HDR record found after first line, skipping.".to_string())?;
+                        // If the handler returns Ok, set the flag
+                        known_record_processed = true; // Still mark as processed if we just log/skip
+                        Ok(())
+                    }
+                    // Apply the pattern: call handler, set flag on success
+                    // NOTE: These calls WILL FAIL TO COMPILE until their signatures are updated
+                    //       to accept the `context` argument.
+                    "GRH" => { record_handlers::parse_and_insert_grh(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "GRT" => { record_handlers::parse_and_insert_grt(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "TRL" => { record_handlers::parse_and_insert_trl(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "AGR" => { record_handlers::parse_and_insert_agr(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "NWR" | "REV" | "ISW" | "EXC" => { record_handlers::parse_and_insert_nwr(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "ACK" => { record_handlers::parse_and_insert_ack(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "TER" => { record_handlers::parse_and_insert_ter(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "IPA" => { record_handlers::parse_and_insert_ipa(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "NPA" => { record_handlers::parse_and_insert_npa(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "SPU" | "OPU" => { record_handlers::parse_and_insert_spu(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "NPN" => { record_handlers::parse_and_insert_npn(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "SPT" | "OPT" => { record_handlers::parse_and_insert_spt(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "SWR" | "OWR" => { record_handlers::parse_and_insert_swr(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "NWN" => { record_handlers::parse_and_insert_nwn(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "SWT" | "OWT" => { record_handlers::parse_and_insert_swt(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "PWR" => { record_handlers::parse_and_insert_pwr(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "ALT" => { record_handlers::parse_and_insert_alt(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "NAT" => { record_handlers::parse_and_insert_nat(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "EWT" => { record_handlers::parse_and_insert_ewt(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "VER" => { record_handlers::parse_and_insert_ver(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "PER" => { record_handlers::parse_and_insert_per(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "NPR" => { record_handlers::parse_and_insert_npr(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "REC" => { record_handlers::parse_and_insert_rec(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "ORN" => { record_handlers::parse_and_insert_orn(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "INS" => { record_handlers::parse_and_insert_ins(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "IND" => { record_handlers::parse_and_insert_ind(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "COM" => { record_handlers::parse_and_insert_com(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "MSG" => { record_handlers::parse_and_insert_msg(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "NET" | "NCT" | "NVT" => { record_handlers::parse_and_insert_net(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "NOW" => { record_handlers::parse_and_insert_now(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "ARI" => { record_handlers::parse_and_insert_ari(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    "XRF" => { record_handlers::parse_and_insert_xrf(line_number, &tx, &mut prepared_statements, &safe_slice)?; known_record_processed = true; Ok(()) },
+                    _ => { // Unrecognized record type
+                        log_error(&mut prepared_statements.error_stmt, line_number, format!("Unrecognized record type '{}', skipping.", record_type))?;
+                        // known_record_processed remains false
+                        Ok(()) // Still Ok overall, just skipped this line
+                    }
                 }
-            };
+            }; // End of inner scope for process_result
 
             // Check the result of processing this line
             match process_result {
                 Ok(_) => {
-                    // Only increment if it wasn't an unknown/skipped type
-                    if record_type != "_" { // Use a placeholder or check against known types
+                    // Only increment if a known record type was processed successfully
+                    if known_record_processed {
                         processed_records += 1;
                     }
+                    // If !known_record_processed, it was an unknown type, already logged, do nothing more.
                 }
                 Err(e) => {
                     // An error occurred processing this line (e.g., BadFormat from validation, or DB error from macro)
