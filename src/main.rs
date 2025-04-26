@@ -18,13 +18,14 @@ enum CwrParseError {
     BadFormat(String),
 }
 
-// Implement conversions and Error trait (same as before)
 impl From<io::Error> for CwrParseError {
     fn from(err: io::Error) -> CwrParseError { CwrParseError::Io(err) }
 }
+
 impl From<rusqlite::Error> for CwrParseError {
     fn from(err: rusqlite::Error) -> CwrParseError { CwrParseError::Db(err) }
 }
+
 impl std::fmt::Display for CwrParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -44,9 +45,7 @@ impl std::error::Error for CwrParseError {
     }
 }
 
-// --- Main Function ---
 fn main() {
-    // (Same as previous version: parse args, determine db filename, setup db)
     let args: Vec<String> = env::args().collect();
     if args.len() != 2 {
         eprintln!("Usage: {} <input_filename>", args[0]);
@@ -134,8 +133,8 @@ fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
         let description: String = row.get(0)?;
         let count: i64 = row.get(1)?;
         // Truncate description if too long for alignment
-        let desc_display = if description.len() > 60 {
-            description[..57].to_string().to_owned() + "..."
+        let desc_display = if description.len() > 65 {
+            description[..62].to_string().to_owned() + "..."
         } else {
             description
         };
@@ -165,8 +164,6 @@ fn format_int_with_commas(num: i64) -> String {
     result
 }
 
-
-// --- Helper Functions ---
 fn determine_db_filename(input_filename: &str) -> String {
     let mut n = 0;
     let mut db_filename = format!("{}.db", input_filename);
@@ -201,16 +198,20 @@ fn setup_database(db_filename: &str, schema_path: &str) -> Result<(), Box<dyn st
     Ok(())
 }
 
-/// Logs a CwrParseError to stderr and the error table.                                                                                                                                                         
-fn log_error(tx: &mut Transaction, line_number: usize, error: &CwrParseError) -> Result<(), rusqlite::Error> {
-    // Use the Display implementation of the error for the description                                                                                                                                              
-    let description = error.to_string();
-    // Insert into the database table                                                                                                                                                                               
+/// Inserts a record into the 'error' table to log errors.
+fn log_error(tx: &mut Transaction, line_number: usize, description: String) -> Result<(), rusqlite::Error> {
+    // Insert into the database table
     tx.execute(
         "INSERT INTO error (line_number, description) VALUES (?1, ?2)",
         params![line_number as i64, description],
     )?;
     Ok(())
+}
+
+/// Logs a CwrParseError to stderr and the error table.                                                                                                                                                         
+fn log_cwr_parse_error(tx: &mut Transaction, line_number: usize, error: &CwrParseError) -> Result<(), rusqlite::Error> {
+    let description = error.to_string();
+    log_error(tx, line_number, description)
 }
 
 /// Inserts a record into the 'file' table to link a CWR record to its source line.
@@ -227,8 +228,6 @@ fn insert_file_record(
     Ok(())
 }
 
-
-// --- File Processing Logic ---
 fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<usize, CwrParseError> {
     let file = File::open(input_filename)?;
     let reader = BufReader::new(file);
@@ -246,7 +245,7 @@ fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<usiz
         }
 
         if line.len() < 3 {
-            eprintln!("Warning: Line {} is too short (less than 3 chars), skipping.", line_number);
+            log_error(&mut tx, line_number, format!("Line {} is too short (less than 3 chars), skipping.", line_number))?;
             continue;
         }
 
@@ -254,7 +253,6 @@ fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<usiz
 
         // --- Define the Safe Slice Helper Closure ---
         // It's defined here to capture `line` and `line_number` for error messages if needed
-        // but the logic doesn't strictly require capturing line_number.
         let safe_slice = |start: usize, end: usize| -> Result<Option<String>, CwrParseError> {
             let slice_opt = if end > line.len() {
                 if start >= line.len() {
@@ -289,17 +287,17 @@ fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<usiz
             "GRT" => parse_and_insert_grt(line_number, &mut tx, &safe_slice),
             "TRL" => parse_and_insert_trl(line_number, &mut tx, &safe_slice),
             "AGR" => parse_and_insert_agr(line_number, &mut tx, &safe_slice),
-            "NWR" | "REV" | "ISW" | "EXC" => parse_and_insert_nwr(line_number, &mut tx, &safe_slice), // NWR handles multiple types
+            "NWR" | "REV" | "ISW" | "EXC" => parse_and_insert_nwr(line_number, &mut tx, &safe_slice),
             "ACK" => parse_and_insert_ack(line_number, &mut tx, &safe_slice),
             "TER" => parse_and_insert_ter(line_number, &mut tx, &safe_slice),
             "IPA" => parse_and_insert_ipa(line_number, &mut tx, &safe_slice),
             "NPA" => parse_and_insert_npa(line_number, &mut tx, &safe_slice),
-            "SPU" | "OPU" => parse_and_insert_spu(line_number, &mut tx, &safe_slice), // SPU handles SPU/OPU
+            "SPU" | "OPU" => parse_and_insert_spu(line_number, &mut tx, &safe_slice),
             "NPN" => parse_and_insert_npn(line_number, &mut tx, &safe_slice),
-            "SPT" | "OPT" => parse_and_insert_spt(line_number, &mut tx, &safe_slice), // SPT handles SPT/OPT
-            "SWR" | "OWR" => parse_and_insert_swr(line_number, &mut tx, &safe_slice), // SWR handles SWR/OWR
+            "SPT" | "OPT" => parse_and_insert_spt(line_number, &mut tx, &safe_slice),
+            "SWR" | "OWR" => parse_and_insert_swr(line_number, &mut tx, &safe_slice),
             "NWN" => parse_and_insert_nwn(line_number, &mut tx, &safe_slice),
-            "SWT" | "OWT" => parse_and_insert_swt(line_number, &mut tx, &safe_slice), // SWT handles SWT/OWT
+            "SWT" | "OWT" => parse_and_insert_swt(line_number, &mut tx, &safe_slice),
             "PWR" => parse_and_insert_pwr(line_number, &mut tx, &safe_slice),
             "ALT" => parse_and_insert_alt(line_number, &mut tx, &safe_slice),
             "NAT" => parse_and_insert_nat(line_number, &mut tx, &safe_slice),
@@ -313,12 +311,12 @@ fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<usiz
             "IND" => parse_and_insert_ind(line_number, &mut tx, &safe_slice),
             "COM" => parse_and_insert_com(line_number, &mut tx, &safe_slice),
             "MSG" => parse_and_insert_msg(line_number, &mut tx, &safe_slice),
-            "NET" | "NCT" | "NVT" => parse_and_insert_net(line_number, &mut tx, &safe_slice), // NET handles multiple types
+            "NET" | "NCT" | "NVT" => parse_and_insert_net(line_number, &mut tx, &safe_slice),
             "NOW" => parse_and_insert_now(line_number, &mut tx, &safe_slice),
             "ARI" => parse_and_insert_ari(line_number, &mut tx, &safe_slice),
             "XRF" => parse_and_insert_xrf(line_number, &mut tx, &safe_slice),
             _ => {
-                // eprintln!("Warning: Unrecognized record type '{}', skipping.", line_number, record_type);
+                log_error(&mut tx, line_number, format!("Unrecognized record type '{}', skipping.", record_type))?;
                 Ok(()) // Don't treat unknown as an error for the whole file
             }
         };
@@ -335,7 +333,7 @@ fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<usiz
                 // An error occurred processing this line (e.g., BadFormat from validation, or DB error from macro)                                                                                                 
 
                 // Attempt to log the error first.                                                                                                                                                                  
-                if let Err(log_err) = log_error(&mut tx, line_number, &e) {
+                if let Err(log_err) = log_cwr_parse_error(&mut tx, line_number, &e) {
                     // If logging *itself* fails, we have a serious problem (likely DB issue). Abort immediately.                                                                                                   
                     eprintln!(
                         "CRITICAL Error: Failed to log error to database on line {}: {} (Original error was: {})",
@@ -416,13 +414,11 @@ fn parse_transaction_prefix(
     tx: &mut Transaction,
     safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,
 ) -> Result<(String, String, String), CwrParseError> {
-    // The macro handles the '?' internally, so we don't need it here.
     let record_type = get_mandatory_field!(&tx, safe_slice, 0, 3, line_number, "Transaction", "Record Type");
     let transaction_sequence_num = get_mandatory_field!(&tx, safe_slice, 3, 11, line_number, &record_type, "Transaction Sequence #");
     let record_sequence_num = get_mandatory_field!(&tx, safe_slice, 11, 19, line_number, &record_type, "Record Sequence #");
     Ok((record_type, transaction_sequence_num, record_sequence_num))
 }
-
 
 // HDR - Transmission Header
 fn parse_and_insert_hdr(
@@ -634,7 +630,6 @@ fn parse_and_insert_nwr(
     Ok(())
 }
 
-
 // ACK - Acknowledgement of Transaction
 fn parse_and_insert_ack(
     line_number: usize,
@@ -701,7 +696,6 @@ fn parse_and_insert_ter(
     Ok(())
 }
 
-
 // IPA - Interested Party of Agreement
 fn parse_and_insert_ipa(line_number: usize, tx: &mut Transaction, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>,) -> Result<(), CwrParseError> {
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, tx, safe_slice)?;
@@ -749,7 +743,6 @@ fn parse_and_insert_ipa(line_number: usize, tx: &mut Transaction, safe_slice: &i
     Ok(())
 }
 
-
 // NPA - Non-Roman Alphabet Interested Party Name (associated with IPA)
 fn parse_and_insert_npa(
     line_number: usize,
@@ -775,7 +768,6 @@ fn parse_and_insert_npa(
     insert_file_record(tx, line_number, &record_type, record_id)?;
     Ok(())
 }
-
 
 // SPU - Publisher Controlled by Submitter / OPU - Other Publisher
 fn parse_and_insert_spu(
@@ -953,7 +945,6 @@ fn parse_and_insert_swr(
     Ok(())
 }
 
-
 // NWN - Non-Roman Alphabet Writer Name
 fn parse_and_insert_nwn(
     line_number: usize,
@@ -1004,7 +995,6 @@ fn parse_and_insert_swt(
     insert_file_record(tx, line_number, &record_type, record_id)?;
     Ok(())
 }
-
 
 // PWR - Publisher for Writer relationship
 fn parse_and_insert_pwr(
@@ -1081,7 +1071,6 @@ fn parse_and_insert_nat(
     Ok(())
 }
 
-
 // EWT - Entire Work Title for Excerpts
 fn parse_and_insert_ewt(
     line_number: usize,
@@ -1146,7 +1135,6 @@ fn parse_and_insert_ver(
     Ok(())
 }
 
-
 // PER - Performing Artist
 fn parse_and_insert_per(
     line_number: usize,
@@ -1200,7 +1188,6 @@ fn parse_and_insert_npr(
     Ok(())
 }
 
-
 // REC - Recording Detail
 fn parse_and_insert_rec(
     line_number: usize,
@@ -1248,7 +1235,6 @@ fn parse_and_insert_rec(
     insert_file_record(tx, line_number, &record_type, record_id)?;
     Ok(())
 }
-
 
 // ORN - Work Origin
 fn parse_and_insert_orn(
@@ -1298,7 +1284,6 @@ fn parse_and_insert_orn(
     insert_file_record(tx, line_number, &record_type, record_id)?;
     Ok(())
 }
-
 
 // INS - Instrumentation Summary
 fn parse_and_insert_ins(
@@ -1351,7 +1336,6 @@ fn parse_and_insert_ind(
     Ok(())
 }
 
-
 // COM - Composite Component
 fn parse_and_insert_com(
     line_number: usize,
@@ -1382,7 +1366,6 @@ fn parse_and_insert_com(
     insert_file_record(tx, line_number, &record_type, record_id)?;
     Ok(())
 }
-
 
 // MSG - Message (Part of ACK Transaction usually)
 fn parse_and_insert_msg(
@@ -1430,7 +1413,6 @@ fn parse_and_insert_net(
     Ok(())
 }
 
-
 // NOW - Non-Roman Alphabet Writer Name (for EWT/VER/COM)
 fn parse_and_insert_now(
     line_number: usize,
@@ -1454,7 +1436,6 @@ fn parse_and_insert_now(
     insert_file_record(tx, line_number, &record_type, record_id)?;
     Ok(())
 }
-
 
 // ARI - Additional Related Information
 fn parse_and_insert_ari(
@@ -1505,6 +1486,3 @@ fn parse_and_insert_xrf(
     insert_file_record(tx, line_number, &record_type, record_id)?;
     Ok(())
 }
-
-
-// --- END OF FILE main.rs.txt ---
