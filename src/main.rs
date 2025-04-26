@@ -5,7 +5,19 @@ use std::path::Path;
 use std::process;
 use std::time::Instant;
 
-use rusqlite::{params, Connection, Statement, Transaction};
+// Declare modules
+mod db;
+mod error;
+mod parser;
+mod report;
+mod util;
+
+// Use specific items from modules
+use crate::db::{determine_db_filename, setup_database};
+use crate::error::CwrParseError;
+use crate::parser::process_and_load_file;
+use crate::report::report_summary;
+use crate::util::format_int_with_commas;
 
 #[derive(Debug)]
 enum CwrParseError {
@@ -181,21 +193,6 @@ fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     Ok(())
-}
-
-/// Formats an integer with commas as thousands separators.
-fn format_int_with_commas(num: i64) -> String {
-    let s = num.to_string();
-    let mut result = String::new();
-    let len = s.len();
-    for (i, c) in s.chars().enumerate() {
-        result.push(c);
-        let pos = len - 1 - i;
-        if pos > 0 && pos % 3 == 0 {
-            result.push(',');
-        }
-    }
-    result
 }
 
 fn determine_db_filename(input_filename: &str) -> String {
