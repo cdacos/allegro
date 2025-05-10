@@ -1,5 +1,4 @@
 use crate::db;
-use rusqlite;
 use std::io;
 
 #[derive(Debug)]
