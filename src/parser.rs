@@ -15,7 +15,7 @@ pub struct ParsingContext {
 
 fn get_cwr_version(hdr_line: &str) -> Result<f32, CwrParseError> {
     // Define valid CWR versions
-    let valid_cwr_versions = vec![2.0, 2.1, 2.2];
+    let valid_cwr_versions = [2.0, 2.1, 2.2];
 
     // Determine version based on header line length
     let cwr_version = if hdr_line.len() < 87 {
