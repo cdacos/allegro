@@ -83,15 +83,14 @@ impl GrhRecord {
 
     /// Convert this record to a CWR format line
     pub fn to_cwr_line(&self) -> String {
-        format!(
-            "{}{}{}{}{}{}",
-            self.record_type,                                                                    // 3 chars
-            format!("{:3}", self.transaction_type),                                             // 3 chars  
-            format!("{:5}", self.group_id),                                                     // 5 chars
-            format!("{:5}", self.version_number),                                               // 5 chars
-            format!("{:10}", self.batch_request.as_deref().unwrap_or("")),                     // 10 chars
-            format!("{:2}", self.submission_distribution_type.as_deref().unwrap_or(""))        // 2 chars
-        )
+        vec![
+            format!("{:3}", self.record_type),
+            format!("{:3}", self.transaction_type),
+            format!("{:5}", self.group_id),
+            format!("{:5}", self.version_number),
+            format!("{:10}", self.batch_request.as_deref().unwrap_or("")),
+            format!("{:2}", self.submission_distribution_type.as_deref().unwrap_or(""))
+        ].join("")
     }
 }
 

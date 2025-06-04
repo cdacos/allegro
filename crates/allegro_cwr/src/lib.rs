@@ -20,7 +20,7 @@ pub enum OutputFormat {
 pub use allegro_cwr_sqlite::{determine_db_filename, setup_database};
 pub use crate::error::CwrParseError;
 pub use crate::parser::{process_and_load_file, process_and_stream_json, ParsingContext};
-pub use crate::records::GrhRecord;
+pub use crate::records::{AgrRecord, GrhRecord, GrtRecord, HdrRecord, NwrRecord, SwrRecord, TrlRecord};
 pub use crate::report::report_summary;
 pub use crate::util::format_int_with_commas;
 
