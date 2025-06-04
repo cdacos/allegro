@@ -8,6 +8,13 @@ pub mod record_handlers;
 pub mod report;
 pub mod util;
 
+#[derive(Debug, Clone)]
+pub enum OutputFormat {
+    Default,
+    Sql,
+    Json,
+}
+
 // Re-export commonly used items
 pub use allegro_cwr_sqlite::{determine_db_filename, setup_database};
 pub use crate::error::CwrParseError;
@@ -17,11 +24,11 @@ pub use crate::util::format_int_with_commas;
 
 /// Main processing function that combines parsing and reporting
 pub fn process_cwr_file(input_filename: &str) -> Result<(String, usize), CwrParseError> {
-    process_cwr_file_with_output(input_filename, None)
+    process_cwr_file_with_output(input_filename, None, OutputFormat::Default)
 }
 
 /// Main processing function with optional output path
-pub fn process_cwr_file_with_output(input_filename: &str, output_path: Option<&str>) -> Result<(String, usize), CwrParseError> {
+pub fn process_cwr_file_with_output(input_filename: &str, output_path: Option<&str>, format: OutputFormat) -> Result<(String, usize), CwrParseError> {
     let db_filename = determine_db_filename(input_filename, output_path);
     
     println!("Using database filename: '{}'", db_filename);
@@ -30,7 +37,7 @@ pub fn process_cwr_file_with_output(input_filename: &str, output_path: Option<&s
     
     let (file_id, count) = process_and_load_file(input_filename, &db_filename)?;
     
-    report_summary(&db_filename, file_id).map_err(|e| CwrParseError::BadFormat(format!("Report generation error: {}", e)))?;
+    report_summary(&db_filename, file_id, format).map_err(|e| CwrParseError::BadFormat(format!("Report generation error: {}", e)))?;
     
     Ok((db_filename, count))
 }
