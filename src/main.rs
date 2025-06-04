@@ -2,17 +2,7 @@ use std::env;
 use std::process;
 use std::time::Instant;
 
-mod db;
-mod error;
-mod parser;
-mod record_handlers;
-mod report;
-mod util;
-
-// Use specific items from modules
-use crate::db::{determine_db_filename, setup_database};
-use crate::report::report_summary;
-use crate::util::format_int_with_commas;
+use allegro_cwr::{process_cwr_file, format_int_with_commas};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -22,41 +12,25 @@ fn main() {
         process::exit(1);
     }
     let input_filename = &args[1];
-    let db_filename = determine_db_filename(input_filename);
-    println!("Using database filename: '{}'", db_filename);
-
-    match setup_database(&db_filename) {
-        Ok(_) => {}
-        Err(e) => {
-            eprintln!("Error setting up database '{}': {}", db_filename, e);
-            process::exit(1);
-        }
-    }
 
     println!("Processing input file: {}...", input_filename);
 
     let start_time = Instant::now();
 
-    let result = parser::process_and_load_file(input_filename, &db_filename);
+    let result = process_cwr_file(input_filename);
 
     let elapsed_time = start_time.elapsed();
 
     println!("Done!");
 
     // Handle the result of file processing
-    let count = match result {
-        Ok(c) => c,
+    let (db_filename, count) = match result {
+        Ok((db, c)) => (db, c),
         Err(e) => {
-            eprintln!("Error processing file '{}' into '{}' after {:.2?}: {}", input_filename, db_filename, elapsed_time, e);
+            eprintln!("Error processing file '{}' after {:.2?}: {}", input_filename, elapsed_time, e);
             process::exit(1);
         }
     };
-
-    // --- Reporting ---
-    match report_summary(&db_filename) {
-        Ok(_) => {}
-        Err(e) => eprintln!("Error generating report from database '{}': {}", db_filename, e),
-    }
 
     println!("Successfully processed {} CWR records from '{}' into '{}' in {:.2?}.", format_int_with_commas(count as i64), input_filename, db_filename, elapsed_time);
 }
