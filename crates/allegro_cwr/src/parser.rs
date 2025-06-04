@@ -126,7 +126,7 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
             };
             // --- End of Safe Slice Definition ---
 
-            // Use a separate scope to handle the result processing cleanly
+            // Process the record with graduated error recovery
             let process_result: Result<(), CwrParseError> = {
                 match record_type {
                     // Apply the pattern: call handler, set flag on success
@@ -166,39 +166,50 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
                     _ => {
                         // Unrecognized record type
                         log_error(&mut prepared_statements.error_stmt, context.file_id, line_number, format!("Unrecognized record type '{}', skipping.", record_type))?;
-                        // known_record_processed remains false
                         Ok(()) // Still Ok overall, just skipped this line
                     }
                 }
-            }; // End of inner scope for process_result
+            };
 
-            // Check the result of processing this line
+            // Handle the result with graduated error recovery
             match process_result {
-                Ok(_) => {}
+                Ok(_) => {
+                    // Record processed successfully, continue to next
+                }
                 Err(e) => {
-                    // An error occurred processing this line (e.g., BadFormat from validation, or DB error from macro)
-
-                    if let Err(log_err) = error::log_cwr_parse_error(&mut prepared_statements, context.file_id, line_number, &e) {
-                        // If logging *itself* fails, we have a serious problem (likely DB issue). Abort immediately.
-                        eprintln!("CRITICAL Error: Failed to log error to database on line {}: {} (Original error was: {})", line_number, log_err, e);
-                        // Return the database error that occurred during logging.
-                        return Err(CwrParseError::from(log_err));
-                    }
-
-                    // Logging succeeded. Now decide if the *original* error warrants stopping.
-                    match e {
-                        // BadFormat errors are logged per record, but we continue processing the file.
-                        CwrParseError::BadFormat(_) => {
-                            // Logged above. Continue to the next line.
-                            // No action needed here, the loop will just continue.
+                    // Determine if this is a recoverable error
+                    let is_recoverable = match &e {
+                        CwrParseError::BadFormat(_) => true,
+                        CwrParseError::Db(db_err) => {
+                            // Check if it's a constraint violation (recoverable) vs system error (unrecoverable)
+                            match db_err {
+                                rusqlite::Error::SqliteFailure(err, _) => {
+                                    match err.code {
+                                        rusqlite::ErrorCode::ConstraintViolation => true,
+                                        rusqlite::ErrorCode::TooBig => true,
+                                        rusqlite::ErrorCode::DatabaseCorrupt => false,
+                                        rusqlite::ErrorCode::SystemIoFailure => false,
+                                        _ => false, // Conservative: treat unknown DB errors as unrecoverable
+                                    }
+                                }
+                                _ => false, // Other DB errors are unrecoverable
+                            }
                         }
-                        // IO errors (reading the file) or DB errors (during parsing/insertion, *not* during logging)
-                        // are usually fatal for the whole process.
-                        CwrParseError::Io(_) | CwrParseError::Db(_) => {
-                            eprintln!("Aborting transaction due to unrecoverable error: {}", e);
-                            // Propagate the original error to trigger transaction rollback.
-                            return Err(e);
+                        CwrParseError::Io(_) => false, // File IO errors are unrecoverable
+                    };
+
+                    if is_recoverable {
+                        // Log the error for this record and continue processing
+                        if let Err(log_err) = error::log_cwr_parse_error(&mut prepared_statements, context.file_id, line_number, &e) {
+                            eprintln!("CRITICAL Error: Failed to log recoverable error to database on line {}: {} (Original error was: {})", line_number, log_err, e);
+                            return Err(CwrParseError::from(log_err));
                         }
+
+                        // Continue to next record (don't return error)
+                    } else {
+                        // Unrecoverable error - abort the entire transaction
+                        eprintln!("Aborting transaction due to unrecoverable error on line {}: {}", line_number, e);
+                        return Err(e);
                     }
                 }
             }
