@@ -69,14 +69,16 @@ impl AriRecord {
 
     /// Convert this record to a CWR format line
     pub fn to_cwr_line(&self) -> String {
-        let fields = [format!("{:3}", self.record_type),
+        let fields = [
+            format!("{:3}", self.record_type),
             format!("{:8}", self.transaction_sequence_num),
             format!("{:8}", self.record_sequence_num),
             format!("{:3}", self.society_num),
             format!("{:14}", self.work_num.as_deref().unwrap_or("")),
             format!("{:3}", self.type_of_right),
             format!("{:2}", self.subject_code.as_deref().unwrap_or("")),
-            format!("{:160}", self.note.as_deref().unwrap_or(""))];
+            format!("{:160}", self.note.as_deref().unwrap_or("")),
+        ];
 
         fields.join("")
     }
