@@ -9,7 +9,7 @@ pub fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error
     println!();
     println!("{:<5} | {:>10}", "Type", "Count"); // Header (Right-align Count)
     println!("{:-<5}-+-{:-<10}", "", ""); // Separator (No change needed here)
-    let mut stmt_rec = conn.prepare("SELECT record_type, count(*) FROM file GROUP BY record_type ORDER BY record_type")?;
+    let mut stmt_rec = conn.prepare("SELECT record_type, count(*) FROM file_line GROUP BY record_type ORDER BY record_type")?;
     let mut rows_rec = stmt_rec.query([])?;
     let mut record_found = false;
     while let Some(row) = rows_rec.next()? {
@@ -19,7 +19,7 @@ pub fn report_summary(db_filename: &str) -> Result<(), Box<dyn std::error::Error
         println!("{:<5} | {:>10}", record_type, format_int_with_commas(count)); // Right-align count
     }
     if !record_found {
-        println!("  No records loaded into 'file' table.");
+        println!("  No records loaded into 'file_line' table.");
     }
 
     // Error Report

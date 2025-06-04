@@ -4,7 +4,7 @@ CREATE TABLE file (
     file_id INTEGER PRIMARY KEY,
     file_path TEXT,
     imported_on DATETIME
-)
+);
 
 CREATE TABLE error (
     error_id INTEGER PRIMARY KEY,

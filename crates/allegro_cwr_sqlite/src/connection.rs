@@ -74,6 +74,7 @@ pub fn setup_database_with_overwrite(db_filename: &str, overwrite: bool) -> Resu
         // Drop and recreate all tables to ensure clean state
         conn.execute_batch("DROP TABLE IF EXISTS error")?;
         conn.execute_batch("DROP TABLE IF EXISTS file")?;
+        conn.execute_batch("DROP TABLE IF EXISTS file_line")?;
         // Drop all CWR tables
         let table_names: Vec<String> = conn.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'cwr_%'")?
             .query_map([], |row| Ok(row.get::<_, String>(0)?))?
