@@ -1,4 +1,4 @@
-use crate::{util::format_int_with_commas, OutputFormat};
+use crate::{OutputFormat, util::format_int_with_commas};
 use rusqlite::Connection;
 
 /// Generates and prints summary reports from the database for a specific file import.
@@ -6,12 +6,8 @@ pub fn report_summary(db_filename: &str, file_id: i64, format: OutputFormat) -> 
     let conn = Connection::open(db_filename)?;
 
     match format {
-        OutputFormat::Default | OutputFormat::Sql => {
-            generate_default_report(&conn, file_id)
-        }
-        OutputFormat::Json => {
-            generate_json_report(&conn, file_id)
-        }
+        OutputFormat::Default | OutputFormat::Sql => generate_default_report(&conn, file_id),
+        OutputFormat::Json => generate_json_report(&conn, file_id),
     }
 }
 
@@ -56,10 +52,9 @@ fn generate_default_report(conn: &Connection, file_id: i64) -> Result<(), Box<dy
     Ok(())
 }
 
-
 fn generate_json_report(conn: &Connection, file_id: i64) -> Result<(), Box<dyn std::error::Error>> {
     use std::collections::HashMap;
-    
+
     // Collect record type data
     let mut record_types = HashMap::new();
     let mut stmt_rec = conn.prepare("SELECT record_type, count(*) FROM file_line WHERE file_id = ?1 GROUP BY record_type ORDER BY record_type")?;
@@ -69,7 +64,7 @@ fn generate_json_report(conn: &Connection, file_id: i64) -> Result<(), Box<dyn s
         let count: i64 = row.get(1)?;
         record_types.insert(record_type, count);
     }
-    
+
     // Collect error data
     let mut errors = HashMap::new();
     let mut stmt_err = conn.prepare("SELECT description, count(*) FROM error WHERE file_id = ?1 GROUP BY description ORDER BY count(*) DESC")?;
@@ -79,12 +74,12 @@ fn generate_json_report(conn: &Connection, file_id: i64) -> Result<(), Box<dyn s
         let count: i64 = row.get(1)?;
         errors.insert(description, count);
     }
-    
+
     // Generate JSON manually (simple format)
     println!("{{");
     println!("  \"file_id\": {},", file_id);
     println!("  \"record_types\": {{");
-    
+
     let mut first = true;
     for (record_type, count) in &record_types {
         if !first {
@@ -97,7 +92,7 @@ fn generate_json_report(conn: &Connection, file_id: i64) -> Result<(), Box<dyn s
         println!();
     }
     println!("  }},");
-    
+
     println!("  \"errors\": {{");
     first = true;
     for (description, count) in &errors {
@@ -114,6 +109,6 @@ fn generate_json_report(conn: &Connection, file_id: i64) -> Result<(), Box<dyn s
     }
     println!("  }}");
     println!("}}");
-    
+
     Ok(())
 }

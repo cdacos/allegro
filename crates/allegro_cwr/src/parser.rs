@@ -1,6 +1,6 @@
-use allegro_cwr_sqlite::{statements::get_prepared_statements, log_error, insert_file_record};
 use crate::error::CwrParseError;
 use crate::{error, record_handlers};
+use allegro_cwr_sqlite::{insert_file_record, log_error, statements::get_prepared_statements};
 use rusqlite::Connection;
 use std::fs::File;
 use std::io;
@@ -79,11 +79,8 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
     {
         // Scope for the main processing loop
         let mut prepared_statements = get_prepared_statements(&tx)?;
-        
-        let context = ParsingContext { 
-            cwr_version: get_cwr_version(hdr_line)?, 
-            file_id 
-        };
+
+        let context = ParsingContext { cwr_version: get_cwr_version(hdr_line)?, file_id };
         println!("Determined CWR Version: {}", context.cwr_version); // Log detected version
 
         // Reset the position to the start of the file
@@ -231,10 +228,7 @@ pub fn process_and_stream_json(input_filename: &str) -> Result<usize, CwrParseEr
     let hdr_line = first_line.trim_end();
 
     if !hdr_line.starts_with("HDR") {
-        return Err(CwrParseError::BadFormat(format!(
-            "File does not start with HDR record. Found: '{}'",
-            hdr_line.get(0..std::cmp::min(hdr_line.len(), 50)).unwrap_or("")
-        )));
+        return Err(CwrParseError::BadFormat(format!("File does not start with HDR record. Found: '{}'", hdr_line.get(0..std::cmp::min(hdr_line.len(), 50)).unwrap_or(""))));
     }
 
     let cwr_version = get_cwr_version(hdr_line)?;
@@ -274,7 +268,7 @@ pub fn process_and_stream_json(input_filename: &str) -> Result<usize, CwrParseEr
         if !first_record {
             println!(",");
         }
-        
+
         stream_record_as_json(record_type, &line, line_number, cwr_version)?;
         first_record = false;
     }
@@ -288,26 +282,10 @@ pub fn process_and_stream_json(input_filename: &str) -> Result<usize, CwrParseEr
 
 fn stream_record_as_json(record_type: &str, line: &str, line_number: usize, cwr_version: f32) -> Result<(), CwrParseError> {
     // Helper function to safely extract field
-    let safe_extract = |start: usize, end: usize| -> Option<String> {
-        if end > line.len() {
-            if start >= line.len() {
-                None
-            } else {
-                line.get(start..line.len()).map(|s| s.trim().to_string()).filter(|s| !s.is_empty())
-            }
-        } else {
-            line.get(start..end).map(|s| s.trim().to_string()).filter(|s| !s.is_empty())
-        }
-    };
+    let safe_extract = |start: usize, end: usize| -> Option<String> { if end > line.len() { if start >= line.len() { None } else { line.get(start..line.len()).map(|s| s.trim().to_string()).filter(|s| !s.is_empty()) } } else { line.get(start..end).map(|s| s.trim().to_string()).filter(|s| !s.is_empty()) } };
 
     // Helper to escape JSON strings
-    let escape_json = |s: &str| -> String {
-        s.replace('\\', "\\\\")
-         .replace('"', "\\\"")
-         .replace('\n', "\\n")
-         .replace('\r', "\\r")
-         .replace('\t', "\\t")
-    };
+    let escape_json = |s: &str| -> String { s.replace('\\', "\\\\").replace('"', "\\\"").replace('\n', "\\n").replace('\r', "\\r").replace('\t', "\\t") };
 
     // Helper to output optional field
     let output_field = |name: &str, value: Option<String>, first: &mut bool| {

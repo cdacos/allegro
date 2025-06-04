@@ -1,7 +1,7 @@
-use allegro_cwr_sqlite::{PreparedStatements, insert_file_line_record, log_error};
 use crate::error::CwrParseError;
-use crate::parser::ParsingContext; // Import the context struct
 use crate::get_mandatory_field;
+use crate::parser::ParsingContext; // Import the context struct
+use allegro_cwr_sqlite::{PreparedStatements, insert_file_line_record, log_error};
 use rusqlite::{Transaction, params};
 
 // Helper for parsing the standard transaction prefix (Type 1-3, TransSeq 4-11, RecSeq 12-19)
@@ -26,7 +26,7 @@ pub fn parse_and_insert_grh<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 
     stmts.grh_stmt.execute(params![context.file_id, &record_type, transaction_type, group_id, version_number, batch_request, submission_distribution_type])?;
 
-    let record_id = tx .last_insert_rowid();
+    let record_id = tx.last_insert_rowid();
     insert_file_line_record(&mut stmts.file_stmt, context.file_id, line_number, &record_type, record_id)?;
     Ok(())
 }
@@ -289,7 +289,22 @@ pub fn parse_and_insert_ack<'a>(line_number: usize, tx: &'a Transaction, stmts: 
     //     return Err(CwrParseError::BadFormat(format!("ACK Recipient Creation # is required when Transaction Status indicates acceptance")));
     // }
 
-    stmts.ack_stmt.execute(params![context.file_id, &record_type, transaction_sequence_num, record_sequence_num, creation_date, creation_time, original_group_id, original_transaction_sequence_num, original_transaction_type, creation_title, submitter_creation_num, recipient_creation_num, processing_date, transaction_status])?;
+    stmts.ack_stmt.execute(params![
+        context.file_id,
+        &record_type,
+        transaction_sequence_num,
+        record_sequence_num,
+        creation_date,
+        creation_time,
+        original_group_id,
+        original_transaction_sequence_num,
+        original_transaction_type,
+        creation_title,
+        submitter_creation_num,
+        recipient_creation_num,
+        processing_date,
+        transaction_status
+    ])?;
 
     let record_id = tx.last_insert_rowid();
     insert_file_line_record(&mut stmts.file_stmt, context.file_id, line_number, &record_type, record_id)?;

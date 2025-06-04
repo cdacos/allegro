@@ -1,44 +1,40 @@
 use std::process;
 use std::time::Instant;
 
-use allegro_cwr::{process_cwr_file_with_output, format_int_with_commas, OutputFormat};
+use allegro_cwr::{OutputFormat, format_int_with_commas, process_cwr_file_with_output};
 
 fn main() {
     let mut output_path = None;
     let mut input_filename = None;
     let mut format = OutputFormat::Default;
-    
+
     let mut parser = lexopt::Parser::from_env();
     while let Ok(arg) = parser.next() {
         match arg {
-            Some(lexopt::Arg::Short('o')) | Some(lexopt::Arg::Long("output")) => {
-                match parser.value() {
-                    Ok(val) => output_path = Some(val.to_string_lossy().to_string()),
-                    Err(e) => {
-                        eprintln!("Error: Missing value for --output: {}", e);
-                        process::exit(1);
-                    }
+            Some(lexopt::Arg::Short('o')) | Some(lexopt::Arg::Long("output")) => match parser.value() {
+                Ok(val) => output_path = Some(val.to_string_lossy().to_string()),
+                Err(e) => {
+                    eprintln!("Error: Missing value for --output: {}", e);
+                    process::exit(1);
                 }
-            }
-            Some(lexopt::Arg::Short('f')) | Some(lexopt::Arg::Long("format")) => {
-                match parser.value() {
-                    Ok(val) => {
-                        let format_str = val.to_string_lossy().to_lowercase();
-                        format = match format_str.as_str() {
-                            "sql" => OutputFormat::Sql,
-                            "json" => OutputFormat::Json,
-                            _ => {
-                                eprintln!("Error: Invalid format '{}'. Valid formats are: sql, json", format_str);
-                                process::exit(1);
-                            }
-                        };
-                    }
-                    Err(e) => {
-                        eprintln!("Error: Missing value for --format: {}", e);
-                        process::exit(1);
-                    }
+            },
+            Some(lexopt::Arg::Short('f')) | Some(lexopt::Arg::Long("format")) => match parser.value() {
+                Ok(val) => {
+                    let format_str = val.to_string_lossy().to_lowercase();
+                    format = match format_str.as_str() {
+                        "sql" => OutputFormat::Sql,
+                        "json" => OutputFormat::Json,
+                        _ => {
+                            eprintln!("Error: Invalid format '{}'. Valid formats are: sql, json", format_str);
+                            process::exit(1);
+                        }
+                    };
                 }
-            }
+                Err(e) => {
+                    eprintln!("Error: Missing value for --format: {}", e);
+                    process::exit(1);
+                }
+            },
             Some(lexopt::Arg::Value(val)) => {
                 if input_filename.is_some() {
                     eprintln!("Error: Multiple input files specified");
@@ -58,7 +54,7 @@ fn main() {
             None => break,
         }
     }
-    
+
     let input_filename = match input_filename {
         Some(filename) => filename,
         None => {

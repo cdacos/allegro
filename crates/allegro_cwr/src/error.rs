@@ -1,4 +1,4 @@
-use allegro_cwr_sqlite::{PreparedStatements, log_error, CwrDbError};
+use allegro_cwr_sqlite::{CwrDbError, PreparedStatements, log_error};
 use std::io;
 
 #[derive(Debug)]

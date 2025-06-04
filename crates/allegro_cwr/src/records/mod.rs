@@ -1,6 +1,6 @@
 //! CWR Record Type Definitions
-//! 
-//! This module contains typed representations of CWR records that mirror the 
+//!
+//! This module contains typed representations of CWR records that mirror the
 //! wire format structure. These serve as an intermediate layer between raw
 //! CWR lines and business domain objects.
 
@@ -23,14 +23,14 @@ pub mod now;
 pub mod npa;
 pub mod npn;
 pub mod npr;
-pub mod nwr;
 pub mod nwn;
+pub mod nwr;
 pub mod orn;
 pub mod per;
 pub mod pwr;
 pub mod rec;
-pub mod spu;
 pub mod spt;
+pub mod spu;
 pub mod swr;
 pub mod swt;
 pub mod ter;
@@ -58,14 +58,14 @@ pub use now::NowRecord;
 pub use npa::NpaRecord;
 pub use npn::NpnRecord;
 pub use npr::NprRecord;
-pub use nwr::NwrRecord;
 pub use nwn::NwnRecord;
+pub use nwr::NwrRecord;
 pub use orn::OrnRecord;
 pub use per::PerRecord;
 pub use pwr::PwrRecord;
 pub use rec::RecRecord;
-pub use spu::SpuRecord;
 pub use spt::SptRecord;
+pub use spu::SpuRecord;
 pub use swr::SwrRecord;
 pub use swt::SwtRecord;
 pub use ter::TerRecord;

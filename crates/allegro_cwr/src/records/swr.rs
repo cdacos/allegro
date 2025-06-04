@@ -1,90 +1,86 @@
 //! SWR - Writer Controlled by Submitter Record
-//! 
+//!
 //! Also handles OWR (Other Writer) records.
 
-use serde::{Deserialize, Serialize};
 use crate::error::CwrParseError;
+use serde::{Deserialize, Serialize};
 
 /// SWR - Writer Controlled by Submitter Record (also OWR - Other Writer)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SwrRecord {
     /// "SWR" or "OWR"
     pub record_type: String,
-    
+
     /// Transaction sequence number (8 chars)
     pub transaction_sequence_num: String,
-    
+
     /// Record sequence number (8 chars)
     pub record_sequence_num: String,
-    
+
     /// Interested party number (9 chars, conditional)
     pub interested_party_num: Option<String>,
-    
+
     /// Writer last name (45 chars, conditional)
     pub writer_last_name: Option<String>,
-    
+
     /// Writer first name (30 chars, optional)
     pub writer_first_name: Option<String>,
-    
+
     /// Writer unknown indicator (1 char, conditional)
     pub writer_unknown_indicator: Option<String>,
-    
+
     /// Writer designation code (2 chars, conditional)
     pub writer_designation_code: Option<String>,
-    
+
     /// Tax ID number (9 chars, optional)
     pub tax_id_num: Option<String>,
-    
+
     /// Writer IPI name number (11 chars, optional)
     pub writer_ipi_name_num: Option<String>,
-    
+
     /// PR affiliation society number (3 chars, optional)
     pub pr_affiliation_society_num: Option<String>,
-    
+
     /// PR ownership share (5 chars, optional)
     pub pr_ownership_share: Option<String>,
-    
+
     /// MR society (3 chars, optional)
     pub mr_society: Option<String>,
-    
+
     /// MR ownership share (5 chars, optional)
     pub mr_ownership_share: Option<String>,
-    
+
     /// SR society (3 chars, optional)
     pub sr_society: Option<String>,
-    
+
     /// SR ownership share (5 chars, optional)
     pub sr_ownership_share: Option<String>,
-    
+
     /// Reversionary indicator (1 char, optional)
     pub reversionary_indicator: Option<String>,
-    
+
     /// First recording refusal indicator (1 char, optional)
     pub first_recording_refusal_ind: Option<String>,
-    
+
     /// Work for hire indicator (1 char, optional)
     pub work_for_hire_indicator: Option<String>,
-    
+
     /// Filler (1 char, optional)
     pub filler: Option<String>,
-    
+
     /// Writer IPI base number (13 chars, optional)
     pub writer_ipi_base_number: Option<String>,
-    
+
     /// Personal number (12 chars, optional)
     pub personal_number: Option<String>,
-    
+
     /// USA license indicator (1 char, optional, v2.1+)
     pub usa_license_ind: Option<String>,
 }
 
 impl SwrRecord {
     /// Create a new SWR record
-    pub fn new(
-        record_type: String,
-        transaction_sequence_num: String,
-        record_sequence_num: String,
-    ) -> Self {
+    pub fn new(record_type: String, transaction_sequence_num: String, record_sequence_num: String) -> Self {
         Self {
             record_type,
             transaction_sequence_num,
@@ -111,21 +107,21 @@ impl SwrRecord {
             usa_license_ind: None,
         }
     }
-    
+
     /// Parse a CWR line into a SWR record
     pub fn from_cwr_line(line: &str) -> Result<Self, CwrParseError> {
         if line.len() < 179 {
             return Err(CwrParseError::BadFormat("SWR line too short".to_string()));
         }
-        
+
         let record_type = line.get(0..3).unwrap().to_string();
         if !["SWR", "OWR"].contains(&record_type.as_str()) {
             return Err(CwrParseError::BadFormat(format!("Expected SWR/OWR, found {}", record_type)));
         }
-        
+
         let transaction_sequence_num = line.get(3..11).unwrap().trim().to_string();
         let record_sequence_num = line.get(11..19).unwrap().trim().to_string();
-        
+
         // Extract all fields as optional
         let interested_party_num = line.get(19..28).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
         let writer_last_name = line.get(28..73).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
@@ -146,13 +142,9 @@ impl SwrRecord {
         let filler = line.get(153..154).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
         let writer_ipi_base_number = line.get(154..167).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
         let personal_number = line.get(167..179).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        
-        let usa_license_ind = if line.len() > 179 {
-            line.get(179..180).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string())
-        } else {
-            None
-        };
-        
+
+        let usa_license_ind = if line.len() > 179 { line.get(179..180).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string()) } else { None };
+
         Ok(SwrRecord {
             record_type,
             transaction_sequence_num,
@@ -206,12 +198,12 @@ impl SwrRecord {
             format!("{:13}", self.writer_ipi_base_number.as_deref().unwrap_or("")),
             format!("{:12}", self.personal_number.as_deref().unwrap_or("")),
         ];
-        
+
         // Add v2.1+ field
         if let Some(ref usa_license) = self.usa_license_ind {
             fields.push(format!("{:1}", usa_license));
         }
-        
+
         fields.join("")
     }
 }
@@ -222,27 +214,19 @@ mod tests {
 
     #[test]
     fn test_swr_creation() {
-        let swr = SwrRecord::new(
-            "SWR".to_string(),
-            "00000001".to_string(),
-            "00000002".to_string(),
-        );
-        
+        let swr = SwrRecord::new("SWR".to_string(), "00000001".to_string(), "00000002".to_string());
+
         assert_eq!(swr.record_type, "SWR");
         assert_eq!(swr.transaction_sequence_num, "00000001");
     }
-    
+
     #[test]
     fn test_swr_round_trip() {
-        let original = SwrRecord::new(
-            "SWR".to_string(),
-            "00000001".to_string(),
-            "00000002".to_string(),
-        );
-        
+        let original = SwrRecord::new("SWR".to_string(), "00000001".to_string(), "00000002".to_string());
+
         let line = original.to_cwr_line();
         let parsed = SwrRecord::from_cwr_line(&line).unwrap();
-        
+
         assert_eq!(original, parsed);
     }
 }
