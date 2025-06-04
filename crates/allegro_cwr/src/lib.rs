@@ -28,9 +28,9 @@ pub fn process_cwr_file_with_output(input_filename: &str, output_path: Option<&s
     
     setup_database(&db_filename).map_err(|e| CwrParseError::BadFormat(format!("Database setup error: {}", e)))?;
     
-    let count = process_and_load_file(input_filename, &db_filename)?;
+    let (file_id, count) = process_and_load_file(input_filename, &db_filename)?;
     
-    report_summary(&db_filename).map_err(|e| CwrParseError::BadFormat(format!("Report generation error: {}", e)))?;
+    report_summary(&db_filename, file_id).map_err(|e| CwrParseError::BadFormat(format!("Report generation error: {}", e)))?;
     
     Ok((db_filename, count))
 }

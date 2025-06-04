@@ -39,7 +39,7 @@ fn get_cwr_version(hdr_line: &str) -> Result<f32, CwrParseError> {
     if valid_cwr_versions.contains(&cwr_version) { Ok(cwr_version) } else { Err(CwrParseError::BadFormat(format!("Invalid CWR version: {}", cwr_version))) }
 }
 
-pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<usize, CwrParseError> {
+pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<(i64, usize), CwrParseError> {
     let file = File::open(input_filename)?;
     // Use BufReader::new directly, we need to consume the first line separately
     let mut reader = BufReader::new(file);
@@ -70,14 +70,15 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
     let tx = conn.transaction()?;
     let mut line_number: usize = 0; // Start at 0, HDR is line 1
 
-    {
-        // Scope for the main processing loop and prepared statements
-        // Prepare all statements *using the transaction*
-        // Keep the struct mutable as inserts happen within the handlers
+    let file_id = {
+        // Scope for file insertion
         let mut prepared_statements = get_prepared_statements(&tx)?;
-        
-        // Insert file record and get file_id
-        let file_id = insert_file_record(&tx, &mut prepared_statements.file_insert_stmt, input_filename)?;
+        insert_file_record(&tx, &mut prepared_statements.file_insert_stmt, input_filename)?
+    };
+
+    {
+        // Scope for the main processing loop
+        let mut prepared_statements = get_prepared_statements(&tx)?;
         
         let context = ParsingContext { 
             cwr_version: get_cwr_version(hdr_line)?, 
@@ -205,12 +206,15 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
                 }
             }
         }
+
+        // Drop prepared_statements to release the borrow on tx
+        drop(prepared_statements);
     }
 
     // Commit the transaction *only if* all lines were processed without error
     tx.commit()?;
 
-    Ok(line_number)
+    Ok((file_id, line_number))
 }
 
 // Helper macro for mandatory fields. Logs error to DB (using prepared statement) and returns "" if missing/empty.
