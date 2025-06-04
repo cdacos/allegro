@@ -5,4 +5,4 @@ edition = "2024"
 description = "CWR file parser CLI tool"
 
 [dependencies]
-allegro-cwr = { path = "../allegro-cwr" }
+allegro_cwr = { path = "../allegro_cwr" }

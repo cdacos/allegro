@@ -1,9 +1,9 @@
 [package]
-name = "allegro-cwr"
+name = "allegro_cwr"
 version = "0.1.0"
 edition = "2024"
 description = "CWR (Common Works Registration) file parser library"
 
 [dependencies]
-allegro-cwr-sqlite = { path = "../allegro-cwr-sqlite" }
+allegro_cwr_sqlite = { path = "../allegro_cwr_sqlite" }
 rusqlite = { version = "0.35.0", features = ["bundled"] }

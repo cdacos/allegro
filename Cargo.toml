@@ -1,7 +1,7 @@
 [workspace]
 members = [
-    "crates/allegro-cwr-sqlite",
-    "crates/allegro-cwr",
+    "crates/allegro_cwr_sqlite",
+    "crates/allegro_cwr",
     "crates/allegro",
 ]
 resolver = "2"

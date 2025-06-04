@@ -6,19 +6,19 @@ version = 4
 name = "allegro"
 version = "0.1.0"
 dependencies = [
- "allegro-cwr",
+ "allegro_cwr",
 ]
 
 [[package]]
-name = "allegro-cwr"
+name = "allegro_cwr"
 version = "0.1.0"
 dependencies = [
- "allegro-cwr-sqlite",
+ "allegro_cwr_sqlite",
  "rusqlite",
 ]
 
 [[package]]
-name = "allegro-cwr-sqlite"
+name = "allegro_cwr_sqlite"
 version = "0.1.0"
 dependencies = [
  "rusqlite",
