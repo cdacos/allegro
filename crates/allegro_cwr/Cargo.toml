@@ -7,3 +7,4 @@ description = "CWR (Common Works Registration) file parser library"
 [dependencies]
 allegro_cwr_sqlite = { path = "../allegro_cwr_sqlite" }
 rusqlite = { version = "0.35.0", features = ["bundled"] }
+serde = { version = "1.0", features = ["derive"] }

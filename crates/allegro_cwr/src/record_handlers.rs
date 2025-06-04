@@ -26,7 +26,7 @@ pub fn parse_and_insert_grh<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 
     stmts.grh_stmt.execute(params![context.file_id, &record_type, transaction_type, group_id, version_number, batch_request, submission_distribution_type])?;
 
-    let record_id = tx.last_insert_rowid();
+    let record_id = tx .last_insert_rowid();
     insert_file_line_record(&mut stmts.file_stmt, context.file_id, line_number, &record_type, record_id)?;
     Ok(())
 }

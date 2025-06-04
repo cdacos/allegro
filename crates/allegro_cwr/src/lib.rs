@@ -5,6 +5,7 @@
 pub mod error;
 pub mod parser;
 pub mod record_handlers;
+pub mod records;
 pub mod report;
 pub mod util;
 
@@ -19,6 +20,7 @@ pub enum OutputFormat {
 pub use allegro_cwr_sqlite::{determine_db_filename, setup_database};
 pub use crate::error::CwrParseError;
 pub use crate::parser::{process_and_load_file, process_and_stream_json, ParsingContext};
+pub use crate::records::GrhRecord;
 pub use crate::report::report_summary;
 pub use crate::util::format_int_with_commas;
 
@@ -49,5 +51,20 @@ pub fn process_cwr_file_with_output(input_filename: &str, output_path: Option<&s
             
             Ok((db_filename, count))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_grh_record_import() {
+        let grh = GrhRecord::new(
+            "AGR".to_string(),
+            "00001".to_string(),
+            "02.10".to_string(),
+        );
+        assert_eq!(grh.record_type, "GRH");
     }
 }
