@@ -353,7 +353,7 @@ fn stream_record_as_json(record_type: &str, line: &str, line_number: usize, cwr_
 // Propagates DB errors or fundamental slice errors.
 #[macro_export]
 macro_rules! get_mandatory_field {
-    ($stmts:expr, $slice_fn:expr, $start:expr, $end:expr, $line_num:expr, $file_id:expr, $rec_type:expr, $field_name:expr) => {
+    ($error_stmt:expr, $slice_fn:expr, $start:expr, $end:expr, $line_num:expr, $file_id:expr, $rec_type:expr, $field_name:expr) => {
         // Match on the result of the slice function
         match $slice_fn($start, $end) {
             // Case 1: Slice function itself returned an error (rare with current safe_slice, but good practice)
@@ -367,9 +367,9 @@ macro_rules! get_mandatory_field {
                 // Construct the error description
                 let error_description = format!("{} missing or empty mandatory field '{}' (Expected at {}-{}). Using fallback ''.", $rec_type, $field_name, $start + 1, $end); // Use 1-based indexing for user message
 
-                match $stmts.error_stmt.execute(params![$file_id, $line_num as i64, error_description]) {
+                match $error_stmt.execute(rusqlite::params![$file_id, $line_num as i64, error_description]) {
                     // Subcase 3a: Database insertion failed
-                    Err(db_err) => Err(CwrParseError::Db(db_err)), // Propagate the DB error
+                    Err(db_err) => Err($crate::error::CwrParseError::Db(db_err)), // Propagate the DB error
                     // Subcase 3b: Database insertion succeeded
                     Ok(_) => Ok(String::new()), // Return the fallback empty string
                 }

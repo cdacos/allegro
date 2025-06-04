@@ -6,21 +6,21 @@ use rusqlite::{Transaction, params};
 
 // Helper for parsing the standard transaction prefix (Type 1-3, TransSeq 4-11, RecSeq 12-19)
 fn parse_transaction_prefix(line_number: usize, file_id: i64, stmts: &mut PreparedStatements, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(String, String, String), CwrParseError> {
-    let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, file_id, "Transaction", "Record Type");
-    let transaction_sequence_num = get_mandatory_field!(stmts, safe_slice, 3, 11, line_number, file_id, &record_type, "Transaction Sequence #");
-    let record_sequence_num = get_mandatory_field!(stmts, safe_slice, 11, 19, line_number, file_id, &record_type, "Record Sequence #");
+    let record_type = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 0, 3, line_number, file_id, "Transaction", "Record Type");
+    let transaction_sequence_num = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 3, 11, line_number, file_id, &record_type, "Transaction Sequence #");
+    let record_sequence_num = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 11, 19, line_number, file_id, &record_type, "Record Sequence #");
     Ok((record_type, transaction_sequence_num, record_sequence_num))
 }
 
 // GRH - Group Header
 pub fn parse_and_insert_grh<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
-    let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, context.file_id, "GRH", "Record Type");
+    let record_type = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 0, 3, line_number, context.file_id, "GRH", "Record Type");
     if record_type != "GRH" {
         return Err(CwrParseError::BadFormat(format!("Expected GRH, found {}", record_type)));
     }
-    let transaction_type = get_mandatory_field!(stmts, safe_slice, 3, 6, line_number, context.file_id, "GRH", "Transaction Type");
-    let group_id = get_mandatory_field!(stmts, safe_slice, 6, 11, line_number, context.file_id, "GRH", "Group ID");
-    let version_number = get_mandatory_field!(stmts, safe_slice, 11, 16, line_number, context.file_id, "GRH", "Version Number for this transaction type");
+    let transaction_type = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 3, 6, line_number, context.file_id, "GRH", "Transaction Type");
+    let group_id = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 6, 11, line_number, context.file_id, "GRH", "Group ID");
+    let version_number = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 11, 16, line_number, context.file_id, "GRH", "Version Number for this transaction type");
     let batch_request = safe_slice(16, 26)?; // Opt
     let submission_distribution_type = safe_slice(26, 28)?; // Cond (blank for CWR)
 
@@ -33,18 +33,18 @@ pub fn parse_and_insert_grh<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 
 // HDR - Transmission Header
 pub fn parse_and_insert_hdr<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
-    let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, context.file_id, "HDR", "Record Type");
+    let record_type = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 0, 3, line_number, context.file_id, "HDR", "Record Type");
     if record_type != "HDR" {
         return Err(CwrParseError::BadFormat(format!("Expected HDR, found {}", record_type)));
     }
 
-    let sender_type = get_mandatory_field!(stmts, safe_slice, 3, 5, line_number, context.file_id, "HDR", "Sender Type");
-    let sender_id = get_mandatory_field!(stmts, safe_slice, 5, 14, line_number, context.file_id, "HDR", "Sender ID");
-    let sender_name = get_mandatory_field!(stmts, safe_slice, 14, 59, line_number, context.file_id, "HDR", "Sender Name");
-    let edi_version = get_mandatory_field!(stmts, safe_slice, 59, 64, line_number, context.file_id, "HDR", "EDI Standard Version Number");
-    let creation_date = get_mandatory_field!(stmts, safe_slice, 64, 72, line_number, context.file_id, "HDR", "Creation Date");
-    let creation_time = get_mandatory_field!(stmts, safe_slice, 72, 78, line_number, context.file_id, "HDR", "Creation Time");
-    let transmission_date = get_mandatory_field!(stmts, safe_slice, 78, 86, line_number, context.file_id, "HDR", "Transmission Date");
+    let sender_type = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 3, 5, line_number, context.file_id, "HDR", "Sender Type");
+    let sender_id = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 5, 14, line_number, context.file_id, "HDR", "Sender ID");
+    let sender_name = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 14, 59, line_number, context.file_id, "HDR", "Sender Name");
+    let edi_version = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 59, 64, line_number, context.file_id, "HDR", "EDI Standard Version Number");
+    let creation_date = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 64, 72, line_number, context.file_id, "HDR", "Creation Date");
+    let creation_time = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 72, 78, line_number, context.file_id, "HDR", "Creation Time");
+    let transmission_date = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 78, 86, line_number, context.file_id, "HDR", "Transmission Date");
     let character_set = safe_slice(86, 101)?; // Opt v2.1
     let version = safe_slice(101, 104)?; // Opt v2.2
     let revision = safe_slice(104, 107)?; // Opt v2.2
@@ -71,13 +71,13 @@ pub fn parse_and_insert_hdr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 
 // GRT - Group Trailer
 pub fn parse_and_insert_grt<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
-    let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, context.file_id, "GRT", "Record Type");
+    let record_type = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 0, 3, line_number, context.file_id, "GRT", "Record Type");
     if record_type != "GRT" {
         return Err(CwrParseError::BadFormat(format!("Expected GRT, found {}", record_type)));
     }
-    let group_id = get_mandatory_field!(stmts, safe_slice, 3, 8, line_number, context.file_id, "GRT", "Group ID");
-    let transaction_count = get_mandatory_field!(stmts, safe_slice, 8, 16, line_number, context.file_id, "GRT", "Transaction Count");
-    let record_count = get_mandatory_field!(stmts, safe_slice, 16, 24, line_number, context.file_id, "GRT", "Record Count");
+    let group_id = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 3, 8, line_number, context.file_id, "GRT", "Group ID");
+    let transaction_count = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 8, 16, line_number, context.file_id, "GRT", "Transaction Count");
+    let record_count = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 16, 24, line_number, context.file_id, "GRT", "Record Count");
     let currency_indicator = safe_slice(24, 27)?; // Cond
     let total_monetary_value = safe_slice(27, 37)?; // Opt
 
@@ -90,13 +90,13 @@ pub fn parse_and_insert_grt<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 
 // TRL - Transmission Trailer
 pub fn parse_and_insert_trl<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), CwrParseError> {
-    let record_type = get_mandatory_field!(stmts, safe_slice, 0, 3, line_number, context.file_id, "TRL", "Record Type");
+    let record_type = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 0, 3, line_number, context.file_id, "TRL", "Record Type");
     if record_type != "TRL" {
         return Err(CwrParseError::BadFormat(format!("Expected TRL, found {}", record_type)));
     }
-    let group_count = get_mandatory_field!(stmts, safe_slice, 3, 8, line_number, context.file_id, "TRL", "Group Count");
-    let transaction_count = get_mandatory_field!(stmts, safe_slice, 8, 16, line_number, context.file_id, "TRL", "Transaction Count");
-    let record_count = get_mandatory_field!(stmts, safe_slice, 16, 24, line_number, context.file_id, "TRL", "Record Count");
+    let group_count = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 3, 8, line_number, context.file_id, "TRL", "Group Count");
+    let transaction_count = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 8, 16, line_number, context.file_id, "TRL", "Transaction Count");
+    let record_count = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 16, 24, line_number, context.file_id, "TRL", "Record Count");
 
     stmts.trl_stmt.execute(params![context.file_id, &record_type, group_count, transaction_count, record_count])?;
 
@@ -112,18 +112,18 @@ pub fn parse_and_insert_agr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
         return Err(CwrParseError::BadFormat(format!("Expected AGR, found {}", record_type)));
     }
 
-    let submitter_agreement_number = get_mandatory_field!(stmts, safe_slice, 19, 33, line_number, context.file_id, "AGR", "Submitter Agreement Number");
+    let submitter_agreement_number = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 33, line_number, context.file_id, "AGR", "Submitter Agreement Number");
     let international_standard_agreement_code = safe_slice(33, 47)?; // Opt
-    let agreement_type = get_mandatory_field!(stmts, safe_slice, 47, 49, line_number, context.file_id, "AGR", "Agreement Type");
-    let agreement_start_date = get_mandatory_field!(stmts, safe_slice, 49, 57, line_number, context.file_id, "AGR", "Agreement Start Date");
+    let agreement_type = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 47, 49, line_number, context.file_id, "AGR", "Agreement Type");
+    let agreement_start_date = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 49, 57, line_number, context.file_id, "AGR", "Agreement Start Date");
     let agreement_end_date = safe_slice(57, 65)?; // Opt
     let retention_end_date = safe_slice(65, 73)?; // Opt
-    let prior_royalty_status = get_mandatory_field!(stmts, safe_slice, 73, 74, line_number, context.file_id, "AGR", "Prior Royalty Status");
+    let prior_royalty_status = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 73, 74, line_number, context.file_id, "AGR", "Prior Royalty Status");
     let prior_royalty_start_date = safe_slice(74, 82)?; // Cond
-    let post_term_collection_status = get_mandatory_field!(stmts, safe_slice, 82, 83, line_number, context.file_id, "AGR", "Post-term Collection Status");
+    let post_term_collection_status = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 82, 83, line_number, context.file_id, "AGR", "Post-term Collection Status");
     let post_term_collection_end_date = safe_slice(83, 91)?; // Cond
     let date_of_signature_of_agreement = safe_slice(91, 99)?; // Opt
-    let number_of_works = get_mandatory_field!(stmts, safe_slice, 99, 104, line_number, context.file_id, "AGR", "Number of Works");
+    let number_of_works = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 99, 104, line_number, context.file_id, "AGR", "Number of Works");
     let sales_manufacture_clause = safe_slice(104, 105)?; // Cond
     let shares_change = safe_slice(105, 106)?; // Opt
     let advance_given = safe_slice(106, 107)?; // Opt
@@ -176,18 +176,18 @@ pub fn parse_and_insert_nwr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, context.file_id, stmts, safe_slice)?;
     // No need to check exact type, handled by caller match
 
-    let work_title = get_mandatory_field!(stmts, safe_slice, 19, 79, line_number, context.file_id, &record_type, "Work Title");
+    let work_title = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 79, line_number, context.file_id, &record_type, "Work Title");
     let language_code = safe_slice(79, 81)?; // Opt
-    let submitter_work_num = get_mandatory_field!(stmts, safe_slice, 81, 95, line_number, context.file_id, &record_type, "Submitter Work #");
+    let submitter_work_num = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 81, 95, line_number, context.file_id, &record_type, "Submitter Work #");
     let iswc = safe_slice(95, 106)?; // Opt
     let copyright_date = safe_slice(106, 114)?; // Opt
     let copyright_number = safe_slice(114, 126)?; // Opt
-    let musical_work_distribution_category = get_mandatory_field!(stmts, safe_slice, 126, 129, line_number, context.file_id, &record_type, "Musical Work Distribution Category");
+    let musical_work_distribution_category = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 126, 129, line_number, context.file_id, &record_type, "Musical Work Distribution Category");
     let duration = safe_slice(129, 135)?; // Cond
-    let recorded_indicator = get_mandatory_field!(stmts, safe_slice, 135, 136, line_number, context.file_id, &record_type, "Recorded Indicator");
+    let recorded_indicator = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 135, 136, line_number, context.file_id, &record_type, "Recorded Indicator");
     let text_music_relationship = safe_slice(136, 139)?; // Opt
     let composite_type = safe_slice(139, 142)?; // Opt
-    let version_type = get_mandatory_field!(stmts, safe_slice, 142, 145, line_number, context.file_id, &record_type, "Version Type");
+    let version_type = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 142, 145, line_number, context.file_id, &record_type, "Version Type");
     let excerpt_type = safe_slice(145, 148)?; // Opt
     let music_arrangement = safe_slice(148, 151)?; // Cond
     let lyric_adaptation = safe_slice(151, 154)?; // Cond
@@ -262,16 +262,16 @@ pub fn parse_and_insert_ack<'a>(line_number: usize, tx: &'a Transaction, stmts: 
         return Err(CwrParseError::BadFormat(format!("Expected ACK, found {}", record_type)));
     }
 
-    let creation_date = get_mandatory_field!(stmts, safe_slice, 19, 27, line_number, context.file_id, "ACK", "Creation Date");
-    let creation_time = get_mandatory_field!(stmts, safe_slice, 27, 33, line_number, context.file_id, "ACK", "Creation Time");
-    let original_group_id = get_mandatory_field!(stmts, safe_slice, 33, 38, line_number, context.file_id, "ACK", "Original Group ID");
-    let original_transaction_sequence_num = get_mandatory_field!(stmts, safe_slice, 38, 46, line_number, context.file_id, "ACK", "Original Transaction Sequence #");
-    let original_transaction_type = get_mandatory_field!(stmts, safe_slice, 46, 49, line_number, context.file_id, "ACK", "Original Transaction Type");
+    let creation_date = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 27, line_number, context.file_id, "ACK", "Creation Date");
+    let creation_time = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 27, 33, line_number, context.file_id, "ACK", "Creation Time");
+    let original_group_id = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 33, 38, line_number, context.file_id, "ACK", "Original Group ID");
+    let original_transaction_sequence_num = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 38, 46, line_number, context.file_id, "ACK", "Original Transaction Sequence #");
+    let original_transaction_type = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 46, 49, line_number, context.file_id, "ACK", "Original Transaction Type");
     let creation_title = safe_slice(49, 109)?; // Cond
     let submitter_creation_num = safe_slice(109, 129)?; // Cond
     let recipient_creation_num = safe_slice(129, 149)?; // Cond
-    let processing_date = get_mandatory_field!(stmts, safe_slice, 149, 157, line_number, context.file_id, "ACK", "Processing Date");
-    let transaction_status = get_mandatory_field!(stmts, safe_slice, 157, 159, line_number, context.file_id, "ACK", "Transaction Status");
+    let processing_date = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 149, 157, line_number, context.file_id, "ACK", "Processing Date");
+    let transaction_status = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 157, 159, line_number, context.file_id, "ACK", "Transaction Status");
 
     // Conditional Validation
     let is_nwr_rev = original_transaction_type == "NWR" || original_transaction_type == "REV";
@@ -318,8 +318,8 @@ pub fn parse_and_insert_ter<'a>(line_number: usize, tx: &'a Transaction, stmts: 
         return Err(CwrParseError::BadFormat(format!("Expected TER, found {}", record_type)));
     }
 
-    let inclusion_exclusion_indicator = get_mandatory_field!(stmts, safe_slice, 19, 20, line_number, context.file_id, "TER", "Inclusion/Exclusion Indicator");
-    let tis_numeric_code = get_mandatory_field!(stmts, safe_slice, 20, 24, line_number, context.file_id, "TER", "TIS Numeric Code");
+    let inclusion_exclusion_indicator = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 20, line_number, context.file_id, "TER", "Inclusion/Exclusion Indicator");
+    let tis_numeric_code = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 20, 24, line_number, context.file_id, "TER", "TIS Numeric Code");
 
     stmts.ter_stmt.execute(params![context.file_id, &record_type, transaction_sequence_num, record_sequence_num, inclusion_exclusion_indicator, tis_numeric_code])?;
 
@@ -335,11 +335,11 @@ pub fn parse_and_insert_ipa<'a>(line_number: usize, tx: &'a Transaction, stmts: 
         return Err(CwrParseError::BadFormat(format!("Expected IPA, found {}", record_type)));
     }
 
-    let agreement_role_code = get_mandatory_field!(stmts, safe_slice, 19, 21, line_number, context.file_id, "IPA", "Agreement Role Code");
+    let agreement_role_code = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 21, line_number, context.file_id, "IPA", "Agreement Role Code");
     let interested_party_ipi_name_num = safe_slice(21, 32)?; // Opt
     let ipi_base_number = safe_slice(32, 45)?; // Opt
-    let interested_party_num = get_mandatory_field!(stmts, safe_slice, 45, 54, line_number, context.file_id, "IPA", "Interested Party #");
-    let interested_party_last_name = get_mandatory_field!(stmts, safe_slice, 54, 99, line_number, context.file_id, "IPA", "Interested Party Last Name");
+    let interested_party_num = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 45, 54, line_number, context.file_id, "IPA", "Interested Party #");
+    let interested_party_last_name = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 54, 99, line_number, context.file_id, "IPA", "Interested Party Last Name");
     let interested_party_writer_first_name = safe_slice(99, 129)?; // Opt (Cond based on Agreement Type in AGR - requires context)
     let pr_affiliation_society = safe_slice(129, 132)?; // Cond
     let pr_share = safe_slice(132, 137)?; // Cond
@@ -403,8 +403,8 @@ pub fn parse_and_insert_npa<'a>(line_number: usize, tx: &'a Transaction, stmts: 
     // Let's assume optional based on schema. If Mandatory, change to get_mandatory_field!
     let interested_party_num = safe_slice(19, 28)?; // Cond? (Schema says nullable)
 
-    let interested_party_name = get_mandatory_field!(stmts, safe_slice, 28, 188, line_number, context.file_id, "NPA", "Interested Party Name");
-    let interested_party_writer_first_name = get_mandatory_field!(stmts, safe_slice, 188, 348, line_number, context.file_id, "NPA", "Interested Party Writer First Name");
+    let interested_party_name = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 28, 188, line_number, context.file_id, "NPA", "Interested Party Name");
+    let interested_party_writer_first_name = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 188, 348, line_number, context.file_id, "NPA", "Interested Party Writer First Name");
     let language_code = safe_slice(348, 350)?; // Opt
 
     stmts.npa_stmt.execute(params![context.file_id, &record_type, transaction_sequence_num, record_sequence_num, interested_party_num, interested_party_name, interested_party_writer_first_name, language_code])?;
@@ -419,7 +419,7 @@ pub fn parse_and_insert_spu<'a>(line_number: usize, tx: &'a Transaction, stmts: 
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, context.file_id, stmts, safe_slice)?;
     // record_type will be "SPU" or "OPU"
 
-    let publisher_sequence_num = get_mandatory_field!(stmts, safe_slice, 19, 21, line_number, context.file_id, &record_type, "Publisher Sequence #");
+    let publisher_sequence_num = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 21, line_number, context.file_id, &record_type, "Publisher Sequence #");
     let interested_party_num = safe_slice(21, 30)?; // Cond (Mandatory for SPU, Optional for OPU)
     let publisher_name = safe_slice(30, 75)?; // Cond (Mandatory for SPU, Optional for OPU)
     let publisher_unknown_indicator = safe_slice(75, 76)?; // Cond (Must be blank for SPU, 'Y' if OPU name is blank)
@@ -510,9 +510,9 @@ pub fn parse_and_insert_npn<'a>(line_number: usize, tx: &'a Transaction, stmts: 
         return Err(CwrParseError::BadFormat(format!("Expected NPN, found {}", record_type)));
     }
 
-    let publisher_sequence_num = get_mandatory_field!(stmts, safe_slice, 19, 21, line_number, context.file_id, "NPN", "Publisher Sequence #");
-    let interested_party_num = get_mandatory_field!(stmts, safe_slice, 21, 30, line_number, context.file_id, "NPN", "Interested Party #");
-    let publisher_name = get_mandatory_field!(stmts, safe_slice, 30, 510, line_number, context.file_id, "NPN", "Publisher Name");
+    let publisher_sequence_num = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 21, line_number, context.file_id, "NPN", "Publisher Sequence #");
+    let interested_party_num = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 21, 30, line_number, context.file_id, "NPN", "Interested Party #");
+    let publisher_name = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 30, 510, line_number, context.file_id, "NPN", "Publisher Name");
     let language_code = safe_slice(510, 512)?; // Opt
 
     stmts.npn_stmt.execute(params![context.file_id, &record_type, transaction_sequence_num, record_sequence_num, publisher_sequence_num, interested_party_num, publisher_name, language_code])?;
@@ -527,16 +527,16 @@ pub fn parse_and_insert_spt<'a>(line_number: usize, tx: &'a Transaction, stmts: 
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, context.file_id, stmts, safe_slice)?;
     // record_type will be "SPT" or "OPT"
 
-    let interested_party_num = get_mandatory_field!(stmts, safe_slice, 19, 28, line_number, context.file_id, &record_type, "Interested Party #");
+    let interested_party_num = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 28, line_number, context.file_id, &record_type, "Interested Party #");
     let constant_spaces = safe_slice(28, 34)?; // Should be spaces
     let pr_collection_share = safe_slice(34, 39)?; // Cond
     let mr_collection_share = safe_slice(39, 44)?; // Cond
     let sr_collection_share = safe_slice(44, 49)?; // Cond
-    let inclusion_exclusion_indicator = get_mandatory_field!(stmts, safe_slice, 49, 50, line_number, context.file_id, &record_type, "Inclusion/Exclusion Indicator");
-    let tis_numeric_code = get_mandatory_field!(stmts, safe_slice, 50, 54, line_number, context.file_id, &record_type, "TIS Numeric Code");
+    let inclusion_exclusion_indicator = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 49, 50, line_number, context.file_id, &record_type, "Inclusion/Exclusion Indicator");
+    let tis_numeric_code = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 50, 54, line_number, context.file_id, &record_type, "TIS Numeric Code");
     let shares_change = safe_slice(54, 55)?; // Opt
     // V2.1 Sequence # (Mandatory)
-    let sequence_num = get_mandatory_field!(stmts, safe_slice, 55, 58, line_number, context.file_id, &record_type, "Sequence # (v2.1)");
+    let sequence_num = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 55, 58, line_number, context.file_id, &record_type, "Sequence # (v2.1)");
 
     // Validation: Ensure at least one collection share is present? Spec doesn't explicitly state, but implied.
     // if pr_collection_share.is_none() && mr_collection_share.is_none() && sr_collection_share.is_none() {
@@ -642,7 +642,7 @@ pub fn parse_and_insert_nwn<'a>(line_number: usize, tx: &'a Transaction, stmts: 
     }
 
     let interested_party_num = safe_slice(19, 28)?; // Cond? Schema allows NULL
-    let writer_last_name = get_mandatory_field!(stmts, safe_slice, 28, 188, line_number, context.file_id, "NWN", "Writer Last Name");
+    let writer_last_name = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 28, 188, line_number, context.file_id, "NWN", "Writer Last Name");
     let writer_first_name = safe_slice(188, 348)?; // Opt? Schema allows NULL, Spec says O,O
     let language_code = safe_slice(348, 350)?; // Opt
 
@@ -662,11 +662,11 @@ pub fn parse_and_insert_swt<'a>(line_number: usize, tx: &'a Transaction, stmts: 
     let pr_collection_share = safe_slice(28, 33)?; // Opt
     let mr_collection_share = safe_slice(33, 38)?; // Opt
     let sr_collection_share = safe_slice(38, 43)?; // Opt
-    let inclusion_exclusion_indicator = get_mandatory_field!(stmts, safe_slice, 43, 44, line_number, context.file_id, &record_type, "Inclusion/Exclusion Indicator");
-    let tis_numeric_code = get_mandatory_field!(stmts, safe_slice, 44, 48, line_number, context.file_id, &record_type, "TIS Numeric Code");
+    let inclusion_exclusion_indicator = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 43, 44, line_number, context.file_id, &record_type, "Inclusion/Exclusion Indicator");
+    let tis_numeric_code = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 44, 48, line_number, context.file_id, &record_type, "TIS Numeric Code");
     let shares_change = safe_slice(48, 49)?; // Opt
     // V2.1 Sequence # (Mandatory)
-    let sequence_num = get_mandatory_field!(stmts, safe_slice, 49, 52, line_number, context.file_id, &record_type, "Sequence # (v2.1)");
+    let sequence_num = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 49, 52, line_number, context.file_id, &record_type, "Sequence # (v2.1)");
 
     stmts.swt_stmt.execute(params![context.file_id, &record_type, transaction_sequence_num, record_sequence_num, interested_party_num, pr_collection_share, mr_collection_share, sr_collection_share, inclusion_exclusion_indicator, tis_numeric_code, shares_change, sequence_num])?;
 
@@ -688,7 +688,7 @@ pub fn parse_and_insert_pwr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
     let society_assigned_agreement_number = safe_slice(87, 101)?; // Opt
     let writer_ip_num = safe_slice(101, 110)?; // Cond? v2.1 Schema allows NULL, Spec says C
     // V2.2 Publisher Sequence # (Mandatory)
-    let publisher_sequence_num = get_mandatory_field!(stmts, safe_slice, 110, 112, line_number, context.file_id, "PWR", "Publisher Sequence # (v2.2)");
+    let publisher_sequence_num = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 110, 112, line_number, context.file_id, "PWR", "Publisher Sequence # (v2.2)");
 
     stmts.pwr_stmt.execute(params![context.file_id, &record_type, transaction_sequence_num, record_sequence_num, publisher_ip_num, publisher_name, submitter_agreement_number, society_assigned_agreement_number, writer_ip_num, publisher_sequence_num])?;
 
@@ -704,8 +704,8 @@ pub fn parse_and_insert_alt<'a>(line_number: usize, tx: &'a Transaction, stmts: 
         return Err(CwrParseError::BadFormat(format!("Expected ALT, found {}", record_type)));
     }
 
-    let alternate_title = get_mandatory_field!(stmts, safe_slice, 19, 79, line_number, context.file_id, "ALT", "Alternate Title");
-    let title_type = get_mandatory_field!(stmts, safe_slice, 79, 81, line_number, context.file_id, "ALT", "Title Type");
+    let alternate_title = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 79, line_number, context.file_id, "ALT", "Alternate Title");
+    let title_type = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 79, 81, line_number, context.file_id, "ALT", "Title Type");
     let language_code = safe_slice(81, 83)?; // Cond
 
     // Conditional Validation
@@ -727,8 +727,8 @@ pub fn parse_and_insert_nat<'a>(line_number: usize, tx: &'a Transaction, stmts: 
         return Err(CwrParseError::BadFormat(format!("Expected NAT, found {}", record_type)));
     }
 
-    let title = get_mandatory_field!(stmts, safe_slice, 19, 659, line_number, context.file_id, "NAT", "Title");
-    let title_type = get_mandatory_field!(stmts, safe_slice, 659, 661, line_number, context.file_id, "NAT", "Title Type");
+    let title = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 659, line_number, context.file_id, "NAT", "Title");
+    let title_type = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 659, 661, line_number, context.file_id, "NAT", "Title Type");
     let language_code = safe_slice(661, 663)?; // Opt
 
     stmts.nat_stmt.execute(params![context.file_id, &record_type, transaction_sequence_num, record_sequence_num, title, title_type, language_code])?;
@@ -745,7 +745,7 @@ pub fn parse_and_insert_ewt<'a>(line_number: usize, tx: &'a Transaction, stmts: 
         return Err(CwrParseError::BadFormat(format!("Expected EWT, found {}", record_type)));
     }
 
-    let entire_work_title = get_mandatory_field!(stmts, safe_slice, 19, 79, line_number, context.file_id, "EWT", "Entire Work Title");
+    let entire_work_title = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 79, line_number, context.file_id, "EWT", "Entire Work Title");
     let iswc_of_entire_work = safe_slice(79, 90)?; // Opt
     let language_code = safe_slice(90, 92)?; // Opt
     let writer_1_last_name = safe_slice(92, 137)?; // Opt
@@ -791,7 +791,7 @@ pub fn parse_and_insert_ver<'a>(line_number: usize, tx: &'a Transaction, stmts: 
         return Err(CwrParseError::BadFormat(format!("Expected VER, found {}", record_type)));
     }
 
-    let original_work_title = get_mandatory_field!(stmts, safe_slice, 19, 79, line_number, context.file_id, "VER", "Original Work Title");
+    let original_work_title = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 79, line_number, context.file_id, "VER", "Original Work Title");
     let iswc_of_original_work = safe_slice(79, 90)?; // Opt
     let language_code = safe_slice(90, 92)?; // Opt
     let writer_1_last_name = safe_slice(92, 137)?; // Opt
@@ -837,7 +837,7 @@ pub fn parse_and_insert_per<'a>(line_number: usize, tx: &'a Transaction, stmts: 
         return Err(CwrParseError::BadFormat(format!("Expected PER, found {}", record_type)));
     }
 
-    let performing_artist_last_name = get_mandatory_field!(stmts, safe_slice, 19, 64, line_number, context.file_id, "PER", "Performing Artist Last Name");
+    let performing_artist_last_name = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 64, line_number, context.file_id, "PER", "Performing Artist Last Name");
     let performing_artist_first_name = safe_slice(64, 94)?; // Opt
     let performing_artist_ipi_name_num = safe_slice(94, 105)?; // Opt
     let performing_artist_ipi_base_number = safe_slice(105, 118)?; // Opt
@@ -946,7 +946,7 @@ pub fn parse_and_insert_orn<'a>(line_number: usize, tx: &'a Transaction, stmts: 
         return Err(CwrParseError::BadFormat(format!("Expected ORN, found {}", record_type)));
     }
 
-    let intended_purpose = get_mandatory_field!(stmts, safe_slice, 19, 22, line_number, context.file_id, "ORN", "Intended Purpose");
+    let intended_purpose = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 22, line_number, context.file_id, "ORN", "Intended Purpose");
     let production_title = safe_slice(22, 82)?; // Cond
     let cd_identifier = safe_slice(82, 97)?; // Cond
     let cut_number = safe_slice(97, 101)?; // Opt (Cond based on Intended Purpose)
@@ -1043,7 +1043,7 @@ pub fn parse_and_insert_ind<'a>(line_number: usize, tx: &'a Transaction, stmts: 
         return Err(CwrParseError::BadFormat(format!("Expected IND, found {}", record_type)));
     }
 
-    let instrument_code = get_mandatory_field!(stmts, safe_slice, 19, 22, line_number, context.file_id, "IND", "Instrument Code");
+    let instrument_code = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 22, line_number, context.file_id, "IND", "Instrument Code");
     let number_of_players = safe_slice(22, 25)?; // Opt
 
     stmts.ind_stmt.execute(params![context.file_id, &record_type, transaction_sequence_num, record_sequence_num, instrument_code, number_of_players])?;
@@ -1060,11 +1060,11 @@ pub fn parse_and_insert_com<'a>(line_number: usize, tx: &'a Transaction, stmts: 
         return Err(CwrParseError::BadFormat(format!("Expected COM, found {}", record_type)));
     }
 
-    let title = get_mandatory_field!(stmts, safe_slice, 19, 79, line_number, context.file_id, "COM", "Title");
+    let title = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 79, line_number, context.file_id, "COM", "Title");
     let iswc_of_component = safe_slice(79, 90)?; // Opt
     let submitter_work_num = safe_slice(90, 104)?; // Opt
     let duration = safe_slice(104, 110)?; // Opt
-    let writer_1_last_name = get_mandatory_field!(stmts, safe_slice, 110, 155, line_number, context.file_id, "COM", "Writer 1 Last Name");
+    let writer_1_last_name = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 110, 155, line_number, context.file_id, "COM", "Writer 1 Last Name");
     let writer_1_first_name = safe_slice(155, 185)?; // Opt
     let writer_1_ipi_name_num = safe_slice(185, 196)?; // Opt
     let writer_2_last_name = safe_slice(196, 241)?; // Opt
@@ -1104,12 +1104,12 @@ pub fn parse_and_insert_msg<'a>(line_number: usize, tx: &'a Transaction, stmts: 
         return Err(CwrParseError::BadFormat(format!("Expected MSG, found {}", record_type)));
     }
 
-    let message_type = get_mandatory_field!(stmts, safe_slice, 19, 20, line_number, context.file_id, "MSG", "Message Type");
-    let original_record_sequence_num = get_mandatory_field!(stmts, safe_slice, 20, 28, line_number, context.file_id, "MSG", "Original Record Sequence #");
-    let msg_record_type = get_mandatory_field!(stmts, safe_slice, 28, 31, line_number, context.file_id, "MSG", "Record Type (in original transaction)"); // Renamed column to avoid clash
-    let message_level = get_mandatory_field!(stmts, safe_slice, 31, 32, line_number, context.file_id, "MSG", "Message Level");
-    let validation_number = get_mandatory_field!(stmts, safe_slice, 32, 35, line_number, context.file_id, "MSG", "Validation Number");
-    let message_text = get_mandatory_field!(stmts, safe_slice, 35, 185, line_number, context.file_id, "MSG", "Message Text");
+    let message_type = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 20, line_number, context.file_id, "MSG", "Message Type");
+    let original_record_sequence_num = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 20, 28, line_number, context.file_id, "MSG", "Original Record Sequence #");
+    let msg_record_type = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 28, 31, line_number, context.file_id, "MSG", "Record Type (in original transaction)"); // Renamed column to avoid clash
+    let message_level = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 31, 32, line_number, context.file_id, "MSG", "Message Level");
+    let validation_number = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 32, 35, line_number, context.file_id, "MSG", "Validation Number");
+    let message_text = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 35, 185, line_number, context.file_id, "MSG", "Message Text");
 
     stmts.msg_stmt.execute(params![context.file_id, &record_type, transaction_sequence_num, record_sequence_num, message_type, original_record_sequence_num, msg_record_type, message_level, validation_number, message_text])?;
 
@@ -1123,7 +1123,7 @@ pub fn parse_and_insert_net<'a>(line_number: usize, tx: &'a Transaction, stmts: 
     let (record_type, transaction_sequence_num, record_sequence_num) = parse_transaction_prefix(line_number, context.file_id, stmts, safe_slice)?;
     // record_type is NET, NCT, or NVT
 
-    let title = get_mandatory_field!(stmts, safe_slice, 19, 659, line_number, context.file_id, &record_type, "Title");
+    let title = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 659, line_number, context.file_id, &record_type, "Title");
     let language_code = safe_slice(659, 661)?; // Opt
 
     stmts.net_stmt.execute(params![context.file_id, &record_type, transaction_sequence_num, record_sequence_num, title, language_code])?;
@@ -1140,9 +1140,9 @@ pub fn parse_and_insert_now<'a>(line_number: usize, tx: &'a Transaction, stmts: 
         return Err(CwrParseError::BadFormat(format!("Expected NOW, found {}", record_type)));
     }
 
-    let writer_name = get_mandatory_field!(stmts, safe_slice, 19, 179, line_number, context.file_id, "NOW", "Writer Name");
+    let writer_name = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 179, line_number, context.file_id, "NOW", "Writer Name");
     // Spec says O,M for First Name - assume Mandatory based on schema
-    let writer_first_name = get_mandatory_field!(stmts, safe_slice, 179, 339, line_number, context.file_id, "NOW", "Writer First Name");
+    let writer_first_name = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 179, 339, line_number, context.file_id, "NOW", "Writer First Name");
     let language_code = safe_slice(339, 341)?; // Opt
     let writer_position = safe_slice(341, 342)?; // Opt
 
@@ -1160,9 +1160,9 @@ pub fn parse_and_insert_ari<'a>(line_number: usize, tx: &'a Transaction, stmts: 
         return Err(CwrParseError::BadFormat(format!("Expected ARI, found {}", record_type)));
     }
 
-    let society_num = get_mandatory_field!(stmts, safe_slice, 19, 22, line_number, context.file_id, "ARI", "Society #");
+    let society_num = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 22, line_number, context.file_id, "ARI", "Society #");
     let work_num = safe_slice(22, 36)?; // Cond? Schema allows NULL
-    let type_of_right = get_mandatory_field!(stmts, safe_slice, 36, 39, line_number, context.file_id, "ARI", "Type of Right");
+    let type_of_right = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 36, 39, line_number, context.file_id, "ARI", "Type of Right");
     let subject_code = safe_slice(39, 41)?; // Cond? Schema allows NULL
     let note = safe_slice(41, 201)?; // Cond? Schema allows NULL
 
@@ -1183,10 +1183,10 @@ pub fn parse_and_insert_xrf<'a>(line_number: usize, tx: &'a Transaction, stmts: 
         return Err(CwrParseError::BadFormat(format!("Expected XRF, found {}", record_type)));
     }
 
-    let organisation_code = get_mandatory_field!(stmts, safe_slice, 19, 22, line_number, context.file_id, "XRF", "Organisation Code");
-    let identifier = get_mandatory_field!(stmts, safe_slice, 22, 36, line_number, context.file_id, "XRF", "Identifier");
-    let identifier_type = get_mandatory_field!(stmts, safe_slice, 36, 37, line_number, context.file_id, "XRF", "Identifier Type");
-    let validity = get_mandatory_field!(stmts, safe_slice, 37, 38, line_number, context.file_id, "XRF", "Validity");
+    let organisation_code = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 19, 22, line_number, context.file_id, "XRF", "Organisation Code");
+    let identifier = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 22, 36, line_number, context.file_id, "XRF", "Identifier");
+    let identifier_type = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 36, 37, line_number, context.file_id, "XRF", "Identifier Type");
+    let validity = get_mandatory_field!(&mut stmts.error_stmt, safe_slice, 37, 38, line_number, context.file_id, "XRF", "Validity");
 
     stmts.xrf_stmt.execute(params![context.file_id, &record_type, transaction_sequence_num, record_sequence_num, organisation_code, identifier, identifier_type, validity])?;
 
