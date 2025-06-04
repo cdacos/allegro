@@ -1,5 +1,6 @@
 use crate::{error::CwrDbError, statements::PreparedStatements};
-use rusqlite::{params, Statement, Transaction};
+use rusqlite::{params, Statement, Transaction, Connection};
+use std::collections::HashMap;
 
 /// High-level interface for inserting CWR records
 pub struct CwrRecordInserter<'conn> {
@@ -50,4 +51,34 @@ pub fn insert_file_line_record(
 ) -> Result<(), CwrDbError> {
     file_stmt.execute(params![file_id, line_number as i64, record_type, record_id])?;
     Ok(())
+}
+
+/// Count records by type in all CWR tables
+pub fn count_records_by_type(db_path: &str) -> Result<HashMap<String, i32>, CwrDbError> {
+    let conn = Connection::open(db_path)?;
+    let mut counts = HashMap::new();
+    
+    // Query SQLite system tables to find all tables starting with "cwr_"
+    let table_query = "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'cwr_%'";
+    let mut stmt = conn.prepare(table_query)?;
+    let table_rows = stmt.query_map([], |row| {
+        Ok(row.get::<_, String>(0)?)
+    })?;
+    
+    for table_result in table_rows {
+        let table_name = table_result?;
+        let record_type = table_name.strip_prefix("cwr_").unwrap().to_uppercase();
+        let count_query = format!("SELECT COUNT(*) FROM {}", table_name);
+        
+        match conn.query_row(&count_query, [], |row| row.get::<_, i32>(0)) {
+            Ok(count) => {
+                if count > 0 {
+                    counts.insert(record_type, count);
+                }
+            }
+            Err(_) => {} // Table might be empty or inaccessible
+        }
+    }
+    
+    Ok(counts)
 }
