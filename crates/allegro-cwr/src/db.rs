@@ -53,7 +53,7 @@ pub fn determine_db_filename(input_filename: &str) -> String {
 
 pub fn setup_database(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
     // Schema is embedded directly into the binary at compile time
-    const SCHEMA_SQL: &str = include_str!("../docs/cwr_2.2_schema_sqlite.sql");
+    const SCHEMA_SQL: &str = include_str!("../../../docs/cwr_2.2_schema_sqlite.sql");
     let conn = Connection::open(db_filename)?;
 
     // Check if tables already exist to avoid erroring on re-runs

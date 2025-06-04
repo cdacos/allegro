@@ -3,7 +3,14 @@
 version = 4
 
 [[package]]
-name = "allegro-rs"
+name = "allegro"
+version = "0.1.0"
+dependencies = [
+ "allegro-cwr",
+]
+
+[[package]]
+name = "allegro-cwr"
 version = "0.1.0"
 dependencies = [
  "rusqlite",

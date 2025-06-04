@@ -1,15 +1,10 @@
-[package]
-name = "allegro-rs"
+[workspace]
+members = [
+    "crates/allegro-cwr",
+    "crates/allegro",
+]
+resolver = "2"
+
+[workspace.package]
 version = "0.1.0"
 edition = "2024"
-
-[lib]
-name = "allegro_cwr"
-path = "src/lib.rs"
-
-[[bin]]
-name = "allegro"
-path = "src/main.rs"
-
-[dependencies]
-rusqlite = { version = "0.35.0", features = ["bundled"] }

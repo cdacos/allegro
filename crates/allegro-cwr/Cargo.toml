@@ -1,0 +1,8 @@
+[package]
+name = "allegro-cwr"
+version = "0.1.0"
+edition = "2024"
+description = "CWR (Common Works Registration) file parser library"
+
+[dependencies]
+rusqlite = { version = "0.35.0", features = ["bundled"] }

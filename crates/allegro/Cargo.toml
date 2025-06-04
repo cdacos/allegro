@@ -1,0 +1,8 @@
+[package]
+name = "allegro"
+version = "0.1.0"
+edition = "2024"
+description = "CWR file parser CLI tool"
+
+[dependencies]
+allegro-cwr = { path = "../allegro-cwr" }
