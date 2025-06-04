@@ -217,6 +217,160 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
     Ok((file_id, line_number))
 }
 
+/// Streams JSON output for each CWR record without using a database
+pub fn process_and_stream_json(input_filename: &str) -> Result<usize, CwrParseError> {
+    let file = File::open(input_filename)?;
+    let mut reader = BufReader::new(file);
+
+    // --- Read the first line to determine CWR version ---
+    let mut first_line = String::new();
+    let bytes_read = reader.read_line(&mut first_line)?;
+    if bytes_read == 0 {
+        return Err(CwrParseError::BadFormat("File is empty".to_string()));
+    }
+    let hdr_line = first_line.trim_end();
+
+    if !hdr_line.starts_with("HDR") {
+        return Err(CwrParseError::BadFormat(format!(
+            "File does not start with HDR record. Found: '{}'",
+            hdr_line.get(0..std::cmp::min(hdr_line.len(), 50)).unwrap_or("")
+        )));
+    }
+
+    let cwr_version = get_cwr_version(hdr_line)?;
+    println!("Determined CWR Version: {}", cwr_version);
+
+    // Reset to start of file
+    reader.seek(io::SeekFrom::Start(0))?;
+
+    let mut line_number: usize = 0;
+    let mut first_record = true;
+
+    // Start JSON array
+    println!("[");
+
+    for line_result in reader.lines() {
+        line_number += 1;
+        let line = match line_result {
+            Ok(l) => l,
+            Err(io_err) => {
+                eprintln!("IO error reading line {}: {}", line_number, io_err);
+                return Err(CwrParseError::Io(io_err));
+            }
+        };
+
+        if line.is_empty() || line.trim().is_empty() {
+            continue;
+        }
+
+        if line.len() < 3 {
+            eprintln!("Line {} is too short (less than 3 chars), skipping.", line_number);
+            continue;
+        }
+
+        let record_type = &line[0..3];
+
+        // Output JSON for this record
+        if !first_record {
+            println!(",");
+        }
+        
+        stream_record_as_json(record_type, &line, line_number, cwr_version)?;
+        first_record = false;
+    }
+
+    // End JSON array
+    println!();
+    println!("]");
+
+    Ok(line_number)
+}
+
+fn stream_record_as_json(record_type: &str, line: &str, line_number: usize, cwr_version: f32) -> Result<(), CwrParseError> {
+    // Helper function to safely extract field
+    let safe_extract = |start: usize, end: usize| -> Option<String> {
+        if end > line.len() {
+            if start >= line.len() {
+                None
+            } else {
+                line.get(start..line.len()).map(|s| s.trim().to_string()).filter(|s| !s.is_empty())
+            }
+        } else {
+            line.get(start..end).map(|s| s.trim().to_string()).filter(|s| !s.is_empty())
+        }
+    };
+
+    // Helper to escape JSON strings
+    let escape_json = |s: &str| -> String {
+        s.replace('\\', "\\\\")
+         .replace('"', "\\\"")
+         .replace('\n', "\\n")
+         .replace('\r', "\\r")
+         .replace('\t', "\\t")
+    };
+
+    // Helper to output optional field
+    let output_field = |name: &str, value: Option<String>, first: &mut bool| {
+        if let Some(val) = value {
+            if !*first {
+                print!(",");
+            }
+            print!("\n    \"{}\": \"{}\"", name, escape_json(&val));
+            *first = false;
+        }
+    };
+
+    print!("  {{");
+    print!("\n    \"record_type\": \"{}\",", record_type);
+    print!("\n    \"line_number\": {},", line_number);
+    print!("\n    \"cwr_version\": {}", cwr_version);
+
+    let mut first_field = false;
+
+    // Parse common fields based on record type
+    match record_type {
+        "HDR" => {
+            output_field("sender_type", safe_extract(3, 5), &mut first_field);
+            output_field("sender_id", safe_extract(5, 14), &mut first_field);
+            output_field("sender_name", safe_extract(14, 59), &mut first_field);
+            output_field("edi_version", safe_extract(59, 64), &mut first_field);
+            output_field("creation_date", safe_extract(64, 72), &mut first_field);
+            output_field("creation_time", safe_extract(72, 78), &mut first_field);
+            output_field("transmission_date", safe_extract(78, 86), &mut first_field);
+        }
+        "GRH" => {
+            output_field("transaction_type", safe_extract(3, 6), &mut first_field);
+            output_field("group_id", safe_extract(6, 11), &mut first_field);
+            output_field("version_number", safe_extract(11, 16), &mut first_field);
+        }
+        "NWR" | "REV" | "ISW" | "EXC" => {
+            output_field("transaction_sequence_num", safe_extract(3, 11), &mut first_field);
+            output_field("record_sequence_num", safe_extract(11, 19), &mut first_field);
+            output_field("work_title", safe_extract(19, 79), &mut first_field);
+            output_field("language_code", safe_extract(79, 81), &mut first_field);
+            output_field("submitter_work_num", safe_extract(81, 95), &mut first_field);
+            output_field("iswc", safe_extract(95, 106), &mut first_field);
+            output_field("copyright_date", safe_extract(106, 114), &mut first_field);
+            output_field("musical_work_distribution_category", safe_extract(126, 129), &mut first_field);
+            output_field("duration", safe_extract(129, 135), &mut first_field);
+            output_field("recorded_indicator", safe_extract(135, 136), &mut first_field);
+            output_field("version_type", safe_extract(142, 145), &mut first_field);
+        }
+        "TRL" => {
+            output_field("group_count", safe_extract(3, 8), &mut first_field);
+            output_field("transaction_count", safe_extract(8, 16), &mut first_field);
+            output_field("record_count", safe_extract(16, 24), &mut first_field);
+        }
+        _ => {
+            // For other record types, just output the raw data
+            output_field("raw_data", Some(line.to_string()), &mut first_field);
+        }
+    }
+
+    print!("\n  }}");
+    Ok(())
+}
+
 // Helper macro for mandatory fields. Logs error to DB (using prepared statement) and returns "" if missing/empty.
 // Propagates DB errors or fundamental slice errors.
 #[macro_export]

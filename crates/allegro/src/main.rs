@@ -87,7 +87,11 @@ fn main() {
         }
     };
 
-    println!("Successfully processed {} CWR records from '{}' into '{}' in {:.2?}.", format_int_with_commas(count as i64), &input_filename, db_filename, elapsed_time);
+    if !db_filename.is_empty() {
+        println!("Successfully processed {} CWR records from '{}' into '{}' in {:.2?}.", format_int_with_commas(count as i64), &input_filename, db_filename, elapsed_time);
+    } else {
+        println!("Successfully processed {} CWR records from '{}' in {:.2?}.", format_int_with_commas(count as i64), &input_filename, elapsed_time);
+    }
 }
 
 fn print_help() {
