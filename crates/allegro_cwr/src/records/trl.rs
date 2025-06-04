@@ -49,7 +49,7 @@ impl TrlRecord {
 
     /// Convert this record to a CWR format line
     pub fn to_cwr_line(&self) -> String {
-        vec![format!("{:3}", self.record_type), format!("{:5}", self.group_count), format!("{:8}", self.transaction_count), format!("{:8}", self.record_count)].join("")
+        [format!("{:3}", self.record_type), format!("{:5}", self.group_count), format!("{:8}", self.transaction_count), format!("{:8}", self.record_count)].join("")
     }
 }
 

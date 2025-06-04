@@ -49,7 +49,7 @@ impl TerRecord {
 
     /// Convert this record to a CWR format line
     pub fn to_cwr_line(&self) -> String {
-        vec![format!("{:3}", self.record_type), format!("{:8}", self.transaction_sequence_num), format!("{:8}", self.record_sequence_num), format!("{:1}", self.inclusion_exclusion_indicator), format!("{:4}", self.tis_numeric_code)].join("")
+        [format!("{:3}", self.record_type), format!("{:8}", self.transaction_sequence_num), format!("{:8}", self.record_sequence_num), format!("{:1}", self.inclusion_exclusion_indicator), format!("{:4}", self.tis_numeric_code)].join("")
     }
 }
 

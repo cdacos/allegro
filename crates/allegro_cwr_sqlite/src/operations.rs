@@ -46,20 +46,17 @@ pub fn count_records_by_type(db_path: &str) -> Result<HashMap<String, i32>, CwrD
     // Query SQLite system tables to find all tables starting with "cwr_"
     let table_query = "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'cwr_%'";
     let mut stmt = conn.prepare(table_query)?;
-    let table_rows = stmt.query_map([], |row| Ok(row.get::<_, String>(0)?))?;
+    let table_rows = stmt.query_map([], |row| row.get::<_, String>(0))?;
 
     for table_result in table_rows {
         let table_name = table_result?;
         let record_type = table_name.strip_prefix("cwr_").unwrap().to_uppercase();
         let count_query = format!("SELECT COUNT(*) FROM {}", table_name);
 
-        match conn.query_row(&count_query, [], |row| row.get::<_, i32>(0)) {
-            Ok(count) => {
-                if count > 0 {
-                    counts.insert(record_type, count);
-                }
+        if let Ok(count) = conn.query_row(&count_query, [], |row| row.get::<_, i32>(0)) {
+            if count > 0 {
+                counts.insert(record_type, count);
             }
-            Err(_) => {} // Table might be empty or inaccessible
         }
     }
 

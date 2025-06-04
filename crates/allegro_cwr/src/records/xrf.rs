@@ -57,7 +57,7 @@ impl XrfRecord {
 
     /// Convert this record to a CWR format line
     pub fn to_cwr_line(&self) -> String {
-        vec![format!("{:3}", self.record_type), format!("{:8}", self.transaction_sequence_num), format!("{:8}", self.record_sequence_num), format!("{:3}", self.organisation_code), format!("{:14}", self.identifier), format!("{:1}", self.identifier_type), format!("{:1}", self.validity)].join("")
+        [format!("{:3}", self.record_type), format!("{:8}", self.transaction_sequence_num), format!("{:8}", self.record_sequence_num), format!("{:3}", self.organisation_code), format!("{:14}", self.identifier), format!("{:1}", self.identifier_type), format!("{:1}", self.validity)].join("")
     }
 }
 
