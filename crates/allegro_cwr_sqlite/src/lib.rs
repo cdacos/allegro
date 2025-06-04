@@ -9,7 +9,7 @@ pub mod operations;
 pub mod statements;
 
 // Re-export main types and functions
-pub use connection::{CwrDatabase, determine_db_filename, setup_database, setup_database_with_overwrite};
+pub use connection::{CwrDatabase, determine_db_filename, setup_database};
 pub use error::CwrDbError;
 pub use operations::{CwrRecordInserter, log_error, insert_file_record, insert_file_line_record};
 pub use statements::PreparedStatements;
