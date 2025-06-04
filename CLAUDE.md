@@ -1,1 +1,2 @@
 - Do not add comments.
+- The Rust 2024 Edition is now stable

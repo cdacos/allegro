@@ -1,6 +1,17 @@
-# CWR File Parser and Validator
+# Allegro - CWR File Parser and Database Tool
 
-A Rust workspace for parsing CWR (Common Works Registration) files into SQLite databases.
+A Rust application for parsing and processing CWR (Common Works Registration) files. CWR is the standard file format used by the music industry to exchange musical work data between publishers, performance rights organizations, and other entities.
+
+This application validates CWR files according to the CWR 2.2 specification (with support for 2.0 and 2.1) and stores the parsed data in SQLite databases for querying and analysis. It handles all standard CWR record types including works registrations, publisher information, writer details, territory data, etc.
+
+## Features
+
+- **CWR 2.2 Support**: Parses all standard record types according to the CWR specification
+- **Validation**: Validates field formats, mandatory fields, and data integrity
+- **Database Storage**: Stores parsed data in structured SQLite tables for easy querying
+- **Error Reporting**: Detailed validation error reporting with line numbers and descriptions
+- **Multiple Output Formats**: Supports database storage, JSON streaming, and SQL output
+- **Performance**: Efficiently processes large CWR files with thousands of records
 
 ## Usage
 
