@@ -6,3 +6,4 @@ description = "CWR file parser CLI tool"
 
 [dependencies]
 allegro_cwr = { path = "../allegro_cwr" }
+lexopt = "0.3.1"
