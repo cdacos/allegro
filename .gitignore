@@ -1,4 +1,3 @@
-/target
-.aider*
-.me
+**/target
+.*
 test.db

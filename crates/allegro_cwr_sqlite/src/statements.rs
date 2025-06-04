@@ -1,8 +1,7 @@
-use crate::error::CwrParseError;
-use rusqlite::{Connection, Statement, Transaction, params};
-use std::path::Path;
+use crate::error::CwrDbError;
+use rusqlite::{Statement, Transaction};
 
-// Structure to hold all prepared statements
+/// Structure to hold all prepared statements for CWR record insertion
 pub struct PreparedStatements<'conn> {
     pub error_stmt: Statement<'conn>,
     pub file_stmt: Statement<'conn>,
@@ -41,56 +40,8 @@ pub struct PreparedStatements<'conn> {
     pub xrf_stmt: Statement<'conn>,
 }
 
-pub fn determine_db_filename(input_filename: &str) -> String {
-    let mut n = 0;
-    let mut db_filename = format!("{}.db", input_filename);
-    while Path::new(&db_filename).exists() {
-        n += 1;
-        db_filename = format!("{}.{}.db", input_filename, n);
-    }
-    db_filename
-}
-
-pub fn setup_database(db_filename: &str) -> Result<(), Box<dyn std::error::Error>> {
-    // Schema is embedded directly into the binary at compile time
-    const SCHEMA_SQL: &str = include_str!("../docs/cwr_2.2_schema_sqlite.sql");
-    let conn = Connection::open(db_filename)?;
-
-    // Check if tables already exist to avoid erroring on re-runs
-    let table_count: i64 = conn.query_row("SELECT count(*) FROM sqlite_master WHERE type='table' AND name LIKE 'cwr_%'", [], |row| row.get(0))?;
-
-    if table_count == 0 {
-        println!("Applying embedded schema...");
-        conn.execute_batch(SCHEMA_SQL)?;
-    } else {
-        println!("Database schema already exists.");
-    }
-
-    Ok(())
-}
-
-/// Inserts a record into the 'error' table using a prepared statement.
-pub fn log_error(
-    error_stmt: &mut Statement, // Changed to take the whole struct
-    line_number: usize,
-    description: String,
-) -> Result<(), rusqlite::Error> {
-    error_stmt.execute(params![line_number as i64, description])?;
-    Ok(())
-}
-
-/// Inserts a record into the 'file' table using a prepared statement.
-pub fn insert_file_record(
-    file_stmt: &mut Statement, // Changed to take the whole struct
-    line_number: usize,
-    record_type: &str,
-    record_id: i64,
-) -> Result<(), CwrParseError> {
-    file_stmt.execute(params![line_number as i64, record_type, record_id])?;
-    Ok(())
-}
-
-pub fn get_prepared_statements<'a>(tx: &'a Transaction) -> Result<PreparedStatements<'a>, CwrParseError> {
+/// Creates all prepared statements for CWR record insertion
+pub fn get_prepared_statements<'a>(tx: &'a Transaction) -> Result<PreparedStatements<'a>, CwrDbError> {
     Ok(PreparedStatements {
         error_stmt: tx.prepare("INSERT INTO error (line_number, description) VALUES (?1, ?2)")?,
         file_stmt: tx.prepare("INSERT INTO file (line_number, record_type, record_id) VALUES (?1, ?2, ?3)")?,
