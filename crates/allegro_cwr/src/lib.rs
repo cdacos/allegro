@@ -21,8 +21,10 @@ pub use allegro_cwr_sqlite::{determine_db_filename, setup_database};
 pub use crate::error::CwrParseError;
 pub use crate::parser::{process_and_load_file, process_and_stream_json, ParsingContext};
 pub use crate::records::{
-    AckRecord, AgrRecord, AltRecord, GrhRecord, GrtRecord, HdrRecord, IpaRecord, NwrRecord, 
-    PerRecord, PwrRecord, RecRecord, SpuRecord, SptRecord, SwrRecord, SwtRecord, TerRecord, TrlRecord
+    AckRecord, AgrRecord, AltRecord, ComRecord, EwtRecord, GrhRecord, GrtRecord, HdrRecord, 
+    IndRecord, InsRecord, IpaRecord, MsgRecord, NpaRecord, NwrRecord, NwnRecord, OrnRecord,
+    PerRecord, PwrRecord, RecRecord, SpuRecord, SptRecord, SwrRecord, SwtRecord, TerRecord, 
+    TrlRecord, VerRecord
 };
 pub use crate::report::report_summary;
 pub use crate::util::format_int_with_commas;
