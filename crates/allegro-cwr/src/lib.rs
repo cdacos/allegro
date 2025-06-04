@@ -2,7 +2,6 @@
 //! 
 //! This library provides functionality to parse CWR files and load them into SQLite databases.
 
-pub mod db;
 pub mod error;
 pub mod parser;
 pub mod record_handlers;
@@ -10,7 +9,7 @@ pub mod report;
 pub mod util;
 
 // Re-export commonly used items
-pub use crate::db::{determine_db_filename, setup_database};
+pub use allegro_cwr_sqlite::{determine_db_filename, setup_database};
 pub use crate::error::CwrParseError;
 pub use crate::parser::{process_and_load_file, ParsingContext};
 pub use crate::report::report_summary;

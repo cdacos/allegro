@@ -1,4 +1,4 @@
-use crate::db;
+use allegro_cwr_sqlite::{PreparedStatements, log_error, CwrDbError};
 use std::io;
 
 #[derive(Debug)]
@@ -17,6 +17,16 @@ impl From<io::Error> for CwrParseError {
 impl From<rusqlite::Error> for CwrParseError {
     fn from(err: rusqlite::Error) -> CwrParseError {
         CwrParseError::Db(err)
+    }
+}
+
+impl From<CwrDbError> for CwrParseError {
+    fn from(err: CwrDbError) -> CwrParseError {
+        match err {
+            CwrDbError::Sqlite(e) => CwrParseError::Db(e),
+            CwrDbError::Io(e) => CwrParseError::Io(e),
+            CwrDbError::Setup(msg) => CwrParseError::BadFormat(format!("Database error: {}", msg)),
+        }
     }
 }
 
@@ -41,7 +51,7 @@ impl std::error::Error for CwrParseError {
 }
 
 /// Logs a CwrParseError to stderr and the error table using prepared statements.
-pub fn log_cwr_parse_error(stmts: &mut db::PreparedStatements, line_number: usize, error: &CwrParseError) -> Result<(), rusqlite::Error> {
+pub fn log_cwr_parse_error(stmts: &mut PreparedStatements, line_number: usize, error: &CwrParseError) -> Result<(), CwrDbError> {
     let description = error.to_string();
-    db::log_error(&mut stmts.error_stmt, line_number, description)
+    log_error(&mut stmts.error_stmt, line_number, description)
 }

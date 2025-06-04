@@ -1,6 +1,6 @@
-use crate::db::log_error;
+use allegro_cwr_sqlite::{statements::get_prepared_statements, log_error};
 use crate::error::CwrParseError;
-use crate::{db, error, record_handlers};
+use crate::{error, record_handlers};
 use rusqlite::Connection;
 use std::fs::File;
 use std::io;
@@ -76,7 +76,7 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
         // Scope for the main processing loop and prepared statements
         // Prepare all statements *using the transaction*
         // Keep the struct mutable as inserts happen within the handlers
-        let mut prepared_statements = db::get_prepared_statements(&tx)?;
+        let mut prepared_statements = get_prepared_statements(&tx)?;
 
         // Reset the position to the start of the file
         reader.seek(io::SeekFrom::Start(0))?;
@@ -90,7 +90,7 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
                     let parse_err = CwrParseError::Io(io_err);
                     if let Err(log_err) = error::log_cwr_parse_error(&mut prepared_statements, line_number, &parse_err) {
                         eprintln!("CRITICAL Error: Failed to log IO error to database on line {}: {} (Original error was: {})", line_number, log_err, parse_err);
-                        return Err(CwrParseError::Db(log_err));
+                        return Err(CwrParseError::from(log_err));
                     }
                     eprintln!("Aborting transaction due to IO error reading line {}: {}", line_number, parse_err);
                     return Err(parse_err); // Abort on IO Error
@@ -177,7 +177,7 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
                         // If logging *itself* fails, we have a serious problem (likely DB issue). Abort immediately.
                         eprintln!("CRITICAL Error: Failed to log error to database on line {}: {} (Original error was: {})", line_number, log_err, e);
                         // Return the database error that occurred during logging.
-                        return Err(CwrParseError::Db(log_err));
+                        return Err(CwrParseError::from(log_err));
                     }
 
                     // Logging succeeded. Now decide if the *original* error warrants stopping.

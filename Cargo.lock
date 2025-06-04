@@ -13,6 +13,14 @@ dependencies = [
 name = "allegro-cwr"
 version = "0.1.0"
 dependencies = [
+ "allegro-cwr-sqlite",
+ "rusqlite",
+]
+
+[[package]]
+name = "allegro-cwr-sqlite"
+version = "0.1.0"
+dependencies = [
  "rusqlite",
 ]
 

@@ -1,0 +1,8 @@
+[package]
+name = "allegro-cwr-sqlite"
+version = "0.1.0"
+edition = "2024"
+description = "SQLite database operations for CWR (Common Works Registration) files"
+
+[dependencies]
+rusqlite = { version = "0.35.0", features = ["bundled"] }
