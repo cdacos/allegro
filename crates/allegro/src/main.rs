@@ -55,11 +55,12 @@ fn print_help() {
     eprintln!("  <input_filename>    CWR file to process");
     eprintln!();
     eprintln!("Options:");
-    eprintln!("  -o, --output <file> Output database file path (will overwrite if exists)");
+    eprintln!("  -o, --output <file> Output database file path");
     eprintln!("  -h, --help          Show this help message");
     eprintln!();
     eprintln!("By default, creates <input_filename>.db, or numbered variants if it exists");
-    eprintln!("(.1.db, .2.db, etc.). Use --output to specify exact file and overwrite.");
+    eprintln!("(.1.db, .2.db, etc.). Use --output to specify exact file. Multiple files");
+    eprintln!("can be imported into the same database.");
 }
 
     println!("Processing input file: {}...", input_filename);

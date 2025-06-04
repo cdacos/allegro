@@ -1,25 +1,35 @@
 -- noinspection SqlNoDataSourceInspectionForFile
 
+CREATE TABLE file (
+    file_id INTEGER PRIMARY KEY,
+    file_path TEXT,
+    imported_on DATETIME
+);
+
 CREATE TABLE error (
     error_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     line_number INTEGER NOT NULL,
     description TEXT
 );
 
-CREATE TABLE file (
+CREATE TABLE file_line (
+    file_line_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     line_number INTEGER NOT NULL,
     insert_position INTEGER NOT NULL DEFAULT 0,
     record_type VARCHAR(3) NOT NULL,
     record_id INTEGER NOT NULL
 );
 
-CREATE UNIQUE INDEX idx_file_line_pos ON file(line_number, insert_position);
+CREATE UNIQUE INDEX idx_file_line_pos ON file_line(file_id, line_number, insert_position);
 
 -- SQLITE DDL for CWR 2.2 Record Types
 
 -- Transmission Header
 CREATE TABLE cwr_hdr (
     cwr_hdr_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     sender_type VARCHAR(2) NOT NULL,
     sender_id VARCHAR(9) NOT NULL,
@@ -38,6 +48,7 @@ CREATE TABLE cwr_hdr (
 -- Group Header
 CREATE TABLE cwr_grh (
     cwr_grh_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_type VARCHAR(3) NOT NULL,
     group_id VARCHAR(5) NOT NULL,
@@ -49,6 +60,7 @@ CREATE TABLE cwr_grh (
 -- Group Trailer
 CREATE TABLE cwr_grt (
     cwr_grt_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     group_id VARCHAR(5) NOT NULL,
     transaction_count VARCHAR(8) NOT NULL,
@@ -60,6 +72,7 @@ CREATE TABLE cwr_grt (
 -- Transmission Trailer
 CREATE TABLE cwr_trl (
     cwr_trl_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     group_count VARCHAR(5) NOT NULL,
     transaction_count VARCHAR(8) NOT NULL,
@@ -69,6 +82,7 @@ CREATE TABLE cwr_trl (
 -- Agreement Transaction
 CREATE TABLE cwr_agr (
     cwr_agr_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -93,6 +107,7 @@ CREATE TABLE cwr_agr (
 -- New Work Registration / Revised Registration / ISWC Notification / Existing Work in Conflict
 CREATE TABLE cwr_nwr (
     cwr_nwr_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -126,6 +141,7 @@ CREATE TABLE cwr_nwr (
 -- Acknowledgement of Transaction
 CREATE TABLE cwr_ack (
     cwr_ack_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -144,6 +160,7 @@ CREATE TABLE cwr_ack (
 -- Territory in Agreement
 CREATE TABLE cwr_ter (
     cwr_ter_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -154,6 +171,7 @@ CREATE TABLE cwr_ter (
 -- Interested Party of Agreement
 CREATE TABLE cwr_ipa (
     cwr_ipa_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -174,6 +192,7 @@ CREATE TABLE cwr_ipa (
 -- Non-Roman Alphabet Interested Party Name (associated with IPA)
 CREATE TABLE cwr_npa (
     cwr_npa_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -186,6 +205,7 @@ CREATE TABLE cwr_npa (
 -- Publisher Controlled by Submitter / Other Publisher
 CREATE TABLE cwr_spu (
     cwr_spu_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -216,6 +236,7 @@ CREATE TABLE cwr_spu (
 -- Non-Roman Alphabet Publisher Name
 CREATE TABLE cwr_npn (
     cwr_npn_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -228,6 +249,7 @@ CREATE TABLE cwr_npn (
 -- Publisher Territory of Control / Other Publisher Territory
 CREATE TABLE cwr_spt (
     cwr_spt_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -245,6 +267,7 @@ CREATE TABLE cwr_spt (
 -- Writer Controlled by Submitter / Other Writer
 CREATE TABLE cwr_swr (
     cwr_swr_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -273,6 +296,7 @@ CREATE TABLE cwr_swr (
 -- Non-Roman Alphabet Writer Name
 CREATE TABLE cwr_nwn (
     cwr_nwn_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -285,6 +309,7 @@ CREATE TABLE cwr_nwn (
 -- Writer Territory of Control / Other Writer Territory
 CREATE TABLE cwr_swt (
     cwr_swt_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -301,6 +326,7 @@ CREATE TABLE cwr_swt (
 -- Publisher for Writer relationship
 CREATE TABLE cwr_pwr (
     cwr_pwr_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -315,6 +341,7 @@ CREATE TABLE cwr_pwr (
 -- Alternate Title
 CREATE TABLE cwr_alt (
     cwr_alt_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -326,6 +353,7 @@ CREATE TABLE cwr_alt (
 -- Non-Roman Alphabet Title
 CREATE TABLE cwr_nat (
     cwr_nat_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -337,6 +365,7 @@ CREATE TABLE cwr_nat (
 -- Entire Work Title for Excerpts
 CREATE TABLE cwr_ewt (
     cwr_ewt_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -358,6 +387,7 @@ CREATE TABLE cwr_ewt (
 -- Original Work Title for Versions
 CREATE TABLE cwr_ver (
     cwr_ver_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -379,6 +409,7 @@ CREATE TABLE cwr_ver (
 -- Performing Artist
 CREATE TABLE cwr_per (
     cwr_per_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -391,6 +422,7 @@ CREATE TABLE cwr_per (
 -- Non-Roman Alphabet Performing Artist Name
 CREATE TABLE cwr_npr (
     cwr_npr_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -406,6 +438,7 @@ CREATE TABLE cwr_npr (
 -- Recording Detail
 CREATE TABLE cwr_rec (
     cwr_rec_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -432,6 +465,7 @@ CREATE TABLE cwr_rec (
 -- Work Origin
 CREATE TABLE cwr_orn (
     cwr_orn_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -460,6 +494,7 @@ CREATE TABLE cwr_orn (
 -- Instrumentation Summary
 CREATE TABLE cwr_ins (
     cwr_ins_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -471,6 +506,7 @@ CREATE TABLE cwr_ins (
 -- Instrumentation Detail
 CREATE TABLE cwr_ind (
     cwr_ind_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -481,6 +517,7 @@ CREATE TABLE cwr_ind (
 -- Composite Component
 CREATE TABLE cwr_com (
     cwr_com_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -501,6 +538,7 @@ CREATE TABLE cwr_com (
 -- Message
 CREATE TABLE cwr_msg (
     cwr_msg_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -515,6 +553,7 @@ CREATE TABLE cwr_msg (
 -- Non-Roman Alphabet Entire Work Title / Component Title / Original Title (for EWT/COM/VER)
 CREATE TABLE cwr_net (
     cwr_net_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -525,6 +564,7 @@ CREATE TABLE cwr_net (
 -- Non-Roman Alphabet Writer Name (for EWT/VER/COM)
 CREATE TABLE cwr_now (
     cwr_now_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -537,6 +577,7 @@ CREATE TABLE cwr_now (
 -- Additional Related Information
 CREATE TABLE cwr_ari (
     cwr_ari_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,
@@ -550,6 +591,7 @@ CREATE TABLE cwr_ari (
 -- Work ID Cross Reference
 CREATE TABLE cwr_xrf (
     cwr_xrf_id INTEGER PRIMARY KEY,
+    file_id INTEGER NOT NULL,
     record_type VARCHAR(3) NOT NULL,
     transaction_sequence_num VARCHAR(8) NOT NULL,
     record_sequence_num VARCHAR(8) NOT NULL,

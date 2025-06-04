@@ -22,20 +22,32 @@ impl<'conn> CwrRecordInserter<'conn> {
 /// Inserts a record into the 'error' table using a prepared statement
 pub fn log_error(
     error_stmt: &mut Statement,
+    file_id: i64,
     line_number: usize,
     description: String,
 ) -> Result<(), CwrDbError> {
-    error_stmt.execute(params![line_number as i64, description])?;
+    error_stmt.execute(params![file_id, line_number as i64, description])?;
     Ok(())
 }
 
-/// Inserts a record into the 'file' table using a prepared statement
+/// Inserts a record into the 'file' table and returns the file_id
 pub fn insert_file_record(
+    tx: &Transaction,
+    file_insert_stmt: &mut Statement,
+    file_path: &str,
+) -> Result<i64, CwrDbError> {
+    file_insert_stmt.execute(params![file_path])?;
+    Ok(tx.last_insert_rowid())
+}
+
+/// Inserts a record into the 'file_line' table using a prepared statement
+pub fn insert_file_line_record(
     file_stmt: &mut Statement,
+    file_id: i64,
     line_number: usize,
     record_type: &str,
     record_id: i64,
 ) -> Result<(), CwrDbError> {
-    file_stmt.execute(params![line_number as i64, record_type, record_id])?;
+    file_stmt.execute(params![file_id, line_number as i64, record_type, record_id])?;
     Ok(())
 }

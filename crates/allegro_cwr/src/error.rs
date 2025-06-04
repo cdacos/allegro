@@ -51,7 +51,7 @@ impl std::error::Error for CwrParseError {
 }
 
 /// Logs a CwrParseError to stderr and the error table using prepared statements.
-pub fn log_cwr_parse_error(stmts: &mut PreparedStatements, line_number: usize, error: &CwrParseError) -> Result<(), CwrDbError> {
+pub fn log_cwr_parse_error(stmts: &mut PreparedStatements, file_id: i64, line_number: usize, error: &CwrParseError) -> Result<(), CwrDbError> {
     let description = error.to_string();
-    log_error(&mut stmts.error_stmt, line_number, description)
+    log_error(&mut stmts.error_stmt, file_id, line_number, description)
 }

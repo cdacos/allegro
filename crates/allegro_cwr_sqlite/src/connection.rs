@@ -44,18 +44,8 @@ pub fn determine_db_filename(input_filename: &str, output_path: Option<&str>) ->
 
 /// Sets up the CWR database schema
 pub fn setup_database(db_filename: &str) -> Result<(), CwrDbError> {
-    setup_database_with_overwrite(db_filename, false)
-}
-
-/// Sets up the CWR database schema with optional overwrite
-pub fn setup_database_with_overwrite(db_filename: &str, overwrite: bool) -> Result<(), CwrDbError> {
     // Schema is embedded directly into the binary at compile time
     const SCHEMA_SQL: &str = include_str!("schema.sql");
-    
-    if overwrite && Path::new(db_filename).exists() {
-        println!("Removing existing database file...");
-        std::fs::remove_file(db_filename)?;
-    }
     
     let conn = Connection::open(db_filename)?;
 
@@ -69,24 +59,10 @@ pub fn setup_database_with_overwrite(db_filename: &str, overwrite: bool) -> Resu
     if table_count == 0 {
         println!("Applying embedded schema...");
         conn.execute_batch(SCHEMA_SQL)?;
-    } else if overwrite {
-        println!("Clearing existing data and reapplying schema...");
-        // Drop and recreate all tables to ensure clean state
-        conn.execute_batch("DROP TABLE IF EXISTS error")?;
-        conn.execute_batch("DROP TABLE IF EXISTS file")?;
-        // Drop all CWR tables
-        let table_names: Vec<String> = conn.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'cwr_%'")?
-            .query_map([], |row| Ok(row.get::<_, String>(0)?))?
-            .collect::<Result<Vec<_>, _>>()?;
-        
-        for table_name in table_names {
-            conn.execute(&format!("DROP TABLE IF EXISTS {}", table_name), [])?;
-        }
-        
-        conn.execute_batch(SCHEMA_SQL)?;
     } else {
-        println!("Database schema already exists.");
+        println!("Database schema already exists, ready for import.");
     }
 
     Ok(())
 }
+

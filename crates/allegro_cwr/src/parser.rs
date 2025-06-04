@@ -1,4 +1,4 @@
-use allegro_cwr_sqlite::{statements::get_prepared_statements, log_error};
+use allegro_cwr_sqlite::{statements::get_prepared_statements, log_error, insert_file_record};
 use crate::error::CwrParseError;
 use crate::{error, record_handlers};
 use rusqlite::Connection;
@@ -10,6 +10,7 @@ use std::io::{BufRead, BufReader, Seek};
 #[derive(Debug, Clone)]
 pub struct ParsingContext {
     pub cwr_version: f32, // e.g., 2.0, 2.1, 2.2
+    pub file_id: i64,     // Database file_id for this file
                           // Add other metadata like charset later if needed
 }
 
@@ -38,7 +39,7 @@ fn get_cwr_version(hdr_line: &str) -> Result<f32, CwrParseError> {
     if valid_cwr_versions.contains(&cwr_version) { Ok(cwr_version) } else { Err(CwrParseError::BadFormat(format!("Invalid CWR version: {}", cwr_version))) }
 }
 
-pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<usize, CwrParseError> {
+pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<(i64, usize), CwrParseError> {
     let file = File::open(input_filename)?;
     // Use BufReader::new directly, we need to consume the first line separately
     let mut reader = BufReader::new(file);
@@ -58,9 +59,6 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
         )));
     }
 
-    let context = ParsingContext { cwr_version: get_cwr_version(hdr_line)? };
-    println!("Determined CWR Version: {}", context.cwr_version); // Log detected version
-
     // --- Setup Database and Transaction ---
     let mut conn = Connection::open(db_filename)?;
     // Set PRAGMAs before transaction
@@ -72,11 +70,21 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
     let tx = conn.transaction()?;
     let mut line_number: usize = 0; // Start at 0, HDR is line 1
 
-    {
-        // Scope for the main processing loop and prepared statements
-        // Prepare all statements *using the transaction*
-        // Keep the struct mutable as inserts happen within the handlers
+    let file_id = {
+        // Scope for file insertion
         let mut prepared_statements = get_prepared_statements(&tx)?;
+        insert_file_record(&tx, &mut prepared_statements.file_insert_stmt, input_filename)?
+    };
+
+    {
+        // Scope for the main processing loop
+        let mut prepared_statements = get_prepared_statements(&tx)?;
+        
+        let context = ParsingContext { 
+            cwr_version: get_cwr_version(hdr_line)?, 
+            file_id 
+        };
+        println!("Determined CWR Version: {}", context.cwr_version); // Log detected version
 
         // Reset the position to the start of the file
         reader.seek(io::SeekFrom::Start(0))?;
@@ -88,7 +96,7 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
                 Err(io_err) => {
                     // Log IO error reading the line
                     let parse_err = CwrParseError::Io(io_err);
-                    if let Err(log_err) = error::log_cwr_parse_error(&mut prepared_statements, line_number, &parse_err) {
+                    if let Err(log_err) = error::log_cwr_parse_error(&mut prepared_statements, context.file_id, line_number, &parse_err) {
                         eprintln!("CRITICAL Error: Failed to log IO error to database on line {}: {} (Original error was: {})", line_number, log_err, parse_err);
                         return Err(CwrParseError::from(log_err));
                     }
@@ -102,7 +110,7 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
             }
 
             if line.len() < 3 {
-                log_error(&mut prepared_statements.error_stmt, line_number, format!("Line {} is too short (less than 3 chars), skipping.", line_number))?;
+                log_error(&mut prepared_statements.error_stmt, context.file_id, line_number, format!("Line {} is too short (less than 3 chars), skipping.", line_number))?;
                 continue;
             }
 
@@ -160,7 +168,7 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
                     "XRF" => record_handlers::parse_and_insert_xrf(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
                     _ => {
                         // Unrecognized record type
-                        log_error(&mut prepared_statements.error_stmt, line_number, format!("Unrecognized record type '{}', skipping.", record_type))?;
+                        log_error(&mut prepared_statements.error_stmt, context.file_id, line_number, format!("Unrecognized record type '{}', skipping.", record_type))?;
                         // known_record_processed remains false
                         Ok(()) // Still Ok overall, just skipped this line
                     }
@@ -173,7 +181,7 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
                 Err(e) => {
                     // An error occurred processing this line (e.g., BadFormat from validation, or DB error from macro)
 
-                    if let Err(log_err) = error::log_cwr_parse_error(&mut prepared_statements, line_number, &e) {
+                    if let Err(log_err) = error::log_cwr_parse_error(&mut prepared_statements, context.file_id, line_number, &e) {
                         // If logging *itself* fails, we have a serious problem (likely DB issue). Abort immediately.
                         eprintln!("CRITICAL Error: Failed to log error to database on line {}: {} (Original error was: {})", line_number, log_err, e);
                         // Return the database error that occurred during logging.
@@ -198,19 +206,22 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
                 }
             }
         }
+
+        // Drop prepared_statements to release the borrow on tx
+        drop(prepared_statements);
     }
 
     // Commit the transaction *only if* all lines were processed without error
     tx.commit()?;
 
-    Ok(line_number)
+    Ok((file_id, line_number))
 }
 
 // Helper macro for mandatory fields. Logs error to DB (using prepared statement) and returns "" if missing/empty.
 // Propagates DB errors or fundamental slice errors.
 #[macro_export]
 macro_rules! get_mandatory_field {
-    ($stmts:expr, $slice_fn:expr, $start:expr, $end:expr, $line_num:expr, $rec_type:expr, $field_name:expr) => {
+    ($stmts:expr, $slice_fn:expr, $start:expr, $end:expr, $line_num:expr, $file_id:expr, $rec_type:expr, $field_name:expr) => {
         // Match on the result of the slice function
         match $slice_fn($start, $end) {
             // Case 1: Slice function itself returned an error (rare with current safe_slice, but good practice)
@@ -224,7 +235,7 @@ macro_rules! get_mandatory_field {
                 // Construct the error description
                 let error_description = format!("{} missing or empty mandatory field '{}' (Expected at {}-{}). Using fallback ''.", $rec_type, $field_name, $start + 1, $end); // Use 1-based indexing for user message
 
-                match $stmts.error_stmt.execute(params![$line_num as i64, error_description]) {
+                match $stmts.error_stmt.execute(params![$file_id, $line_num as i64, error_description]) {
                     // Subcase 3a: Database insertion failed
                     Err(db_err) => Err(CwrParseError::Db(db_err)), // Propagate the DB error
                     // Subcase 3b: Database insertion succeeded
