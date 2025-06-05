@@ -2,7 +2,7 @@
 
 use log::debug;
 use crate::validators::{date_yyyymmdd, one_of, yes_no, works_count};
-use crate::impl_cwr_parsing;
+use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
 use serde::{Deserialize, Serialize};
 
 /// AGR - Agreement Transaction Record
@@ -96,3 +96,4 @@ impl_cwr_parsing! {
     }
 }
 
+impl_cwr_parsing_test_roundtrip!(AgrRecord, "AGR00000001000000011234567890123               AA20231201                Y        Y                00001                 ");

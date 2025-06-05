@@ -1,7 +1,10 @@
 /// Macro to generate from_cwr_line_v2 method for CWR record parsing
 /// 
 /// Usage:
-/// ```
+/// ```ignore
+/// use allegro_cwr::impl_cwr_parsing;
+/// use allegro_cwr::validators::one_of;
+///
 /// impl_cwr_parsing! {
 ///     AgrRecord {
 ///         record_type: (0, 3, required, one_of(&["AGR"])),
@@ -116,6 +119,47 @@ macro_rules! impl_cwr_parsing {
 
 }
 
+/// Macro to generate a round-trip test for CWR record parsing
+/// 
+/// Usage:
+/// ```ignore
+/// use allegro_cwr::impl_cwr_parsing_test_roundtrip;
+///
+/// impl_cwr_parsing_test_roundtrip!(AgrRecord, "AGR00000001000000011234567890123...");
+/// ```
+#[macro_export]
+macro_rules! impl_cwr_parsing_test_roundtrip {
+    ($struct_name:ident, $test_line:expr) => {
+        #[cfg(test)]
+        mod roundtrip_tests {
+            use super::*;
+
+            #[test]
+            fn test_roundtrip_parsing() {
+                let original_line = $test_line;
+                
+                // Parse the line
+                let parse_result = $struct_name::from_cwr_line_v2(original_line).unwrap();
+                let record = parse_result.record;
+                
+                // Convert back to CWR line
+                let regenerated_line = record.to_cwr_line();
+                
+                // Should be able to round-trip the data
+                assert_eq!(original_line, regenerated_line, 
+                    "Round-trip failed: original line and regenerated line don't match");
+                
+                // Parse the regenerated line to ensure it's still valid
+                let reparse_result = $struct_name::from_cwr_line_v2(&regenerated_line).unwrap();
+                
+                // The records should be identical
+                assert_eq!(record, reparse_result.record, 
+                    "Records differ after round-trip parsing");
+            }
+        }
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use crate::error::CwrParseError;
@@ -141,6 +185,8 @@ mod tests {
             optional_field: (8, 13, optional),
         }
     }
+
+    impl_cwr_parsing_test_roundtrip!(TestRecord, "TST12345ABCDE");
 
     #[test]
     fn test_macro_generated_parsing() {

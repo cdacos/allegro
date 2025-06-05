@@ -179,11 +179,29 @@ The macro integrates with a comprehensive validation system (`validators.rs`) in
 - `works_count` - Validates work count (1-99999)
 - `alphanumeric` - Validates alphanumeric content
 
+### Testing with `impl_cwr_parsing_test_roundtrip!`
+
+A companion macro generates comprehensive round-trip tests to ensure parsing and formatting work correctly:
+
+```rust
+// Generates a test that parses the line, converts back to CWR format, 
+// and verifies the result matches the original
+impl_cwr_parsing_test_roundtrip!(AgrRecord, "AGR00000001000000011234567890123...");
+```
+
+The generated test:
+1. Parses the provided CWR line using `from_cwr_line_v2()`
+2. Converts the record back to CWR format using `to_cwr_line()`
+3. Verifies the regenerated line exactly matches the original
+4. Parses the regenerated line again to ensure consistency
+5. Verifies both parsed records are identical
+
 ### Migration Path
 
 This macro enables easy migration of all 30+ CWR record types from manual implementations to generated code:
 
 1. Define field specifications using the macro syntax
 2. Remove manual `new()`, `from_cwr_line_v2()`, and `to_cwr_line()` implementations  
-3. The macro generates equivalent functionality with validation and warnings
-4. All existing tests continue to pass without modification
+3. Add round-trip test with `impl_cwr_parsing_test_roundtrip!`
+4. The macro generates equivalent functionality with validation and warnings
+5. All existing tests continue to pass without modification
