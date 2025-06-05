@@ -65,7 +65,6 @@ pub struct AgrRecord {
     pub society_assigned_agreement_number: Option<String>,
 }
 
-// Generate the from_cwr_line_v2 method using the macro
 impl_cwr_parsing! {
     AgrRecord {
         record_type: (0, 3, required, one_of(&["AGR"])),
