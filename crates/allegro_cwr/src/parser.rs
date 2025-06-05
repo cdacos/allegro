@@ -229,3 +229,175 @@ pub fn process_cwr_stream(input_filename: &str) -> Result<impl Iterator<Item = R
     )
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use std::fs;
+
+    #[test]
+    fn test_get_cwr_version_v20() {
+        let hdr_line = "HDR01BMI      BMI MUSIC                             01.1020050101120000 ";
+        let version = get_cwr_version(hdr_line).unwrap();
+        assert_eq!(version, 2.0);
+    }
+
+    #[test]
+    fn test_get_cwr_version_v21() {
+        let hdr_line = "HDR01BMI      BMI MUSIC                             01.1020050101120000 20050101        ";
+        let version = get_cwr_version(hdr_line).unwrap();
+        assert_eq!(version, 2.1);
+    }
+
+    #[test]
+    fn test_get_cwr_version_v22() {
+        let hdr_line = "HDR01BMI      BMI MUSIC                             01.1020050101120000 20050101                    2.2";
+        let version = get_cwr_version(hdr_line).unwrap();
+        assert_eq!(version, 2.2);
+    }
+
+    #[test]
+    fn test_get_cwr_version_invalid() {
+        let hdr_line = "HDR01BMI      BMI MUSIC                             01.1020050101120000 20050101                    9.9";
+        let result = get_cwr_version(hdr_line);
+        assert!(result.is_err());
+        match result {
+            Err(CwrParseError::BadFormat(msg)) => {
+                assert_eq!(msg, "Invalid CWR version: 9.9");
+            }
+            _ => panic!("Expected BadFormat error"),
+        }
+    }
+
+    #[test]
+    fn test_parse_cwr_line_too_short() {
+        let context = ParsingContext { cwr_version: 2.2, file_id: 0 };
+        let result = parse_cwr_line("AB", 1, &context);
+        assert!(result.is_err());
+        match result {
+            Err(CwrParseError::BadFormat(msg)) => {
+                assert_eq!(msg, "Line 1 is too short (less than 3 chars)");
+            }
+            _ => panic!("Expected BadFormat error"),
+        }
+    }
+
+    #[test]
+    fn test_parse_cwr_line_unknown_record_type() {
+        let context = ParsingContext { cwr_version: 2.2, file_id: 0 };
+        let result = parse_cwr_line("XYZ00000001000000012005010112000000001000000001NWR", 1, &context);
+        assert!(result.is_err());
+        match result {
+            Err(CwrParseError::BadFormat(msg)) => {
+                assert_eq!(msg, "Unrecognized record type 'XYZ'");
+            }
+            _ => panic!("Expected BadFormat error"),
+        }
+    }
+
+    #[test]
+    fn test_parse_cwr_line_valid_hdr() {
+        let context = ParsingContext { cwr_version: 2.2, file_id: 0 };
+        let line = "HDR01BMI      BMI MUSIC                             01.1020050101120000 20050101                    2.2";
+        let result = parse_cwr_line(line, 1, &context);
+        assert!(result.is_ok());
+        let parsed = result.unwrap();
+        assert_eq!(parsed.line_number, 1);
+        assert_eq!(parsed.record.record_type(), "HDR");
+    }
+
+    #[test]
+    fn test_cwr_record_type_mapping() {
+        use crate::records::HdrRecord;
+        let hdr = HdrRecord::new("01".to_string(), "BMI".to_string(), "BMI MUSIC".to_string(), "01.10".to_string(), "20050101".to_string(), "120000".to_string(), "20050101".to_string());
+        let cwr_record = CwrRecord::Hdr(hdr);
+        assert_eq!(cwr_record.record_type(), "HDR");
+    }
+
+    fn create_temp_cwr_file(content: &str) -> String {
+        let temp_dir = std::env::temp_dir();
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let file_path = temp_dir.join(format!("test_{}.cwr", timestamp));
+        let mut file = File::create(&file_path).unwrap();
+        file.write_all(content.as_bytes()).unwrap();
+        file_path.to_string_lossy().to_string()
+    }
+
+    #[test]
+    fn test_process_cwr_stream_empty_file() {
+        let temp_file = create_temp_cwr_file("");
+        let result = process_cwr_stream(&temp_file);
+        assert!(result.is_err());
+        match result {
+            Err(CwrParseError::BadFormat(msg)) => {
+                assert_eq!(msg, "File is empty");
+            }
+            _ => panic!("Expected BadFormat error"),
+        }
+        fs::remove_file(&temp_file).ok();
+    }
+
+    #[test]
+    fn test_process_cwr_stream_no_hdr() {
+        let content = "TRL00000001000000012005010100";
+        let temp_file = create_temp_cwr_file(content);
+        let result = process_cwr_stream(&temp_file);
+        assert!(result.is_err());
+        match result {
+            Err(CwrParseError::BadFormat(msg)) => {
+                assert!(msg.starts_with("File does not start with HDR record"));
+            }
+            _ => panic!("Expected BadFormat error"),
+        }
+        fs::remove_file(&temp_file).ok();
+    }
+
+    #[test] 
+    fn test_process_cwr_stream_valid_file() {
+        let content = "HDR01BMI      BMI MUSIC                             01.1020050101120000 20050101                    2.2\nTRL00000001000000012005010100                                                                                                                                                                                                                                                                                                                                                                                   ";
+        let temp_file = create_temp_cwr_file(content);
+        let result = process_cwr_stream(&temp_file);
+        assert!(result.is_ok());
+        
+        let records: Vec<_> = result.unwrap().collect();
+        assert_eq!(records.len(), 2);
+        
+        assert!(records[0].is_ok());
+        assert!(records[1].is_ok());
+        
+        let first_record = records[0].as_ref().unwrap();
+        assert_eq!(first_record.line_number, 1);
+        assert_eq!(first_record.record.record_type(), "HDR");
+        assert_eq!(first_record.context.cwr_version, 2.2);
+        
+        fs::remove_file(&temp_file).ok();
+    }
+
+    #[test]
+    fn test_process_cwr_stream_empty_line() {
+        let content = "HDR01BMI      BMI MUSIC                             01.1020050101120000 20050101                    2.2\n\nTRL00000001000000012005010100                                                                                                                                                                                                                                                                                                                                                                                   ";
+        let temp_file = create_temp_cwr_file(content);
+        let result = process_cwr_stream(&temp_file);
+        assert!(result.is_ok());
+        
+        let records: Vec<_> = result.unwrap().collect();
+        assert_eq!(records.len(), 3);
+        
+        assert!(records[0].is_ok());
+        assert!(records[1].is_err());
+        assert!(records[2].is_ok());
+        
+        match &records[1] {
+            Err(CwrParseError::BadFormat(msg)) => {
+                assert_eq!(msg, "Line 2 is empty");
+            }
+            _ => panic!("Expected BadFormat error for empty line"),
+        }
+        
+        fs::remove_file(&temp_file).ok();
+    }
+}
+
