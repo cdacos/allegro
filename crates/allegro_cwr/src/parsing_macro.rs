@@ -51,23 +51,18 @@ macro_rules! impl_cwr_parsing {
 
             /// Convert this record to a CWR format line
             pub fn to_cwr_line(&self) -> String {
-                let mut result = String::new();
+                let mut fields = Vec::new();
 
                 $(
                     let field_value = impl_cwr_parsing!(@format_field self.$field_name, $field_type);
                     let field_width = $end - $start;
                     
-                    // Pad to the start position if needed
-                    while result.len() < $start {
-                        result.push(' ');
-                    }
-                    
-                    // Add the field value, truncated or padded to the correct width
-                    let formatted = format!("{:width$}", field_value, width = field_width);
-                    result.push_str(&formatted[..field_width.min(formatted.len())]);
+                    // Format field to exact width (left-aligned, space-padded)
+                    let formatted = format!("{:<width$}", field_value, width = field_width);
+                    fields.push(formatted);
                 )*
 
-                result
+                fields.join("")
             }
         }
     };
