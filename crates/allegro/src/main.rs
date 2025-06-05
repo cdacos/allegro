@@ -1,7 +1,7 @@
 use std::process;
 use std::time::Instant;
 
-use allegro_cwr::{OutputFormat, format_int_with_commas, process_cwr_file_with_output};
+use allegro_cwr::{OutputFormat, format_int_with_commas, process_cwr_file_json};
 
 struct Config {
     output_path: Option<String>,
@@ -78,7 +78,26 @@ fn main() {
 
     let start_time = Instant::now();
 
-    let result = process_cwr_file_with_output(&input_filename, config.output_path.as_deref(), config.format);
+    let result = match config.format {
+        OutputFormat::Json => {
+            match process_cwr_file_json(&input_filename) {
+                Ok(count) => Ok(("".to_string(), count)),
+                Err(e) => Err(Box::new(e) as Box<dyn std::error::Error>),
+            }
+        }
+        OutputFormat::Default | OutputFormat::Sql => {
+            let db_filename = allegro_cwr_sqlite::determine_db_filename(&input_filename, config.output_path.as_deref());
+            println!("Using database filename: '{}'", db_filename);
+            
+            match allegro_cwr_sqlite::process_cwr_to_sqlite(&input_filename, &db_filename) {
+                Ok((file_id, count, report)) => {
+                    println!("{}", report);
+                    Ok((db_filename, count))
+                }
+                Err(e) => Err(e),
+            }
+        }
+    };
 
     let elapsed_time = start_time.elapsed();
 

@@ -229,9 +229,6 @@ pub fn process_cwr_stream(input_filename: &str) -> Result<impl Iterator<Item = R
     )
 }
 
-
-
-
 // Helper macro for mandatory fields. Logs error to DB (using prepared statement) and returns "" if missing/empty.
 // Propagates DB errors or fundamental slice errors.
 #[macro_export]

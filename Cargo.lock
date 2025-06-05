@@ -7,6 +7,7 @@ name = "allegro"
 version = "0.1.0"
 dependencies = [
  "allegro_cwr",
+ "allegro_cwr_sqlite",
  "lexopt",
 ]
 
@@ -14,8 +15,6 @@ dependencies = [
 name = "allegro_cwr"
 version = "0.1.0"
 dependencies = [
- "allegro_cwr_sqlite",
- "rusqlite",
  "serde",
 ]
 
@@ -23,6 +22,7 @@ dependencies = [
 name = "allegro_cwr_sqlite"
 version = "0.1.0"
 dependencies = [
+ "allegro_cwr",
  "rusqlite",
 ]
 
