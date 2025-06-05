@@ -212,7 +212,7 @@ fn parse_cwr_line(line: &str, line_number: usize, context: &ParsingContext) -> R
         "GRH" => CwrRecord::Grh(GrhRecord::from_cwr_line(line)?),
         "GRT" => CwrRecord::Grt(GrtRecord::from_cwr_line(line)?),
         "TRL" => CwrRecord::Trl(TrlRecord::from_cwr_line(line)?),
-        "AGR" => CwrRecord::Agr(AgrRecord::from_cwr_line(line)?),
+        "AGR" => CwrRecord::Agr(AgrRecord::from_cwr_line_v2(line)?.record),
         "NWR" | "REV" | "ISW" | "EXC" => CwrRecord::Nwr(NwrRecord::from_cwr_line(line)?),
         "ACK" => CwrRecord::Ack(AckRecord::from_cwr_line(line)?),
         "TER" => CwrRecord::Ter(TerRecord::from_cwr_line(line)?),

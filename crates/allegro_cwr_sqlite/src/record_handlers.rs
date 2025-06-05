@@ -44,6 +44,40 @@ where
     }
 }
 
+/// Generic handler for records that return CwrParseResult (with warnings)
+fn handle_record_with_warnings<T, F>(line_number: usize, tx: &Transaction, stmts: &mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>, parse_fn: fn(&str) -> Result<allegro_cwr::error::CwrParseResult<T>, CwrParseError>, insert_fn: F) -> Result<(), crate::CwrDbError>
+where
+    F: FnOnce(&T, &mut PreparedStatements, i64) -> Result<(), rusqlite::Error>,
+{
+    // Reconstruct the full line
+    let line = reconstruct_line_from_safe_slice(safe_slice)?;
+
+    // Parse using the provided function
+    match parse_fn(&line) {
+        Ok(parse_result) => {
+            // Log any warnings
+            for warning in &parse_result.warnings {
+                log::warn!("Line {}: {}", line_number, warning);
+            }
+            
+            // Insert using the provided function
+            insert_fn(&parse_result.record, stmts, context.file_id)?;
+            let record_id = tx.last_insert_rowid();
+
+            // Log to file_line table
+            let record_type = line.get(0..3).unwrap_or("UNK");
+            insert_file_line_record(&mut stmts.file_stmt, context.file_id, line_number, record_type, record_id)?;
+
+            Ok(())
+        }
+        Err(e) => {
+            // Log error but continue processing (recoverable error)
+            log_error(&mut stmts.error_stmt, context.file_id, line_number, e.to_string())?;
+            Ok(())
+        }
+    }
+}
+
 // HDR - Transmission Header
 pub fn parse_and_insert_hdr<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
     handle_record_with_struct(line_number, tx, stmts, context, safe_slice, HdrRecord::from_cwr_line, |record, stmts, file_id| {
@@ -121,7 +155,7 @@ pub fn parse_and_insert_alt<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 
 // AGR - Agreement Transaction
 pub fn parse_and_insert_agr<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
-    handle_record_with_struct(line_number, tx, stmts, context, safe_slice, AgrRecord::from_cwr_line, |record, stmts, file_id| {
+    handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, AgrRecord::from_cwr_line_v2, |record, stmts, file_id| {
         stmts.agr_stmt.execute(params![
             file_id,
             record.record_type,

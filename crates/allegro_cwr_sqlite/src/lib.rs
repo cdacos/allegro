@@ -73,12 +73,6 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
         let tx = self.conn.transaction()?;
         let mut prepared_statements = statements::get_prepared_statements(&tx)?;
         
-        // Update context with the real file_id
-        let context = allegro_cwr::ParsingContext { 
-            cwr_version: parsed_record.context.cwr_version, 
-            file_id: self.file_id 
-        };
-
         // For now, just log to file_line table - TODO: implement full record insertion
         let record_id = 1; // Placeholder
         insert_file_line_record(&mut prepared_statements.file_stmt, self.file_id, parsed_record.line_number, parsed_record.record.record_type(), record_id)?;

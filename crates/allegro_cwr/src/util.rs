@@ -43,6 +43,7 @@ pub fn validate_record_type(line: &str, expected: &str) -> Result<String, crate:
 }
 
 
+
 /// Extract CWR version from filename according to the spec:
 /// CWyynnnnsss_rrr.Vxx where Vxx is the version (e.g., V21 = 2.1, V22 = 2.2)
 pub fn extract_version_from_filename(filename: &str) -> Option<f32> {
@@ -126,4 +127,5 @@ mod tests {
         assert_eq!(extract_version_from_filename("file.V21.extra"), None);
         assert_eq!(extract_version_from_filename("file.V21.zip"), Some(2.1));
     }
+
 }

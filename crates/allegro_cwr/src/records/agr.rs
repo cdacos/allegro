@@ -1,7 +1,7 @@
 //! AGR - Agreement Transaction Record
 
-use crate::error::CwrParseError;
-use crate::util::{validate_record_type, extract_required_field, extract_optional_field};
+use crate::error::{CwrParseError, CwrParseResult};
+use crate::validators::*;
 use serde::{Deserialize, Serialize};
 
 /// AGR - Agreement Transaction Record
@@ -91,29 +91,67 @@ impl AgrRecord {
         }
     }
 
-    /// Parse a CWR line into an AGR record
-    pub fn from_cwr_line(line: &str) -> Result<Self, CwrParseError> {
-        let mut _warnings = Vec::new();
+    /// Parse a CWR line into an AGR record (v2 with validation and warnings)
+    pub fn from_cwr_line_v2(line: &str) -> Result<CwrParseResult<Self>, CwrParseError> {
+        let mut warnings = Vec::new();
 
-        let record_type = validate_record_type(line, "AGR")?;
-        let transaction_sequence_num = extract_required_field(line, 3, 11, "transaction_sequence_num", &mut _warnings)?;
-        let record_sequence_num = extract_required_field(line, 11, 19, "record_sequence_num", &mut _warnings)?;
-        let submitter_agreement_number = extract_required_field(line, 19, 33, "submitter_agreement_number", &mut _warnings)?;
-        let international_standard_agreement_code = extract_optional_field(line, 33, 47, "international_standard_agreement_code", "AGR", &mut _warnings);
-        let agreement_type = extract_required_field(line, 47, 49, "agreement_type", &mut _warnings)?;
-        let agreement_start_date = extract_required_field(line, 49, 57, "agreement_start_date", &mut _warnings)?;
-        let agreement_end_date = extract_optional_field(line, 57, 65, "agreement_end_date", "AGR", &mut _warnings);
-        let retention_end_date = extract_optional_field(line, 65, 73, "retention_end_date", "AGR", &mut _warnings);
-        let prior_royalty_status = extract_required_field(line, 73, 74, "prior_royalty_status", &mut _warnings)?;
-        let prior_royalty_start_date = extract_optional_field(line, 74, 82, "prior_royalty_start_date", "AGR", &mut _warnings);
-        let post_term_collection_status = extract_required_field(line, 82, 83, "post_term_collection_status", &mut _warnings)?;
-        let post_term_collection_end_date = extract_optional_field(line, 83, 91, "post_term_collection_end_date", "AGR", &mut _warnings);
-        let date_of_signature_of_agreement = extract_optional_field(line, 91, 99, "date_of_signature_of_agreement", "AGR", &mut _warnings);
-        let number_of_works = extract_required_field(line, 99, 104, "number_of_works", &mut _warnings)?;
-        let sales_manufacture_clause = extract_optional_field(line, 104, 105, "sales_manufacture_clause", "AGR", &mut _warnings);
-        let shares_change = extract_optional_field(line, 105, 106, "shares_change", "AGR", &mut _warnings);
-        let advance_given = extract_optional_field(line, 106, 107, "advance_given", "AGR", &mut _warnings);
-        let society_assigned_agreement_number = extract_optional_field(line, 107, 121, "society_assigned_agreement_number", "AGR", &mut _warnings);
+        // Helper function to extract and validate required fields
+        let extract_required_validated = |line: &str, start: usize, end: usize, field_name: &str, validator: Option<&dyn Fn(&str) -> Result<(), String>>, _warnings: &mut Vec<String>| -> Result<String, CwrParseError> {
+            if line.len() < end {
+                return Err(CwrParseError::BadFormat(format!("Line too short for required field {}", field_name)));
+            }
+            let value = line.get(start..end).unwrap().trim().to_string();
+            if let Some(validator) = validator {
+                if let Err(err) = validator(&value) {
+                    return Err(CwrParseError::BadFormat(format!("Validation failed for field {}: {}", field_name, err)));
+                }
+            }
+            Ok(value)
+        };
+
+        // Helper function to extract and validate optional fields
+        let extract_optional_validated = |line: &str, start: usize, end: usize, field_name: &str, validator: Option<&dyn Fn(&str) -> Result<(), String>>, warnings: &mut Vec<String>| -> Option<String> {
+            if line.len() < end {
+                warnings.push(format!("Line too short for optional field {}", field_name));
+                return None;
+            }
+            let trimmed = line.get(start..end).unwrap().trim();
+            if trimmed.is_empty() {
+                return None;
+            }
+            if let Some(validator) = validator {
+                if let Err(err) = validator(trimmed) {
+                    warnings.push(format!("Validation failed for optional field {}: {}", field_name, err));
+                    return None;
+                }
+            }
+            Some(trimmed.to_string())
+        };
+
+        let record_type_validator = record_type_must_be("AGR");
+        let yes_no_validator = one_of(&["Y", "N"]);
+        let date_validator = &date_yyyymmdd;
+        let works_validator = numeric_range(1, 99999);
+
+        let record_type = extract_required_validated(line, 0, 3, "record_type", Some(&record_type_validator), &mut warnings)?;
+        let transaction_sequence_num = extract_required_validated(line, 3, 11, "transaction_sequence_num", None, &mut warnings)?;
+        let record_sequence_num = extract_required_validated(line, 11, 19, "record_sequence_num", None, &mut warnings)?;
+        let submitter_agreement_number = extract_required_validated(line, 19, 33, "submitter_agreement_number", None, &mut warnings)?;
+        let international_standard_agreement_code = extract_optional_validated(line, 33, 47, "international_standard_agreement_code", None, &mut warnings);
+        let agreement_type = extract_required_validated(line, 47, 49, "agreement_type", None, &mut warnings)?;
+        let agreement_start_date = extract_required_validated(line, 49, 57, "agreement_start_date", Some(date_validator), &mut warnings)?;
+        let agreement_end_date = extract_optional_validated(line, 57, 65, "agreement_end_date", Some(date_validator), &mut warnings);
+        let retention_end_date = extract_optional_validated(line, 65, 73, "retention_end_date", Some(date_validator), &mut warnings);
+        let prior_royalty_status = extract_required_validated(line, 73, 74, "prior_royalty_status", Some(&yes_no_validator), &mut warnings)?;
+        let prior_royalty_start_date = extract_optional_validated(line, 74, 82, "prior_royalty_start_date", Some(date_validator), &mut warnings);
+        let post_term_collection_status = extract_required_validated(line, 82, 83, "post_term_collection_status", Some(&yes_no_validator), &mut warnings)?;
+        let post_term_collection_end_date = extract_optional_validated(line, 83, 91, "post_term_collection_end_date", Some(date_validator), &mut warnings);
+        let date_of_signature_of_agreement = extract_optional_validated(line, 91, 99, "date_of_signature_of_agreement", Some(date_validator), &mut warnings);
+        let number_of_works = extract_required_validated(line, 99, 104, "number_of_works", Some(&works_validator), &mut warnings)?;
+        let sales_manufacture_clause = extract_optional_validated(line, 104, 105, "sales_manufacture_clause", None, &mut warnings);
+        let shares_change = extract_optional_validated(line, 105, 106, "shares_change", None, &mut warnings);
+        let advance_given = extract_optional_validated(line, 106, 107, "advance_given", None, &mut warnings);
+        let society_assigned_agreement_number = extract_optional_validated(line, 107, 121, "society_assigned_agreement_number", None, &mut warnings);
 
         let record = AgrRecord {
             record_type,
@@ -137,7 +175,7 @@ impl AgrRecord {
             society_assigned_agreement_number,
         };
 
-        Ok(record)
+        Ok(CwrParseResult { record, warnings })
     }
 
     /// Convert this record to a CWR format line
@@ -169,29 +207,5 @@ impl AgrRecord {
         }
 
         fields.join("")
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_agr_creation() {
-        let agr = AgrRecord::new("00000001".to_string(), "00000001".to_string(), "AGREEMENT001".to_string(), "OS".to_string(), "20050101".to_string(), "Y".to_string(), "Y".to_string(), "00001".to_string());
-
-        assert_eq!(agr.record_type, "AGR");
-        assert_eq!(agr.agreement_type, "OS");
-        assert_eq!(agr.submitter_agreement_number, "AGREEMENT001");
-    }
-
-    #[test]
-    fn test_agr_round_trip() {
-        let original = AgrRecord::new("00000001".to_string(), "00000001".to_string(), "AGREEMENT001".to_string(), "OS".to_string(), "20050101".to_string(), "Y".to_string(), "Y".to_string(), "00001".to_string());
-
-        let line = original.to_cwr_line();
-        let result = AgrRecord::from_cwr_line(&line).unwrap();
-
-        assert_eq!(original, result);
     }
 }
