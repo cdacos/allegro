@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/allegro_cwr_sqlite",
+    "crates/allegro_cwr_json",
     "crates/allegro_cwr",
     "crates/allegro",
 ]

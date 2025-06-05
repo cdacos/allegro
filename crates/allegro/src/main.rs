@@ -1,7 +1,7 @@
 use std::process;
 use std::time::Instant;
 
-use allegro_cwr::{OutputFormat, format_int_with_commas, process_cwr_file_json};
+use allegro_cwr::{OutputFormat, format_int_with_commas};
 
 struct Config {
     output_path: Option<String>,
@@ -80,9 +80,9 @@ fn main() {
 
     let result = match config.format {
         OutputFormat::Json => {
-            match process_cwr_file_json(&input_filename) {
+            match allegro_cwr_json::process_cwr_to_json(&input_filename) {
                 Ok(count) => Ok(("".to_string(), count)),
-                Err(e) => Err(Box::new(e) as Box<dyn std::error::Error>),
+                Err(e) => Err(e),
             }
         }
         OutputFormat::Default | OutputFormat::Sql => {
