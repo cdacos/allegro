@@ -37,10 +37,7 @@ impl std::str::FromStr for OutputFormat {
 // Re-export commonly used items
 pub use crate::error::CwrParseError;
 pub use crate::parser::{ParsingContext, process_and_load_into_sqlite, process_and_stream_json};
-pub use crate::records::{
-    AckRecord, AgrRecord, AltRecord, AriRecord, ComRecord, EwtRecord, GrhRecord, GrtRecord, HdrRecord, IndRecord, InsRecord, IpaRecord, MsgRecord, NatRecord, NetRecord, NowRecord, NpaRecord, NpnRecord, NprRecord, NwnRecord, NwrRecord, OrnRecord, PerRecord, PwrRecord, RecRecord, SptRecord, SpuRecord, SwrRecord,
-    SwtRecord, TerRecord, TrlRecord, VerRecord, XrfRecord,
-};
+pub use crate::records::*;
 pub use crate::report::report_summary;
 pub use crate::util::format_int_with_commas;
 pub use allegro_cwr_sqlite::{determine_db_filename, setup_database};
