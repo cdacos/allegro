@@ -26,6 +26,9 @@ target/release/allegro input_file.cwr
 target/release/allegro -o output.db input_file.cwr
 target/release/allegro --output /path/to/database.db input_file.cwr
 
+# View logging
+RUST_LOG=info target/release/allegro -o output.db input_file.cwr
+
 # Show help
 target/release/allegro --help
 ```

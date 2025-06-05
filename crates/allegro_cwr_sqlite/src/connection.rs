@@ -1,6 +1,7 @@
 use crate::error::CwrDbError;
 use rusqlite::Connection;
 use std::path::Path;
+use log::info;
 
 /// Main database manager for CWR operations
 pub struct CwrDatabase {
@@ -53,10 +54,10 @@ pub fn setup_database(db_filename: &str) -> Result<(), CwrDbError> {
     let table_count: i64 = conn.query_row("SELECT count(*) FROM sqlite_master WHERE type='table' AND name LIKE 'cwr_%'", [], |row| row.get(0))?;
 
     if table_count == 0 {
-        println!("Applying embedded schema...");
+        info!("Applying embedded schema");
         conn.execute_batch(SCHEMA_SQL)?;
     } else {
-        println!("Database schema already exists, ready for import.");
+        info!("Database schema already exists, ready for import");
     }
 
     Ok(())

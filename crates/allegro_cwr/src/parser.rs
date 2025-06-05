@@ -3,6 +3,7 @@ use crate::records::*;
 use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader, Seek};
+use log::{info, warn, error};
 
 // Context struct to hold file-level metadata like CWR version
 #[derive(Debug, Clone)]
@@ -26,14 +27,14 @@ fn get_cwr_version(filename: &str, hdr_line: &str, cli_version: Option<f32>) -> 
         // CLI version specified
         (Some(cli_ver), Some(filename_ver), _) => {
             if cli_ver != filename_ver {
-                println!("Note: CLI specified CWR version {} but filename suggests {}. Using CLI version {}.", 
+                info!("CLI specified CWR version {} but filename suggests {}. Using CLI version {}", 
                     cli_ver, filename_ver, cli_ver);
             }
             Ok(cli_ver)
         }
         (Some(cli_ver), None, Some(hdr_ver)) => {
             if cli_ver != hdr_ver {
-                eprintln!("Warning: CLI specified CWR version {} but file contains explicit version {}. Using CLI version {}.", 
+                warn!("CLI specified CWR version {} but file contains explicit version {}. Using CLI version {}", 
                     cli_ver, hdr_ver, cli_ver);
             }
             Ok(cli_ver)
@@ -43,13 +44,13 @@ fn get_cwr_version(filename: &str, hdr_line: &str, cli_version: Option<f32>) -> 
         // No CLI version - use filename version if available
         (None, Some(filename_ver), Some(hdr_ver)) => {
             if filename_ver != hdr_ver {
-                println!("Note: Filename suggests CWR version {} but file contains explicit version {}. Using filename version {}.", 
+                info!("Filename suggests CWR version {} but file contains explicit version {}. Using filename version {}", 
                     filename_ver, hdr_ver, filename_ver);
             }
             Ok(filename_ver)
         }
         (None, Some(filename_ver), None) => {
-            println!("Detected CWR version {} from filename.", filename_ver);
+            info!("Detected CWR version {} from filename", filename_ver);
             Ok(filename_ver)
         }
         
@@ -59,7 +60,7 @@ fn get_cwr_version(filename: &str, hdr_line: &str, cli_version: Option<f32>) -> 
         // Fall back to heuristics
         (None, None, None) => {
             let heuristic_version = detect_version_by_heuristics(hdr_line);
-            println!("Auto-detected CWR version: {}", heuristic_version);
+            info!("Auto-detected CWR version: {}", heuristic_version);
             Ok(heuristic_version)
         }
     }
@@ -102,9 +103,9 @@ fn detect_version_from_hdr(hdr_line: &str) -> Result<Option<f32>, CwrParseError>
 fn detect_version_by_heuristics(hdr_line: &str) -> f32 {
     let len = hdr_line.len();
     
-    if len > 102 {
+    if len > 104 {
         2.2
-    } else if len > 87 {
+    } else if len >= 80 {
         2.1
     } else {
         2.0
@@ -278,7 +279,7 @@ pub fn process_cwr_stream_with_version(input_filename: &str, version_hint: Optio
     }
 
     let cwr_version = get_cwr_version(input_filename, hdr_line, version_hint)?;
-    println!("Determined CWR Version: {}", cwr_version);
+    info!("Determined CWR version: {}", cwr_version);
 
     let context = ParsingContext { cwr_version, file_id: 0 };
 
@@ -300,7 +301,7 @@ pub fn process_cwr_stream_with_version(input_filename: &str, version_hint: Optio
                     }
                 }
                 Err(io_err) => {
-                    eprintln!("IO error reading line {}: {}", line_number, io_err);
+                    error!("IO error reading line {}: {}", line_number, io_err);
                     Some(Err(CwrParseError::Io(io_err)))
                 }
             }

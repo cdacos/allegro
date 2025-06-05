@@ -42,6 +42,8 @@ pub use crate::parser::{ParsingContext, process_cwr_stream, process_cwr_stream_w
 pub use crate::records::*;
 pub use crate::util::{format_int_with_commas, extract_version_from_filename};
 
+use log::info;
+
 /// Trait for handling CWR records during processing
 pub trait CwrHandler {
     type Error: std::error::Error;
@@ -97,7 +99,7 @@ where
     
     handler.finalize()?;
     
-    println!("Processing complete: {} records processed, {} errors", processed_count, error_count);
+    info!("Processing complete: {} records processed, {} errors", processed_count, error_count);
     Ok(handler.get_report())
 }
 

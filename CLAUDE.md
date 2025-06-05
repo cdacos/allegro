@@ -2,3 +2,4 @@
 - The Rust 2024 Edition is now stable
 - Do not add code that silently skips over unhappy paths. Be explicit!
 - When writing CWR tests always take exact examples from the file .me/TestSample.V21 (.me/ is gitignored in project root)
+- Logging: Use `log` crate with appropriate levels (info, warn, error). To see logs, set RUST_LOG=info (or debug) when running

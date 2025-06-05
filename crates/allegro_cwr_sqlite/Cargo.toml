@@ -7,3 +7,4 @@ description = "SQLite database operations for CWR (Common Works Registration) fi
 [dependencies]
 rusqlite = { version = "0.35.0", features = ["bundled"] }
 allegro_cwr = { path = "../allegro_cwr" }
+log = "0.4"

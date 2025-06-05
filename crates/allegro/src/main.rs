@@ -2,6 +2,7 @@ use std::process;
 use std::time::Instant;
 
 use allegro_cwr::{OutputFormat, format_int_with_commas};
+use log::{info, error};
 
 struct Config {
     output_path: Option<String>,
@@ -76,10 +77,14 @@ fn get_value(parser: &mut lexopt::Parser, arg_name: &str) -> Result<String, Stri
 }
 
 fn main() {
+    // Initialize logging - use RUST_LOG environment variable to control level
+    // e.g., RUST_LOG=info cargo run or RUST_LOG=debug cargo run
+    env_logger::init();
+
     let config = match parse_args() {
         Ok(config) => config,
         Err(e) => {
-            eprintln!("Error: {}", e);
+            error!("Configuration error: {}", e);
             print_help();
             process::exit(1);
         }
@@ -87,7 +92,7 @@ fn main() {
 
     let input_filename = config.input_filename.expect("input_filename already validated during parsing");
 
-    println!("Processing input file: {}...", input_filename);
+    info!("Processing input file: {}", input_filename);
 
     let start_time = Instant::now();
 
@@ -100,7 +105,7 @@ fn main() {
         }
         OutputFormat::Default | OutputFormat::Sql => {
             let db_filename = allegro_cwr_sqlite::determine_db_filename(&input_filename, config.output_path.as_deref());
-            println!("Using database filename: '{}'", db_filename);
+            info!("Using database filename: '{}'", db_filename);
             
             match allegro_cwr_sqlite::process_cwr_to_sqlite_with_version(&input_filename, &db_filename, config.cwr_version) {
                 Ok((_file_id, count, report)) => {
@@ -114,7 +119,7 @@ fn main() {
 
     let elapsed_time = start_time.elapsed();
 
-    println!("Done!");
+    info!("Processing completed");
 
     // Handle the result of file processing
     let (db_filename, count) = match result {
@@ -125,7 +130,7 @@ fn main() {
         }
     };
 
-    println!("Successfully processed {} CWR records from '{}'{} in {:.2?}.", 
+    println!("Successfully processed {} CWR records from '{}'{} in {:.2?}",
         format_int_with_commas(count as i64), 
         &input_filename,
         if !db_filename.is_empty() { format!(" into '{}'", db_filename) } else { String::new() },
