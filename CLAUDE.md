@@ -1,2 +1,3 @@
 - Do not add comments.
 - The Rust 2024 Edition is now stable
+- Do not add code that silently skips over unhappy paths. Be explicit!
