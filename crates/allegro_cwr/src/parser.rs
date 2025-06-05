@@ -212,8 +212,10 @@ pub fn process_cwr_stream(input_filename: &str) -> Result<impl Iterator<Item = R
             let line_number = idx + 1;
             match line_result {
                 Ok(line) => {
-                    if line.is_empty() || line.trim().is_empty() || line.len() < 3 {
-                        None // Skip empty/short lines
+                    if line.is_empty() || line.trim().is_empty() {
+                        Some(Err(CwrParseError::BadFormat(format!("Line {} is empty", line_number))))
+                    } else if line.len() < 3 {
+                        Some(Err(CwrParseError::BadFormat(format!("Line {} is too short (less than 3 chars)", line_number))))
                     } else {
                         Some(parse_cwr_line(&line, line_number, &context))
                     }
