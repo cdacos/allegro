@@ -36,7 +36,7 @@ impl std::str::FromStr for OutputFormat {
 
 // Re-export commonly used items
 pub use crate::error::CwrParseError;
-pub use crate::parser::{ParsingContext, process_and_load_into_sqlite, process_and_stream_json};
+pub use crate::parser::{ParsingContext, process_cwr_stream, process_and_load_into_sqlite, process_and_stream_json};
 pub use crate::records::*;
 pub use crate::report::report_summary;
 pub use crate::util::format_int_with_commas;
