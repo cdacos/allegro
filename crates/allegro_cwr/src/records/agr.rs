@@ -1,5 +1,6 @@
 //! AGR - Agreement Transaction Record
 
+use log::debug;
 use crate::validators::{date_yyyymmdd, one_of, yes_no, works_count};
 use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
@@ -63,6 +64,12 @@ pub struct AgrRecord {
 
     /// Society assigned agreement number (14 chars, optional, v2.1+)
     pub society_assigned_agreement_number: Option<String>,
+}
+
+impl AgrRecord {
+    fn post_process_fields(record: &mut AgrRecord, warnings: &mut Vec<String>) {
+        debug!("post_process_fields hook! Record: {:?}, Warnings: {:?}", record, warnings);
+    }
 }
 
 impl_cwr_parsing! {

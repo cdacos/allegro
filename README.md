@@ -4,6 +4,8 @@ A Rust application for parsing and processing CWR (Common Works Registration) fi
 
 This application validates CWR files according to the CWR 2.2 specification (with support for 2.0 and 2.1) and stores the parsed data in SQLite databases for querying and analysis. It handles all standard CWR record types including works registrations, publisher information, writer details, territory data, etc.
 
+Note: This is not yet a complete solution. For example, there is still outstanding validation logic.
+
 ## Features
 
 - **CWR 2.2 Support**: Parses all standard record types according to the CWR specification
@@ -54,7 +56,7 @@ cargo test
 
 ## Code Generation with `impl_cwr_parsing!` Macro
 
-This project uses a powerful declarative macro to automatically generate CWR record parsing and formatting code. Instead of writing hundreds of lines of repetitive boilerplate for each record type, we define field specifications and let the macro generate all necessary methods.
+This project uses a brave declarative macro to automatically generate CWR record parsing and formatting code. Instead of writing hundreds of lines of repetitive boilerplate for each record type, we define field specifications and let the macro generate all necessary methods.
 
 ### Example Usage
 

@@ -40,11 +40,14 @@ macro_rules! impl_cwr_parsing {
                     let $field_name = impl_cwr_parsing!(@extract_field line, $start, $end, stringify!($field_name), $field_type, warnings $(, $validator)?);
                 )*
 
-                let record = Self {
+                let mut record = Self {
                     $(
                         $field_name: impl_cwr_parsing!(@handle_result $field_name, $field_type),
                     )*
                 };
+
+                // Call post_process_fields if it exists
+                Self::post_process_fields(&mut record, &mut warnings);
 
                 Ok($crate::error::CwrParseResult { record, warnings })
             }
@@ -110,6 +113,7 @@ macro_rules! impl_cwr_parsing {
     (@param_type optional) => {
         Option<String>
     };
+
 }
 
 #[cfg(test)]
@@ -122,6 +126,12 @@ mod tests {
         record_type: String,
         required_field: String,
         optional_field: Option<String>,
+    }
+
+    impl TestRecord {
+        fn post_process_fields(_record: &mut TestRecord, _warnings: &mut Vec<String>) {
+            // No-op for testing
+        }
     }
 
     impl_cwr_parsing! {
