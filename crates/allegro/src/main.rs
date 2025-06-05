@@ -3,72 +3,86 @@ use std::time::Instant;
 
 use allegro_cwr::{OutputFormat, format_int_with_commas, process_cwr_file_with_output};
 
-fn main() {
-    let mut output_path = None;
-    let mut input_filename = None;
-    let mut format = OutputFormat::Default;
+struct Config {
+    output_path: Option<String>,
+    input_filename: Option<String>,
+    format: OutputFormat,
+}
 
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            output_path: None,
+            input_filename: None,
+            format: OutputFormat::Default,
+        }
+    }
+}
+
+fn parse_args() -> Result<Config, String> {
+    let mut config = Config::default();
     let mut parser = lexopt::Parser::from_env();
-    while let Ok(arg) = parser.next() {
+    
+    while let Ok(Some(arg)) = parser.next() {
         match arg {
-            Some(lexopt::Arg::Short('o')) | Some(lexopt::Arg::Long("output")) => match parser.value() {
-                Ok(val) => output_path = Some(val.to_string_lossy().to_string()),
-                Err(e) => {
-                    eprintln!("Error: Missing value for --output: {}", e);
-                    process::exit(1);
-                }
-            },
-            Some(lexopt::Arg::Short('f')) | Some(lexopt::Arg::Long("format")) => match parser.value() {
-                Ok(val) => {
-                    let format_str = val.to_string_lossy().to_lowercase();
-                    format = match format_str.as_str() {
-                        "sql" => OutputFormat::Sql,
-                        "json" => OutputFormat::Json,
-                        _ => {
-                            eprintln!("Error: Invalid format '{}'. Valid formats are: sql, json", format_str);
-                            process::exit(1);
-                        }
-                    };
-                }
-                Err(e) => {
-                    eprintln!("Error: Missing value for --format: {}", e);
-                    process::exit(1);
-                }
-            },
-            Some(lexopt::Arg::Value(val)) => {
-                if input_filename.is_some() {
-                    eprintln!("Error: Multiple input files specified");
-                    process::exit(1);
-                }
-                input_filename = Some(val.to_string_lossy().to_string());
+            lexopt::Arg::Short('o') | lexopt::Arg::Long("output") => {
+                config.output_path = Some(get_value(&mut parser, "output")?);
             }
-            Some(lexopt::Arg::Short('h')) | Some(lexopt::Arg::Long("help")) => {
+            lexopt::Arg::Short('f') | lexopt::Arg::Long("format") => {
+                let format_str = get_value(&mut parser, "format")?.to_lowercase();
+                config.format = match format_str.as_str() {
+                    "sql" => OutputFormat::Sql,
+                    "json" => OutputFormat::Json,
+                    _ => return Err(format!("Invalid format '{}'. Valid formats are: sql, json", format_str)),
+                };
+            }
+            lexopt::Arg::Value(val) => {
+                if config.input_filename.is_some() {
+                    return Err("Multiple input files specified".to_string());
+                }
+                config.input_filename = Some(val.to_string_lossy().to_string());
+            }
+            lexopt::Arg::Short('h') | lexopt::Arg::Long("help") => {
                 print_help();
                 process::exit(0);
             }
-            Some(_) => {
-                eprintln!("Error: Unknown argument");
-                print_help();
-                process::exit(1);
+            _ => {
+                return Err("Unknown argument".to_string());
             }
-            None => break,
         }
     }
+    
+    if config.input_filename.is_none() {
+        return Err("No input file specified".to_string());
+    }
+    
+    Ok(config)
+}
 
-    let input_filename = match input_filename {
-        Some(filename) => filename,
-        None => {
-            eprintln!("Error: No input file specified");
+
+fn get_value(parser: &mut lexopt::Parser, arg_name: &str) -> Result<String, String> {
+    parser.value()
+        .map(|val| val.to_string_lossy().to_string())
+        .map_err(|e| format!("Missing value for --{}: {}", arg_name, e))
+}
+
+fn main() {
+    let config = match parse_args() {
+        Ok(config) => config,
+        Err(e) => {
+            eprintln!("Error: {}", e);
             print_help();
             process::exit(1);
         }
     };
 
+    let input_filename = config.input_filename.unwrap();
+
     println!("Processing input file: {}...", input_filename);
 
     let start_time = Instant::now();
 
-    let result = process_cwr_file_with_output(&input_filename, output_path.as_deref(), format);
+    let result = process_cwr_file_with_output(&input_filename, config.output_path.as_deref(), config.format);
 
     let elapsed_time = start_time.elapsed();
 
