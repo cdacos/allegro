@@ -2,7 +2,8 @@
 //!
 //! The Transmission Trailer record marks the end of a CWR transmission and contains summary counts.
 
-use crate::error::CwrParseError;
+use crate::validators::one_of;
+use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
 use serde::{Deserialize, Serialize};
 
 /// TRL - Transmission Trailer Record
@@ -24,57 +25,18 @@ pub struct TrlRecord {
 }
 
 impl TrlRecord {
-    /// Create a new TRL record
-    pub fn new(group_count: String, transaction_count: String, record_count: String) -> Self {
-        Self { record_type: "TRL".to_string(), group_count, transaction_count, record_count }
-    }
-
-    /// Parse a CWR line into a TRL record
-    pub fn from_cwr_line(line: &str) -> Result<Self, CwrParseError> {
-        if line.len() < 24 {
-            return Err(CwrParseError::BadFormat("TRL line too short".to_string()));
-        }
-
-        let record_type = line.get(0..3).unwrap().to_string();
-        if record_type != "TRL" {
-            return Err(CwrParseError::BadFormat(format!("Expected TRL, found {}", record_type)));
-        }
-
-        let group_count = line.get(3..8).unwrap().trim().to_string();
-        let transaction_count = line.get(8..16).unwrap().trim().to_string();
-        let record_count = line.get(16..24).unwrap().trim().to_string();
-
-        Ok(TrlRecord { record_type, group_count, transaction_count, record_count })
-    }
-
-    /// Convert this record to a CWR format line
-    pub fn to_cwr_line(&self) -> String {
-        [format!("{:3}", self.record_type), format!("{:5}", self.group_count), format!("{:8}", self.transaction_count), format!("{:8}", self.record_count)].join("")
+    fn post_process_fields(_record: &mut TrlRecord, _warnings: &mut Vec<String>) {
+        // No specific post-processing needed for TRL
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_trl_creation() {
-        let trl = TrlRecord::new("00001".to_string(), "00000001".to_string(), "00000005".to_string());
-
-        assert_eq!(trl.record_type, "TRL");
-        assert_eq!(trl.group_count, "00001");
-        assert_eq!(trl.transaction_count, "00000001");
-        assert_eq!(trl.record_count, "00000005");
-    }
-
-    #[test]
-    fn test_trl_round_trip() {
-        let original = TrlRecord::new("00001".to_string(), "00000001".to_string(), "00000005".to_string());
-
-        let line = original.to_cwr_line();
-        let parsed = TrlRecord::from_cwr_line(&line).unwrap();
-
-        assert_eq!(original, parsed);
-        assert_eq!(line.len(), 24);
+impl_cwr_parsing! {
+    TrlRecord {
+        record_type: (0, 3, required, one_of(&["TRL"])),
+        group_count: (3, 8, required),
+        transaction_count: (8, 16, required),
+        record_count: (16, 24, required),
     }
 }
+
+impl_cwr_parsing_test_roundtrip!(TrlRecord, "TRL000010000001400000367");

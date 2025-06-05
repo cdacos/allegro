@@ -208,16 +208,16 @@ fn parse_cwr_line(line: &str, line_number: usize, context: &ParsingContext) -> R
 
     // Parse into the appropriate record struct
     let record = match record_type {
-        "HDR" => CwrRecord::Hdr(HdrRecord::from_cwr_line(line)?),
-        "GRH" => CwrRecord::Grh(GrhRecord::from_cwr_line(line)?),
-        "GRT" => CwrRecord::Grt(GrtRecord::from_cwr_line(line)?),
-        "TRL" => CwrRecord::Trl(TrlRecord::from_cwr_line(line)?),
+        "HDR" => CwrRecord::Hdr(HdrRecord::from_cwr_line_v2(line)?.record),
+        "GRH" => CwrRecord::Grh(GrhRecord::from_cwr_line_v2(line)?.record),
+        "GRT" => CwrRecord::Grt(GrtRecord::from_cwr_line_v2(line)?.record),
+        "TRL" => CwrRecord::Trl(TrlRecord::from_cwr_line_v2(line)?.record),
         "AGR" => CwrRecord::Agr(AgrRecord::from_cwr_line_v2(line)?.record),
-        "NWR" | "REV" | "ISW" | "EXC" => CwrRecord::Nwr(NwrRecord::from_cwr_line(line)?),
-        "ACK" => CwrRecord::Ack(AckRecord::from_cwr_line(line)?),
-        "TER" => CwrRecord::Ter(TerRecord::from_cwr_line(line)?),
-        "IPA" => CwrRecord::Ipa(IpaRecord::from_cwr_line(line)?),
-        "NPA" => CwrRecord::Npa(NpaRecord::from_cwr_line(line)?),
+        "NWR" | "REV" | "ISW" | "EXC" => CwrRecord::Nwr(NwrRecord::from_cwr_line_v2(line)?.record),
+        "ACK" => CwrRecord::Ack(AckRecord::from_cwr_line_v2(line)?.record),
+        "TER" => CwrRecord::Ter(TerRecord::from_cwr_line_v2(line)?.record),
+        "IPA" => CwrRecord::Ipa(IpaRecord::from_cwr_line_v2(line)?.record),
+        "NPA" => CwrRecord::Npa(NpaRecord::from_cwr_line_v2(line)?.record),
         "SPU" | "OPU" => CwrRecord::Spu(SpuRecord::from_cwr_line(line)?),
         "NPN" => CwrRecord::Npn(NpnRecord::from_cwr_line(line)?),
         "SPT" | "OPT" => CwrRecord::Spt(SptRecord::from_cwr_line(line)?),
@@ -452,7 +452,7 @@ mod tests {
     #[test]
     fn test_cwr_record_type_mapping() {
         use crate::records::HdrRecord;
-        let hdr = HdrRecord::new("01".to_string(), "BMI".to_string(), "BMI MUSIC".to_string(), "01.10".to_string(), "20050101".to_string(), "120000".to_string(), "20050101".to_string());
+        let hdr = HdrRecord::new("HDR".to_string(), "01".to_string(), "BMI".to_string(), "BMI MUSIC".to_string(), "01.10".to_string(), "20050101".to_string(), "120000".to_string(), "20050101".to_string(), None, None, None, None, None);
         let cwr_record = CwrRecord::Hdr(hdr);
         assert_eq!(cwr_record.record_type(), "HDR");
     }

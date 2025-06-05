@@ -2,7 +2,8 @@
 //!
 //! Also handles REV (Revised Registration), ISW (ISWC Notification), and EXC (Existing Work in Conflict).
 
-use crate::error::CwrParseError;
+use crate::validators::one_of;
+use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
 use serde::{Deserialize, Serialize};
 
 /// NWR - New Work Registration Record
@@ -96,197 +97,42 @@ pub struct NwrRecord {
 }
 
 impl NwrRecord {
-    /// Create a new NWR record with required fields
-    pub fn new(record_type: String, transaction_sequence_num: String, record_sequence_num: String, work_title: String, submitter_work_num: String, musical_work_distribution_category: String, recorded_indicator: String, version_type: String) -> Self {
-        Self {
-            record_type,
-            transaction_sequence_num,
-            record_sequence_num,
-            work_title,
-            language_code: None,
-            submitter_work_num,
-            iswc: None,
-            copyright_date: None,
-            copyright_number: None,
-            musical_work_distribution_category,
-            duration: None,
-            recorded_indicator,
-            text_music_relationship: None,
-            composite_type: None,
-            version_type,
-            excerpt_type: None,
-            music_arrangement: None,
-            lyric_adaptation: None,
-            contact_name: None,
-            contact_id: None,
-            cwr_work_type: None,
-            grand_rights_ind: None,
-            composite_component_count: None,
-            date_of_publication_of_printed_edition: None,
-            exceptional_clause: None,
-            opus_number: None,
-            catalogue_number: None,
-            priority_flag: None,
-        }
-    }
-
-    /// Parse a CWR line into an NWR record
-    pub fn from_cwr_line(line: &str) -> Result<Self, CwrParseError> {
-        if line.len() < 259 {
-            return Err(CwrParseError::BadFormat("NWR line too short".to_string()));
-        }
-
-        let record_type = line.get(0..3).unwrap().to_string();
-        if !["NWR", "REV", "ISW", "EXC"].contains(&record_type.as_str()) {
-            return Err(CwrParseError::BadFormat(format!("Expected NWR/REV/ISW/EXC, found {}", record_type)));
-        }
-
-        let transaction_sequence_num = line.get(3..11).unwrap().trim().to_string();
-        let record_sequence_num = line.get(11..19).unwrap().trim().to_string();
-        let work_title = line.get(19..79).unwrap().trim().to_string();
-
-        let language_code = line.get(79..81).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let submitter_work_num = line.get(81..95).unwrap().trim().to_string();
-
-        let iswc = line.get(95..106).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let copyright_date = line.get(106..114).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let copyright_number = line.get(114..126).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let musical_work_distribution_category = line.get(126..129).unwrap().trim().to_string();
-
-        let duration = line.get(129..135).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let recorded_indicator = line.get(135..136).unwrap().trim().to_string();
-
-        let text_music_relationship = line.get(136..139).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let composite_type = line.get(139..142).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let version_type = line.get(142..145).unwrap().trim().to_string();
-
-        let excerpt_type = line.get(145..148).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let music_arrangement = line.get(148..151).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let lyric_adaptation = line.get(151..154).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let contact_name = line.get(154..184).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let contact_id = line.get(184..194).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let cwr_work_type = line.get(194..196).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let grand_rights_ind = line.get(196..197).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let composite_component_count = line.get(197..200).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let date_of_publication_of_printed_edition = line.get(200..208).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let exceptional_clause = line.get(208..209).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let opus_number = line.get(209..234).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let catalogue_number = line.get(234..259).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let priority_flag = if line.len() > 259 { line.get(259..260).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string()) } else { None };
-
-        Ok(NwrRecord {
-            record_type,
-            transaction_sequence_num,
-            record_sequence_num,
-            work_title,
-            language_code,
-            submitter_work_num,
-            iswc,
-            copyright_date,
-            copyright_number,
-            musical_work_distribution_category,
-            duration,
-            recorded_indicator,
-            text_music_relationship,
-            composite_type,
-            version_type,
-            excerpt_type,
-            music_arrangement,
-            lyric_adaptation,
-            contact_name,
-            contact_id,
-            cwr_work_type,
-            grand_rights_ind,
-            composite_component_count,
-            date_of_publication_of_printed_edition,
-            exceptional_clause,
-            opus_number,
-            catalogue_number,
-            priority_flag,
-        })
-    }
-
-    /// Convert this record to a CWR format line
-    pub fn to_cwr_line(&self) -> String {
-        let mut fields = vec![
-            format!("{:3}", self.record_type),
-            format!("{:8}", self.transaction_sequence_num),
-            format!("{:8}", self.record_sequence_num),
-            format!("{:60}", self.work_title),
-            format!("{:2}", self.language_code.as_deref().unwrap_or("")),
-            format!("{:14}", self.submitter_work_num),
-            format!("{:11}", self.iswc.as_deref().unwrap_or("")),
-            format!("{:8}", self.copyright_date.as_deref().unwrap_or("")),
-            format!("{:12}", self.copyright_number.as_deref().unwrap_or("")),
-            format!("{:3}", self.musical_work_distribution_category),
-            format!("{:6}", self.duration.as_deref().unwrap_or("")),
-            format!("{:1}", self.recorded_indicator),
-            format!("{:3}", self.text_music_relationship.as_deref().unwrap_or("")),
-            format!("{:3}", self.composite_type.as_deref().unwrap_or("")),
-            format!("{:3}", self.version_type),
-            format!("{:3}", self.excerpt_type.as_deref().unwrap_or("")),
-            format!("{:3}", self.music_arrangement.as_deref().unwrap_or("")),
-            format!("{:3}", self.lyric_adaptation.as_deref().unwrap_or("")),
-            format!("{:30}", self.contact_name.as_deref().unwrap_or("")),
-            format!("{:10}", self.contact_id.as_deref().unwrap_or("")),
-            format!("{:2}", self.cwr_work_type.as_deref().unwrap_or("")),
-            format!("{:1}", self.grand_rights_ind.as_deref().unwrap_or("")),
-            format!("{:3}", self.composite_component_count.as_deref().unwrap_or("")),
-            format!("{:8}", self.date_of_publication_of_printed_edition.as_deref().unwrap_or("")),
-            format!("{:1}", self.exceptional_clause.as_deref().unwrap_or("")),
-            format!("{:25}", self.opus_number.as_deref().unwrap_or("")),
-            format!("{:25}", self.catalogue_number.as_deref().unwrap_or("")),
-        ];
-
-        // Add v2.1+ field
-        if let Some(ref priority_flag) = self.priority_flag {
-            fields.push(format!("{:1}", priority_flag));
-        }
-
-        fields.join("")
+    fn post_process_fields(_record: &mut NwrRecord, _warnings: &mut Vec<String>) {
+        // No specific post-processing needed for NWR
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_nwr_creation() {
-        let nwr = NwrRecord::new("NWR".to_string(), "00000001".to_string(), "00000001".to_string(), "Test Song".to_string(), "SW0000000001".to_string(), "SER".to_string(), "Y".to_string(), "ORI".to_string());
-
-        assert_eq!(nwr.record_type, "NWR");
-        assert_eq!(nwr.work_title, "Test Song");
-        assert_eq!(nwr.submitter_work_num, "SW0000000001");
-    }
-
-    #[test]
-    fn test_nwr_round_trip() {
-        let original = NwrRecord::new("NWR".to_string(), "00000001".to_string(), "00000001".to_string(), "Test Song".to_string(), "SW0000000001".to_string(), "SER".to_string(), "Y".to_string(), "ORI".to_string());
-
-        let line = original.to_cwr_line();
-        let parsed = NwrRecord::from_cwr_line(&line).unwrap();
-
-        assert_eq!(original, parsed);
-        assert_eq!(line.len(), 259); // Without optional v2.1 field
+impl_cwr_parsing! {
+    NwrRecord {
+        record_type: (0, 3, required, one_of(&["NWR", "REV", "ISW", "EXC"])),
+        transaction_sequence_num: (3, 11, required),
+        record_sequence_num: (11, 19, required),
+        work_title: (19, 79, required),
+        language_code: (79, 81, optional),
+        submitter_work_num: (81, 95, required),
+        iswc: (95, 106, optional),
+        copyright_date: (106, 114, optional),
+        copyright_number: (114, 126, optional),
+        musical_work_distribution_category: (126, 129, required),
+        duration: (129, 135, optional),
+        recorded_indicator: (135, 136, required),
+        text_music_relationship: (136, 139, optional),
+        composite_type: (139, 142, optional),
+        version_type: (142, 145, required),
+        excerpt_type: (145, 148, optional),
+        music_arrangement: (148, 151, optional),
+        lyric_adaptation: (151, 154, optional),
+        contact_name: (154, 184, optional),
+        contact_id: (184, 194, optional),
+        cwr_work_type: (194, 196, optional),
+        grand_rights_ind: (196, 197, optional),
+        composite_component_count: (197, 200, optional),
+        date_of_publication_of_printed_edition: (200, 208, optional),
+        exceptional_clause: (208, 209, optional),
+        opus_number: (209, 234, optional),
+        catalogue_number: (234, 259, optional),
+        priority_flag: (259, 260, optional),
     }
 }
+
+impl_cwr_parsing_test_roundtrip!(NwrRecord, "NWR0000000100000001Test Song                                               SW0000000001        SER        Y       ORI                                                                                                                                               ");
