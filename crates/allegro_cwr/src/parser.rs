@@ -39,9 +39,13 @@ fn get_cwr_version(hdr_line: &str) -> Result<f32, CwrParseError> {
     if valid_cwr_versions.contains(&cwr_version) { Ok(cwr_version) } else { Err(CwrParseError::BadFormat(format!("Invalid CWR version: {}", cwr_version))) }
 }
 
-pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<(i64, usize), CwrParseError> {
+/// Generic stream processor that handles file opening, header validation, and line-by-line processing
+/// The processor function receives (line, line_number, context) for each valid line
+pub fn process_cwr_stream<F>(input_filename: &str, mut processor: F) -> Result<(ParsingContext, usize), CwrParseError>
+where 
+    F: FnMut(&str, usize, &ParsingContext) -> Result<(), CwrParseError>
+{
     let file = File::open(input_filename)?;
-    // Use BufReader::new directly, we need to consume the first line separately
     let mut reader = BufReader::new(file);
 
     // --- Read the first line to determine CWR version ---
@@ -50,15 +54,52 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
     if bytes_read == 0 {
         return Err(CwrParseError::BadFormat("File is empty".to_string()));
     }
-    let hdr_line = first_line.trim_end(); // Remove trailing newline chars
+    let hdr_line = first_line.trim_end();
 
     if !hdr_line.starts_with("HDR") {
         return Err(CwrParseError::BadFormat(format!(
             "File does not start with HDR record. Found: '{}'",
-            hdr_line.get(0..std::cmp::min(hdr_line.len(), 50)).unwrap_or("") // Show first 50 chars
+            hdr_line.get(0..std::cmp::min(hdr_line.len(), 50)).unwrap_or("")
         )));
     }
 
+    let cwr_version = get_cwr_version(hdr_line)?;
+    println!("Determined CWR Version: {}", cwr_version);
+
+    // Create context with temporary file_id (will be set by caller if needed)
+    let context = ParsingContext { cwr_version, file_id: 0 };
+
+    // Reset to start of file
+    reader.seek(io::SeekFrom::Start(0))?;
+
+    let mut line_number: usize = 0;
+    for line_result in reader.lines() {
+        line_number += 1;
+        let line = match line_result {
+            Ok(l) => l,
+            Err(io_err) => {
+                eprintln!("IO error reading line {}: {}", line_number, io_err);
+                return Err(CwrParseError::Io(io_err));
+            }
+        };
+
+        if line.is_empty() || line.trim().is_empty() {
+            continue;
+        }
+
+        if line.len() < 3 {
+            eprintln!("Line {} is too short (less than 3 chars), skipping.", line_number);
+            continue;
+        }
+
+        // Call the processor for this line
+        processor(&line, line_number, &context)?;
+    }
+
+    Ok((context, line_number))
+}
+
+pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<(i64, usize), CwrParseError> {
     // --- Setup Database and Transaction ---
     let mut conn = Connection::open(db_filename)?;
     // Set PRAGMAs before transaction
@@ -68,7 +109,6 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
 
     // Start transaction *before* preparing statements
     let tx = conn.transaction()?;
-    let mut line_number: usize = 0; // Start at 0, HDR is line 1
 
     let file_id = {
         // Scope for file insertion
@@ -80,35 +120,14 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
         // Scope for the main processing loop
         let mut prepared_statements = get_prepared_statements(&tx)?;
 
-        let context = ParsingContext { cwr_version: get_cwr_version(hdr_line)?, file_id };
-        println!("Determined CWR Version: {}", context.cwr_version); // Log detected version
-
-        // Reset the position to the start of the file
-        reader.seek(io::SeekFrom::Start(0))?;
-
-        for line_result in reader.lines() {
-            line_number += 1; // Increment for subsequent lines
-            let line = match line_result {
-                Ok(l) => l,
-                Err(io_err) => {
-                    // Log IO error reading the line
-                    let parse_err = CwrParseError::Io(io_err);
-                    if let Err(log_err) = error::log_cwr_parse_error(&mut prepared_statements, context.file_id, line_number, &parse_err) {
-                        eprintln!("CRITICAL Error: Failed to log IO error to database on line {}: {} (Original error was: {})", line_number, log_err, parse_err);
-                        return Err(CwrParseError::from(log_err));
-                    }
-                    eprintln!("Aborting transaction due to IO error reading line {}: {}", line_number, parse_err);
-                    return Err(parse_err); // Abort on IO Error
-                }
-            };
-
-            if line.is_empty() || line.trim().is_empty() {
-                continue;
-            }
+        // Use the stream processor with a closure that handles database insertion
+        let (_context, line_count) = process_cwr_stream(input_filename, |line, line_number, temp_context| {
+            // Update context with the real file_id
+            let context = ParsingContext { cwr_version: temp_context.cwr_version, file_id };
 
             if line.len() < 3 {
                 log_error(&mut prepared_statements.error_stmt, context.file_id, line_number, format!("Line {} is too short (less than 3 chars), skipping.", line_number))?;
-                continue;
+                return Ok(());
             }
 
             let record_type = &line[0..3];
@@ -175,6 +194,7 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
             match process_result {
                 Ok(_) => {
                     // Record processed successfully, continue to next
+                    Ok(())
                 }
                 Err(e) => {
                     // Determine if this is a recoverable error
@@ -206,89 +226,53 @@ pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<
                         }
 
                         // Continue to next record (don't return error)
+                        Ok(())
                     } else {
                         // Unrecoverable error - abort the entire transaction
                         eprintln!("Aborting transaction due to unrecoverable error on line {}: {}", line_number, e);
-                        return Err(e);
+                        Err(e)
                     }
                 }
             }
-        }
+        })?;
 
         // Drop prepared_statements to release the borrow on tx
         drop(prepared_statements);
+
+        // Commit the transaction *only if* all lines were processed without error
+        tx.commit()?;
+
+        Ok((file_id, line_count))
     }
-
-    // Commit the transaction *only if* all lines were processed without error
-    tx.commit()?;
-
-    Ok((file_id, line_number))
 }
 
 /// Streams JSON output for each CWR record without using a database
 pub fn process_and_stream_json(input_filename: &str) -> Result<usize, CwrParseError> {
-    let file = File::open(input_filename)?;
-    let mut reader = BufReader::new(file);
-
-    // --- Read the first line to determine CWR version ---
-    let mut first_line = String::new();
-    let bytes_read = reader.read_line(&mut first_line)?;
-    if bytes_read == 0 {
-        return Err(CwrParseError::BadFormat("File is empty".to_string()));
-    }
-    let hdr_line = first_line.trim_end();
-
-    if !hdr_line.starts_with("HDR") {
-        return Err(CwrParseError::BadFormat(format!("File does not start with HDR record. Found: '{}'", hdr_line.get(0..std::cmp::min(hdr_line.len(), 50)).unwrap_or(""))));
-    }
-
-    let cwr_version = get_cwr_version(hdr_line)?;
-    println!("Determined CWR Version: {}", cwr_version);
-
-    // Reset to start of file
-    reader.seek(io::SeekFrom::Start(0))?;
-
-    let mut line_number: usize = 0;
-    let mut first_record = true;
+    use std::cell::RefCell;
+    let first_record = RefCell::new(true);
 
     // Start JSON array
     println!("[");
 
-    for line_result in reader.lines() {
-        line_number += 1;
-        let line = match line_result {
-            Ok(l) => l,
-            Err(io_err) => {
-                eprintln!("IO error reading line {}: {}", line_number, io_err);
-                return Err(CwrParseError::Io(io_err));
-            }
-        };
-
-        if line.is_empty() || line.trim().is_empty() {
-            continue;
-        }
-
-        if line.len() < 3 {
-            eprintln!("Line {} is too short (less than 3 chars), skipping.", line_number);
-            continue;
-        }
-
+    // Use the stream processor with a closure that handles JSON output
+    let (_context, line_count) = process_cwr_stream(input_filename, |line, line_number, context| {
         let record_type = &line[0..3];
 
         // Output JSON for this record
-        if !first_record {
+        if !*first_record.borrow() {
             println!(",");
         }
 
-        stream_record_as_json(record_type, &line, line_number, cwr_version)?;
-        first_record = false;
-    }
+        stream_record_as_json(record_type, line, line_number, context.cwr_version)?;
+        *first_record.borrow_mut() = false;
+        Ok(())
+    })?;
 
     // End JSON array
     println!();
     println!("]");
 
-    Ok(line_number)
+    Ok(line_count)
 }
 
 fn stream_record_as_json(record_type: &str, line: &str, line_number: usize, cwr_version: f32) -> Result<(), CwrParseError> {
