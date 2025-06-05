@@ -1,6 +1,7 @@
 //! AGR - Agreement Transaction Record
 
 use crate::error::{CwrParseError, CwrParseResult};
+use crate::util::{extract_required_validated, extract_optional_validated};
 use crate::validators::*;
 use serde::{Deserialize, Serialize};
 
@@ -94,39 +95,6 @@ impl AgrRecord {
     /// Parse a CWR line into an AGR record (v2 with validation and warnings)
     pub fn from_cwr_line_v2(line: &str) -> Result<CwrParseResult<Self>, CwrParseError> {
         let mut warnings = Vec::new();
-
-        // Helper function to extract and validate required fields
-        let extract_required_validated = |line: &str, start: usize, end: usize, field_name: &str, validator: Option<&dyn Fn(&str) -> Result<(), String>>, _warnings: &mut Vec<String>| -> Result<String, CwrParseError> {
-            if line.len() < end {
-                return Err(CwrParseError::BadFormat(format!("Line too short for required field {}", field_name)));
-            }
-            let value = line.get(start..end).unwrap().trim().to_string();
-            if let Some(validator) = validator {
-                if let Err(err) = validator(&value) {
-                    return Err(CwrParseError::BadFormat(format!("Validation failed for field {}: {}", field_name, err)));
-                }
-            }
-            Ok(value)
-        };
-
-        // Helper function to extract and validate optional fields
-        let extract_optional_validated = |line: &str, start: usize, end: usize, field_name: &str, validator: Option<&dyn Fn(&str) -> Result<(), String>>, warnings: &mut Vec<String>| -> Option<String> {
-            if line.len() < end {
-                warnings.push(format!("Line too short for optional field {}", field_name));
-                return None;
-            }
-            let trimmed = line.get(start..end).unwrap().trim();
-            if trimmed.is_empty() {
-                return None;
-            }
-            if let Some(validator) = validator {
-                if let Err(err) = validator(trimmed) {
-                    warnings.push(format!("Validation failed for optional field {}: {}", field_name, err));
-                    return None;
-                }
-            }
-            Some(trimmed.to_string())
-        };
 
         let record_type_validator = record_type_must_be("AGR");
         let yes_no_validator = one_of(&["Y", "N"]);
