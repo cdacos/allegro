@@ -76,7 +76,7 @@ fn main() {
         }
     };
 
-    let input_filename = config.input_filename.unwrap();
+    let input_filename = config.input_filename.expect("input_filename already validated during parsing");
 
     println!("Processing input file: {}...", input_filename);
 
