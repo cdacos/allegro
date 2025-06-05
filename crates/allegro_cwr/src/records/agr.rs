@@ -117,35 +117,3 @@ impl_cwr_parsing! {
     }
 }
 
-impl AgrRecord {
-    /// Convert this record to a CWR format line
-    pub fn to_cwr_line(&self) -> String {
-        let mut fields = vec![
-            format!("{:3}", self.record_type),
-            format!("{:8}", self.transaction_sequence_num),
-            format!("{:8}", self.record_sequence_num),
-            format!("{:14}", self.submitter_agreement_number),
-            format!("{:14}", self.international_standard_agreement_code.as_deref().unwrap_or("")),
-            format!("{:2}", self.agreement_type),
-            format!("{:8}", self.agreement_start_date),
-            format!("{:8}", self.agreement_end_date.as_deref().unwrap_or("")),
-            format!("{:8}", self.retention_end_date.as_deref().unwrap_or("")),
-            format!("{:1}", self.prior_royalty_status),
-            format!("{:8}", self.prior_royalty_start_date.as_deref().unwrap_or("")),
-            format!("{:1}", self.post_term_collection_status),
-            format!("{:8}", self.post_term_collection_end_date.as_deref().unwrap_or("")),
-            format!("{:8}", self.date_of_signature_of_agreement.as_deref().unwrap_or("")),
-            format!("{:5}", self.number_of_works),
-            format!("{:1}", self.sales_manufacture_clause.as_deref().unwrap_or("")),
-            format!("{:1}", self.shares_change.as_deref().unwrap_or("")),
-            format!("{:1}", self.advance_given.as_deref().unwrap_or("")),
-        ];
-
-        // Add v2.1+ field
-        if let Some(ref society_assigned) = self.society_assigned_agreement_number {
-            fields.push(format!("{:14}", society_assigned));
-        }
-
-        fields.join("")
-    }
-}

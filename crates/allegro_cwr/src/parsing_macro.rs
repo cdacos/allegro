@@ -39,6 +39,27 @@ macro_rules! impl_cwr_parsing {
 
                 Ok($crate::error::CwrParseResult { record, warnings })
             }
+
+            /// Convert this record to a CWR format line
+            pub fn to_cwr_line(&self) -> String {
+                let mut result = String::new();
+
+                $(
+                    let field_value = impl_cwr_parsing!(@format_field self.$field_name, $field_type);
+                    let field_width = $end - $start;
+                    
+                    // Pad to the start position if needed
+                    while result.len() < $start {
+                        result.push(' ');
+                    }
+                    
+                    // Add the field value, truncated or padded to the correct width
+                    let formatted = format!("{:width$}", field_value, width = field_width);
+                    result.push_str(&formatted[..field_width.min(formatted.len())]);
+                )*
+
+                result
+            }
         }
     };
 
@@ -66,6 +87,15 @@ macro_rules! impl_cwr_parsing {
 
     (@handle_result $field:expr, optional) => {
         $field
+    };
+
+    // Helper rule for formatting fields
+    (@format_field $field:expr, required) => {
+        &$field
+    };
+
+    (@format_field $field:expr, optional) => {
+        $field.as_deref().unwrap_or("")
     };
 }
 
@@ -124,5 +154,25 @@ mod tests {
         assert_eq!(result.record.optional_field, None);
         assert_eq!(result.warnings.len(), 1);
         assert!(result.warnings[0].contains("Line too short for optional field"));
+    }
+
+    #[test]
+    fn test_macro_generated_to_cwr_line() {
+        let line = "TST12345ABCDE";
+        let result = TestRecord::from_cwr_line_v2(line).unwrap();
+        
+        // Test that the generated to_cwr_line method works
+        let output = result.record.to_cwr_line();
+        assert_eq!(output, "TST12345ABCDE");
+    }
+
+    #[test]
+    fn test_macro_round_trip() {
+        let original_line = "TST12345ABCDE";
+        let parsed = TestRecord::from_cwr_line_v2(original_line).unwrap();
+        let regenerated_line = parsed.record.to_cwr_line();
+        
+        // Should be able to round-trip the data
+        assert_eq!(original_line, regenerated_line);
     }
 }
