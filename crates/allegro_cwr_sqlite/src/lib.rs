@@ -8,6 +8,8 @@ pub mod connection;
 pub mod error;
 pub mod operations;
 pub mod statements;
+pub mod record_handlers;
+pub mod report;
 
 // Re-export main types and functions
 pub use connection::{CwrDatabase, determine_db_filename, setup_database};

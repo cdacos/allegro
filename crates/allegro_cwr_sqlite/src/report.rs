@@ -1,4 +1,4 @@
-use crate::{OutputFormat, util::format_int_with_commas};
+use allegro_cwr::{OutputFormat, format_int_with_commas};
 use rusqlite::Connection;
 
 /// Generates and prints summary reports from the database for a specific file import.

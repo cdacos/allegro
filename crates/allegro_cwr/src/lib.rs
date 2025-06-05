@@ -1,6 +1,7 @@
 //! CWR (Common Works Registration) file parser library
 //!
-//! This library provides functionality to parse CWR files and load them into SQLite databases.
+//! This library provides core functionality to parse CWR files. For database storage,
+//! see the `allegro_cwr_sqlite` crate. For JSON output, see the `allegro_cwr_json` crate.
 
 pub mod error;
 pub mod parser;
