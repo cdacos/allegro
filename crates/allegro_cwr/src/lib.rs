@@ -8,6 +8,9 @@ pub mod parser;
 pub mod records;
 pub mod util;
 
+#[cfg(test)]
+pub mod test_utils;
+
 #[derive(Debug, Clone)]
 pub enum OutputFormat {
     Default,
@@ -35,9 +38,9 @@ impl std::str::FromStr for OutputFormat {
 
 // Re-export commonly used items
 pub use crate::error::CwrParseError;
-pub use crate::parser::{ParsingContext, process_cwr_stream, ParsedRecord};
+pub use crate::parser::{ParsingContext, process_cwr_stream, process_cwr_stream_with_version, ParsedRecord};
 pub use crate::records::*;
-pub use crate::util::format_int_with_commas;
+pub use crate::util::{format_int_with_commas, extract_version_from_filename};
 
 /// Trait for handling CWR records during processing
 pub trait CwrHandler {
@@ -59,7 +62,19 @@ pub trait CwrHandler {
 /// Generic function to process CWR file with any handler that implements CwrHandler trait
 pub fn process_cwr_with_handler<H: CwrHandler>(
     input_filename: &str, 
-    mut handler: H
+    handler: H
+) -> Result<String, Box<dyn std::error::Error>> 
+where 
+    H::Error: 'static,
+{
+    process_cwr_with_handler_and_version(input_filename, handler, None)
+}
+
+/// Generic function to process CWR file with any handler that implements CwrHandler trait and optional version hint
+pub fn process_cwr_with_handler_and_version<H: CwrHandler>(
+    input_filename: &str, 
+    mut handler: H,
+    version_hint: Option<f32>
 ) -> Result<String, Box<dyn std::error::Error>> 
 where 
     H::Error: 'static,
@@ -67,7 +82,7 @@ where
     let mut processed_count = 0;
     let mut error_count = 0;
     
-    for result in process_cwr_stream(input_filename)? {
+    for result in process_cwr_stream_with_version(input_filename, version_hint)? {
         match result {
             Ok(parsed_record) => {
                 handler.process_record(parsed_record)?;

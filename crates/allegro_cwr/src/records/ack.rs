@@ -121,6 +121,39 @@ impl AckRecord {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_utils::record_test_utils::CwrRecordTestable;
+
+    impl CwrRecordTestable for AckRecord {
+        fn expected_record_type() -> &'static str {
+            "ACK"
+        }
+
+        fn expected_line_length() -> usize {
+            159
+        }
+
+        fn from_cwr_line(line: &str) -> Result<Self, CwrParseError> {
+            AckRecord::from_cwr_line(line)
+        }
+
+        fn to_cwr_line(&self) -> String {
+            self.to_cwr_line()
+        }
+
+        fn create_test_record() -> Self {
+            AckRecord::new(
+                "00000001".to_string(),
+                "00000001".to_string(),
+                "20050101".to_string(),
+                "120000".to_string(),
+                "00001".to_string(),
+                "00000001".to_string(),
+                "NWR".to_string(),
+                "20050102".to_string(),
+                "AS".to_string(),
+            )
+        }
+    }
 
     #[test]
     fn test_ack_creation() {
@@ -140,5 +173,130 @@ mod tests {
 
         assert_eq!(original, parsed);
         assert_eq!(line.len(), 159);
+    }
+
+    // Use the test generator for comprehensive error condition testing
+    use crate::test_utils::record_test_utils::RecordTestGenerator;
+
+    #[test]
+    fn test_ack_line_too_short() {
+        RecordTestGenerator::test_line_too_short::<AckRecord>();
+    }
+
+    #[test]
+    fn test_ack_wrong_record_type() {
+        RecordTestGenerator::test_wrong_record_type::<AckRecord>();
+    }
+
+    #[test]
+    fn test_ack_exact_minimum_length() {
+        RecordTestGenerator::test_exact_minimum_length::<AckRecord>();
+    }
+
+    #[test]
+    fn test_ack_one_char_too_short() {
+        RecordTestGenerator::test_one_char_too_short::<AckRecord>();
+    }
+
+    #[test]
+    fn test_ack_comprehensive() {
+        RecordTestGenerator::run_all_tests::<AckRecord>();
+    }
+
+    // Field validation tests
+    use crate::test_utils::record_test_utils::TestLineBuilder;
+
+    #[test]
+    fn test_ack_with_optional_fields_populated() {
+        let line = TestLineBuilder::new("ACK")
+            .add_field("00000001", 8)  // transaction_sequence_num
+            .add_field("00000001", 8)  // record_sequence_num  
+            .add_field("20050101", 8)  // creation_date
+            .add_field("120000", 6)    // creation_time
+            .add_field("00001", 5)     // original_group_id
+            .add_field("00000001", 8)  // original_transaction_sequence_num
+            .add_field("NWR", 3)       // original_transaction_type
+            .add_field("Some Creation Title", 60)  // creation_title (optional)
+            .add_field("Submitter123", 20)         // submitter_creation_num (optional)
+            .add_field("Recipient456", 20)         // recipient_creation_num (optional)
+            .add_field("20050102", 8)  // processing_date
+            .add_field("AS", 2)        // transaction_status
+            .build();
+
+        let parsed = AckRecord::from_cwr_line(&line).unwrap();
+        assert_eq!(parsed.creation_title, Some("Some Creation Title".to_string()));
+        assert_eq!(parsed.submitter_creation_num, Some("Submitter123".to_string()));
+        assert_eq!(parsed.recipient_creation_num, Some("Recipient456".to_string()));
+    }
+
+    #[test]
+    fn test_ack_with_empty_optional_fields() {
+        let line = TestLineBuilder::new("ACK")
+            .add_field("00000001", 8)  // transaction_sequence_num
+            .add_field("00000001", 8)  // record_sequence_num  
+            .add_field("20050101", 8)  // creation_date
+            .add_field("120000", 6)    // creation_time
+            .add_field("00001", 5)     // original_group_id
+            .add_field("00000001", 8)  // original_transaction_sequence_num
+            .add_field("NWR", 3)       // original_transaction_type
+            .add_field("", 60)         // creation_title (empty)
+            .add_field("", 20)         // submitter_creation_num (empty)
+            .add_field("", 20)         // recipient_creation_num (empty)
+            .add_field("20050102", 8)  // processing_date
+            .add_field("AS", 2)        // transaction_status
+            .build();
+
+        let parsed = AckRecord::from_cwr_line(&line).unwrap();
+        assert_eq!(parsed.creation_title, None);
+        assert_eq!(parsed.submitter_creation_num, None);
+        assert_eq!(parsed.recipient_creation_num, None);
+    }
+
+    #[test]
+    fn test_ack_field_trimming() {
+        // Create a line with spaces in fields that should be trimmed
+        let mut line = "ACK".to_string();
+        line.push_str("  000001"); // transaction_sequence_num (pos 3-11) with leading spaces
+        line.push_str("  000001"); // record_sequence_num (pos 11-19) with leading spaces  
+        line.push_str("20050101"); // creation_date (pos 19-27)
+        line.push_str("120000");   // creation_time (pos 27-33)
+        line.push_str("00001");    // original_group_id (pos 33-38)
+        line.push_str("00000001"); // original_transaction_sequence_num (pos 38-46)
+        line.push_str("NWR");      // original_transaction_type (pos 46-49)
+        line.push_str(&" ".repeat(60)); // creation_title (pos 49-109) - empty
+        line.push_str(&" ".repeat(20)); // submitter_creation_num (pos 109-129) - empty
+        line.push_str(&" ".repeat(20)); // recipient_creation_num (pos 129-149) - empty
+        line.push_str("20050102"); // processing_date (pos 149-157)
+        line.push_str("AS");       // transaction_status (pos 157-159)
+
+        let parsed = AckRecord::from_cwr_line(&line).unwrap();
+        assert_eq!(parsed.transaction_sequence_num, "000001");
+        assert_eq!(parsed.record_sequence_num, "000001");
+        assert_eq!(parsed.creation_date, "20050101");
+        assert_eq!(parsed.transaction_status, "AS");
+    }
+
+    #[test] 
+    fn test_ack_edge_case_field_lengths() {
+        // Test with maximum length fields
+        let line = TestLineBuilder::new("ACK")
+            .add_field("99999999", 8)  // transaction_sequence_num (max)
+            .add_field("99999999", 8)  // record_sequence_num (max)  
+            .add_field("20991231", 8)  // creation_date (far future)
+            .add_field("235959", 6)    // creation_time (end of day)
+            .add_field("ZZZZZ", 5)     // original_group_id (alpha max)
+            .add_field("99999999", 8)  // original_transaction_sequence_num (max)
+            .add_field("EXC", 3)       // original_transaction_type (alt type)
+            .add_field("A".repeat(60).as_str(), 60)  // creation_title (max length)
+            .add_field("B".repeat(20).as_str(), 20)  // submitter_creation_num (max length)
+            .add_field("C".repeat(20).as_str(), 20)  // recipient_creation_num (max length)
+            .add_field("20991231", 8)  // processing_date (far future)
+            .add_field("ZZ", 2)        // transaction_status (max)
+            .build();
+
+        let parsed = AckRecord::from_cwr_line(&line).unwrap();
+        assert_eq!(parsed.creation_title, Some("A".repeat(60)));
+        assert_eq!(parsed.submitter_creation_num, Some("B".repeat(20)));
+        assert_eq!(parsed.recipient_creation_num, Some("C".repeat(20)));
     }
 }

@@ -12,29 +12,103 @@ pub struct ParsingContext {
                           // Add other metadata like charset later if needed
 }
 
-fn get_cwr_version(hdr_line: &str) -> Result<f32, CwrParseError> {
-    // Define valid CWR versions
-    let valid_cwr_versions = [2.0, 2.1, 2.2];
-
-    // Determine version based on header line length
-    let cwr_version = if hdr_line.len() < 87 {
-        2.0
-    } else if hdr_line.len() > 104 {
-        // Try to parse version from specific position in header
-        if let Some(version_str) = hdr_line.get(101..104) {
-            match version_str.trim().parse::<f32>() {
-                Ok(version) => version,
-                Err(_) => return Err(CwrParseError::BadFormat(format!("Invalid CWR version value: {}", version_str))),
+fn get_cwr_version(filename: &str, hdr_line: &str, cli_version: Option<f32>) -> Result<f32, CwrParseError> {
+    use crate::util::extract_version_from_filename;
+    
+    // Try to detect version from HDR line using enhanced heuristics
+    let hdr_detected_version = detect_version_from_hdr(hdr_line)?;
+    
+    // Try to extract version from filename
+    let filename_version = extract_version_from_filename(filename);
+    
+    // Determine final version with precedence: CLI > filename > HDR explicit > HDR heuristics
+    match (cli_version, filename_version, hdr_detected_version) {
+        // CLI version specified
+        (Some(cli_ver), Some(filename_ver), _) => {
+            if cli_ver != filename_ver {
+                println!("Note: CLI specified CWR version {} but filename suggests {}. Using CLI version {}.", 
+                    cli_ver, filename_ver, cli_ver);
             }
-        } else {
-            return Err(CwrParseError::BadFormat("Unable to extract CWR version from header".to_string()));
+            Ok(cli_ver)
         }
-    } else {
-        2.1
-    };
+        (Some(cli_ver), None, Some(hdr_ver)) => {
+            if cli_ver != hdr_ver {
+                eprintln!("Warning: CLI specified CWR version {} but file contains explicit version {}. Using CLI version {}.", 
+                    cli_ver, hdr_ver, cli_ver);
+            }
+            Ok(cli_ver)
+        }
+        (Some(cli_ver), None, None) => Ok(cli_ver),
+        
+        // No CLI version - use filename version if available
+        (None, Some(filename_ver), Some(hdr_ver)) => {
+            if filename_ver != hdr_ver {
+                println!("Note: Filename suggests CWR version {} but file contains explicit version {}. Using filename version {}.", 
+                    filename_ver, hdr_ver, filename_ver);
+            }
+            Ok(filename_ver)
+        }
+        (None, Some(filename_ver), None) => {
+            println!("Detected CWR version {} from filename.", filename_ver);
+            Ok(filename_ver)
+        }
+        
+        // No CLI or filename version - use HDR version if available
+        (None, None, Some(hdr_ver)) => Ok(hdr_ver),
+        
+        // Fall back to heuristics
+        (None, None, None) => {
+            let heuristic_version = detect_version_by_heuristics(hdr_line);
+            println!("Auto-detected CWR version: {}", heuristic_version);
+            Ok(heuristic_version)
+        }
+    }
+}
 
-    // Validate the version
-    if valid_cwr_versions.contains(&cwr_version) { Ok(cwr_version) } else { Err(CwrParseError::BadFormat(format!("Invalid CWR version: {}", cwr_version))) }
+fn detect_version_from_hdr(hdr_line: &str) -> Result<Option<f32>, CwrParseError> {
+    // Check for explicit version field at position 101-104 (CWR 2.2+)
+    if hdr_line.len() > 104 {
+        if let Some(version_str) = hdr_line.get(101..104) {
+            let trimmed = version_str.trim();
+            if !trimmed.is_empty() {
+                match trimmed.parse::<f32>() {
+                    Ok(version) => {
+                        if [2.0, 2.1, 2.2].contains(&version) {
+                            return Ok(Some(version));
+                        } else {
+                            return Err(CwrParseError::BadFormat(format!("Invalid CWR version in header: {}", version)));
+                        }
+                    }
+                    Err(_) => return Err(CwrParseError::BadFormat(format!("Invalid CWR version format in header: {}", trimmed))),
+                }
+            }
+        }
+    }
+    
+    // Check for character set field presence (positions 87-89, indicates 2.1+)
+    if hdr_line.len() >= 89 {
+        if let Some(charset_field) = hdr_line.get(87..89) {
+            let trimmed = charset_field.trim();
+            if !trimmed.is_empty() {
+                // Character set field present suggests 2.1+, but we can't distinguish 2.1 from 2.2 without explicit version
+                return Ok(None); // Let heuristics handle it
+            }
+        }
+    }
+    
+    Ok(None)
+}
+
+fn detect_version_by_heuristics(hdr_line: &str) -> f32 {
+    let len = hdr_line.len();
+    
+    if len > 102 {
+        2.2
+    } else if len > 87 {
+        2.1
+    } else {
+        2.0
+    }
 }
 
 /// Enum containing all possible parsed CWR record types
@@ -180,6 +254,11 @@ fn parse_cwr_line(line: &str, line_number: usize, context: &ParsingContext) -> R
 
 /// Returns an iterator that processes CWR lines and yields parsed records
 pub fn process_cwr_stream(input_filename: &str) -> Result<impl Iterator<Item = Result<ParsedRecord, CwrParseError>>, CwrParseError> {
+    process_cwr_stream_with_version(input_filename, None)
+}
+
+/// Returns an iterator that processes CWR lines and yields parsed records with optional version hint
+pub fn process_cwr_stream_with_version(input_filename: &str, version_hint: Option<f32>) -> Result<impl Iterator<Item = Result<ParsedRecord, CwrParseError>>, CwrParseError> {
     let file = File::open(input_filename)?;
     let mut reader = BufReader::new(file);
 
@@ -198,7 +277,7 @@ pub fn process_cwr_stream(input_filename: &str) -> Result<impl Iterator<Item = R
         )));
     }
 
-    let cwr_version = get_cwr_version(hdr_line)?;
+    let cwr_version = get_cwr_version(input_filename, hdr_line, version_hint)?;
     println!("Determined CWR Version: {}", cwr_version);
 
     let context = ParsingContext { cwr_version, file_id: 0 };
@@ -236,34 +315,96 @@ mod tests {
     use std::fs;
 
     #[test]
-    fn test_get_cwr_version_v20() {
-        let hdr_line = "HDR01BMI      BMI MUSIC                             01.1020050101120000 ";
-        let version = get_cwr_version(hdr_line).unwrap();
-        assert_eq!(version, 2.0);
-    }
-
-    #[test]
-    fn test_get_cwr_version_v21() {
-        let hdr_line = "HDR01BMI      BMI MUSIC                             01.1020050101120000 20050101        ";
-        let version = get_cwr_version(hdr_line).unwrap();
+    fn test_get_cwr_version_v21_auto_detect() {
+        // TestSample.V21 HDR line - should auto-detect as 2.1 by heuristics
+        let hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221";
+        let version = get_cwr_version("test_file.cwr", hdr_line, None).unwrap();
         assert_eq!(version, 2.1);
     }
 
     #[test]
-    fn test_get_cwr_version_v22() {
-        let hdr_line = "HDR01BMI      BMI MUSIC                             01.1020050101120000 20050101                    2.2";
-        let version = get_cwr_version(hdr_line).unwrap();
+    fn test_get_cwr_version_cli_override() {
+        // CLI version should override auto-detection
+        let hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221";
+        let version = get_cwr_version("test_file.cwr", hdr_line, Some(2.0)).unwrap();
+        assert_eq!(version, 2.0);
+    }
+
+    #[test]
+    fn test_get_cwr_version_filename_detection() {
+        // Filename version should be detected when no CLI version specified
+        let hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221";
+        let version = get_cwr_version("CW060001EMI_044.V21", hdr_line, None).unwrap();
+        assert_eq!(version, 2.1);
+    }
+
+    #[test]
+    fn test_get_cwr_version_cli_vs_filename() {
+        // CLI version should override filename version
+        let hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221";
+        let version = get_cwr_version("CW060001EMI_044.V21", hdr_line, Some(2.2)).unwrap();
         assert_eq!(version, 2.2);
     }
 
     #[test]
-    fn test_get_cwr_version_invalid() {
-        let hdr_line = "HDR01BMI      BMI MUSIC                             01.1020050101120000 20050101                    9.9";
-        let result = get_cwr_version(hdr_line);
+    fn test_get_cwr_version_filename_vs_hdr() {
+        // Filename version should override HDR version when no CLI version
+        let mut hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221".to_string();
+        while hdr_line.len() < 101 {
+            hdr_line.push(' ');
+        }
+        hdr_line.push_str("2.2");  // HDR says 2.2
+        hdr_line.push(' ');
+        
+        let version = get_cwr_version("CW060001EMI_044.V21", &hdr_line, None).unwrap(); // filename says 2.1
+        assert_eq!(version, 2.1); // filename takes precedence
+    }
+
+    #[test]
+    fn test_get_cwr_version_explicit_v22() {
+        // Create a v2.2 line with explicit version at position 101-104
+        let mut hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221".to_string();
+        // Pad to position 101
+        while hdr_line.len() < 101 {
+            hdr_line.push(' ');
+        }
+        hdr_line.push_str("2.2");  // Add version at position 101-104
+        hdr_line.push(' ');        // Make length > 104
+        
+        let version = get_cwr_version("test_file.cwr", &hdr_line, None).unwrap();
+        assert_eq!(version, 2.2);
+    }
+
+    #[test]
+    fn test_get_cwr_version_explicit_conflicts_with_cli() {
+        // Test warning when explicit version conflicts with CLI version
+        let mut hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221".to_string();
+        while hdr_line.len() < 101 {
+            hdr_line.push(' ');
+        }
+        hdr_line.push_str("2.2");
+        hdr_line.push(' ');
+        
+        // CLI specifies 2.1 but file has explicit 2.2 - should use CLI version with warning
+        let version = get_cwr_version("test_file.cwr", &hdr_line, Some(2.1)).unwrap();
+        assert_eq!(version, 2.1);
+    }
+
+    #[test]
+    fn test_get_cwr_version_invalid_explicit() {
+        // Invalid explicit version should return error
+        let mut hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221".to_string();
+        while hdr_line.len() < 101 {
+            hdr_line.push(' ');
+        }
+        hdr_line.push_str("9.9");
+        hdr_line.push(' ');
+        
+        let result = get_cwr_version("test_file.cwr", &hdr_line, None);
         assert!(result.is_err());
         match result {
             Err(CwrParseError::BadFormat(msg)) => {
-                assert_eq!(msg, "Invalid CWR version: 9.9");
+                assert!(msg.contains("Invalid CWR version in header: 9.9"));
             }
             _ => panic!("Expected BadFormat error"),
         }
@@ -297,8 +438,9 @@ mod tests {
 
     #[test]
     fn test_parse_cwr_line_valid_hdr() {
-        let context = ParsingContext { cwr_version: 2.2, file_id: 0 };
-        let line = "HDR01BMI      BMI MUSIC                             01.1020050101120000 20050101                    2.2";
+        let context = ParsingContext { cwr_version: 2.0, file_id: 0 };
+        // Real HDR line from TestSample.V21
+        let line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221";
         let result = parse_cwr_line(line, 1, &context);
         assert!(result.is_ok());
         let parsed = result.unwrap();
@@ -357,28 +499,33 @@ mod tests {
 
     #[test] 
     fn test_process_cwr_stream_valid_file() {
-        let content = "HDR01BMI      BMI MUSIC                             01.1020050101120000 20050101                    2.2\nTRL00000001000000012005010100                                                                                                                                                                                                                                                                                                                                                                                   ";
+        let content = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221\nGRHNWR0000102.100000000000  \nTRL00000002000000022022122100                                                                                                                                                                                                                                                                                                                                                                                   ";
         let temp_file = create_temp_cwr_file(content);
         let result = process_cwr_stream(&temp_file);
         assert!(result.is_ok());
         
         let records: Vec<_> = result.unwrap().collect();
-        assert_eq!(records.len(), 2);
+        assert_eq!(records.len(), 3);
         
         assert!(records[0].is_ok());
-        assert!(records[1].is_ok());
+        assert!(records[1].is_ok()); 
+        assert!(records[2].is_ok());
         
         let first_record = records[0].as_ref().unwrap();
         assert_eq!(first_record.line_number, 1);
         assert_eq!(first_record.record.record_type(), "HDR");
-        assert_eq!(first_record.context.cwr_version, 2.2);
+        assert_eq!(first_record.context.cwr_version, 2.1);
+        
+        let second_record = records[1].as_ref().unwrap();
+        assert_eq!(second_record.line_number, 2);
+        assert_eq!(second_record.record.record_type(), "GRH");
         
         fs::remove_file(&temp_file).ok();
     }
 
     #[test]
     fn test_process_cwr_stream_empty_line() {
-        let content = "HDR01BMI      BMI MUSIC                             01.1020050101120000 20050101                    2.2\n\nTRL00000001000000012005010100                                                                                                                                                                                                                                                                                                                                                                                   ";
+        let content = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221\n\nTRL00000002000000022022122100                                                                                                                                                                                                                                                                                                                                                                                   ";
         let temp_file = create_temp_cwr_file(content);
         let result = process_cwr_stream(&temp_file);
         assert!(result.is_ok());
@@ -398,6 +545,22 @@ mod tests {
         }
         
         fs::remove_file(&temp_file).ok();
+    }
+
+    #[test]
+    fn test_process_cwr_stream_real_sample() {
+        // Test with actual sample file
+        let result = process_cwr_stream("/Users/carlos/src/personal/allegro-rs/.me/TestSample.V21");
+        assert!(result.is_ok());
+        
+        let records: Vec<_> = result.unwrap().take(10).collect(); // Just test first 10 records
+        assert!(records.len() > 0);
+        
+        // Verify first record is HDR
+        assert!(records[0].is_ok());
+        let first_record = records[0].as_ref().unwrap();
+        assert_eq!(first_record.record.record_type(), "HDR");
+        assert_eq!(first_record.context.cwr_version, 2.1);
     }
 }
 

@@ -74,8 +74,13 @@ impl allegro_cwr::CwrHandler for JsonHandler {
 
 /// Convenience function to process CWR file and output JSON
 pub fn process_cwr_to_json(input_filename: &str) -> Result<usize, Box<dyn std::error::Error>> {
+    process_cwr_to_json_with_version(input_filename, None)
+}
+
+/// Convenience function to process CWR file and output JSON with optional version hint
+pub fn process_cwr_to_json_with_version(input_filename: &str, version_hint: Option<f32>) -> Result<usize, Box<dyn std::error::Error>> {
     let handler = JsonHandler::new();
-    let report = allegro_cwr::process_cwr_with_handler(input_filename, handler)?;
+    let report = allegro_cwr::process_cwr_with_handler_and_version(input_filename, handler, version_hint)?;
     
     // Extract count from report
     let output_count = report.lines()

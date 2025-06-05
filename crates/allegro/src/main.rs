@@ -7,6 +7,7 @@ struct Config {
     output_path: Option<String>,
     input_filename: Option<String>,
     format: OutputFormat,
+    cwr_version: Option<f32>,
 }
 
 impl Default for Config {
@@ -15,6 +16,7 @@ impl Default for Config {
             output_path: None,
             input_filename: None,
             format: OutputFormat::Default,
+            cwr_version: None,
         }
     }
 }
@@ -31,6 +33,17 @@ fn parse_args() -> Result<Config, String> {
             lexopt::Arg::Short('f') | lexopt::Arg::Long("format") => {
                 let format_str = get_value(&mut parser, "format")?;
                 config.format = format_str.parse()?;
+            }
+            lexopt::Arg::Long("cwr") => {
+                let version_str = get_value(&mut parser, "cwr")?;
+                let version: f32 = version_str.parse()
+                    .map_err(|_| format!("Invalid CWR version '{}'. Valid versions: 2.0, 2.1, 2.2", version_str))?;
+                
+                if ![2.0, 2.1, 2.2].contains(&version) {
+                    return Err(format!("Unsupported CWR version '{}'. Valid versions: 2.0, 2.1, 2.2", version));
+                }
+                
+                config.cwr_version = Some(version);
             }
             lexopt::Arg::Value(val) => {
                 if config.input_filename.is_some() {
@@ -80,7 +93,7 @@ fn main() {
 
     let result = match config.format {
         OutputFormat::Json => {
-            match allegro_cwr_json::process_cwr_to_json(&input_filename) {
+            match allegro_cwr_json::process_cwr_to_json_with_version(&input_filename, config.cwr_version) {
                 Ok(count) => Ok(("".to_string(), count)),
                 Err(e) => Err(e),
             }
@@ -89,8 +102,8 @@ fn main() {
             let db_filename = allegro_cwr_sqlite::determine_db_filename(&input_filename, config.output_path.as_deref());
             println!("Using database filename: '{}'", db_filename);
             
-            match allegro_cwr_sqlite::process_cwr_to_sqlite(&input_filename, &db_filename) {
-                Ok((file_id, count, report)) => {
+            match allegro_cwr_sqlite::process_cwr_to_sqlite_with_version(&input_filename, &db_filename, config.cwr_version) {
+                Ok((_file_id, count, report)) => {
                     println!("{}", report);
                     Ok((db_filename, count))
                 }
@@ -128,6 +141,7 @@ fn print_help() {
     eprintln!("Options:");
     eprintln!("  -o, --output <file>      Output database file path");
     eprintln!("  -f, --format <format>    Output format ({})", OutputFormat::valid_formats());
+    eprintln!("      --cwr <version>      CWR version (2.0, 2.1, 2.2). Auto-detected from filename (.Vxx) or file content if not specified");
     eprintln!("  -h, --help               Show this help message");
     eprintln!();
     eprintln!("By default, creates <input_filename>.db, or numbered variants if it exists");

@@ -117,9 +117,14 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
 
 /// Convenience function to process CWR file with SQLite handler
 pub fn process_cwr_to_sqlite(input_filename: &str, db_filename: &str) -> std::result::Result<(i64, usize, String), Box<dyn std::error::Error>> {
+    process_cwr_to_sqlite_with_version(input_filename, db_filename, None)
+}
+
+/// Convenience function to process CWR file with SQLite handler and optional version hint
+pub fn process_cwr_to_sqlite_with_version(input_filename: &str, db_filename: &str, version_hint: Option<f32>) -> std::result::Result<(i64, usize, String), Box<dyn std::error::Error>> {
     let handler = SqliteHandler::new(input_filename, db_filename)?;
     let file_id = handler.file_id;
-    let report = allegro_cwr::process_cwr_with_handler(input_filename, handler)?;
+    let report = allegro_cwr::process_cwr_with_handler_and_version(input_filename, handler, version_hint)?;
     
     // Extract count from report (simple parsing for now)
     let processed_count = report.lines()
