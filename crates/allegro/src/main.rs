@@ -29,12 +29,8 @@ fn parse_args() -> Result<Config, String> {
                 config.output_path = Some(get_value(&mut parser, "output")?);
             }
             lexopt::Arg::Short('f') | lexopt::Arg::Long("format") => {
-                let format_str = get_value(&mut parser, "format")?.to_lowercase();
-                config.format = match format_str.as_str() {
-                    "sql" => OutputFormat::Sql,
-                    "json" => OutputFormat::Json,
-                    _ => return Err(format!("Invalid format '{}'. Valid formats are: sql, json", format_str)),
-                };
+                let format_str = get_value(&mut parser, "format")?;
+                config.format = format_str.parse()?;
             }
             lexopt::Arg::Value(val) => {
                 if config.input_filename.is_some() {
@@ -112,7 +108,7 @@ fn print_help() {
     eprintln!();
     eprintln!("Options:");
     eprintln!("  -o, --output <file>      Output database file path");
-    eprintln!("  -f, --format <format>    Output format (sql, json)");
+    eprintln!("  -f, --format <format>    Output format ({})", OutputFormat::valid_formats());
     eprintln!("  -h, --help               Show this help message");
     eprintln!();
     eprintln!("By default, creates <input_filename>.db, or numbered variants if it exists");

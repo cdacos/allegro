@@ -16,6 +16,24 @@ pub enum OutputFormat {
     Json,
 }
 
+impl OutputFormat {
+    pub fn valid_formats() -> &'static str {
+        "sql, json"
+    }
+}
+
+impl std::str::FromStr for OutputFormat {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "sql" => Ok(OutputFormat::Sql),
+            "json" => Ok(OutputFormat::Json),
+            _ => Err(format!("Invalid format '{}'. Valid formats are: {}", s, Self::valid_formats())),
+        }
+    }
+}
+
 // Re-export commonly used items
 pub use crate::error::CwrParseError;
 pub use crate::parser::{ParsingContext, process_and_load_file, process_and_stream_json};
