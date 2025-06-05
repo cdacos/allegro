@@ -1,8 +1,7 @@
 //! AGR - Agreement Transaction Record
 
-use crate::error::{CwrParseError, CwrParseResult};
-use crate::util::{extract_required_validated, extract_optional_validated};
 use crate::validators::{date_yyyymmdd, one_of, yes_no, works_count};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// AGR - Agreement Transaction Record
@@ -91,56 +90,34 @@ impl AgrRecord {
             society_assigned_agreement_number: None,
         }
     }
+}
 
-    /// Parse a CWR line into an AGR record (v2 with validation and warnings)
-    pub fn from_cwr_line_v2(line: &str) -> Result<CwrParseResult<Self>, CwrParseError> {
-        let mut warnings = Vec::new();
-
-        let record_type = extract_required_validated(line, 0, 3, "record_type", Some(&one_of(&["AGR"])), &mut warnings)?;
-        let transaction_sequence_num = extract_required_validated(line, 3, 11, "transaction_sequence_num", None, &mut warnings)?;
-        let record_sequence_num = extract_required_validated(line, 11, 19, "record_sequence_num", None, &mut warnings)?;
-        let submitter_agreement_number = extract_required_validated(line, 19, 33, "submitter_agreement_number", None, &mut warnings)?;
-        let international_standard_agreement_code = extract_optional_validated(line, 33, 47, "international_standard_agreement_code", None, &mut warnings);
-        let agreement_type = extract_required_validated(line, 47, 49, "agreement_type", None, &mut warnings)?;
-        let agreement_start_date = extract_required_validated(line, 49, 57, "agreement_start_date", Some(&date_yyyymmdd), &mut warnings)?;
-        let agreement_end_date = extract_optional_validated(line, 57, 65, "agreement_end_date", Some(&date_yyyymmdd), &mut warnings);
-        let retention_end_date = extract_optional_validated(line, 65, 73, "retention_end_date", Some(&date_yyyymmdd), &mut warnings);
-        let prior_royalty_status = extract_required_validated(line, 73, 74, "prior_royalty_status", Some(&yes_no), &mut warnings)?;
-        let prior_royalty_start_date = extract_optional_validated(line, 74, 82, "prior_royalty_start_date", Some(&date_yyyymmdd), &mut warnings);
-        let post_term_collection_status = extract_required_validated(line, 82, 83, "post_term_collection_status", Some(&yes_no), &mut warnings)?;
-        let post_term_collection_end_date = extract_optional_validated(line, 83, 91, "post_term_collection_end_date", Some(&date_yyyymmdd), &mut warnings);
-        let date_of_signature_of_agreement = extract_optional_validated(line, 91, 99, "date_of_signature_of_agreement", Some(&date_yyyymmdd), &mut warnings);
-        let number_of_works = extract_required_validated(line, 99, 104, "number_of_works", Some(&works_count), &mut warnings)?;
-        let sales_manufacture_clause = extract_optional_validated(line, 104, 105, "sales_manufacture_clause", None, &mut warnings);
-        let shares_change = extract_optional_validated(line, 105, 106, "shares_change", None, &mut warnings);
-        let advance_given = extract_optional_validated(line, 106, 107, "advance_given", None, &mut warnings);
-        let society_assigned_agreement_number = extract_optional_validated(line, 107, 121, "society_assigned_agreement_number", None, &mut warnings);
-
-        let record = AgrRecord {
-            record_type,
-            transaction_sequence_num,
-            record_sequence_num,
-            submitter_agreement_number,
-            international_standard_agreement_code,
-            agreement_type,
-            agreement_start_date,
-            agreement_end_date,
-            retention_end_date,
-            prior_royalty_status,
-            prior_royalty_start_date,
-            post_term_collection_status,
-            post_term_collection_end_date,
-            date_of_signature_of_agreement,
-            number_of_works,
-            sales_manufacture_clause,
-            shares_change,
-            advance_given,
-            society_assigned_agreement_number,
-        };
-
-        Ok(CwrParseResult { record, warnings })
+// Generate the from_cwr_line_v2 method using the macro
+impl_cwr_parsing! {
+    AgrRecord {
+        record_type: (0, 3, required, one_of(&["AGR"])),
+        transaction_sequence_num: (3, 11, required),
+        record_sequence_num: (11, 19, required),
+        submitter_agreement_number: (19, 33, required),
+        international_standard_agreement_code: (33, 47, optional),
+        agreement_type: (47, 49, required),
+        agreement_start_date: (49, 57, required, date_yyyymmdd),
+        agreement_end_date: (57, 65, optional, date_yyyymmdd),
+        retention_end_date: (65, 73, optional, date_yyyymmdd),
+        prior_royalty_status: (73, 74, required, yes_no),
+        prior_royalty_start_date: (74, 82, optional, date_yyyymmdd),
+        post_term_collection_status: (82, 83, required, yes_no),
+        post_term_collection_end_date: (83, 91, optional, date_yyyymmdd),
+        date_of_signature_of_agreement: (91, 99, optional, date_yyyymmdd),
+        number_of_works: (99, 104, required, works_count),
+        sales_manufacture_clause: (104, 105, optional),
+        shares_change: (105, 106, optional),
+        advance_given: (106, 107, optional),
+        society_assigned_agreement_number: (107, 121, optional),
     }
+}
 
+impl AgrRecord {
     /// Convert this record to a CWR format line
     pub fn to_cwr_line(&self) -> String {
         let mut fields = vec![

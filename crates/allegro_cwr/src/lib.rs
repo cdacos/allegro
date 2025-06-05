@@ -5,6 +5,7 @@
 
 pub mod error;
 pub mod parser;
+pub mod parsing_macro;
 pub mod records;
 pub mod util;
 pub mod validators;
@@ -42,6 +43,7 @@ pub use crate::error::CwrParseError;
 pub use crate::parser::{ParsingContext, process_cwr_stream, process_cwr_stream_with_version, ParsedRecord};
 pub use crate::records::*;
 pub use crate::util::{format_int_with_commas, extract_version_from_filename};
+
 
 use log::info;
 
