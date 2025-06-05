@@ -65,33 +65,6 @@ pub struct AgrRecord {
     pub society_assigned_agreement_number: Option<String>,
 }
 
-impl AgrRecord {
-    /// Create a new AGR record with required fields
-    pub fn new(transaction_sequence_num: String, record_sequence_num: String, submitter_agreement_number: String, agreement_type: String, agreement_start_date: String, prior_royalty_status: String, post_term_collection_status: String, number_of_works: String) -> Self {
-        Self {
-            record_type: "AGR".to_string(),
-            transaction_sequence_num,
-            record_sequence_num,
-            submitter_agreement_number,
-            international_standard_agreement_code: None,
-            agreement_type,
-            agreement_start_date,
-            agreement_end_date: None,
-            retention_end_date: None,
-            prior_royalty_status,
-            prior_royalty_start_date: None,
-            post_term_collection_status,
-            post_term_collection_end_date: None,
-            date_of_signature_of_agreement: None,
-            number_of_works,
-            sales_manufacture_clause: None,
-            shares_change: None,
-            advance_given: None,
-            society_assigned_agreement_number: None,
-        }
-    }
-}
-
 // Generate the from_cwr_line_v2 method using the macro
 impl_cwr_parsing! {
     AgrRecord {
