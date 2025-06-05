@@ -99,7 +99,7 @@ where
     Ok((context, line_number))
 }
 
-pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<(i64, usize), CwrParseError> {
+pub fn process_and_load_into_sqlite(input_filename: &str, db_filename: &str) -> Result<(i64, usize), CwrParseError> {
     // --- Setup Database and Transaction ---
     let mut conn = Connection::open(db_filename)?;
     // Set PRAGMAs before transaction
