@@ -1,6 +1,7 @@
 //! ARI - Additional Related Information Record
 
 use crate::error::CwrParseError;
+use crate::util::{validate_record_type, extract_required_field, extract_optional_field};
 use serde::{Deserialize, Serialize};
 
 /// ARI - Additional Related Information Record
@@ -39,32 +40,33 @@ impl AriRecord {
 
     /// Parse a CWR line into an ARI record
     pub fn from_cwr_line(line: &str) -> Result<Self, CwrParseError> {
-        if line.len() < 25 {
-            return Err(CwrParseError::BadFormat("ARI line too short".to_string()));
-        }
+        let mut warnings = Vec::new();
 
-        let record_type = line.get(0..3).unwrap().to_string();
-        if record_type != "ARI" {
-            return Err(CwrParseError::BadFormat(format!("Expected ARI, found {}", record_type)));
-        }
+        let record_type = validate_record_type(line, "ARI")?;
+        let transaction_sequence_num = extract_required_field(line, 3, 11, "transaction_sequence_num", &mut warnings)?;
+        let record_sequence_num = extract_required_field(line, 11, 19, "record_sequence_num", &mut warnings)?;
+        let society_num = extract_required_field(line, 19, 22, "society_num", &mut warnings)?;
 
-        let transaction_sequence_num = line.get(3..11).unwrap().trim().to_string();
-        let record_sequence_num = line.get(11..19).unwrap().trim().to_string();
-        let society_num = line.get(19..22).unwrap().trim().to_string();
-
-        let work_num = if line.len() > 22 { line.get(22..36).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string()) } else { None };
+        let work_num = extract_optional_field(line, 22, 36, "work_num", "ARI", &mut warnings);
 
         let type_of_right = if line.len() > 36 {
-            line.get(36..39).unwrap().trim().to_string()
+            extract_required_field(line, 36, 39, "type_of_right", &mut warnings)?
         } else {
-            return Err(CwrParseError::BadFormat("ARI line missing type of right".to_string()));
+            warnings.push("ARI record missing type of right".to_string());
+            "".to_string()
         };
 
-        let subject_code = if line.len() > 39 { line.get(39..41).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string()) } else { None };
+        let subject_code = extract_optional_field(line, 39, 41, "subject_code", "ARI", &mut warnings);
+        let note = extract_optional_field(line, 41, 201, "note", "ARI", &mut warnings);
 
-        let note = if line.len() > 41 { line.get(41..201).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string()) } else { None };
+        let record = AriRecord { record_type, transaction_sequence_num, record_sequence_num, society_num, work_num, type_of_right, subject_code, note };
 
-        Ok(AriRecord { record_type, transaction_sequence_num, record_sequence_num, society_num, work_num, type_of_right, subject_code, note })
+        if !warnings.is_empty() {
+            for warning in warnings {
+                log::warn!("{}", warning);
+            }
+        }
+        Ok(record)
     }
 
     /// Convert this record to a CWR format line
@@ -102,9 +104,9 @@ mod tests {
         let original = AriRecord::new("00000001".to_string(), "00000001".to_string(), "021".to_string(), "ALL".to_string());
 
         let line = original.to_cwr_line();
-        let parsed = AriRecord::from_cwr_line(&line).unwrap();
+        let result = AriRecord::from_cwr_line(&line).unwrap();
 
-        assert_eq!(original, parsed);
+        assert_eq!(original, result);
         assert_eq!(line.len(), 201);
     }
 }
