@@ -65,6 +65,24 @@ pub fn alphanumeric(value: &str) -> Result<(), String> {
     }
 }
 
+pub fn yes_no(value: &str) -> Result<(), String> {
+    if value == "Y" || value == "N" {
+        Ok(())
+    } else {
+        Err("Value must be 'Y' or 'N'".to_string())
+    }
+}
+
+pub fn works_count(value: &str) -> Result<(), String> {
+    let num: u32 = value.parse().map_err(|_| format!("'{}' is not a valid number", value))?;
+    if num >= 1 && num <= 99999 {
+        Ok(())
+    } else {
+        Err(format!("Number of works {} must be between 1 and 99999", num))
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -117,4 +135,26 @@ mod tests {
         assert!(alphanumeric("ABC 123").is_err()); // space not allowed
         assert!(alphanumeric("").is_ok()); // empty is ok
     }
+
+    #[test]
+    fn test_yes_no() {
+        assert!(yes_no("Y").is_ok());
+        assert!(yes_no("N").is_ok());
+        assert!(yes_no("X").is_err());
+        assert!(yes_no("").is_err());
+        assert!(yes_no("y").is_err()); // lowercase not allowed
+        assert!(yes_no("YES").is_err()); // full word not allowed
+    }
+
+    #[test]
+    fn test_works_count() {
+        assert!(works_count("1").is_ok());
+        assert!(works_count("50").is_ok());
+        assert!(works_count("99999").is_ok());
+        assert!(works_count("0").is_err()); // below minimum
+        assert!(works_count("100000").is_err()); // above maximum
+        assert!(works_count("abc").is_err()); // non-numeric
+        assert!(works_count("").is_err()); // empty
+    }
+
 }

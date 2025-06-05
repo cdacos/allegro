@@ -2,7 +2,7 @@
 
 use crate::error::{CwrParseError, CwrParseResult};
 use crate::util::{extract_required_validated, extract_optional_validated};
-use crate::validators::*;
+use crate::validators::{date_yyyymmdd, one_of, yes_no, works_count};
 use serde::{Deserialize, Serialize};
 
 /// AGR - Agreement Transaction Record
@@ -96,26 +96,21 @@ impl AgrRecord {
     pub fn from_cwr_line_v2(line: &str) -> Result<CwrParseResult<Self>, CwrParseError> {
         let mut warnings = Vec::new();
 
-        let record_type_validator = record_type_must_be("AGR");
-        let yes_no_validator = one_of(&["Y", "N"]);
-        let date_validator = &date_yyyymmdd;
-        let works_validator = numeric_range(1, 99999);
-
-        let record_type = extract_required_validated(line, 0, 3, "record_type", Some(&record_type_validator), &mut warnings)?;
+        let record_type = extract_required_validated(line, 0, 3, "record_type", Some(&one_of(&["AGR"])), &mut warnings)?;
         let transaction_sequence_num = extract_required_validated(line, 3, 11, "transaction_sequence_num", None, &mut warnings)?;
         let record_sequence_num = extract_required_validated(line, 11, 19, "record_sequence_num", None, &mut warnings)?;
         let submitter_agreement_number = extract_required_validated(line, 19, 33, "submitter_agreement_number", None, &mut warnings)?;
         let international_standard_agreement_code = extract_optional_validated(line, 33, 47, "international_standard_agreement_code", None, &mut warnings);
         let agreement_type = extract_required_validated(line, 47, 49, "agreement_type", None, &mut warnings)?;
-        let agreement_start_date = extract_required_validated(line, 49, 57, "agreement_start_date", Some(date_validator), &mut warnings)?;
-        let agreement_end_date = extract_optional_validated(line, 57, 65, "agreement_end_date", Some(date_validator), &mut warnings);
-        let retention_end_date = extract_optional_validated(line, 65, 73, "retention_end_date", Some(date_validator), &mut warnings);
-        let prior_royalty_status = extract_required_validated(line, 73, 74, "prior_royalty_status", Some(&yes_no_validator), &mut warnings)?;
-        let prior_royalty_start_date = extract_optional_validated(line, 74, 82, "prior_royalty_start_date", Some(date_validator), &mut warnings);
-        let post_term_collection_status = extract_required_validated(line, 82, 83, "post_term_collection_status", Some(&yes_no_validator), &mut warnings)?;
-        let post_term_collection_end_date = extract_optional_validated(line, 83, 91, "post_term_collection_end_date", Some(date_validator), &mut warnings);
-        let date_of_signature_of_agreement = extract_optional_validated(line, 91, 99, "date_of_signature_of_agreement", Some(date_validator), &mut warnings);
-        let number_of_works = extract_required_validated(line, 99, 104, "number_of_works", Some(&works_validator), &mut warnings)?;
+        let agreement_start_date = extract_required_validated(line, 49, 57, "agreement_start_date", Some(&date_yyyymmdd), &mut warnings)?;
+        let agreement_end_date = extract_optional_validated(line, 57, 65, "agreement_end_date", Some(&date_yyyymmdd), &mut warnings);
+        let retention_end_date = extract_optional_validated(line, 65, 73, "retention_end_date", Some(&date_yyyymmdd), &mut warnings);
+        let prior_royalty_status = extract_required_validated(line, 73, 74, "prior_royalty_status", Some(&yes_no), &mut warnings)?;
+        let prior_royalty_start_date = extract_optional_validated(line, 74, 82, "prior_royalty_start_date", Some(&date_yyyymmdd), &mut warnings);
+        let post_term_collection_status = extract_required_validated(line, 82, 83, "post_term_collection_status", Some(&yes_no), &mut warnings)?;
+        let post_term_collection_end_date = extract_optional_validated(line, 83, 91, "post_term_collection_end_date", Some(&date_yyyymmdd), &mut warnings);
+        let date_of_signature_of_agreement = extract_optional_validated(line, 91, 99, "date_of_signature_of_agreement", Some(&date_yyyymmdd), &mut warnings);
+        let number_of_works = extract_required_validated(line, 99, 104, "number_of_works", Some(&works_count), &mut warnings)?;
         let sales_manufacture_clause = extract_optional_validated(line, 104, 105, "sales_manufacture_clause", None, &mut warnings);
         let shares_change = extract_optional_validated(line, 105, 106, "shares_change", None, &mut warnings);
         let advance_given = extract_optional_validated(line, 106, 107, "advance_given", None, &mut warnings);
