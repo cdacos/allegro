@@ -571,7 +571,7 @@ mod tests {
 
     #[test]
     fn test_cwr_record_type_mapping() {
-        use crate::domain_types::{Date, RecordType};
+        use crate::domain_types::Date;
         use crate::records::HdrRecord;
         use chrono::NaiveDate;
 
