@@ -36,7 +36,9 @@ macro_rules! impl_cwr_parsing {
 
             /// Parse a CWR line into a record (v2 with validation and warnings)
             pub fn from_cwr_line_v2(line: &str) -> Result<$crate::error::CwrParseResult<Self>, $crate::error::CwrParseError> {
-                use $crate::util::{extract_required_validated, extract_optional_validated};
+                use $crate::util::extract_required_validated;
+                #[allow(unused_imports)]
+                use $crate::util::extract_optional_validated;
                 let mut warnings = Vec::new();
 
                 $(
