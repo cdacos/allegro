@@ -1,19 +1,28 @@
 # Allegro - CWR File Parser and Database Tool
 
+**⚠️ Work in Progress - Beta Software ⚠️**
+
 A Rust application for parsing and processing CWR (Common Works Registration) files. CWR is the standard file format used by the music industry to exchange musical work data between publishers, performance rights organizations, and other entities.
 
-This application validates CWR files according to the CWR 2.2 specification (with support for 2.0 and 2.1) and stores the parsed data in SQLite databases for querying and analysis. It handles all standard CWR record types including works registrations, publisher information, writer details, territory data, etc.
+This is currently a **beta/WIP project** that provides basic CWR file parsing for versions 2.0, 2.1, and 2.2. It handles all 33+ standard CWR record types and includes field parsing with a warning system, but **lacks comprehensive business rule validation and is not ready for production use**.
 
-Note: This is not yet a complete solution. For example, there is still outstanding validation logic.
 
-## Features
+## Current Features
 
-- **CWR 2.2 Support**: Parses all standard record types according to the CWR specification
-- **Validation**: Validates field formats, mandatory fields, and data integrity
-- **Database Storage**: Stores parsed data in structured SQLite tables for easy querying
-- **Error Reporting**: Detailed validation error reporting with line numbers and descriptions
-- **Multiple Output Formats**: Supports database storage, JSON streaming, and SQL output
-- **Performance**: Efficiently processes large CWR files with thousands of records
+- **Basic CWR Parsing**: Parses all 33+ standard record types for CWR versions 2.0, 2.1, and 2.2
+- **Field Extraction**: Extracts individual fields according to CWR specification positions
+- **Multiple Output Formats**: SQLite database storage and structured JSON output
+- **Type Safety**: Domain types and procedural macros for consistent parsing
+- **Warning System**: Basic field-level warnings for malformed data
+- **Auto Record Type Detection**: Validates that record types match their content
+- **Efficient Processing**: Streaming parser with batch database operations handles large files well
+
+## Missing/TODO
+
+- **Business Rule Validation**: Comprehensive cross-field and inter-record validation
+- **Complete Field Validation**: Many field constraints and validations not yet implemented  
+- **Error Recovery**: Limited handling of severely malformed files
+- **Documentation**: API documentation and validation rule documentation incomplete
 
 ## Usage
 
@@ -21,15 +30,20 @@ Note: This is not yet a complete solution. For example, there is still outstandi
 # Build the project
 cargo build --release
 
-# Basic usage (auto-numbered if DB exists)
+# Parse to SQLite database (default format)
 target/release/allegro input_file.cwr
+
+# Output JSON to stdout
+target/release/allegro --format json input_file.cwr
 
 # Specify output database file (overwrites if exists)
 target/release/allegro -o output.db input_file.cwr
-target/release/allegro --output /path/to/database.db input_file.cwr
 
-# View logging
-RUST_LOG=info target/release/allegro -o output.db input_file.cwr
+# Force specific CWR version
+target/release/allegro --version 2.1 input_file.cwr
+
+# View logging output
+RUST_LOG=info target/release/allegro input_file.cwr
 
 # Show help
 target/release/allegro --help
@@ -50,158 +64,33 @@ cargo test
 
 ## Architecture
 
-- `allegro_cwr_sqlite` - SQLite database operations for CWR data
-- `allegro_cwr` - CWR file parsing library  
-- `allegro` - CLI binary for processing CWR files
+The project is organized into focused crates:
 
-## Code Generation with `impl_cwr_parsing!` Macro
+- **`allegro`** - CLI binary for processing CWR files
+- **`allegro_cwr`** - Core CWR parsing library with domain types and validation
+- **`allegro_cwr_derive`** - Procedural macros for automatic record parsing generation
+- **`allegro_cwr_sqlite`** - SQLite database operations and schema management
+- **`allegro_cwr_json`** - JSON output formatting with structured context
 
-This project uses a brave declarative macro to automatically generate CWR record parsing and formatting code. Instead of writing hundreds of lines of repetitive boilerplate for each record type, we define field specifications and let the macro generate all necessary methods.
+## Implementation
 
-### Example Usage
+The parsing system uses modern Rust procedural macros with the `#[derive(CwrRecord)]` attribute to automatically generate parsing logic for each record type. Record definitions are clean and declarative:
 
 ```rust
-use crate::impl_cwr_parsing;
-use crate::validators::{date_yyyymmdd, one_of, yes_no, works_count};
-
-impl_cwr_parsing! {
-    AgrRecord {
-        record_type: (0, 3, required, one_of(&["AGR"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        submitter_agreement_number: (19, 33, required),
-        international_standard_agreement_code: (33, 47, optional),
-        agreement_type: (47, 49, required),
-        agreement_start_date: (49, 57, required, date_yyyymmdd),
-        agreement_end_date: (57, 65, optional, date_yyyymmdd),
-        prior_royalty_status: (73, 74, required, yes_no),
-        number_of_works: (99, 104, required, works_count),
-        // ... more fields
-    }
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "AGR00000001000000011234567890123...")]
+pub struct AgrRecord {
+    #[cwr(title = "Always 'AGR'", start = 0, len = 3)]
+    pub record_type: String,
+    
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
+    pub transaction_sequence_num: String,
+    
+    #[cwr(title = "Agreement start date YYYYMMDD", start = 49, len = 8)]
+    pub agreement_start_date: Date,
+    
+    // ... other fields
 }
 ```
 
-### Generated Methods
-
-The macro automatically generates three essential methods for each record type:
-
-1. **`new()`** - Constructor with appropriate parameter types
-   ```rust
-   pub fn new(
-       record_type: String,
-       transaction_sequence_num: String, 
-       // ... required fields: String
-       optional_field: Option<String>,
-       // ... optional fields: Option<String>
-   ) -> Self
-   ```
-
-2. **`from_cwr_line()`** - Parser with validation and warnings
-   ```rust
-   pub fn from_cwr_line(line: &str) -> Result<CwrParseResult<Self>, CwrParseError>
-   ```
-
-3. **`to_cwr_line()`** - Formatter back to CWR format
-   ```rust
-   pub fn to_cwr_line(&self) -> String
-   ```
-
-### Field Specification Format
-
-Each field is defined as: `field_name: (start_pos, end_pos, type, optional_validator)`
-
-- **`start_pos, end_pos`**: Character positions in the CWR line (0-indexed)
-- **`type`**: Either `required` or `optional`
-- **`validator`**: Optional validation function (e.g., `date_yyyymmdd`, `one_of(&["Y", "N"])`)
-
-### Benefits
-
-- **Code Reduction**: 80% less boilerplate code (94 lines → 19 lines for AGR record)
-- **DRY Principle**: Single source of truth for field definitions
-- **Type Safety**: Compile-time verification of field mappings
-- **Consistency**: Identical parsing/formatting behavior across all record types
-- **Validation**: Built-in field validation and warning collection
-- **Maintainability**: Changes to field definitions automatically update all methods
-
-### Debugging Generated Code
-
-To view the exact code generated by the macro (useful for debugging), use:
-
-```bash
-# View macro expansion for a specific module
-cargo expand --package allegro_cwr records::agr
-
-# View macro expansion for the entire parsing_macro module  
-cargo expand --package allegro_cwr parsing_macro
-
-# Install cargo-expand if needed
-cargo install cargo-expand
-```
-
-The generated code shows exactly what methods are created, their signatures, and their implementations. This is invaluable when debugging parsing issues or understanding how the macro transforms your field specifications into working code.
-
-**Example**: Running `cargo expand --package allegro_cwr records::agr` shows the macro generates approximately 100+ lines of code from just 19 lines of field specifications, including all the parsing logic, validation calls, error handling, and formatting code.
-
-Sample of generated code:
-```rust
-impl AgrRecord {
-    /// Create a new record with required fields  
-    pub fn new(
-        record_type: String,
-        transaction_sequence_num: String,
-        // ... all fields with appropriate types
-        society_assigned_agreement_number: Option<String>,
-    ) -> Self { /* constructor implementation */ }
-
-    /// Parse a CWR line into a record (v2 with validation and warnings)
-    pub fn from_cwr_line(line: &str) -> Result<CwrParseResult<Self>, CwrParseError> {
-        // Generated parsing logic with validation calls
-        let record_type = extract_required_validated(line, 0, 3, "record_type", Some(&one_of(&["AGR"])), &mut warnings)?;
-        // ... parsing for all 19 fields with proper validation
-    }
-
-    /// Convert this record to a CWR format line
-    pub fn to_cwr_line(&self) -> String {
-        // Generated formatting logic
-        // Automatically handles field positioning and padding
-    }
-}
-```
-
-### Validator Functions
-
-The macro integrates with a comprehensive validation system (`validators.rs`) including:
-
-- `date_yyyymmdd` - Validates YYYYMMDD date format
-- `one_of(&["A", "B"])` - Validates value is in allowed list  
-- `yes_no` - Validates Y/N values
-- `numeric_range(min, max)` - Validates numeric ranges
-- `works_count` - Validates work count (1-99999)
-- `alphanumeric` - Validates alphanumeric content
-
-### Testing with `impl_cwr_parsing_test_roundtrip!`
-
-A companion macro generates comprehensive round-trip tests to ensure parsing and formatting work correctly:
-
-```rust
-// Generates a test that parses the line, converts back to CWR format, 
-// and verifies the result matches the original
-impl_cwr_parsing_test_roundtrip!(AgrRecord, "AGR00000001000000011234567890123...");
-```
-
-The generated test:
-1. Parses the provided CWR line using `from_cwr_line()`
-2. Converts the record back to CWR format using `to_cwr_line()`
-3. Verifies the regenerated line exactly matches the original
-4. Parses the regenerated line again to ensure consistency
-5. Verifies both parsed records are identical
-
-### Migration Path
-
-This macro enables easy migration of all 30+ CWR record types from manual implementations to generated code:
-
-1. Define field specifications using the macro syntax
-2. Remove manual `new()`, `from_cwr_line()`, and `to_cwr_line()` implementations  
-3. Add round-trip test with `impl_cwr_parsing_test_roundtrip!`
-4. The macro generates equivalent functionality with validation and warnings
-5. All existing tests continue to pass without modification
+The derive macro automatically generates `from_cwr_line()` parsing methods with field validation and warning collection.
