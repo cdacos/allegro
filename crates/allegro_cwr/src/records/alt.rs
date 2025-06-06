@@ -23,7 +23,7 @@ pub struct AltRecord {
     #[cwr(title = "Title type", start = 79, len = 2)]
     pub title_type: String,
 
-    #[cwr(title = "Language code (2 chars, conditional)", start = 81, len = 2)]
+    #[cwr(title = "Language code (conditional)", start = 81, len = 2)]
     pub language_code: Option<String>,
 
 }

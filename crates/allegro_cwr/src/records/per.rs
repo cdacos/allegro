@@ -20,13 +20,13 @@ pub struct PerRecord {
     #[cwr(title = "Performing artist last name", start = 19, len = 45)]
     pub performing_artist_last_name: String,
 
-    #[cwr(title = "Performing artist first name (30 chars, optional)", start = 64, len = 30)]
+    #[cwr(title = "Performing artist first name (optional)", start = 64, len = 30)]
     pub performing_artist_first_name: Option<String>,
 
-    #[cwr(title = "Performing artist IPI name number (11 chars, optional)", start = 94, len = 11)]
+    #[cwr(title = "Performing artist IPI name number (optional)", start = 94, len = 11)]
     pub performing_artist_ipi_name_num: Option<String>,
 
-    #[cwr(title = "Performing artist IPI base number (13 chars, optional)", start = 105, len = 13)]
+    #[cwr(title = "Performing artist IPI base number (optional)", start = 105, len = 13)]
     pub performing_artist_ipi_base_number: Option<String>,
 
 }

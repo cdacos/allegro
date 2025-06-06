@@ -20,10 +20,10 @@ pub struct GrtRecord {
     #[cwr(title = "Record count", start = 16, len = 8)]
     pub record_count: String,
 
-    #[cwr(title = "Currency indicator (3 chars, conditional)", start = 24, len = 3)]
+    #[cwr(title = "Currency indicator (conditional)", start = 24, len = 3)]
     pub currency_indicator: Option<String>,
 
-    #[cwr(title = "Total monetary value (10 chars, optional)", start = 27, len = 10)]
+    #[cwr(title = "Total monetary value (optional)", start = 27, len = 10)]
     pub total_monetary_value: Option<String>,
 
 }

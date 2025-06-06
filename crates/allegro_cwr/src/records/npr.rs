@@ -16,25 +16,25 @@ pub struct NprRecord {
     #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    #[cwr(title = "Performing artist name (160 chars, conditional)", start = 19, len = 160)]
+    #[cwr(title = "Performing artist name (conditional)", start = 19, len = 160)]
     pub performing_artist_name: Option<String>,
 
-    #[cwr(title = "Performing artist first name (160 chars, optional)", start = 179, len = 160)]
+    #[cwr(title = "Performing artist first name (optional)", start = 179, len = 160)]
     pub performing_artist_first_name: Option<String>,
 
-    #[cwr(title = "Performing artist IPI name number (11 chars, optional)", start = 339, len = 11)]
+    #[cwr(title = "Performing artist IPI name number (optional)", start = 339, len = 11)]
     pub performing_artist_ipi_name_num: Option<String>,
 
-    #[cwr(title = "Performing artist IPI base number (13 chars, optional)", start = 350, len = 13)]
+    #[cwr(title = "Performing artist IPI base number (optional)", start = 350, len = 13)]
     pub performing_artist_ipi_base_number: Option<String>,
 
-    #[cwr(title = "Language code (2 chars, optional)", start = 363, len = 2)]
+    #[cwr(title = "Language code (optional)", start = 363, len = 2)]
     pub language_code: Option<String>,
 
-    #[cwr(title = "Performance language (2 chars, conditional, v2.1+)", start = 365, len = 2)]
+    #[cwr(title = "Performance language (conditional, v2.1+)", start = 365, len = 2)]
     pub performance_language: Option<String>,
 
-    #[cwr(title = "Performance dialect (3 chars, conditional, v2.1+)", start = 367, len = 3)]
+    #[cwr(title = "Performance dialect (conditional, v2.1+)", start = 367, len = 3)]
     pub performance_dialect: Option<String>,
 
 }

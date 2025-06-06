@@ -22,7 +22,7 @@ pub struct NatRecord {
     #[cwr(title = "Title type", start = 659, len = 2)]
     pub title_type: String,
 
-    #[cwr(title = "Language code (2 chars, optional)", start = 661, len = 2)]
+    #[cwr(title = "Language code (optional)", start = 661, len = 2)]
     pub language_code: Option<String>,
 
 }

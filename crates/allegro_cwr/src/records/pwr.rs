@@ -17,22 +17,22 @@ pub struct PwrRecord {
     #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    #[cwr(title = "Publisher IP number (9 chars, conditional)", start = 19, len = 9)]
+    #[cwr(title = "Publisher IP number (conditional)", start = 19, len = 9)]
     pub publisher_ip_num: Option<String>,
 
-    #[cwr(title = "Publisher name (45 chars, conditional)", start = 28, len = 45)]
+    #[cwr(title = "Publisher name (conditional)", start = 28, len = 45)]
     pub publisher_name: Option<String>,
 
-    #[cwr(title = "Submitter agreement number (14 chars, optional)", start = 73, len = 14)]
+    #[cwr(title = "Submitter agreement number (optional)", start = 73, len = 14)]
     pub submitter_agreement_number: Option<String>,
 
-    #[cwr(title = "Society-assigned agreement number (14 chars, optional)", start = 87, len = 14)]
+    #[cwr(title = "Society-assigned agreement number (optional)", start = 87, len = 14)]
     pub society_assigned_agreement_number: Option<String>,
 
-    #[cwr(title = "Writer IP number (9 chars, conditional, v2.1+)", start = 101, len = 9)]
+    #[cwr(title = "Writer IP number (conditional, v2.1+)", start = 101, len = 9)]
     pub writer_ip_num: Option<String>,
 
-    #[cwr(title = "Publisher sequence number (2 chars, v2.2+)", start = 110, len = 2)]
+    #[cwr(title = "Publisher sequence number (v2.2+)", start = 110, len = 2)]
     pub publisher_sequence_num: Option<String>,
 
 }

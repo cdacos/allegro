@@ -23,13 +23,13 @@ pub struct SptRecord {
     #[cwr(title = "Constant - spaces", start = 28, len = 6)]
     pub constant: String,
 
-    #[cwr(title = "PR collection share (5 chars, conditional)", start = 34, len = 5)]
+    #[cwr(title = "PR collection share (conditional)", start = 34, len = 5)]
     pub pr_collection_share: Option<String>,
 
-    #[cwr(title = "MR collection share (5 chars, conditional)", start = 39, len = 5)]
+    #[cwr(title = "MR collection share (conditional)", start = 39, len = 5)]
     pub mr_collection_share: Option<String>,
 
-    #[cwr(title = "SR collection share (5 chars, conditional)", start = 44, len = 5)]
+    #[cwr(title = "SR collection share (conditional)", start = 44, len = 5)]
     pub sr_collection_share: Option<String>,
 
     #[cwr(title = "Inclusion/Exclusion indicator (1 char)", start = 49, len = 1)]
@@ -41,7 +41,7 @@ pub struct SptRecord {
     #[cwr(title = "Shares change (1 char, optional)", start = 54, len = 1)]
     pub shares_change: Option<String>,
 
-    #[cwr(title = "Sequence number (3 chars, v2.1+)", start = 55, len = 3)]
+    #[cwr(title = "Sequence number (v2.1+)", start = 55, len = 3)]
     pub sequence_num: Option<String>,
 
 }

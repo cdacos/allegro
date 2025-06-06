@@ -17,13 +17,13 @@ pub struct InsRecord {
     #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    #[cwr(title = "Number of voices (3 chars, optional)", start = 19, len = 3)]
+    #[cwr(title = "Number of voices (optional)", start = 19, len = 3)]
     pub number_of_voices: Option<String>,
 
-    #[cwr(title = "Standard instrumentation type (3 chars, conditional)", start = 22, len = 3)]
+    #[cwr(title = "Standard instrumentation type (conditional)", start = 22, len = 3)]
     pub standard_instrumentation_type: Option<String>,
 
-    #[cwr(title = "Instrumentation description (50 chars, conditional)", start = 25, len = 50)]
+    #[cwr(title = "Instrumentation description (conditional)", start = 25, len = 50)]
     pub instrumentation_description: Option<String>,
 
 }

@@ -16,7 +16,7 @@ pub struct NpaRecord {
     #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    #[cwr(title = "Interested party number (9 chars, conditional)", start = 19, len = 9)]
+    #[cwr(title = "Interested party number (conditional)", start = 19, len = 9)]
     pub interested_party_num: Option<String>,
 
     #[cwr(title = "Interested party name", start = 28, len = 160)]
@@ -25,7 +25,7 @@ pub struct NpaRecord {
     #[cwr(title = "Interested party writer first name", start = 188, len = 160)]
     pub interested_party_writer_first_name: String,
 
-    #[cwr(title = "Language code (2 chars, optional)", start = 348, len = 2)]
+    #[cwr(title = "Language code (optional)", start = 348, len = 2)]
     pub language_code: Option<String>,
 
 }

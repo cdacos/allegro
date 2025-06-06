@@ -6,7 +6,6 @@
 pub mod domain_types;
 pub mod error;
 pub mod parser;
-pub mod parsing_macro;
 pub mod records;
 pub mod util;
 pub mod validators;

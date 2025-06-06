@@ -17,16 +17,16 @@ pub struct NwnRecord {
     #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    #[cwr(title = "Interested party number (9 chars, conditional)", start = 19, len = 9)]
+    #[cwr(title = "Interested party number (conditional)", start = 19, len = 9)]
     pub interested_party_num: Option<String>,
 
     #[cwr(title = "Writer last name", start = 28, len = 160)]
     pub writer_last_name: String,
 
-    #[cwr(title = "Writer first name (160 chars, optional)", start = 188, len = 160)]
+    #[cwr(title = "Writer first name (optional)", start = 188, len = 160)]
     pub writer_first_name: Option<String>,
 
-    #[cwr(title = "Language code (2 chars, optional)", start = 348, len = 2)]
+    #[cwr(title = "Language code (optional)", start = 348, len = 2)]
     pub language_code: Option<String>,
 
 }

@@ -32,19 +32,19 @@ pub struct HdrRecord {
     #[cwr(title = "Transmission date YYYYMMDD", start = 78, len = 8)]
     pub transmission_date: Date,
 
-    #[cwr(title = "Character set (15 chars, v2.1+)", start = 86, len = 15)]
+    #[cwr(title = "Character set (v2.1+)", start = 86, len = 15)]
     pub character_set: Option<String>,
 
-    #[cwr(title = "Version (3 chars, v2.2+)", start = 101, len = 3)]
+    #[cwr(title = "Version (v2.2+)", start = 101, len = 3)]
     pub version: Option<String>,
 
-    #[cwr(title = "Revision (3 chars, v2.2+)", start = 104, len = 3)]
+    #[cwr(title = "Revision (v2.2+)", start = 104, len = 3)]
     pub revision: Option<String>,
 
-    #[cwr(title = "Software package (30 chars, v2.2+)", start = 107, len = 30)]
+    #[cwr(title = "Software package (v2.2+)", start = 107, len = 30)]
     pub software_package: Option<String>,
 
-    #[cwr(title = "Software package version (30 chars, v2.2+)", start = 137, len = 30)]
+    #[cwr(title = "Software package version (v2.2+)", start = 137, len = 30)]
     pub software_package_version: Option<String>,
 
 }

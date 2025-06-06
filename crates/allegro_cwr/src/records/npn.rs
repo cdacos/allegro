@@ -25,7 +25,7 @@ pub struct NpnRecord {
     #[cwr(title = "Publisher name", start = 30, len = 480)]
     pub publisher_name: String,
 
-    #[cwr(title = "Language code (2 chars, optional)", start = 510, len = 2)]
+    #[cwr(title = "Language code (optional)", start = 510, len = 2)]
     pub language_code: Option<String>,
 
 }

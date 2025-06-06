@@ -19,7 +19,7 @@ pub struct NetRecord {
     #[cwr(title = "Title", start = 19, len = 640)]
     pub title: String,
 
-    #[cwr(title = "Language code (2 chars, optional)", start = 659, len = 2)]
+    #[cwr(title = "Language code (optional)", start = 659, len = 2)]
     pub language_code: Option<String>,
 
 }

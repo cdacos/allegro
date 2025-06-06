@@ -22,7 +22,7 @@ pub struct NowRecord {
     #[cwr(title = "Writer first name", start = 179, len = 160)]
     pub writer_first_name: String,
 
-    #[cwr(title = "Language code (2 chars, optional)", start = 339, len = 2)]
+    #[cwr(title = "Language code (optional)", start = 339, len = 2)]
     pub language_code: Option<String>,
 
     #[cwr(title = "Writer position (1 char, optional)", start = 341, len = 1)]

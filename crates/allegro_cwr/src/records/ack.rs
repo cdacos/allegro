@@ -32,13 +32,13 @@ pub struct AckRecord {
     #[cwr(title = "Original transaction type", start = 46, len = 3)]
     pub original_transaction_type: String,
 
-    #[cwr(title = "Creation title (60 chars, conditional)", start = 49, len = 60)]
+    #[cwr(title = "Creation title (conditional)", start = 49, len = 60)]
     pub creation_title: Option<String>,
 
-    #[cwr(title = "Submitter creation number (20 chars, conditional)", start = 109, len = 20)]
+    #[cwr(title = "Submitter creation number (conditional)", start = 109, len = 20)]
     pub submitter_creation_num: Option<String>,
 
-    #[cwr(title = "Recipient creation number (20 chars, conditional)", start = 129, len = 20)]
+    #[cwr(title = "Recipient creation number (conditional)", start = 129, len = 20)]
     pub recipient_creation_num: Option<String>,
 
     #[cwr(title = "Processing date YYYYMMDD", start = 149, len = 8)]

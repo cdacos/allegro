@@ -20,16 +20,16 @@ pub struct AriRecord {
     #[cwr(title = "Society number", start = 19, len = 3)]
     pub society_num: String,
 
-    #[cwr(title = "Work number (14 chars, conditional)", start = 22, len = 14)]
+    #[cwr(title = "Work number (conditional)", start = 22, len = 14)]
     pub work_num: Option<String>,
 
     #[cwr(title = "Type of right", start = 36, len = 3)]
     pub type_of_right: String,
 
-    #[cwr(title = "Subject code (2 chars, conditional)", start = 39, len = 2)]
+    #[cwr(title = "Subject code (conditional)", start = 39, len = 2)]
     pub subject_code: Option<String>,
 
-    #[cwr(title = "Note (160 chars, conditional)", start = 41, len = 160)]
+    #[cwr(title = "Note (conditional)", start = 41, len = 160)]
     pub note: Option<String>,
 
 }

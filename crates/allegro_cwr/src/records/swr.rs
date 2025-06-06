@@ -17,43 +17,43 @@ pub struct SwrRecord {
     #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    #[cwr(title = "Interested party number (9 chars, conditional)", start = 19, len = 9)]
+    #[cwr(title = "Interested party number (conditional)", start = 19, len = 9)]
     pub interested_party_num: Option<String>,
 
-    #[cwr(title = "Writer last name (45 chars, conditional)", start = 28, len = 45)]
+    #[cwr(title = "Writer last name (conditional)", start = 28, len = 45)]
     pub writer_last_name: Option<String>,
 
-    #[cwr(title = "Writer first name (30 chars, optional)", start = 73, len = 30)]
+    #[cwr(title = "Writer first name (optional)", start = 73, len = 30)]
     pub writer_first_name: Option<String>,
 
     #[cwr(title = "Writer unknown indicator (1 char, conditional)", start = 103, len = 1)]
     pub writer_unknown_indicator: Option<String>,
 
-    #[cwr(title = "Writer designation code (2 chars, conditional)", start = 104, len = 2)]
+    #[cwr(title = "Writer designation code (conditional)", start = 104, len = 2)]
     pub writer_designation_code: Option<String>,
 
-    #[cwr(title = "Tax ID number (9 chars, optional)", start = 106, len = 9)]
+    #[cwr(title = "Tax ID number (optional)", start = 106, len = 9)]
     pub tax_id_num: Option<String>,
 
-    #[cwr(title = "Writer IPI name number (11 chars, optional)", start = 115, len = 11)]
+    #[cwr(title = "Writer IPI name number (optional)", start = 115, len = 11)]
     pub writer_ipi_name_num: Option<String>,
 
-    #[cwr(title = "PR affiliation society number (3 chars, optional)", start = 126, len = 3)]
+    #[cwr(title = "PR affiliation society number (optional)", start = 126, len = 3)]
     pub pr_affiliation_society_num: Option<String>,
 
-    #[cwr(title = "PR ownership share (5 chars, optional)", start = 129, len = 5)]
+    #[cwr(title = "PR ownership share (optional)", start = 129, len = 5)]
     pub pr_ownership_share: Option<String>,
 
-    #[cwr(title = "MR society (3 chars, optional)", start = 134, len = 3)]
+    #[cwr(title = "MR society (optional)", start = 134, len = 3)]
     pub mr_society: Option<String>,
 
-    #[cwr(title = "MR ownership share (5 chars, optional)", start = 137, len = 5)]
+    #[cwr(title = "MR ownership share (optional)", start = 137, len = 5)]
     pub mr_ownership_share: Option<String>,
 
-    #[cwr(title = "SR society (3 chars, optional)", start = 142, len = 3)]
+    #[cwr(title = "SR society (optional)", start = 142, len = 3)]
     pub sr_society: Option<String>,
 
-    #[cwr(title = "SR ownership share (5 chars, optional)", start = 145, len = 5)]
+    #[cwr(title = "SR ownership share (optional)", start = 145, len = 5)]
     pub sr_ownership_share: Option<String>,
 
     #[cwr(title = "Reversionary indicator (1 char, optional)", start = 150, len = 1)]
@@ -68,10 +68,10 @@ pub struct SwrRecord {
     #[cwr(title = "Filler (1 char, optional)", start = 153, len = 1)]
     pub filler: Option<String>,
 
-    #[cwr(title = "Writer IPI base number (13 chars, optional)", start = 154, len = 13)]
+    #[cwr(title = "Writer IPI base number (optional)", start = 154, len = 13)]
     pub writer_ipi_base_number: Option<String>,
 
-    #[cwr(title = "Personal number (12 chars, optional)", start = 167, len = 12)]
+    #[cwr(title = "Personal number (optional)", start = 167, len = 12)]
     pub personal_number: Option<String>,
 
     #[cwr(title = "USA license indicator (1 char, optional, v2.1+)", start = 179, len = 1)]

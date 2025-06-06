@@ -20,43 +20,43 @@ pub struct SpuRecord {
     #[cwr(title = "Publisher sequence number", start = 19, len = 2)]
     pub publisher_sequence_num: String,
 
-    #[cwr(title = "Interested party number (9 chars, conditional)", start = 21, len = 9)]
+    #[cwr(title = "Interested party number (conditional)", start = 21, len = 9)]
     pub interested_party_num: Option<String>,
 
-    #[cwr(title = "Publisher name (45 chars, conditional)", start = 30, len = 45)]
+    #[cwr(title = "Publisher name (conditional)", start = 30, len = 45)]
     pub publisher_name: Option<String>,
 
     #[cwr(title = "Publisher unknown indicator (1 char, conditional)", start = 75, len = 1)]
     pub publisher_unknown_indicator: Option<String>,
 
-    #[cwr(title = "Publisher type (2 chars, conditional)", start = 76, len = 2)]
+    #[cwr(title = "Publisher type (conditional)", start = 76, len = 2)]
     pub publisher_type: Option<String>,
 
-    #[cwr(title = "Tax ID number (9 chars, optional)", start = 78, len = 9)]
+    #[cwr(title = "Tax ID number (optional)", start = 78, len = 9)]
     pub tax_id_num: Option<String>,
 
-    #[cwr(title = "Publisher IPI name number (11 chars, conditional)", start = 87, len = 11)]
+    #[cwr(title = "Publisher IPI name number (conditional)", start = 87, len = 11)]
     pub publisher_ipi_name_num: Option<String>,
 
-    #[cwr(title = "Submitter agreement number (14 chars, optional)", start = 98, len = 14)]
+    #[cwr(title = "Submitter agreement number (optional)", start = 98, len = 14)]
     pub submitter_agreement_number: Option<String>,
 
-    #[cwr(title = "PR affiliation society number (3 chars, conditional)", start = 112, len = 3)]
+    #[cwr(title = "PR affiliation society number (conditional)", start = 112, len = 3)]
     pub pr_affiliation_society_num: Option<String>,
 
-    #[cwr(title = "PR ownership share (5 chars, conditional)", start = 115, len = 5)]
+    #[cwr(title = "PR ownership share (conditional)", start = 115, len = 5)]
     pub pr_ownership_share: Option<String>,
 
-    #[cwr(title = "MR society (3 chars, conditional)", start = 120, len = 3)]
+    #[cwr(title = "MR society (conditional)", start = 120, len = 3)]
     pub mr_society: Option<String>,
 
-    #[cwr(title = "MR ownership share (5 chars, conditional)", start = 123, len = 5)]
+    #[cwr(title = "MR ownership share (conditional)", start = 123, len = 5)]
     pub mr_ownership_share: Option<String>,
 
-    #[cwr(title = "SR society (3 chars, conditional)", start = 128, len = 3)]
+    #[cwr(title = "SR society (conditional)", start = 128, len = 3)]
     pub sr_society: Option<String>,
 
-    #[cwr(title = "SR ownership share (5 chars, conditional)", start = 131, len = 5)]
+    #[cwr(title = "SR ownership share (conditional)", start = 131, len = 5)]
     pub sr_ownership_share: Option<String>,
 
     #[cwr(title = "Special agreements indicator (1 char, optional)", start = 136, len = 1)]
@@ -68,16 +68,16 @@ pub struct SpuRecord {
     #[cwr(title = "Filler (1 char, optional)", start = 138, len = 1)]
     pub filler: Option<String>,
 
-    #[cwr(title = "Publisher IPI base number (13 chars, optional)", start = 139, len = 13)]
+    #[cwr(title = "Publisher IPI base number (optional)", start = 139, len = 13)]
     pub publisher_ipi_base_number: Option<String>,
 
-    #[cwr(title = "International standard agreement code (14 chars, optional)", start = 152, len = 14)]
+    #[cwr(title = "International standard agreement code (optional)", start = 152, len = 14)]
     pub international_standard_agreement_code: Option<String>,
 
-    #[cwr(title = "Society-assigned agreement number (14 chars, optional)", start = 166, len = 14)]
+    #[cwr(title = "Society-assigned agreement number (optional)", start = 166, len = 14)]
     pub society_assigned_agreement_number: Option<String>,
 
-    #[cwr(title = "Agreement type (2 chars, optional, v2.1+)", start = 180, len = 2)]
+    #[cwr(title = "Agreement type (optional, v2.1+)", start = 180, len = 2)]
     pub agreement_type: Option<String>,
 
     #[cwr(title = "USA license indicator (1 char, optional, v2.1+)", start = 182, len = 1)]

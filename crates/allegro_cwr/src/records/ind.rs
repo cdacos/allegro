@@ -20,7 +20,7 @@ pub struct IndRecord {
     #[cwr(title = "Instrument code", start = 19, len = 3)]
     pub instrument_code: String,
 
-    #[cwr(title = "Number of players (3 chars, optional)", start = 22, len = 3)]
+    #[cwr(title = "Number of players (optional)", start = 22, len = 3)]
     pub number_of_players: Option<String>,
 
 }
