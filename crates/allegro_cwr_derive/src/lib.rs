@@ -138,14 +138,6 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
                 })
             }
 
-            /// Convert record back to CWR line format
-            pub fn to_cwr_line(&self) -> String {
-                let mut line = String::new();
-
-                // For now, we'll need to implement proper serialization
-                // This is a placeholder that won't compile yet
-                line
-            }
         }
 
         #_test_module

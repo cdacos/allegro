@@ -9,8 +9,6 @@ pub mod parser;
 pub mod records;
 pub mod util;
 
-#[cfg(test)]
-pub mod test_utils;
 
 #[derive(Debug, Clone)]
 pub enum OutputFormat {
