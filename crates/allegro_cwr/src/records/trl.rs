@@ -39,4 +39,4 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(TrlRecord, "TRL000010000001400000367");
+impl_cwr_parsing_test_roundtrip!(TrlRecord, ["TRL000010000001400000367"]);

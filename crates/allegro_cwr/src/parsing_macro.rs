@@ -121,45 +121,53 @@ macro_rules! impl_cwr_parsing {
 
 }
 
-/// Macro to generate a round-trip test for CWR record parsing
+/// Macro to generate round-trip tests for CWR record parsing
 /// 
 /// Usage:
 /// ```ignore
 /// use allegro_cwr::impl_cwr_parsing_test_roundtrip;
 ///
-/// impl_cwr_parsing_test_roundtrip!(AgrRecord, "AGR00000001000000011234567890123...");
+/// impl_cwr_parsing_test_roundtrip!(AgrRecord, [
+///     "AGR00000001000000011234567890123...",
+///     "AGR00000002000000021234567890456..."
+/// ]);
 /// ```
 #[macro_export]
 macro_rules! impl_cwr_parsing_test_roundtrip {
-    ($struct_name:ident, $test_line:expr) => {
+    ($struct_name:ident, [$($test_line:expr),+ $(,)?]) => {
         #[cfg(test)]
         mod roundtrip_tests {
             use super::*;
 
             #[test]
             fn test_roundtrip_parsing() {
-                let original_line = $test_line;
+                let test_lines = [$($test_line),+];
                 
-                // Parse the line
-                let parse_result = $struct_name::from_cwr_line(original_line).unwrap();
-                let record = parse_result.record;
-                
-                // Convert back to CWR line
-                let regenerated_line = record.to_cwr_line();
-                
-                // Should be able to round-trip the data
-                assert_eq!(original_line, regenerated_line, 
-                    "Round-trip failed: original line and regenerated line don't match");
-                
-                // Parse the regenerated line to ensure it's still valid
-                let reparse_result = $struct_name::from_cwr_line(&regenerated_line).unwrap();
-                
-                // The records should be identical
-                assert_eq!(record, reparse_result.record, 
-                    "Records differ after round-trip parsing");
+                for (i, original_line) in test_lines.iter().enumerate() {
+                    // Parse the line
+                    let parse_result = $struct_name::from_cwr_line(original_line)
+                        .unwrap_or_else(|e| panic!("Failed to parse test case {}: {}", i, e));
+                    let record = parse_result.record;
+                    
+                    // Convert back to CWR line
+                    let regenerated_line = record.to_cwr_line();
+                    
+                    // Should be able to round-trip the data
+                    assert_eq!(*original_line, regenerated_line, 
+                        "Round-trip failed for test case {}: original line and regenerated line don't match", i);
+                    
+                    // Parse the regenerated line to ensure it's still valid
+                    let reparse_result = $struct_name::from_cwr_line(&regenerated_line)
+                        .unwrap_or_else(|e| panic!("Failed to reparse test case {}: {}", i, e));
+                    
+                    // The records should be identical
+                    assert_eq!(record, reparse_result.record, 
+                        "Records differ after round-trip parsing for test case {}", i);
+                }
             }
         }
     };
+
 }
 
 #[cfg(test)]
@@ -188,7 +196,7 @@ mod tests {
         }
     }
 
-    impl_cwr_parsing_test_roundtrip!(TestRecord, "TST12345ABCDE");
+    impl_cwr_parsing_test_roundtrip!(TestRecord, ["TST12345ABCDE"]);
 
     #[test]
     fn test_macro_generated_parsing() {

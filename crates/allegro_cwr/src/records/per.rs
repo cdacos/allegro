@@ -47,4 +47,4 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(PerRecord, "PER0000000100000001SMITH                                        JOHN                          01234567890123456789012");
+impl_cwr_parsing_test_roundtrip!(PerRecord, ["PER0000000100000001SMITH                                        JOHN                          01234567890123456789012"]);

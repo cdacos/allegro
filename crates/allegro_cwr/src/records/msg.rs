@@ -55,4 +55,4 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(MsgRecord, "MSG0000000100000001E00000002NWRR001Record rejected due to invalid format                                                                                                                            ");
+impl_cwr_parsing_test_roundtrip!(MsgRecord, ["MSG0000000100000001E00000002NWRR001Record rejected due to invalid format                                                                                                                            "]);

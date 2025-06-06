@@ -47,4 +47,4 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(XrfRecord, "XRF0000000100000001ISWT1234567890123WY");
+impl_cwr_parsing_test_roundtrip!(XrfRecord, ["XRF0000000100000001ISWT1234567890123WY"]);

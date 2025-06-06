@@ -55,4 +55,4 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(PwrRecord, "PWR0000000100000001123456789PUBLISHER NAME                         SUBAGR        SOCAGR        12345678901");
+impl_cwr_parsing_test_roundtrip!(PwrRecord, ["PWR0000000100000001123456789PUBLISHER NAME                         SUBAGR        SOCAGR        12345678901"]);

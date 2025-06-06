@@ -51,4 +51,4 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(AriRecord, "ARI0000000100000001021              ALL  Additional related information note for the work                                                                                                    ");
+impl_cwr_parsing_test_roundtrip!(AriRecord, ["ARI0000000100000001021              ALL  Additional related information note for the work                                                                                                    "]);

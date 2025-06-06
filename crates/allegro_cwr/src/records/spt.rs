@@ -67,4 +67,4 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(SptRecord, "SPT0000000100000001123456789                  I2840 ");
+impl_cwr_parsing_test_roundtrip!(SptRecord, ["SPT0000000100000001123456789                  I2840 "]);

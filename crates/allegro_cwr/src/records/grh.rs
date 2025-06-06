@@ -47,4 +47,4 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(GrhRecord, "GRHAGR0000102.10            ");
+impl_cwr_parsing_test_roundtrip!(GrhRecord, ["GRHAGR0000102.10            "]);

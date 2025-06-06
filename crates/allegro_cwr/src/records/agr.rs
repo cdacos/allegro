@@ -96,4 +96,4 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(AgrRecord, "AGR00000001000000011234567890123               AA20231201                Y        Y                00001                 ");
+impl_cwr_parsing_test_roundtrip!(AgrRecord, ["AGR00000001000000011234567890123               AA20231201                Y        Y                00001                 "]);

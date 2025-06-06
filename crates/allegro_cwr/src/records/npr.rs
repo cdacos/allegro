@@ -59,4 +59,4 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(NprRecord, "NPR0000000100000001ARTIST NAME                                                                                                                                                             FIRST NAME                                                                                                                                                              01234567890123456789012ENFRGER");
+impl_cwr_parsing_test_roundtrip!(NprRecord, ["NPR0000000100000001ARTIST NAME                                                                                                                                                             FIRST NAME                                                                                                                                                              01234567890123456789012ENFRGER"]);

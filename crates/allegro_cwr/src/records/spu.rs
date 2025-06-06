@@ -119,4 +119,4 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(SpuRecord, "SPU0000000100000001011234567890PUBLISHER NAME                             N AS1234567890123456789    BMI  50.00000000000000000000000000000  N N                                                            ");
+impl_cwr_parsing_test_roundtrip!(SpuRecord, ["SPU0000000100000001011234567890PUBLISHER NAME                             N AS1234567890123456789    BMI  50.00000000000000000000000000000  N N                                                            "]);

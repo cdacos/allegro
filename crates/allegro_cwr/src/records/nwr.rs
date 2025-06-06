@@ -135,4 +135,4 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(NwrRecord, "NWR0000000100000001Test Song                                               SW0000000001        SER        Y       ORI                                                                                                                                               ");
+impl_cwr_parsing_test_roundtrip!(NwrRecord, ["NWR0000000100000001Test Song                                               SW0000000001        SER        Y       ORI                                                                                                                                               "]);

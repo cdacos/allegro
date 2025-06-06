@@ -39,4 +39,4 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(TerRecord, "TER0000000100000001I2840");
+impl_cwr_parsing_test_roundtrip!(TerRecord, ["TER0000000100000001I2840"]);

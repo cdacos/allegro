@@ -47,4 +47,4 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(GrtRecord, "GRT000010000001400000365             ");
+impl_cwr_parsing_test_roundtrip!(GrtRecord, ["GRT000010000001400000365             "]);

@@ -39,4 +39,4 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(IndRecord, "IND0000000100000001PNO004");
+impl_cwr_parsing_test_roundtrip!(IndRecord, ["IND0000000100000001PNO004"]);

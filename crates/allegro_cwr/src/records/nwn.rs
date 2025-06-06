@@ -47,4 +47,4 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(NwnRecord, "NWN0000000100000001123456789WRITER LAST NAME                                                                                                                                                                EN");
+impl_cwr_parsing_test_roundtrip!(NwnRecord, ["NWN0000000100000001123456789WRITER LAST NAME                                                                                                                                                                EN"]);

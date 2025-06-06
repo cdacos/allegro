@@ -43,4 +43,4 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(InsRecord, "INS000000010000000104 ORCHFULL ORCHESTRA WITH STRINGS AND BRASS SECTION   ");
+impl_cwr_parsing_test_roundtrip!(InsRecord, ["INS000000010000000104 ORCHFULL ORCHESTRA WITH STRINGS AND BRASS SECTION   "]);

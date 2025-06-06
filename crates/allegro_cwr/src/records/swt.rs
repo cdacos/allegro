@@ -63,4 +63,4 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(SwtRecord, "SWT0000000100000001         I2840 ");
+impl_cwr_parsing_test_roundtrip!(SwtRecord, ["SWT0000000100000001         I2840 "]);
