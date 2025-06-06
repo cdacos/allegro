@@ -2,7 +2,8 @@
 //!
 //! Also handles OWR (Other Writer) records.
 
-use crate::error::CwrParseError;
+use crate::validators::one_of;
+use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
 use serde::{Deserialize, Serialize};
 
 /// SWR - Writer Controlled by Submitter Record (also OWR - Other Writer)
@@ -79,154 +80,37 @@ pub struct SwrRecord {
 }
 
 impl SwrRecord {
-    /// Create a new SWR record
-    pub fn new(record_type: String, transaction_sequence_num: String, record_sequence_num: String) -> Self {
-        Self {
-            record_type,
-            transaction_sequence_num,
-            record_sequence_num,
-            interested_party_num: None,
-            writer_last_name: None,
-            writer_first_name: None,
-            writer_unknown_indicator: None,
-            writer_designation_code: None,
-            tax_id_num: None,
-            writer_ipi_name_num: None,
-            pr_affiliation_society_num: None,
-            pr_ownership_share: None,
-            mr_society: None,
-            mr_ownership_share: None,
-            sr_society: None,
-            sr_ownership_share: None,
-            reversionary_indicator: None,
-            first_recording_refusal_ind: None,
-            work_for_hire_indicator: None,
-            filler: None,
-            writer_ipi_base_number: None,
-            personal_number: None,
-            usa_license_ind: None,
-        }
-    }
-
-    /// Parse a CWR line into a SWR record
-    pub fn from_cwr_line(line: &str) -> Result<Self, CwrParseError> {
-        if line.len() < 179 {
-            return Err(CwrParseError::BadFormat("SWR line too short".to_string()));
-        }
-
-        let record_type = line.get(0..3).unwrap().to_string();
-        if !["SWR", "OWR"].contains(&record_type.as_str()) {
-            return Err(CwrParseError::BadFormat(format!("Expected SWR/OWR, found {}", record_type)));
-        }
-
-        let transaction_sequence_num = line.get(3..11).unwrap().trim().to_string();
-        let record_sequence_num = line.get(11..19).unwrap().trim().to_string();
-
-        // Extract all fields as optional
-        let interested_party_num = line.get(19..28).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        let writer_last_name = line.get(28..73).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        let writer_first_name = line.get(73..103).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        let writer_unknown_indicator = line.get(103..104).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        let writer_designation_code = line.get(104..106).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        let tax_id_num = line.get(106..115).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        let writer_ipi_name_num = line.get(115..126).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        let pr_affiliation_society_num = line.get(126..129).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        let pr_ownership_share = line.get(129..134).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        let mr_society = line.get(134..137).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        let mr_ownership_share = line.get(137..142).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        let sr_society = line.get(142..145).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        let sr_ownership_share = line.get(145..150).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        let reversionary_indicator = line.get(150..151).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        let first_recording_refusal_ind = line.get(151..152).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        let work_for_hire_indicator = line.get(152..153).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        let filler = line.get(153..154).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        let writer_ipi_base_number = line.get(154..167).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-        let personal_number = line.get(167..179).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-
-        let usa_license_ind = if line.len() > 179 { line.get(179..180).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string()) } else { None };
-
-        Ok(SwrRecord {
-            record_type,
-            transaction_sequence_num,
-            record_sequence_num,
-            interested_party_num,
-            writer_last_name,
-            writer_first_name,
-            writer_unknown_indicator,
-            writer_designation_code,
-            tax_id_num,
-            writer_ipi_name_num,
-            pr_affiliation_society_num,
-            pr_ownership_share,
-            mr_society,
-            mr_ownership_share,
-            sr_society,
-            sr_ownership_share,
-            reversionary_indicator,
-            first_recording_refusal_ind,
-            work_for_hire_indicator,
-            filler,
-            writer_ipi_base_number,
-            personal_number,
-            usa_license_ind,
-        })
-    }
-
-    /// Convert this record to a CWR format line
-    pub fn to_cwr_line(&self) -> String {
-        let mut fields = vec![
-            format!("{:3}", self.record_type),
-            format!("{:8}", self.transaction_sequence_num),
-            format!("{:8}", self.record_sequence_num),
-            format!("{:9}", self.interested_party_num.as_deref().unwrap_or("")),
-            format!("{:45}", self.writer_last_name.as_deref().unwrap_or("")),
-            format!("{:30}", self.writer_first_name.as_deref().unwrap_or("")),
-            format!("{:1}", self.writer_unknown_indicator.as_deref().unwrap_or("")),
-            format!("{:2}", self.writer_designation_code.as_deref().unwrap_or("")),
-            format!("{:9}", self.tax_id_num.as_deref().unwrap_or("")),
-            format!("{:11}", self.writer_ipi_name_num.as_deref().unwrap_or("")),
-            format!("{:3}", self.pr_affiliation_society_num.as_deref().unwrap_or("")),
-            format!("{:5}", self.pr_ownership_share.as_deref().unwrap_or("")),
-            format!("{:3}", self.mr_society.as_deref().unwrap_or("")),
-            format!("{:5}", self.mr_ownership_share.as_deref().unwrap_or("")),
-            format!("{:3}", self.sr_society.as_deref().unwrap_or("")),
-            format!("{:5}", self.sr_ownership_share.as_deref().unwrap_or("")),
-            format!("{:1}", self.reversionary_indicator.as_deref().unwrap_or("")),
-            format!("{:1}", self.first_recording_refusal_ind.as_deref().unwrap_or("")),
-            format!("{:1}", self.work_for_hire_indicator.as_deref().unwrap_or("")),
-            format!("{:1}", self.filler.as_deref().unwrap_or("")),
-            format!("{:13}", self.writer_ipi_base_number.as_deref().unwrap_or("")),
-            format!("{:12}", self.personal_number.as_deref().unwrap_or("")),
-        ];
-
-        // Add v2.1+ field
-        if let Some(ref usa_license) = self.usa_license_ind {
-            fields.push(format!("{:1}", usa_license));
-        }
-
-        fields.join("")
+    fn post_process_fields(_record: &mut SwrRecord, _warnings: &mut Vec<String>) {
+        // No specific post-processing needed for SWR
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_swr_creation() {
-        let swr = SwrRecord::new("SWR".to_string(), "00000001".to_string(), "00000002".to_string());
-
-        assert_eq!(swr.record_type, "SWR");
-        assert_eq!(swr.transaction_sequence_num, "00000001");
-    }
-
-    #[test]
-    fn test_swr_round_trip() {
-        let original = SwrRecord::new("SWR".to_string(), "00000001".to_string(), "00000002".to_string());
-
-        let line = original.to_cwr_line();
-        let parsed = SwrRecord::from_cwr_line(&line).unwrap();
-
-        assert_eq!(original, parsed);
+impl_cwr_parsing! {
+    SwrRecord {
+        record_type: (0, 3, required, one_of(&["SWR", "OWR"])),
+        transaction_sequence_num: (3, 11, required),
+        record_sequence_num: (11, 19, required),
+        interested_party_num: (19, 28, optional),
+        writer_last_name: (28, 73, optional),
+        writer_first_name: (73, 103, optional),
+        writer_unknown_indicator: (103, 104, optional),
+        writer_designation_code: (104, 106, optional),
+        tax_id_num: (106, 115, optional),
+        writer_ipi_name_num: (115, 126, optional),
+        pr_affiliation_society_num: (126, 129, optional),
+        pr_ownership_share: (129, 134, optional),
+        mr_society: (134, 137, optional),
+        mr_ownership_share: (137, 142, optional),
+        sr_society: (142, 145, optional),
+        sr_ownership_share: (145, 150, optional),
+        reversionary_indicator: (150, 151, optional),
+        first_recording_refusal_ind: (151, 152, optional),
+        work_for_hire_indicator: (152, 153, optional),
+        filler: (153, 154, optional),
+        writer_ipi_base_number: (154, 167, optional),
+        personal_number: (167, 179, optional),
+        usa_license_ind: (179, 180, optional),
     }
 }
+
+impl_cwr_parsing_test_roundtrip!(SwrRecord, "SWR00000010000000201234567890WRITER LAST NAME                     WRITER FIRST NAME             N WR12345678901234567890   50.000   50.000   50.000N N N 0123456789012012345678901");
