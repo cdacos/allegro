@@ -439,7 +439,21 @@ mod tests {
     #[test]
     fn test_cwr_record_type_mapping() {
         use crate::records::HdrRecord;
-        let hdr = HdrRecord::new("HDR".to_string(), "01".to_string(), "BMI".to_string(), "BMI MUSIC".to_string(), "01.10".to_string(), "20050101".to_string(), "120000".to_string(), "20050101".to_string(), None, None, None, None, None);
+        let hdr = HdrRecord {
+            record_type: "HDR".to_string(),
+            sender_type: "01".to_string(),
+            sender_id: "BMI".to_string(),
+            sender_name: "BMI MUSIC".to_string(),
+            edi_standard_version_number: "01.10".to_string(),
+            creation_date: "20050101".to_string(),
+            creation_time: "120000".to_string(),
+            transmission_date: "20050101".to_string(),
+            character_set: None,
+            version: None,
+            revision: None,
+            software_package: None,
+            software_package_version: None,
+        };
         let cwr_record = CwrRecord::Hdr(hdr);
         assert_eq!(cwr_record.record_type(), "HDR");
     }

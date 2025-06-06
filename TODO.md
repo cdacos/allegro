@@ -1,143 +1,54 @@
 # TODO
 
-## CWR Record Parsing Macro System
+## CWR Domain Types + Procedural Macros
 
-### Overview
-Replace repetitive string parsing in 30+ CWR records with a declarative macro system that generates both parsing code and tests.
+### Core Concept
+- **Domain types** encode single-field constraints in type system
+- **Validation methods** handle cross-field business logic
+- **Procedural macro** generates graceful parsing with structured warnings
 
-### Architecture
-
-#### 1. Validation Library
-Create reusable field validators that can be thoroughly tested once:
+### Domain Types
 ```rust
-// Examples of validators to implement
-date_yyyymmdd      // Validates YYYYMMDD format
-numeric_range(min, max)  // Validates numeric strings within range
-one_of(["Y", "N"])  // Validates against allowed values
-alphanumeric       // Basic character validation
+pub struct WorksCount(u32);           // 1-99999 range
+pub enum RecordType { Agr, Ari, Alt } // Valid record types
+pub enum AgreementType { OS, OA, AA } // Business meaning
+pub struct Date(String);              // YYYYMMDD format
+pub enum YesNo { Yes, No }            // Y/N values
 ```
 
-#### 2. Parsing Macro
+### Graceful Parsing Trait
 ```rust
-parse_fields! {
-    record_type: required(0..3, validate=record_type_must_be("AGR")),
-    agreement_start_date: required(49..57, validate=date_yyyymmdd),
-    agreement_end_date: optional(57..65, validate=date_yyyymmdd),
-    prior_royalty_status: required(73..74, validate=one_of(["Y", "N"])),
-    number_of_works: required(99..104, validate=numeric_range(1, 99999)),
-    // Required field with fallback - warns instead of failing
-    type_of_right: required(36..39, fallback="", validate=valid_right_type),
+pub trait CwrFieldParse: Sized {
+    fn parse_cwr_field(source: &str, field_name: &str, field_title: &str) -> (Self, Vec<CwrWarning>);
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CwrWarning {
+    pub field_name: String,
+    pub field_title: String, 
+    pub source_str: String,
+    pub level: WarningLevel,
+    pub description: String,
 }
 ```
 
-#### 3. Post-Processing Hook
-For cross-field validation that can't be done in isolation:
+### Annotated Struct
 ```rust
-fn post_process_fields(record: &mut AgrRecord, warnings: &mut Vec<String>) {
-    // Date range validation
-    if let (Some(start), Some(end)) = (&record.agreement_start_date, &record.agreement_end_date) {
-        if end < start {
-            warnings.push("Agreement end date before start date".to_string());
-        }
-    }
+#[derive(Debug, Clone, PartialEq, CwrRecord)]
+#[cwr(test_data = "AGR00000001000000011234567890123AA20231201Y00001")]
+pub struct AgrRecord {
+    #[cwr(title = "Record Type", start = 0, len = 3)]
+    pub record_type: RecordType,
     
-    // Conditional field requirements
-    if record.prior_royalty_status == "Y" && record.prior_royalty_start_date.is_none() {
-        warnings.push("Prior royalty start date required when status is Y".to_string());
-    }
+    #[cwr(title = "Agreement Type", start = 47, len = 2)]  
+    pub agreement_type: AgreementType,
+    
+    #[cwr(title = "Number of Works", start = 99, len = 5)]
+    pub number_of_works: WorksCount,
 }
 ```
-
-#### 4. Test Generation
-Macro auto-generates round-trip tests using real sample data:
-```rust
-// Auto-generated test - starts from real CWR line from .me/TestSample.V21
-#[test]
-fn test_agr_round_trip_from_sample() {
-    let sample_line = "AGR00000001000000011234567890123456..."; // From sample file
-    let result = AgrRecord::from_cwr_line(sample_line).unwrap();
-    let regenerated_line = result.record.to_cwr_line();
-    let reparsed = AgrRecord::from_cwr_line(&regenerated_line).unwrap();
-    assert_eq!(result.record, reparsed.record);
-}
-```
-
-### Testing Strategy
-
-#### What Gets Tested Where:
-- **Validation library**: Unit tests for each validator (`date_yyyymmdd`, `numeric_range`, etc.)
-- **Macro logic**: Test the macro code generation itself
-- **Post-process functions**: Unit tests for cross-field validation logic
-- **Records**: Only round-trip tests using real sample data from `.me/TestSample.V21`
-
-#### Benefits:
-- **Consistency**: All records use same validation logic
-- **Maintainability**: Field parsing logic centralized
-- **Test coverage**: Real sample data ensures compatibility
-- **Performance**: Validators optimized once, used everywhere
-- **Documentation**: Field specs become living documentation
 
 ### Implementation Steps
-
-#### Phase 1: Infrastructure
-1. **Create validation library** with common validators
-2. **Design and implement parsing macro** that generates `from_cwr_line()` method
-3. **Extract sample lines** from `.me/TestSample.V21` for test data
-
-#### Phase 2: Gradual Migration
-4. **Add macro to AGR record** - generates `AgrRecord::from_cwr_line()`
-5. **Update parser.rs** to call `AgrRecord::from_cwr_line()` for AGR records
-6. **Test and verify** AGR parsing works correctly
-7. **Add macro to ARI record** - generates `AriRecord::from_cwr_line()`  
-8. **Update parser.rs** to call `AriRecord::from_cwr_line()` for ARI records
-9. **Repeat migration** for remaining 28+ records one by one
-
-#### Phase 3: Cleanup
-10. **Remove all** `from_cwr_line()` methods once migration complete
-11. **Rename** `from_cwr_line()` to `from_cwr_line()` 
-12. **Update parser.rs** to remove `_v2` suffixes
-
-### Migration Strategy
-
-#### Coexistence Pattern
-```rust
-impl AgrRecord {
-    // Original method (unchanged during migration)
-    pub fn from_cwr_line(line: &str) -> Result<Self, CwrParseError> {
-        // Current manual implementation
-    }
-    
-    // New macro-generated method 
-    pub fn from_cwr_line(line: &str) -> Result<CwrParseResult<Self>, CwrParseError> {
-        // Generated by parse_fields! macro
-    }
-}
-```
-
-#### Parser Updates
-```rust
-// In parser.rs - update one record type at a time
-let record = match record_type {
-    // Migrated records use v2 method
-    "AGR" => CwrRecord::Agr(AgrRecord::from_cwr_line(line)?.record),
-    "ARI" => CwrRecord::Ari(AriRecord::from_cwr_line(line)?.record),
-    
-    // Not yet migrated records use original method  
-    "ALT" => CwrRecord::Alt(AltRecord::from_cwr_line(line)?),
-    "ACK" => CwrRecord::Ack(AckRecord::from_cwr_line(line)?),
-    // ... etc
-};
-```
-
-#### Benefits of This Approach
-- **App stays working** throughout the migration
-- **Test each record individually** before moving to next
-- **Easy rollback** if issues found with specific record
-- **Clear migration progress** - can see which records are updated
-- **No big-bang changes** - incremental and safe
-
-### Notes
-- Macro should handle length checks automatically
-- Fallback values allow "required" fields to gracefully degrade with warnings
-- Generated tests verify parsing works with real-world data
-- Cross-field validation keeps business logic explicit and testable
+1. Create domain types with `CwrFieldParse` trait
+2. Build `#[derive(CwrRecord)]` procedural macro
+3. Convert AGR record to use domain types and annotations

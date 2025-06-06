@@ -74,16 +74,6 @@ macro_rules! impl_cwr_parsing {
     // Internal implementation helper
     (@impl $struct_name:ident { $($field_name:ident: ($start:expr, $end:expr, $field_type:ident $(, $validator:expr)?)),* } $(with_post_process $post_process_fn:expr)?) => {
         impl $struct_name {
-            /// Create a new record with required fields
-            pub fn new($($field_name: impl_cwr_parsing!(@param_type $field_type)),*) -> Self {
-                Self {
-                    $(
-                        $field_name,
-                    )*
-                }
-            }
-
-
             /// Parse a CWR line into a record (v2 with validation and warnings)
             pub fn from_cwr_line(line: &str) -> Result<$crate::error::CwrParseResult<Self>, $crate::error::CwrParseError> {
                 use $crate::util::extract_required_validated;
@@ -161,14 +151,6 @@ macro_rules! impl_cwr_parsing {
         $field.as_deref().unwrap_or("")
     };
 
-    // Helper rules for new() function parameter types
-    (@param_type required) => {
-        String
-    };
-
-    (@param_type optional) => {
-        Option<String>
-    };
 
     // Helper: Custom post-processing
     (@post_process $struct_name:ident, $record:ident, $warnings:ident, $post_process_fn:expr) => {
@@ -352,15 +334,19 @@ mod tests {
     }
 
     #[test]
-    fn test_macro_generated_new() {
-        // Test that the generated new() method works
-        let record = TestRecord::new("TST".to_string(), "12345".to_string(), Some("ABCDE".to_string()));
+    fn test_struct_literal_creation() {
+        // Test that struct literals work
+        let record = TestRecord {
+            record_type: "TST".to_string(),
+            required_field: "12345".to_string(),
+            optional_field: Some("ABCDE".to_string()),
+        };
 
         assert_eq!(record.record_type, "TST");
         assert_eq!(record.required_field, "12345");
         assert_eq!(record.optional_field, Some("ABCDE".to_string()));
 
-        // Test that to_cwr_line works with new() created record
+        // Test that to_cwr_line works with struct literal created record
         let output = record.to_cwr_line();
         assert_eq!(output, "TST12345ABCDE");
     }
