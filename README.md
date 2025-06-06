@@ -14,8 +14,7 @@ This is currently a **beta/WIP project** that provides basic CWR file parsing fo
 - **Multiple Output Formats**: SQLite database storage and structured JSON output
 - **Type Safety**: Domain types and procedural macros for consistent parsing
 - **Warning System**: Basic field-level warnings for malformed data
-- **Auto Record Type Detection**: Validates that record types match their content
-- **Efficient Processing**: Streaming parser with batch database operations handles large files well
+- **Performance**: Processes ~500K records/second with full parsing and database insertion
 
 ## Missing/TODO
 
