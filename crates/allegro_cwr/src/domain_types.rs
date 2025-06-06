@@ -37,11 +37,65 @@ pub trait CwrFieldParse: Sized + Default {
 #[derive(Debug, Clone, PartialEq, Default, serde::Serialize, serde::Deserialize)]
 pub struct WorksCount(pub u32);
 
+impl WorksCount {
+    pub fn as_str(&self) -> String {
+        self.0.to_string()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum RecordType {
     Agr, Ack, Alt, Ari, Com, Ewt, Grh, Grt, Hdr, Ind, Ins, Ipa, Msg,
     Nat, Net, Now, Npa, Npn, Npr, Nwr, Nwn, Orn, Per, Pwr, Rec, Spt,
     Spu, Swr, Swt, Ter, Trl, Ver, Xrf,
+}
+
+impl std::fmt::Display for RecordType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            RecordType::Agr => "AGR",
+            RecordType::Ack => "ACK",
+            RecordType::Alt => "ALT",
+            RecordType::Ari => "ARI",
+            RecordType::Com => "COM",
+            RecordType::Ewt => "EWT",
+            RecordType::Grh => "GRH",
+            RecordType::Grt => "GRT",
+            RecordType::Hdr => "HDR",
+            RecordType::Ind => "IND",
+            RecordType::Ins => "INS",
+            RecordType::Ipa => "IPA",
+            RecordType::Msg => "MSG",
+            RecordType::Nat => "NAT",
+            RecordType::Net => "NET",
+            RecordType::Now => "NOW",
+            RecordType::Npa => "NPA",
+            RecordType::Npn => "NPN",
+            RecordType::Npr => "NPR",
+            RecordType::Nwr => "NWR",
+            RecordType::Nwn => "NWN",
+            RecordType::Orn => "ORN",
+            RecordType::Per => "PER",
+            RecordType::Pwr => "PWR",
+            RecordType::Rec => "REC",
+            RecordType::Spt => "SPT",
+            RecordType::Spu => "SPU",
+            RecordType::Swr => "SWR",
+            RecordType::Swt => "SWT",
+            RecordType::Ter => "TER",
+            RecordType::Trl => "TRL",
+            RecordType::Ver => "VER",
+            RecordType::Xrf => "XRF",
+        };
+        write!(f, "{}", s)
+    }
+}
+
+#[cfg(feature = "rusqlite")]
+impl rusqlite::ToSql for RecordType {
+    fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
+        Ok(rusqlite::types::ToSqlOutput::from(self.to_string()))
+    }
 }
 
 impl Default for RecordType {
@@ -56,6 +110,15 @@ pub enum YesNo {
     No,
 }
 
+impl YesNo {
+    pub fn as_str(&self) -> &str {
+        match self {
+            YesNo::Yes => "Y",
+            YesNo::No => "N",
+        }
+    }
+}
+
 impl Default for YesNo {
     fn default() -> Self {
         YesNo::No
@@ -64,6 +127,25 @@ impl Default for YesNo {
 
 #[derive(Debug, Clone, PartialEq, Default, serde::Serialize, serde::Deserialize)]
 pub struct Date(pub Option<NaiveDate>);
+
+impl Date {
+    pub fn as_str(&self) -> String {
+        match &self.0 {
+            Some(date) => date.format("%Y%m%d").to_string(),
+            None => String::new(),
+        }
+    }
+}
+
+#[cfg(feature = "rusqlite")]
+impl rusqlite::ToSql for Date {
+    fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
+        match &self.0 {
+            Some(date) => Ok(rusqlite::types::ToSqlOutput::from(date.format("%Y%m%d").to_string())),
+            None => Ok(rusqlite::types::ToSqlOutput::from("")),
+        }
+    }
+}
 
 // Implement CwrFieldParse for String (default case)
 impl CwrFieldParse for String {

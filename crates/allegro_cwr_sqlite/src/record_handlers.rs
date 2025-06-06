@@ -137,15 +137,15 @@ pub fn parse_and_insert_agr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.submitter_agreement_number,
             record.international_standard_agreement_code.as_deref().unwrap_or(""),
             record.agreement_type,
-            record.agreement_start_date.as_str(),
-            record.agreement_end_date.as_deref().unwrap_or(""),
-            record.retention_end_date.as_deref().unwrap_or(""),
+            &record.agreement_start_date.as_str(),
+            &record.agreement_end_date.as_ref().map(|d| d.as_str()).unwrap_or_default(),
+            &record.retention_end_date.as_ref().map(|d| d.as_str()).unwrap_or_default(),
             record.prior_royalty_status.as_str(),
-            record.prior_royalty_start_date.as_deref().unwrap_or(""),
+            &record.prior_royalty_start_date.as_ref().map(|d| d.as_str()).unwrap_or_default(),
             record.post_term_collection_status.as_str(),
-            record.post_term_collection_end_date.as_deref().unwrap_or(""),
-            record.date_of_signature_of_agreement.as_deref().unwrap_or(""),
-            record.number_of_works.as_str(),
+            &record.post_term_collection_end_date.as_ref().map(|d| d.as_str()).unwrap_or_default(),
+            &record.date_of_signature_of_agreement.as_ref().map(|d| d.as_str()).unwrap_or_default(),
+            &record.number_of_works.as_str(),
             record.sales_manufacture_clause.as_deref().unwrap_or(""),
             record.shares_change.as_deref().unwrap_or(""),
             record.advance_given.as_deref().unwrap_or(""),
@@ -247,7 +247,7 @@ pub fn parse_and_insert_ipa<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 
 pub fn parse_and_insert_npa<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
     handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, NpaRecord::from_cwr_line, |record, stmts, file_id| {
-        stmts.npa_stmt.execute(params![file_id, record.record_type, record.transaction_sequence_num, record.record_sequence_num, record.interested_party_num, record.interested_party_name, record.interested_party_writer_first_name.as_str(), record.language_code.as_deref().unwrap_or(""),])?;
+        stmts.npa_stmt.execute(params![file_id, record.record_type, record.transaction_sequence_num, record.record_sequence_num, record.interested_party_num, record.interested_party_name, &record.interested_party_writer_first_name, record.language_code.as_deref().unwrap_or(""),])?;
         Ok(())
     })
 }
@@ -570,7 +570,7 @@ pub fn parse_and_insert_com<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.iswc_of_component.as_deref().unwrap_or(""),
             record.submitter_work_num.as_deref().unwrap_or(""),
             record.duration.as_deref().unwrap_or(""),
-            record.writer_1_last_name.as_str(),
+            &record.writer_1_last_name,
             record.writer_1_first_name.as_deref().unwrap_or(""),
             record.writer_1_ipi_name_num.as_deref().unwrap_or(""),
             record.writer_2_last_name.as_deref().unwrap_or(""),
@@ -585,7 +585,7 @@ pub fn parse_and_insert_com<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 
 pub fn parse_and_insert_msg<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
     handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, MsgRecord::from_cwr_line, |record, stmts, file_id| {
-        stmts.msg_stmt.execute(params![file_id, record.record_type, record.transaction_sequence_num, record.record_sequence_num, record.message_type, record.original_record_sequence_num.as_str(), record.record_type_field.as_str(), record.message_level, record.validation_number.as_str(), record.message_text,])?;
+        stmts.msg_stmt.execute(params![file_id, record.record_type, record.transaction_sequence_num, record.record_sequence_num, record.message_type, &record.original_record_sequence_num, &record.record_type_field, record.message_level, &record.validation_number, record.message_text,])?;
         Ok(())
     })
 }
@@ -599,7 +599,7 @@ pub fn parse_and_insert_net<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 
 pub fn parse_and_insert_now<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
     handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, NowRecord::from_cwr_line, |record, stmts, file_id| {
-        stmts.now_stmt.execute(params![file_id, record.record_type, record.transaction_sequence_num, record.record_sequence_num, record.writer_name, record.writer_first_name.as_str(), record.language_code.as_deref().unwrap_or(""), record.writer_position.as_deref().unwrap_or(""),])?;
+        stmts.now_stmt.execute(params![file_id, record.record_type, record.transaction_sequence_num, record.record_sequence_num, record.writer_name, &record.writer_first_name, record.language_code.as_deref().unwrap_or(""), record.writer_position.as_deref().unwrap_or(""),])?;
         Ok(())
     })
 }
