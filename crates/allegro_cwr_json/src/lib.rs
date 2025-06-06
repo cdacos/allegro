@@ -9,6 +9,12 @@ pub struct JsonHandler {
     first_record: bool,
 }
 
+impl Default for JsonHandler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl JsonHandler {
     pub fn new() -> Self {
         // Start JSON array

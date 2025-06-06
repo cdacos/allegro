@@ -17,15 +17,15 @@ pub fn date_yyyymmdd(value: &str) -> Result<(), String> {
     let month: u32 = value[4..6].parse().map_err(|_| "Invalid month")?;
     let day: u32 = value[6..8].parse().map_err(|_| "Invalid day")?;
 
-    if year < 1900 || year > 2100 {
+    if !(1900..=2100).contains(&year) {
         return Err("Year must be between 1900 and 2100".to_string());
     }
 
-    if month < 1 || month > 12 {
+    if !(1..=12).contains(&month) {
         return Err("Month must be between 01 and 12".to_string());
     }
 
-    if day < 1 || day > 31 {
+    if !(1..=31).contains(&day) {
         return Err("Day must be between 01 and 31".to_string());
     }
 
@@ -55,7 +55,7 @@ pub fn yes_no(value: &str) -> Result<(), String> {
 
 pub fn works_count(value: &str) -> Result<(), String> {
     let num: u32 = value.parse().map_err(|_| format!("'{}' is not a valid number", value))?;
-    if num >= 1 && num <= 99999 { Ok(()) } else { Err(format!("Number of works {} must be between 1 and 99999", num)) }
+    if (1..=99999).contains(&num) { Ok(()) } else { Err(format!("Number of works {} must be between 1 and 99999", num)) }
 }
 
 #[cfg(test)]

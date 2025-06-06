@@ -539,7 +539,7 @@ mod tests {
         assert!(result.is_ok());
 
         let records: Vec<_> = result.unwrap().take(10).collect(); // Just test first 10 records
-        assert!(records.len() > 0);
+        assert!(!records.is_empty());
 
         // Verify first record is HDR
         assert!(records[0].is_ok());

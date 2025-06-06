@@ -156,7 +156,7 @@ pub mod record_test_utils {
             #[cfg(test)]
             mod generated_tests {
                 use super::*;
-                use crate::test_utils::record_test_utils::{CwrRecordTestable, RecordTestGenerator};
+                use $crate::test_utils::record_test_utils::{CwrRecordTestable, RecordTestGenerator};
 
                 #[test]
                 fn test_round_trip_generated() {
