@@ -27,10 +27,16 @@ pub struct SqliteHandler {
     processed_count: usize,
     error_count: usize,
     db_filename: String,
+    batch_size: usize,
+    statements: Option<statements::PreparedStatements<'static>>,
 }
 
 impl SqliteHandler {
     pub fn new(input_filename: &str, db_filename: &str) -> Result<Self> {
+        Self::new_with_batch_size(input_filename, db_filename, 1000)
+    }
+
+    pub fn new_with_batch_size(input_filename: &str, db_filename: &str, batch_size: usize) -> Result<Self> {
         use statements::get_prepared_statements;
 
         // Setup database
@@ -53,7 +59,43 @@ impl SqliteHandler {
             file_id
         };
 
-        Ok(SqliteHandler { conn, tx: None, file_id, processed_count: 0, error_count: 0, db_filename: db_filename.to_string() })
+        Ok(SqliteHandler { 
+            conn, 
+            tx: None, 
+            file_id, 
+            processed_count: 0, 
+            error_count: 0, 
+            db_filename: db_filename.to_string(),
+            batch_size,
+            statements: None,
+        })
+    }
+
+    fn start_batch(&mut self) -> Result<()> {
+        if self.tx.is_none() {
+            // Start transaction
+            let tx = self.conn.transaction()?;
+            // We need to use unsafe to extend the lifetime
+            let tx: rusqlite::Transaction<'static> = unsafe { std::mem::transmute(tx) };
+            let statements = statements::get_prepared_statements(&tx)?;
+            let statements: statements::PreparedStatements<'static> = unsafe { std::mem::transmute(statements) };
+            
+            self.tx = Some(tx);
+            self.statements = Some(statements);
+        }
+        Ok(())
+    }
+
+    fn commit_batch(&mut self) -> Result<()> {
+        if let Some(tx) = self.tx.take() {
+            self.statements = None;
+            tx.commit()?;
+        }
+        Ok(())
+    }
+
+    fn should_commit_batch(&self) -> bool {
+        self.processed_count % self.batch_size == 0
     }
 }
 
@@ -61,37 +103,42 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
     type Error = CwrDbError;
 
     fn process_record(&mut self, parsed_record: allegro_cwr::ParsedRecord) -> std::result::Result<(), Self::Error> {
-        // Start a transaction for this record
-        let tx = self.conn.transaction()?;
-        let mut prepared_statements = statements::get_prepared_statements(&tx)?;
-
-        // For now, just log to file_line table - TODO: implement full record insertion
-        let record_id = 1; // Placeholder
-        insert_file_line_record(&mut prepared_statements.file_stmt, self.file_id, parsed_record.line_number, parsed_record.record.record_type(), record_id)?;
-
-        drop(prepared_statements);
-        tx.commit()?;
+        self.start_batch()?;
+        
+        if let Some(ref mut statements) = self.statements {
+            // For now, just log to file_line table - TODO: implement full record insertion
+            let record_id = 1; // Placeholder
+            insert_file_line_record(&mut statements.file_stmt, self.file_id, parsed_record.line_number, parsed_record.record.record_type(), record_id)?;
+        }
 
         self.processed_count += 1;
+        
+        if self.should_commit_batch() {
+            self.commit_batch()?;
+        }
+        
         Ok(())
     }
 
     fn handle_parse_error(&mut self, line_number: usize, error: &allegro_cwr::CwrParseError) -> std::result::Result<(), Self::Error> {
-        // Log error to database
-        let tx = self.conn.transaction()?;
-        let mut prepared_statements = statements::get_prepared_statements(&tx)?;
-
-        log_error(&mut prepared_statements.error_stmt, self.file_id, line_number, error.to_string())?;
-
-        drop(prepared_statements);
-        tx.commit()?;
+        self.start_batch()?;
+        
+        if let Some(ref mut statements) = self.statements {
+            log_error(&mut statements.error_stmt, self.file_id, line_number, error.to_string())?;
+        }
 
         self.error_count += 1;
+        
+        if self.should_commit_batch() {
+            self.commit_batch()?;
+        }
+        
         Ok(())
     }
 
     fn finalize(&mut self) -> std::result::Result<(), Self::Error> {
-        // Any final cleanup if needed
+        // Commit any remaining batch
+        self.commit_batch()?;
         Ok(())
     }
 
