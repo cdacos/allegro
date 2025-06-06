@@ -4,6 +4,7 @@
 //! for storing and querying CWR file data in SQLite databases.
 
 pub mod connection;
+pub mod domain_conversions;
 pub mod error;
 pub mod operations;
 pub mod record_handlers;

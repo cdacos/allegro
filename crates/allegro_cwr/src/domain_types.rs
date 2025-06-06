@@ -122,12 +122,6 @@ impl std::fmt::Display for RecordType {
     }
 }
 
-#[cfg(feature = "rusqlite")]
-impl rusqlite::ToSql for RecordType {
-    fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
-        Ok(rusqlite::types::ToSqlOutput::from(self.to_string()))
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub enum YesNo {
@@ -157,15 +151,6 @@ impl Date {
     }
 }
 
-#[cfg(feature = "rusqlite")]
-impl rusqlite::ToSql for Date {
-    fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
-        match &self.0 {
-            Some(date) => Ok(rusqlite::types::ToSqlOutput::from(date.format("%Y%m%d").to_string())),
-            None => Ok(rusqlite::types::ToSqlOutput::from("")),
-        }
-    }
-}
 
 // Implement CwrFieldParse for String (default case)
 impl CwrFieldParse for String {

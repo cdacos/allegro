@@ -30,7 +30,6 @@ dependencies = [
  "allegro_cwr_derive",
  "chrono",
  "log",
- "rusqlite",
  "serde",
 ]
 

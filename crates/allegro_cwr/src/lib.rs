@@ -8,7 +8,6 @@ pub mod error;
 pub mod parser;
 pub mod records;
 pub mod util;
-pub mod validators;
 
 #[cfg(test)]
 pub mod test_utils;
