@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// PWR - Publisher for Writer Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(test_data = "PWR0000000100000001123456789PUBLISHER NAME                         SUBAGR        SOCAGR        12345678901")]
+#[cwr(test_data = "PWR0000000000000325ABKC     ABKCO MUSIC INC.                                                         WOMA     01")]
 pub struct PwrRecord {
     #[cwr(title = "Always 'PWR'", start = 0, len = 3)]
     pub record_type: RecordType,

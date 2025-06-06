@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// ALT - Alternate Title Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(test_data = "ALT0000000100000001ALTERNATE TITLE                                          ATEN")]
+#[cwr(test_data = "ALT0000000200000326BABY CAN T YOU SEE                                          AT  ")]
 pub struct AltRecord {
     #[cwr(title = "Always 'ALT'", start = 0, len = 3)]
     pub record_type: RecordType,

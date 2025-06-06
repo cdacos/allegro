@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// INS - Instrumentation Summary Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(test_data = "INS000000010000000104 ORCHFULL ORCHESTRA WITH STRINGS AND BRASS SECTION   ")]
+#[cwr(test_data = "INS000000010000000104 ORCHFULL ORCHESTRA WITH STRINGS AND BRASS SECTION    ")]
 pub struct InsRecord {
     #[cwr(title = "Always 'INS'", start = 0, len = 3)]
     pub record_type: RecordType,

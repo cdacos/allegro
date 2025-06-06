@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// ARI - Additional Related Information Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(test_data = "ARI0000000100000001021              ALL  Additional related information note for the work                                                                                                    ")]
+#[cwr(test_data = "ARI0000000100000001021              ALL  Additional related information note for the work                                                                                                                ")]
 pub struct AriRecord {
     #[cwr(title = "Always 'ARI'", start = 0, len = 3)]
     pub record_type: RecordType,

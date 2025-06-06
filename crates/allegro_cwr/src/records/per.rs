@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// PER - Performing Artist Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(test_data = "PER0000000100000001SMITH                                        JOHN                          01234567890123456789012")]
+#[cwr(test_data = "PER0000050400000429DEVVON TERRELL                                                                                     ")]
 pub struct PerRecord {
     #[cwr(title = "Always 'PER'", start = 0, len = 3)]
     pub record_type: RecordType,

@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// SWR - Writer Controlled by Submitter Record (also OWR - Other Writer)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(test_data = "SWR00000010000000201234567890WRITER LAST NAME                     WRITER FIRST NAME             N WR12345678901234567890   50.000   50.000   50.000N N N 0123456789012012345678901")]
+#[cwr(test_data = "SWR0000000000000226WOMA     WOMACK                                       BOBBY                          CA00000000000033188001021050000990000009900000 N                           B")]
 pub struct SwrRecord {
     #[cwr(title = "'SWR' or 'OWR'", start = 0, len = 3)]
     pub record_type: String,
