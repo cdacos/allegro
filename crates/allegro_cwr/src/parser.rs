@@ -193,6 +193,7 @@ pub struct ParsedRecord {
     pub line_number: usize,
     pub record: CwrRecord,
     pub context: ParsingContext,
+    pub warnings: Vec<String>,
 }
 
 /// Parses a single CWR line and returns the parsed record
@@ -204,46 +205,145 @@ fn parse_cwr_line(line: &str, line_number: usize, context: &ParsingContext) -> R
     let record_type = &line[0..3];
 
     // Parse into the appropriate record struct
-    let record = match record_type {
-        "HDR" => CwrRecord::Hdr(HdrRecord::from_cwr_line(line)?.record),
-        "GRH" => CwrRecord::Grh(GrhRecord::from_cwr_line(line)?.record),
-        "GRT" => CwrRecord::Grt(GrtRecord::from_cwr_line(line)?.record),
-        "TRL" => CwrRecord::Trl(TrlRecord::from_cwr_line(line)?.record),
-        "AGR" => CwrRecord::Agr(AgrRecord::from_cwr_line(line)?.record),
-        "NWR" | "REV" | "ISW" | "EXC" => CwrRecord::Nwr(NwrRecord::from_cwr_line(line)?.record),
-        "ACK" => CwrRecord::Ack(AckRecord::from_cwr_line(line)?.record),
-        "TER" => CwrRecord::Ter(TerRecord::from_cwr_line(line)?.record),
-        "IPA" => CwrRecord::Ipa(IpaRecord::from_cwr_line(line)?.record),
-        "NPA" => CwrRecord::Npa(NpaRecord::from_cwr_line(line)?.record),
-        "SPU" | "OPU" => CwrRecord::Spu(SpuRecord::from_cwr_line(line)?.record),
-        "NPN" => CwrRecord::Npn(NpnRecord::from_cwr_line(line)?.record),
-        "SPT" | "OPT" => CwrRecord::Spt(SptRecord::from_cwr_line(line)?.record),
-        "SWR" | "OWR" => CwrRecord::Swr(SwrRecord::from_cwr_line(line)?.record),
-        "NWN" => CwrRecord::Nwn(NwnRecord::from_cwr_line(line)?.record),
-        "SWT" | "OWT" => CwrRecord::Swt(SwtRecord::from_cwr_line(line)?.record),
-        "PWR" => CwrRecord::Pwr(PwrRecord::from_cwr_line(line)?.record),
-        "ALT" => CwrRecord::Alt(AltRecord::from_cwr_line(line)?.record),
-        "NAT" => CwrRecord::Nat(NatRecord::from_cwr_line(line)?.record),
-        "EWT" => CwrRecord::Ewt(EwtRecord::from_cwr_line(line)?.record),
-        "VER" => CwrRecord::Ver(VerRecord::from_cwr_line(line)?.record),
-        "PER" => CwrRecord::Per(PerRecord::from_cwr_line(line)?.record),
-        "NPR" => CwrRecord::Npr(NprRecord::from_cwr_line(line)?.record),
-        "REC" => CwrRecord::Rec(RecRecord::from_cwr_line(line)?.record),
-        "ORN" => CwrRecord::Orn(OrnRecord::from_cwr_line(line)?.record),
-        "INS" => CwrRecord::Ins(InsRecord::from_cwr_line(line)?.record),
-        "IND" => CwrRecord::Ind(IndRecord::from_cwr_line(line)?.record),
-        "COM" => CwrRecord::Com(ComRecord::from_cwr_line(line)?.record),
-        "MSG" => CwrRecord::Msg(MsgRecord::from_cwr_line(line)?.record),
-        "NET" | "NCT" | "NVT" => CwrRecord::Net(NetRecord::from_cwr_line(line)?.record),
-        "NOW" => CwrRecord::Now(NowRecord::from_cwr_line(line)?.record),
-        "ARI" => CwrRecord::Ari(AriRecord::from_cwr_line(line)?.record),
-        "XRF" => CwrRecord::Xrf(XrfRecord::from_cwr_line(line)?.record),
+    let (record, warnings) = match record_type {
+        "HDR" => {
+            let result = HdrRecord::from_cwr_line(line)?;
+            (CwrRecord::Hdr(result.record), result.warnings)
+        },
+        "GRH" => {
+            let result = GrhRecord::from_cwr_line(line)?;
+            (CwrRecord::Grh(result.record), result.warnings)
+        },
+        "GRT" => {
+            let result = GrtRecord::from_cwr_line(line)?;
+            (CwrRecord::Grt(result.record), result.warnings)
+        },
+        "TRL" => {
+            let result = TrlRecord::from_cwr_line(line)?;
+            (CwrRecord::Trl(result.record), result.warnings)
+        },
+        "AGR" => {
+            let result = AgrRecord::from_cwr_line(line)?;
+            (CwrRecord::Agr(result.record), result.warnings)
+        },
+        "NWR" | "REV" | "ISW" | "EXC" => {
+            let result = NwrRecord::from_cwr_line(line)?;
+            (CwrRecord::Nwr(result.record), result.warnings)
+        },
+        "ACK" => {
+            let result = AckRecord::from_cwr_line(line)?;
+            (CwrRecord::Ack(result.record), result.warnings)
+        },
+        "TER" => {
+            let result = TerRecord::from_cwr_line(line)?;
+            (CwrRecord::Ter(result.record), result.warnings)
+        },
+        "IPA" => {
+            let result = IpaRecord::from_cwr_line(line)?;
+            (CwrRecord::Ipa(result.record), result.warnings)
+        },
+        "NPA" => {
+            let result = NpaRecord::from_cwr_line(line)?;
+            (CwrRecord::Npa(result.record), result.warnings)
+        },
+        "SPU" | "OPU" => {
+            let result = SpuRecord::from_cwr_line(line)?;
+            (CwrRecord::Spu(result.record), result.warnings)
+        },
+        "NPN" => {
+            let result = NpnRecord::from_cwr_line(line)?;
+            (CwrRecord::Npn(result.record), result.warnings)
+        },
+        "SPT" | "OPT" => {
+            let result = SptRecord::from_cwr_line(line)?;
+            (CwrRecord::Spt(result.record), result.warnings)
+        },
+        "SWR" | "OWR" => {
+            let result = SwrRecord::from_cwr_line(line)?;
+            (CwrRecord::Swr(result.record), result.warnings)
+        },
+        "NWN" => {
+            let result = NwnRecord::from_cwr_line(line)?;
+            (CwrRecord::Nwn(result.record), result.warnings)
+        },
+        "SWT" | "OWT" => {
+            let result = SwtRecord::from_cwr_line(line)?;
+            (CwrRecord::Swt(result.record), result.warnings)
+        },
+        "PWR" => {
+            let result = PwrRecord::from_cwr_line(line)?;
+            (CwrRecord::Pwr(result.record), result.warnings)
+        },
+        "ALT" => {
+            let result = AltRecord::from_cwr_line(line)?;
+            (CwrRecord::Alt(result.record), result.warnings)
+        },
+        "NAT" => {
+            let result = NatRecord::from_cwr_line(line)?;
+            (CwrRecord::Nat(result.record), result.warnings)
+        },
+        "EWT" => {
+            let result = EwtRecord::from_cwr_line(line)?;
+            (CwrRecord::Ewt(result.record), result.warnings)
+        },
+        "VER" => {
+            let result = VerRecord::from_cwr_line(line)?;
+            (CwrRecord::Ver(result.record), result.warnings)
+        },
+        "PER" => {
+            let result = PerRecord::from_cwr_line(line)?;
+            (CwrRecord::Per(result.record), result.warnings)
+        },
+        "NPR" => {
+            let result = NprRecord::from_cwr_line(line)?;
+            (CwrRecord::Npr(result.record), result.warnings)
+        },
+        "REC" => {
+            let result = RecRecord::from_cwr_line(line)?;
+            (CwrRecord::Rec(result.record), result.warnings)
+        },
+        "ORN" => {
+            let result = OrnRecord::from_cwr_line(line)?;
+            (CwrRecord::Orn(result.record), result.warnings)
+        },
+        "INS" => {
+            let result = InsRecord::from_cwr_line(line)?;
+            (CwrRecord::Ins(result.record), result.warnings)
+        },
+        "IND" => {
+            let result = IndRecord::from_cwr_line(line)?;
+            (CwrRecord::Ind(result.record), result.warnings)
+        },
+        "COM" => {
+            let result = ComRecord::from_cwr_line(line)?;
+            (CwrRecord::Com(result.record), result.warnings)
+        },
+        "MSG" => {
+            let result = MsgRecord::from_cwr_line(line)?;
+            (CwrRecord::Msg(result.record), result.warnings)
+        },
+        "NET" | "NCT" | "NVT" => {
+            let result = NetRecord::from_cwr_line(line)?;
+            (CwrRecord::Net(result.record), result.warnings)
+        },
+        "NOW" => {
+            let result = NowRecord::from_cwr_line(line)?;
+            (CwrRecord::Now(result.record), result.warnings)
+        },
+        "ARI" => {
+            let result = AriRecord::from_cwr_line(line)?;
+            (CwrRecord::Ari(result.record), result.warnings)
+        },
+        "XRF" => {
+            let result = XrfRecord::from_cwr_line(line)?;
+            (CwrRecord::Xrf(result.record), result.warnings)
+        },
         _ => {
             return Err(CwrParseError::BadFormat(format!("Unrecognized record type '{}'", record_type)));
         }
     };
 
-    Ok(ParsedRecord { line_number, record, context: context.clone() })
+    Ok(ParsedRecord { line_number, record, context: context.clone(), warnings })
 }
 
 /// Returns an iterator that processes CWR lines and yields parsed records

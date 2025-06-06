@@ -55,6 +55,13 @@ pub trait CwrHandler {
     /// Handle a parsing error (e.g., log it, count it, etc.)
     fn handle_parse_error(&mut self, line_number: usize, error: &CwrParseError) -> Result<(), Self::Error>;
 
+    /// Handle warnings from a successfully parsed record (optional override)
+    fn handle_warnings(&mut self, line_number: usize, record_type: &str, warnings: &[String]) -> Result<(), Self::Error> {
+        // Default implementation does nothing - handlers can override to store warnings
+        let _ = (line_number, record_type, warnings);
+        Ok(())
+    }
+
     /// Finalize processing (e.g., commit transaction, close files, etc.)
     fn finalize(&mut self) -> Result<(), Self::Error>;
 
@@ -81,6 +88,10 @@ where
     for result in process_cwr_stream_with_version(input_filename, version_hint)? {
         match result {
             Ok(parsed_record) => {
+                // Handle warnings if any
+                if !parsed_record.warnings.is_empty() {
+                    handler.handle_warnings(parsed_record.line_number, parsed_record.record.record_type(), &parsed_record.warnings)?;
+                }
                 handler.process_record(parsed_record)?;
                 processed_count += 1;
             }

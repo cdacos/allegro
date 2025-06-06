@@ -580,6 +580,29 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
         Ok(())
     }
 
+    fn handle_warnings(&mut self, line_number: usize, record_type: &str, warnings: &[String]) -> std::result::Result<(), Self::Error> {
+        if warnings.is_empty() {
+            return Ok(());
+        }
+
+        self.start_batch()?;
+
+        if let Some(ref mut statements) = self.statements {
+            for warning in warnings {
+                // Store warnings in the error table with "WARNING:" prefix to distinguish from errors
+                let warning_description = format!("WARNING [{}]: {}", record_type, warning);
+                log_error(&mut statements.error_stmt, self.file_id, line_number, warning_description)?;
+                self.error_count += 1;
+            }
+        }
+
+        if self.should_commit_batch() {
+            self.commit_batch()?;
+        }
+
+        Ok(())
+    }
+
     fn finalize(&mut self) -> std::result::Result<(), Self::Error> {
         // Commit any remaining batch
         self.commit_batch()?;

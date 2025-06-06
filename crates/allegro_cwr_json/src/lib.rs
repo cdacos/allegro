@@ -61,6 +61,25 @@ impl allegro_cwr::CwrHandler for JsonHandler {
         Ok(())
     }
 
+    fn handle_warnings(&mut self, line_number: usize, record_type: &str, warnings: &[String]) -> Result<(), Self::Error> {
+        for warning in warnings {
+            if !self.first_record {
+                println!(",");
+            }
+
+            println!("  {{");
+            println!("    \"line_number\": {},", line_number);
+            println!("    \"record_type\": \"{}\",", record_type);
+            println!("    \"status\": \"warning\",");
+            println!("    \"warning_message\": \"{}\"", warning.replace('"', "\\\""));
+            println!("  }}");
+
+            self.first_record = false;
+            self.error_count += 1;
+        }
+        Ok(())
+    }
+
     fn finalize(&mut self) -> Result<(), Self::Error> {
         // End JSON array
         println!();
