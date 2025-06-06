@@ -13,65 +13,6 @@ pub fn format_int_with_commas(num: i64) -> String {
     result
 }
 
-pub fn extract_required_field(line: &str, start: usize, end: usize, field_name: &str, _warnings: &mut Vec<String>) -> Result<String, crate::error::CwrParseError> {
-    if line.len() < end {
-        return Err(crate::error::CwrParseError::BadFormat(format!("Line too short for required field {}", field_name)));
-    }
-    Ok(line.get(start..end).unwrap().trim().to_string())
-}
-
-pub fn extract_optional_field(line: &str, start: usize, end: usize, field_name: &str, record_type: &str, warnings: &mut Vec<String>) -> Option<String> {
-    if line.len() < end {
-        warnings.push(format!("{} record missing optional field: {}", record_type, field_name));
-        return None;
-    }
-    line.get(start..end).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string())
-}
-
-pub fn validate_record_type(line: &str, expected: &str) -> Result<String, crate::error::CwrParseError> {
-    if line.len() < 3 {
-        return Err(crate::error::CwrParseError::BadFormat("Line too short to contain record type".to_string()));
-    }
-    let record_type = line.get(0..3).unwrap().to_string();
-    if record_type != expected {
-        return Err(crate::error::CwrParseError::BadFormat(format!("Expected {}, found {}", expected, record_type)));
-    }
-    Ok(record_type)
-}
-
-/// Extract and validate a required field from a CWR line
-pub fn extract_required_validated(line: &str, start: usize, end: usize, field_name: &str, validator: Option<&dyn Fn(&str) -> Result<(), String>>, _warnings: &mut Vec<String>) -> Result<String, crate::error::CwrParseError> {
-    if line.len() < end {
-        return Err(crate::error::CwrParseError::BadFormat(format!("Line too short for required field {}", field_name)));
-    }
-    let value = line.get(start..end).unwrap().trim().to_string();
-    if let Some(validator) = validator {
-        if let Err(err) = validator(&value) {
-            return Err(crate::error::CwrParseError::BadFormat(format!("Validation failed for field {}: {}", field_name, err)));
-        }
-    }
-    Ok(value)
-}
-
-/// Extract and validate an optional field from a CWR line
-pub fn extract_optional_validated(line: &str, start: usize, end: usize, field_name: &str, validator: Option<&dyn Fn(&str) -> Result<(), String>>, warnings: &mut Vec<String>) -> Option<String> {
-    if line.len() < end {
-        warnings.push(format!("Line too short for optional field {}", field_name));
-        return None;
-    }
-    let trimmed = line.get(start..end).unwrap().trim();
-    if trimmed.is_empty() {
-        return None;
-    }
-    if let Some(validator) = validator {
-        if let Err(err) = validator(trimmed) {
-            warnings.push(format!("Validation failed for optional field {}: {}", field_name, err));
-            return None;
-        }
-    }
-    Some(trimmed.to_string())
-}
-
 /// Extract CWR version from filename according to the spec:
 /// CWyynnnnsss_rrr.Vxx where Vxx is the version (e.g., V21 = 2.1, V22 = 2.2)
 pub fn extract_version_from_filename(filename: &str) -> Option<f32> {

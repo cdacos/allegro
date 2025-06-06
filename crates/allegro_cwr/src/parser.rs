@@ -276,21 +276,21 @@ pub fn process_cwr_stream_with_version(input_filename: &str, version_hint: Optio
     // Reset to start of file
     reader.seek(io::SeekFrom::Start(0))?;
 
-    Ok(reader.lines().enumerate().filter_map(move |(idx, line_result)| {
+    Ok(reader.lines().enumerate().map(move |(idx, line_result)| {
         let line_number = idx + 1;
         match line_result {
             Ok(line) => {
                 if line.is_empty() || line.trim().is_empty() {
-                    Some(Err(CwrParseError::BadFormat(format!("Line {} is empty", line_number))))
+                    Err(CwrParseError::BadFormat(format!("Line {} is empty", line_number)))
                 } else if line.len() < 3 {
-                    Some(Err(CwrParseError::BadFormat(format!("Line {} is too short (less than 3 chars)", line_number))))
+                    Err(CwrParseError::BadFormat(format!("Line {} is too short (less than 3 chars)", line_number)))
                 } else {
-                    Some(parse_cwr_line(&line, line_number, &context))
+                    parse_cwr_line(&line, line_number, &context)
                 }
             }
             Err(io_err) => {
                 error!("IO error reading line {}: {}", line_number, io_err);
-                Some(Err(CwrParseError::Io(io_err)))
+                Err(CwrParseError::Io(io_err))
             }
         }
     }))
