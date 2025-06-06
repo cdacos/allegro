@@ -20,37 +20,57 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
     let field_parsers = fields.iter().map(|field| {
         let field_name = field.ident.as_ref().unwrap();
         let field_type = &field.ty;
-        let (title, start, len) = extract_field_attrs(&field.attrs);
+        let (title, start, len, skip_parse) = extract_field_attrs(&field.attrs);
 
-        quote! {
-            let (#field_name, field_warnings) = {
-                let end = #start + #len;
-                if line.len() < end {
-                    let mut warnings = vec![
-                        CwrWarning {
-                            field_name: stringify!(#field_name),
-                            field_title: #title,
-                            source_str: std::borrow::Cow::Borrowed(""),
-                            level: WarningLevel::Critical,
-                            description: format!(
-                                "Line too short: expected at least {} characters, got {}",
-                                end,
-                                line.len()
-                            ),
-                        }
-                    ];
-                    let default_value = <#field_type as Default>::default();
-                    (default_value, warnings)
-                } else {
-                    let field_slice = &line[#start..end];
-                    <#field_type as CwrFieldParse>::parse_cwr_field(
-                        field_slice,
-                        stringify!(#field_name),
-                        #title
-                    )
-                }
-            };
-            warnings.extend(field_warnings);
+        let field_name_str = field_name.to_string();
+        
+        if field_name_str == "record_type" {
+            // Auto-detect record type from struct name (e.g., AgrRecord -> "AGR")
+            let struct_name = name.to_string();
+            let record_type_str = if struct_name.ends_with("Record") {
+                &struct_name[..struct_name.len() - 6] // Remove "Record" suffix
+            } else {
+                &struct_name
+            }.to_uppercase(); // Convert to uppercase (Agr -> AGR)
+            
+            quote! {
+                let #field_name = #record_type_str;
+            }
+        } else if skip_parse {
+            quote! {
+                let #field_name = <#field_type as Default>::default();
+            }
+        } else {
+            quote! {
+                let (#field_name, field_warnings) = {
+                    let end = #start + #len;
+                    if line.len() < end {
+                        let mut warnings = vec![
+                            CwrWarning {
+                                field_name: stringify!(#field_name),
+                                field_title: #title,
+                                source_str: std::borrow::Cow::Borrowed(""),
+                                level: WarningLevel::Critical,
+                                description: format!(
+                                    "Line too short: expected at least {} characters, got {}",
+                                    end,
+                                    line.len()
+                                ),
+                            }
+                        ];
+                        let default_value = <#field_type as Default>::default();
+                        (default_value, warnings)
+                    } else {
+                        let field_slice = &line[#start..end];
+                        <#field_type as CwrFieldParse>::parse_cwr_field(
+                            field_slice,
+                            stringify!(#field_name),
+                            #title
+                        )
+                    }
+                };
+                warnings.extend(field_warnings);
+            }
         }
     });
 
@@ -97,7 +117,23 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
 
             /// Compatibility method for existing parser
             pub fn from_cwr_line(line: &str) -> Result<crate::error::CwrParseResult<Self>, crate::error::CwrParseError> {
-                let (record, warnings) = Self::parse(line);
+                // Validate record type matches what we expect
+                if line.len() < 3 {
+                    return Err(crate::error::CwrParseError::BadFormat(
+                        "Line too short to contain record type".to_string()
+                    ));
+                }
+                
+                let (mut record, warnings) = Self::parse(line);
+                
+                // Validate that the parsed record type matches the expected type for this struct
+                let line_record_type = &line[0..3];
+                let expected_record_type = record.record_type;
+                if line_record_type != expected_record_type {
+                    return Err(crate::error::CwrParseError::BadFormat(
+                        format!("Record type mismatch: expected {}, found {}", expected_record_type, line_record_type)
+                    ));
+                }
 
                 // Convert CwrWarning to String for compatibility
                 let string_warnings: Vec<String> = warnings.into_iter()
@@ -148,12 +184,17 @@ fn extract_test_data(attrs: &[syn::Attribute]) -> Option<String> {
     None
 }
 
-fn extract_field_attrs(attrs: &[syn::Attribute]) -> (String, usize, usize) {
+fn extract_field_attrs(attrs: &[syn::Attribute]) -> (String, usize, usize, bool) {
     for attr in attrs {
         if attr.path().is_ident("cwr") {
             let result: Result<CwrFieldAttribute, _> = attr.parse_args();
             if let Ok(field_attr) = result {
-                return (field_attr.title.value(), field_attr.start.base10_parse().unwrap(), field_attr.len.base10_parse().unwrap());
+                return (
+                    field_attr.title.value(), 
+                    field_attr.start.base10_parse().unwrap(), 
+                    field_attr.len.base10_parse().unwrap(),
+                    field_attr.skip_parse
+                );
             }
         }
     }
@@ -191,6 +232,7 @@ struct CwrFieldAttribute {
     title: LitStr,
     start: LitInt,
     len: LitInt,
+    skip_parse: bool,
 }
 
 impl syn::parse::Parse for CwrFieldAttribute {
@@ -198,15 +240,27 @@ impl syn::parse::Parse for CwrFieldAttribute {
         let mut title = None;
         let mut start = None;
         let mut len = None;
+        let mut skip_parse = false;
 
         while !input.is_empty() {
             let ident: syn::Ident = input.parse()?;
-            input.parse::<syn::Token![=]>()?;
-
+            
             match ident.to_string().as_str() {
-                "title" => title = Some(input.parse()?),
-                "start" => start = Some(input.parse()?),
-                "len" => len = Some(input.parse()?),
+                "title" => {
+                    input.parse::<syn::Token![=]>()?;
+                    title = Some(input.parse()?);
+                },
+                "start" => {
+                    input.parse::<syn::Token![=]>()?;
+                    start = Some(input.parse()?);
+                },
+                "len" => {
+                    input.parse::<syn::Token![=]>()?;
+                    len = Some(input.parse()?);
+                },
+                "skip_parse" => {
+                    skip_parse = true;
+                },
                 _ => return Err(syn::Error::new(ident.span(), "Unknown field attribute")),
             }
 
@@ -215,6 +269,11 @@ impl syn::parse::Parse for CwrFieldAttribute {
             }
         }
 
-        Ok(CwrFieldAttribute { title: title.ok_or_else(|| input.error("Missing 'title' attribute"))?, start: start.ok_or_else(|| input.error("Missing 'start' attribute"))?, len: len.ok_or_else(|| input.error("Missing 'len' attribute"))? })
+        Ok(CwrFieldAttribute { 
+            title: title.ok_or_else(|| input.error("Missing 'title' attribute"))?, 
+            start: start.ok_or_else(|| input.error("Missing 'start' attribute"))?, 
+            len: len.ok_or_else(|| input.error("Missing 'len' attribute"))?,
+            skip_parse
+        })
     }
 }

@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 #[cwr(test_data = "VER0000000100000002PLACEHOLDER ORIGINAL WORK TITLE                       1234567890 EN PLACEHOLDER WRITER 1                      FIRSTNAME 1         PLACEHOLDER SOURCE                                      12345678901123456789012PLACEHOLDER WRITER 2                     FIRSTNAME 2         123456789011234567890123456789012345                                        ")]
 pub struct VerRecord {
     #[cwr(title = "Always 'VER'", start = 0, len = 3)]
-    pub record_type: RecordType,
+    pub record_type: &'static str,
 
     #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,

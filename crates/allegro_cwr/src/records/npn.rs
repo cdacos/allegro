@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 #[cwr(test_data = "NPN0000000100000002011234567890PLACEHOLDER PUBLISHER NAME                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          EN")]
 pub struct NpnRecord {
     #[cwr(title = "Always 'NPN'", start = 0, len = 3)]
-    pub record_type: RecordType,
+    pub record_type: &'static str,
 
     #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,

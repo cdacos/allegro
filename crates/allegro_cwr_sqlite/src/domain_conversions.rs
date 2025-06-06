@@ -18,3 +18,9 @@ impl CwrToSqlString for Date {
         self.as_str()
     }
 }
+
+impl CwrToSqlString for &'static str {
+    fn to_sql_string(&self) -> String {
+        (*self).to_string()
+    }
+}

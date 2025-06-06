@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 #[cwr(test_data = "ARI0000000100000001021              ALL  Additional related information note for the work                                                                                                                ")]
 pub struct AriRecord {
     #[cwr(title = "Always 'ARI'", start = 0, len = 3)]
-    pub record_type: RecordType,
+    pub record_type: &'static str,
 
     #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
