@@ -32,6 +32,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "allegro_cwr_derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "allegro_cwr_json"
 version = "0.1.0"
 dependencies = [
