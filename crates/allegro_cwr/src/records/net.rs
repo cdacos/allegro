@@ -1,6 +1,7 @@
 //! NET - Non-Roman Alphabet Entire Work Title for Excerpts/Components/Versions Record
 
-use crate::error::CwrParseError;
+use crate::validators::one_of;
+use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
 use serde::{Deserialize, Serialize};
 
 /// NET - Non-Roman Alphabet Entire Work Title for Excerpts/Components/Versions Record
@@ -24,63 +25,19 @@ pub struct NetRecord {
 }
 
 impl NetRecord {
-    /// Create a new NET record
-    pub fn new(record_type: String, transaction_sequence_num: String, record_sequence_num: String, title: String) -> Self {
-        Self { record_type, transaction_sequence_num, record_sequence_num, title, language_code: None }
-    }
-
-    /// Parse a CWR line into a NET record
-    pub fn from_cwr_line(line: &str) -> Result<Self, CwrParseError> {
-        if line.len() < 659 {
-            return Err(CwrParseError::BadFormat("NET line too short".to_string()));
-        }
-
-        let record_type = line.get(0..3).unwrap().to_string();
-        if !["NET", "NCT", "NVT"].contains(&record_type.as_str()) {
-            return Err(CwrParseError::BadFormat(format!("Expected NET/NCT/NVT, found {}", record_type)));
-        }
-
-        let transaction_sequence_num = line.get(3..11).unwrap().trim().to_string();
-        let record_sequence_num = line.get(11..19).unwrap().trim().to_string();
-        let title = line.get(19..659).unwrap().trim().to_string();
-
-        let language_code = if line.len() > 659 { line.get(659..661).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string()) } else { None };
-
-        Ok(NetRecord { record_type, transaction_sequence_num, record_sequence_num, title, language_code })
-    }
-
-    /// Convert this record to a CWR format line
-    pub fn to_cwr_line(&self) -> String {
-        let mut fields = vec![format!("{:3}", self.record_type), format!("{:8}", self.transaction_sequence_num), format!("{:8}", self.record_sequence_num), format!("{:640}", self.title)];
-
-        if let Some(ref language) = self.language_code {
-            fields.push(format!("{:2}", language));
-        }
-
-        fields.join("")
+    fn post_process_fields(_record: &mut NetRecord, _warnings: &mut Vec<String>) {
+        // No specific post-processing needed for NET
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_net_creation() {
-        let net = NetRecord::new("NET".to_string(), "00000001".to_string(), "00000001".to_string(), "Non-Roman Entire Work Title".to_string());
-
-        assert_eq!(net.record_type, "NET");
-        assert_eq!(net.title, "Non-Roman Entire Work Title");
-    }
-
-    #[test]
-    fn test_net_round_trip() {
-        let original = NetRecord::new("NET".to_string(), "00000001".to_string(), "00000001".to_string(), "Non-Roman Entire Work Title".to_string());
-
-        let line = original.to_cwr_line();
-        let parsed = NetRecord::from_cwr_line(&line).unwrap();
-
-        assert_eq!(original, parsed);
-        assert_eq!(line.len(), 659);
+impl_cwr_parsing! {
+    NetRecord {
+        record_type: (0, 3, required, one_of(&["NET", "NCT", "NVT"])),
+        transaction_sequence_num: (3, 11, required),
+        record_sequence_num: (11, 19, required),
+        title: (19, 659, required),
+        language_code: (659, 661, optional),
     }
 }
+
+impl_cwr_parsing_test_roundtrip!(NetRecord, "NET0000000100000001Non-Roman Entire Work Title                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            EN");

@@ -1,6 +1,7 @@
 //! MSG - Message Record
 
-use crate::error::CwrParseError;
+use crate::validators::one_of;
+use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
 use serde::{Deserialize, Serialize};
 
 /// MSG - Message Record
@@ -35,72 +36,23 @@ pub struct MsgRecord {
 }
 
 impl MsgRecord {
-    /// Create a new MSG record
-    pub fn new(transaction_sequence_num: String, record_sequence_num: String, message_type: String, original_record_sequence_num: String, record_type_field: String, message_level: String, validation_number: String, message_text: String) -> Self {
-        Self { record_type: "MSG".to_string(), transaction_sequence_num, record_sequence_num, message_type, original_record_sequence_num, record_type_field, message_level, validation_number, message_text }
-    }
-
-    /// Parse a CWR line into a MSG record
-    pub fn from_cwr_line(line: &str) -> Result<Self, CwrParseError> {
-        if line.len() < 185 {
-            return Err(CwrParseError::BadFormat("MSG line too short".to_string()));
-        }
-
-        let record_type = line.get(0..3).unwrap().to_string();
-        if record_type != "MSG" {
-            return Err(CwrParseError::BadFormat(format!("Expected MSG, found {}", record_type)));
-        }
-
-        let transaction_sequence_num = line.get(3..11).unwrap().trim().to_string();
-        let record_sequence_num = line.get(11..19).unwrap().trim().to_string();
-        let message_type = line.get(19..20).unwrap().trim().to_string();
-        let original_record_sequence_num = line.get(20..28).unwrap().trim().to_string();
-        let record_type_field = line.get(28..31).unwrap().trim().to_string();
-        let message_level = line.get(31..32).unwrap().trim().to_string();
-        let validation_number = line.get(32..35).unwrap().trim().to_string();
-        let message_text = line.get(35..185).unwrap().trim().to_string();
-
-        Ok(MsgRecord { record_type, transaction_sequence_num, record_sequence_num, message_type, original_record_sequence_num, record_type_field, message_level, validation_number, message_text })
-    }
-
-    /// Convert this record to a CWR format line
-    pub fn to_cwr_line(&self) -> String {
-        vec![
-            format!("{:3}", self.record_type),
-            format!("{:8}", self.transaction_sequence_num),
-            format!("{:8}", self.record_sequence_num),
-            format!("{:1}", self.message_type),
-            format!("{:8}", self.original_record_sequence_num),
-            format!("{:3}", self.record_type_field),
-            format!("{:1}", self.message_level),
-            format!("{:3}", self.validation_number),
-            format!("{:150}", self.message_text),
-        ]
-        .join("")
+    fn post_process_fields(_record: &mut MsgRecord, _warnings: &mut Vec<String>) {
+        // No specific post-processing needed for MSG
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_msg_creation() {
-        let msg = MsgRecord::new("00000001".to_string(), "00000001".to_string(), "E".to_string(), "00000002".to_string(), "NWR".to_string(), "R".to_string(), "001".to_string(), "Record rejected due to invalid format".to_string());
-
-        assert_eq!(msg.record_type, "MSG");
-        assert_eq!(msg.message_type, "E");
-        assert_eq!(msg.message_text, "Record rejected due to invalid format");
-    }
-
-    #[test]
-    fn test_msg_round_trip() {
-        let original = MsgRecord::new("00000001".to_string(), "00000001".to_string(), "E".to_string(), "00000002".to_string(), "NWR".to_string(), "R".to_string(), "001".to_string(), "Record rejected due to invalid format".to_string());
-
-        let line = original.to_cwr_line();
-        let parsed = MsgRecord::from_cwr_line(&line).unwrap();
-
-        assert_eq!(original, parsed);
-        assert_eq!(line.len(), 185);
+impl_cwr_parsing! {
+    MsgRecord {
+        record_type: (0, 3, required, one_of(&["MSG"])),
+        transaction_sequence_num: (3, 11, required),
+        record_sequence_num: (11, 19, required),
+        message_type: (19, 20, required),
+        original_record_sequence_num: (20, 28, required),
+        record_type_field: (28, 31, required),
+        message_level: (31, 32, required),
+        validation_number: (32, 35, required),
+        message_text: (35, 185, required),
     }
 }
+
+impl_cwr_parsing_test_roundtrip!(MsgRecord, "MSG0000000100000001E00000002NWRR001Record rejected due to invalid format                                                                                                                            ");

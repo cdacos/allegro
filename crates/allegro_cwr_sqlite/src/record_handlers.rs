@@ -16,7 +16,7 @@ fn reconstruct_line_from_safe_slice(safe_slice: &impl Fn(usize, usize) -> Result
 }
 
 /// Generic handler that uses the record structs instead of field-by-field parsing
-fn handle_record_with_struct<T, F>(line_number: usize, tx: &Transaction, stmts: &mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>, parse_fn: fn(&str) -> Result<T, CwrParseError>, insert_fn: F) -> Result<(), crate::CwrDbError>
+fn handle_record_with_warnings<T, F>(line_number: usize, tx: &Transaction, stmts: &mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>, parse_fn: fn(&str) -> Result<T, CwrParseError>, insert_fn: F) -> Result<(), crate::CwrDbError>
 where
     F: FnOnce(&T, &mut PreparedStatements, i64) -> Result<(), rusqlite::Error>,
 {
@@ -451,7 +451,7 @@ pub fn parse_and_insert_ewt<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 }
 
 pub fn parse_and_insert_ver<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
-    handle_record_with_struct(line_number, tx, stmts, context, safe_slice, VerRecord::from_cwr_line, |record, stmts, file_id| {
+    handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, VerRecord::from_cwr_line_v2, |record, stmts, file_id| {
         stmts.ver_stmt.execute(params![
             file_id,
             record.record_type,
@@ -476,7 +476,7 @@ pub fn parse_and_insert_ver<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 }
 
 pub fn parse_and_insert_per<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
-    handle_record_with_struct(line_number, tx, stmts, context, safe_slice, PerRecord::from_cwr_line, |record, stmts, file_id| {
+    handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, PerRecord::from_cwr_line_v2, |record, stmts, file_id| {
         stmts.per_stmt.execute(params![
             file_id,
             record.record_type,
@@ -492,7 +492,7 @@ pub fn parse_and_insert_per<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 }
 
 pub fn parse_and_insert_npr<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
-    handle_record_with_struct(line_number, tx, stmts, context, safe_slice, NprRecord::from_cwr_line, |record, stmts, file_id| {
+    handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, NprRecord::from_cwr_line_v2, |record, stmts, file_id| {
         stmts.npr_stmt.execute(params![
             file_id,
             record.record_type,
@@ -511,7 +511,7 @@ pub fn parse_and_insert_npr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 }
 
 pub fn parse_and_insert_rec<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
-    handle_record_with_struct(line_number, tx, stmts, context, safe_slice, RecRecord::from_cwr_line, |record, stmts, file_id| {
+    handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, RecRecord::from_cwr_line_v2, |record, stmts, file_id| {
         stmts.rec_stmt.execute(params![
             file_id,
             record.record_type,
@@ -541,7 +541,7 @@ pub fn parse_and_insert_rec<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 }
 
 pub fn parse_and_insert_orn<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
-    handle_record_with_struct(line_number, tx, stmts, context, safe_slice, OrnRecord::from_cwr_line, |record, stmts, file_id| {
+    handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, OrnRecord::from_cwr_line_v2, |record, stmts, file_id| {
         stmts.orn_stmt.execute(params![
             file_id,
             record.record_type,
@@ -573,21 +573,21 @@ pub fn parse_and_insert_orn<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 }
 
 pub fn parse_and_insert_ins<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
-    handle_record_with_struct(line_number, tx, stmts, context, safe_slice, InsRecord::from_cwr_line, |record, stmts, file_id| {
+    handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, InsRecord::from_cwr_line_v2, |record, stmts, file_id| {
         stmts.ins_stmt.execute(params![file_id, record.record_type, record.transaction_sequence_num, record.record_sequence_num, record.number_of_voices.as_deref().unwrap_or(""), record.standard_instrumentation_type.as_deref().unwrap_or(""), record.instrumentation_description.as_deref().unwrap_or(""),])?;
         Ok(())
     })
 }
 
 pub fn parse_and_insert_ind<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
-    handle_record_with_struct(line_number, tx, stmts, context, safe_slice, IndRecord::from_cwr_line, |record, stmts, file_id| {
+    handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, IndRecord::from_cwr_line_v2, |record, stmts, file_id| {
         stmts.ind_stmt.execute(params![file_id, record.record_type, record.transaction_sequence_num, record.record_sequence_num, record.instrument_code, record.number_of_players.as_deref().unwrap_or(""),])?;
         Ok(())
     })
 }
 
 pub fn parse_and_insert_com<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
-    handle_record_with_struct(line_number, tx, stmts, context, safe_slice, ComRecord::from_cwr_line, |record, stmts, file_id| {
+    handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, ComRecord::from_cwr_line_v2, |record, stmts, file_id| {
         stmts.com_stmt.execute(params![
             file_id,
             record.record_type,
@@ -611,35 +611,35 @@ pub fn parse_and_insert_com<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 }
 
 pub fn parse_and_insert_msg<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
-    handle_record_with_struct(line_number, tx, stmts, context, safe_slice, MsgRecord::from_cwr_line, |record, stmts, file_id| {
+    handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, MsgRecord::from_cwr_line_v2, |record, stmts, file_id| {
         stmts.msg_stmt.execute(params![file_id, record.record_type, record.transaction_sequence_num, record.record_sequence_num, record.message_type, record.original_record_sequence_num.as_str(), record.record_type_field.as_str(), record.message_level, record.validation_number.as_str(), record.message_text,])?;
         Ok(())
     })
 }
 
 pub fn parse_and_insert_net<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
-    handle_record_with_struct(line_number, tx, stmts, context, safe_slice, NetRecord::from_cwr_line, |record, stmts, file_id| {
+    handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, NetRecord::from_cwr_line_v2, |record, stmts, file_id| {
         stmts.net_stmt.execute(params![file_id, record.record_type, record.transaction_sequence_num, record.record_sequence_num, record.title, record.language_code.as_deref().unwrap_or(""),])?;
         Ok(())
     })
 }
 
 pub fn parse_and_insert_now<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
-    handle_record_with_struct(line_number, tx, stmts, context, safe_slice, NowRecord::from_cwr_line, |record, stmts, file_id| {
+    handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, NowRecord::from_cwr_line_v2, |record, stmts, file_id| {
         stmts.now_stmt.execute(params![file_id, record.record_type, record.transaction_sequence_num, record.record_sequence_num, record.writer_name, record.writer_first_name.as_str(), record.language_code.as_deref().unwrap_or(""), record.writer_position.as_deref().unwrap_or(""),])?;
         Ok(())
     })
 }
 
 pub fn parse_and_insert_ari<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
-    handle_record_with_struct(line_number, tx, stmts, context, safe_slice, AriRecord::from_cwr_line, |record, stmts, file_id| {
+    handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, AriRecord::from_cwr_line_v2, |record, stmts, file_id| {
         stmts.ari_stmt.execute(params![file_id, record.record_type, record.transaction_sequence_num, record.record_sequence_num, record.society_num, record.work_num, record.type_of_right.as_str(), record.subject_code.as_deref().unwrap_or(""), record.note.as_deref().unwrap_or(""),])?;
         Ok(())
     })
 }
 
 pub fn parse_and_insert_xrf<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
-    handle_record_with_struct(line_number, tx, stmts, context, safe_slice, XrfRecord::from_cwr_line, |record, stmts, file_id| {
+    handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, XrfRecord::from_cwr_line_v2, |record, stmts, file_id| {
         stmts.xrf_stmt.execute(params![file_id, record.record_type, record.transaction_sequence_num, record.record_sequence_num, record.organisation_code, record.identifier, record.identifier_type.as_str(), record.validity.as_str(),])?;
         Ok(())
     })
