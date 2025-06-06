@@ -1,4 +1,4 @@
-/// Macro to generate from_cwr_line_v2 method for CWR record parsing
+/// Macro to generate from_cwr_line method for CWR record parsing
 /// 
 /// Usage:
 /// ```ignore
@@ -35,7 +35,7 @@ macro_rules! impl_cwr_parsing {
             }
 
             /// Parse a CWR line into a record (v2 with validation and warnings)
-            pub fn from_cwr_line_v2(line: &str) -> Result<$crate::error::CwrParseResult<Self>, $crate::error::CwrParseError> {
+            pub fn from_cwr_line(line: &str) -> Result<$crate::error::CwrParseResult<Self>, $crate::error::CwrParseError> {
                 use $crate::util::extract_required_validated;
                 #[allow(unused_imports)]
                 use $crate::util::extract_optional_validated;
@@ -141,7 +141,7 @@ macro_rules! impl_cwr_parsing_test_roundtrip {
                 let original_line = $test_line;
                 
                 // Parse the line
-                let parse_result = $struct_name::from_cwr_line_v2(original_line).unwrap();
+                let parse_result = $struct_name::from_cwr_line(original_line).unwrap();
                 let record = parse_result.record;
                 
                 // Convert back to CWR line
@@ -152,7 +152,7 @@ macro_rules! impl_cwr_parsing_test_roundtrip {
                     "Round-trip failed: original line and regenerated line don't match");
                 
                 // Parse the regenerated line to ensure it's still valid
-                let reparse_result = $struct_name::from_cwr_line_v2(&regenerated_line).unwrap();
+                let reparse_result = $struct_name::from_cwr_line(&regenerated_line).unwrap();
                 
                 // The records should be identical
                 assert_eq!(record, reparse_result.record, 
@@ -193,7 +193,7 @@ mod tests {
     #[test]
     fn test_macro_generated_parsing() {
         let line = "TST12345ABCDE";
-        let result = TestRecord::from_cwr_line_v2(line).unwrap();
+        let result = TestRecord::from_cwr_line(line).unwrap();
         
         assert_eq!(result.record.record_type, "TST");
         assert_eq!(result.record.required_field, "12345");
@@ -204,7 +204,7 @@ mod tests {
     #[test]
     fn test_macro_with_validation_error() {
         let line = "XYZ12345ABCDE";
-        let result = TestRecord::from_cwr_line_v2(line);
+        let result = TestRecord::from_cwr_line(line);
         
         assert!(result.is_err());
         match result {
@@ -218,7 +218,7 @@ mod tests {
     #[test]
     fn test_macro_with_optional_field_missing() {
         let line = "TST12345";
-        let result = TestRecord::from_cwr_line_v2(line).unwrap();
+        let result = TestRecord::from_cwr_line(line).unwrap();
         
         assert_eq!(result.record.record_type, "TST");
         assert_eq!(result.record.required_field, "12345");
@@ -230,7 +230,7 @@ mod tests {
     #[test]
     fn test_macro_generated_to_cwr_line() {
         let line = "TST12345ABCDE";
-        let result = TestRecord::from_cwr_line_v2(line).unwrap();
+        let result = TestRecord::from_cwr_line(line).unwrap();
         
         // Test that the generated to_cwr_line method works
         let output = result.record.to_cwr_line();
@@ -240,7 +240,7 @@ mod tests {
     #[test]
     fn test_macro_round_trip() {
         let original_line = "TST12345ABCDE";
-        let parsed = TestRecord::from_cwr_line_v2(original_line).unwrap();
+        let parsed = TestRecord::from_cwr_line(original_line).unwrap();
         let regenerated_line = parsed.record.to_cwr_line();
         
         // Should be able to round-trip the data

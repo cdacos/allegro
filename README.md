@@ -96,9 +96,9 @@ The macro automatically generates three essential methods for each record type:
    ) -> Self
    ```
 
-2. **`from_cwr_line_v2()`** - Parser with validation and warnings
+2. **`from_cwr_line()`** - Parser with validation and warnings
    ```rust
-   pub fn from_cwr_line_v2(line: &str) -> Result<CwrParseResult<Self>, CwrParseError>
+   pub fn from_cwr_line(line: &str) -> Result<CwrParseResult<Self>, CwrParseError>
    ```
 
 3. **`to_cwr_line()`** - Formatter back to CWR format
@@ -154,7 +154,7 @@ impl AgrRecord {
     ) -> Self { /* constructor implementation */ }
 
     /// Parse a CWR line into a record (v2 with validation and warnings)
-    pub fn from_cwr_line_v2(line: &str) -> Result<CwrParseResult<Self>, CwrParseError> {
+    pub fn from_cwr_line(line: &str) -> Result<CwrParseResult<Self>, CwrParseError> {
         // Generated parsing logic with validation calls
         let record_type = extract_required_validated(line, 0, 3, "record_type", Some(&one_of(&["AGR"])), &mut warnings)?;
         // ... parsing for all 19 fields with proper validation
@@ -190,7 +190,7 @@ impl_cwr_parsing_test_roundtrip!(AgrRecord, "AGR00000001000000011234567890123...
 ```
 
 The generated test:
-1. Parses the provided CWR line using `from_cwr_line_v2()`
+1. Parses the provided CWR line using `from_cwr_line()`
 2. Converts the record back to CWR format using `to_cwr_line()`
 3. Verifies the regenerated line exactly matches the original
 4. Parses the regenerated line again to ensure consistency
@@ -201,7 +201,7 @@ The generated test:
 This macro enables easy migration of all 30+ CWR record types from manual implementations to generated code:
 
 1. Define field specifications using the macro syntax
-2. Remove manual `new()`, `from_cwr_line_v2()`, and `to_cwr_line()` implementations  
+2. Remove manual `new()`, `from_cwr_line()`, and `to_cwr_line()` implementations  
 3. Add round-trip test with `impl_cwr_parsing_test_roundtrip!`
 4. The macro generates equivalent functionality with validation and warnings
 5. All existing tests continue to pass without modification
