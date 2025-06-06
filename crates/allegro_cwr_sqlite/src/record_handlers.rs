@@ -15,35 +15,6 @@ fn reconstruct_line_from_safe_slice(safe_slice: &impl Fn(usize, usize) -> Result
     }
 }
 
-/// Generic handler that uses the record structs instead of field-by-field parsing
-fn handle_record_with_warnings<T, F>(line_number: usize, tx: &Transaction, stmts: &mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>, parse_fn: fn(&str) -> Result<T, CwrParseError>, insert_fn: F) -> Result<(), crate::CwrDbError>
-where
-    F: FnOnce(&T, &mut PreparedStatements, i64) -> Result<(), rusqlite::Error>,
-{
-    // Reconstruct the full line
-    let line = reconstruct_line_from_safe_slice(safe_slice)?;
-
-    // Parse using the existing record struct
-    match parse_fn(&line) {
-        Ok(record) => {
-            // Insert using the provided function
-            insert_fn(&record, stmts, context.file_id)?;
-            let record_id = tx.last_insert_rowid();
-
-            // Log to file_line table
-            let record_type = line.get(0..3).unwrap_or("UNK");
-            insert_file_line_record(&mut stmts.file_stmt, context.file_id, line_number, record_type, record_id)?;
-
-            Ok(())
-        }
-        Err(e) => {
-            // Log error but continue processing (recoverable error)
-            log_error(&mut stmts.error_stmt, context.file_id, line_number, e.to_string())?;
-            Ok(())
-        }
-    }
-}
-
 /// Generic handler for records that return CwrParseResult (with warnings)
 fn handle_record_with_warnings<T, F>(line_number: usize, tx: &Transaction, stmts: &mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>, parse_fn: fn(&str) -> Result<allegro_cwr::error::CwrParseResult<T>, CwrParseError>, insert_fn: F) -> Result<(), crate::CwrDbError>
 where

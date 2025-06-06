@@ -238,9 +238,9 @@ fn parse_cwr_line(line: &str, line_number: usize, context: &ParsingContext) -> R
         "COM" => CwrRecord::Com(ComRecord::from_cwr_line_v2(line)?.record),
         "MSG" => CwrRecord::Msg(MsgRecord::from_cwr_line_v2(line)?.record),
         "NET" | "NCT" | "NVT" => CwrRecord::Net(NetRecord::from_cwr_line_v2(line)?.record),
-        "NOW" => CwrRecord::Now(NowRecord::from_cwr_line(line)?),
-        "ARI" => CwrRecord::Ari(AriRecord::from_cwr_line(line)?),
-        "XRF" => CwrRecord::Xrf(XrfRecord::from_cwr_line(line)?),
+        "NOW" => CwrRecord::Now(NowRecord::from_cwr_line_v2(line)?.record),
+        "ARI" => CwrRecord::Ari(AriRecord::from_cwr_line_v2(line)?.record),
+        "XRF" => CwrRecord::Xrf(XrfRecord::from_cwr_line_v2(line)?.record),
         _ => {
             return Err(CwrParseError::BadFormat(format!("Unrecognized record type '{}'", record_type)));
         }
