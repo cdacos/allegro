@@ -155,3 +155,95 @@ pub fn process_cwr_to_sqlite_with_version(input_filename: &str, db_filename: &st
 
     Ok((file_id, processed_count, report))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs::File;
+    use std::io::Write;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_records_are_actually_inserted_into_database() {
+        // Create a temporary CWR file with a few records
+        let temp_dir = tempdir().unwrap();
+        let cwr_file_path = temp_dir.path().join("test.cwr");
+        let db_file_path = temp_dir.path().join("test.db");
+        
+        let mut file = File::create(&cwr_file_path).unwrap();
+        writeln!(file, "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221").unwrap();
+        writeln!(file, "GRHTRK0000102.10                                                          ").unwrap();
+        writeln!(file, "NWR0000000100000001SAMPLE SONG                                    EN13579246801234500000000000000                                                                                                                                                                                                    00000000            UNC000000000000000000000000000000000000000000000000000").unwrap();
+        writeln!(file, "GRT000010000000100000003").unwrap();
+        writeln!(file, "TRL00001000000010000003").unwrap();
+        
+        // Process the file
+        let (file_id, processed_count, _report) = process_cwr_to_sqlite(
+            cwr_file_path.to_str().unwrap(),
+            db_file_path.to_str().unwrap()
+        ).unwrap();
+        
+        // Verify processing happened
+        assert_eq!(processed_count, 5, "Should have processed 5 records");
+        
+        // Connect to database and verify records were actually inserted
+        let conn = rusqlite::Connection::open(&db_file_path).unwrap();
+        
+        // Check file_line table - should have entries for each record type
+        let mut stmt = conn.prepare("SELECT record_type, COUNT(*) FROM file_line WHERE file_id = ?1 GROUP BY record_type ORDER BY record_type").unwrap();
+        let rows: std::result::Result<Vec<(String, i64)>, rusqlite::Error> = stmt.query_map([file_id], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?))
+        }).unwrap().collect();
+        
+        let record_counts = rows.unwrap();
+        println!("Record counts from file_line table: {:?}", record_counts);
+        
+        // Should have one of each record type
+        let expected_records = vec![
+            ("GRH".to_string(), 1i64),
+            ("GRT".to_string(), 1i64), 
+            ("HDR".to_string(), 1i64),
+            ("NWR".to_string(), 1i64),
+            ("TRL".to_string(), 1i64),
+        ];
+        assert_eq!(record_counts, expected_records, "file_line table should track all record types");
+        
+        // MORE IMPORTANTLY: Check that actual record data was inserted into specific tables
+        
+        // Check HDR table
+        let hdr_count: i64 = conn.query_row(
+            "SELECT COUNT(*) FROM hdr WHERE file_id = ?1", 
+            [file_id], 
+            |row| row.get(0)
+        ).unwrap();
+        assert_eq!(hdr_count, 1, "HDR table should have 1 record");
+        
+        // Check GRH table  
+        let grh_count: i64 = conn.query_row(
+            "SELECT COUNT(*) FROM grh WHERE file_id = ?1",
+            [file_id],
+            |row| row.get(0)
+        ).unwrap();
+        assert_eq!(grh_count, 1, "GRH table should have 1 record");
+        
+        // Check NWR table
+        let nwr_count: i64 = conn.query_row(
+            "SELECT COUNT(*) FROM nwr WHERE file_id = ?1",
+            [file_id], 
+            |row| row.get(0)
+        ).unwrap();
+        assert_eq!(nwr_count, 1, "NWR table should have 1 record");
+        
+        // Verify the HDR record actually contains the parsed data
+        let (sender_name, creation_date): (String, String) = conn.query_row(
+            "SELECT sender_name, creation_date FROM hdr WHERE file_id = ?1",
+            [file_id],
+            |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+        ).unwrap();
+        
+        assert_eq!(sender_name, "WARNER CHAPPELL MUSIC PUBLISHING LTD", "HDR should contain parsed sender name");
+        assert_eq!(creation_date, "20221221", "HDR should contain parsed creation date");
+        
+        println!("✅ Test should pass once record insertion is implemented");
+    }
+}
