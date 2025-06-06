@@ -44,6 +44,7 @@ impl WorksCount {
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Default)]
 pub enum RecordType {
     Agr,
     Ack,
@@ -53,6 +54,7 @@ pub enum RecordType {
     Ewt,
     Grh,
     Grt,
+    #[default]
     Hdr,
     Ind,
     Ins,
@@ -128,15 +130,12 @@ impl rusqlite::ToSql for RecordType {
     }
 }
 
-impl Default for RecordType {
-    fn default() -> Self {
-        RecordType::Hdr
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Default)]
 pub enum YesNo {
     Yes,
+    #[default]
     No,
 }
 
@@ -149,11 +148,6 @@ impl YesNo {
     }
 }
 
-impl Default for YesNo {
-    fn default() -> Self {
-        YesNo::No
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, Default, serde::Serialize, serde::Deserialize)]
 pub struct Date(pub Option<NaiveDate>);
@@ -291,7 +285,7 @@ impl CwrFieldParse for WorksCount {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         match trimmed.parse::<u32>() {
-            Ok(count) if count >= 1 && count <= 99999 => (WorksCount(count), vec![]),
+            Ok(count) if (1..=99999).contains(&count) => (WorksCount(count), vec![]),
             Ok(count) => {
                 let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Works count {} outside valid range 1-99999", count) }];
                 (WorksCount(count.min(99999).max(1)), warnings)
