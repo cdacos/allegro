@@ -576,7 +576,7 @@ mod tests {
         use chrono::NaiveDate;
 
         let hdr = HdrRecord {
-            record_type: RecordType::Hdr,
+            record_type: "HDR",
             sender_type: "01".to_string(),
             sender_id: "BMI".to_string(),
             sender_name: "BMI MUSIC".to_string(),
