@@ -405,71 +405,43 @@ mod tests {
         
         // MORE IMPORTANTLY: Check that actual record data was inserted into specific tables
         
-        // Check HDR table
-        let hdr_count: i64 = conn.query_row(
-            "SELECT COUNT(*) FROM cwr_hdr WHERE file_id = ?1", 
-            [file_id], 
-            |row| row.get(0)
-        ).unwrap();
-        assert_eq!(hdr_count, 1, "HDR table should have 1 record");
+        // Get all cwr_ table names dynamically
+        let mut stmt = conn.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'cwr_%' ORDER BY name").unwrap();
+        let table_names: Vec<String> = stmt.query_map([], |row| {
+            Ok(row.get::<_, String>(0)?)
+        }).unwrap().collect::<std::result::Result<Vec<_>, _>>().unwrap();
         
-        // Check GRH table  
-        let grh_count: i64 = conn.query_row(
-            "SELECT COUNT(*) FROM cwr_grh WHERE file_id = ?1",
-            [file_id],
-            |row| row.get(0)
-        ).unwrap();
-        assert_eq!(grh_count, 1, "GRH table should have 1 record");
+        println!("Found {} cwr_ tables: {:?}", table_names.len(), table_names);
         
-        // Check NWR table
-        let nwr_count: i64 = conn.query_row(
-            "SELECT COUNT(*) FROM cwr_nwr WHERE file_id = ?1",
-            [file_id], 
-            |row| row.get(0)
-        ).unwrap();
-        assert_eq!(nwr_count, 1, "NWR table should have 1 record");
+        // Check count in each cwr_ table
+        let mut total_records_in_tables = 0i64;
+        let mut implemented_tables = Vec::new();
+        let mut unimplemented_tables = Vec::new();
         
-        // Demonstrate that most record types are NOT being inserted into their specific tables
+        for table_name in &table_names {
+            let count: i64 = conn.query_row(
+                &format!("SELECT COUNT(*) FROM {} WHERE file_id = ?1", table_name),
+                [file_id],
+                |row| row.get(0)
+            ).unwrap();
+            
+            total_records_in_tables += count;
+            
+            if count == 1 {
+                implemented_tables.push(table_name.clone());
+                println!("✅ {}: {} records", table_name, count);
+            } else {
+                unimplemented_tables.push(table_name.clone());
+                println!("❌ {}: {} records (not implemented)", table_name, count);
+            }
+        }
         
-        // Check SPU table - should fail because not implemented
-        let spu_count: i64 = conn.query_row(
-            "SELECT COUNT(*) FROM cwr_spu WHERE file_id = ?1",
-            [file_id], 
-            |row| row.get(0)
-        ).unwrap();
-        assert_eq!(spu_count, 0, "SPU table should be EMPTY - not implemented yet!");
+        // The key assertion: total should equal 33 when all are implemented
+        println!("📊 Total records in cwr_ tables: {} / 33", total_records_in_tables);
+        assert_eq!(total_records_in_tables, 33, "Should be 33 one for each record type");
         
-        // Check SWR table - should fail because not implemented  
-        let swr_count: i64 = conn.query_row(
-            "SELECT COUNT(*) FROM cwr_swr WHERE file_id = ?1",
-            [file_id], 
-            |row| row.get(0)
-        ).unwrap();
-        assert_eq!(swr_count, 0, "SWR table should be EMPTY - not implemented yet!");
-        
-        // Check ALT table - should fail because not implemented
-        let alt_count: i64 = conn.query_row(
-            "SELECT COUNT(*) FROM cwr_alt WHERE file_id = ?1",
-            [file_id], 
-            |row| row.get(0)
-        ).unwrap();
-        assert_eq!(alt_count, 0, "ALT table should be EMPTY - not implemented yet!");
-        
-        // Check PER table - should fail because not implemented
-        let per_count: i64 = conn.query_row(
-            "SELECT COUNT(*) FROM cwr_per WHERE file_id = ?1",
-            [file_id], 
-            |row| row.get(0)
-        ).unwrap();
-        assert_eq!(per_count, 0, "PER table should be EMPTY - not implemented yet!");
-        
-        // Check REC table - should fail because not implemented
-        let rec_count: i64 = conn.query_row(
-            "SELECT COUNT(*) FROM cwr_rec WHERE file_id = ?1",
-            [file_id], 
-            |row| row.get(0)
-        ).unwrap();
-        assert_eq!(rec_count, 0, "REC table should be EMPTY - not implemented yet!");
+        // Verify we have the expected number of tables (should be 33 corresponding to all record types)
+        assert_eq!(table_names.len(), 33, "Should have 33 cwr_ tables for all record types");
         
         // Verify the HDR record actually contains the parsed data
         let (sender_name, creation_date): (String, String) = conn.query_row(
@@ -483,7 +455,8 @@ mod tests {
         
         println!("🚨 This test demonstrates the missing functionality!");
         println!("📊 Records tracked in file_line: {} types", record_counts.len());
-        println!("✅ Only HDR, GRH, GRT, TRL, NWR are currently handled");
-        println!("❌ Missing: SPU, SWR, ALT, PER, REC, ACK, AGR, ARI, COM, EWT, IND, INS, IPA, MSG, NAT, NET, NOW, NPA, NPN, NPR, NWN, ORN, PWR, SPT, SWT, TER, VER, XRF");
+        println!("✅ Implemented tables: {:?}", implemented_tables);
+        println!("❌ Unimplemented tables: {:?}", unimplemented_tables);
+        println!("🎯 Goal: All 33 record types should sum to 33 total records in cwr_ tables");
     }
 }
