@@ -75,5 +75,4 @@ impl_cwr_parsing! {
     }
 }
 
-
 impl_cwr_parsing_test_roundtrip!(HdrRecord, ["HDR01BMI      BMI MUSIC                                    01.1020050101120000200501010123456789012345  2. 1DEV MUSIC SOFTWARE VERSION 1.0  MUSIC PACKAGE VERSION 2.0  "]);

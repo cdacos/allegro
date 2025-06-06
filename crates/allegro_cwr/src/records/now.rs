@@ -47,4 +47,9 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(NowRecord, ["NOW0000000100000001Non-Roman Writer Name                                                                                                                                            Non-Roman First Name                                                                                                                                            EN1"]);
+impl_cwr_parsing_test_roundtrip!(
+    NowRecord,
+    [
+        "NOW0000000100000001Non-Roman Writer Name                                                                                                                                            Non-Roman First Name                                                                                                                                            EN1"
+    ]
+);

@@ -25,10 +25,7 @@ pub fn extract_optional_field(line: &str, start: usize, end: usize, field_name: 
         warnings.push(format!("{} record missing optional field: {}", record_type, field_name));
         return None;
     }
-    line.get(start..end)
-        .map(|s| s.trim())
-        .filter(|s| !s.is_empty())
-        .map(|s| s.to_string())
+    line.get(start..end).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string())
 }
 
 pub fn validate_record_type(line: &str, expected: &str) -> Result<String, crate::error::CwrParseError> {
@@ -41,8 +38,6 @@ pub fn validate_record_type(line: &str, expected: &str) -> Result<String, crate:
     }
     Ok(record_type)
 }
-
-
 
 /// Extract and validate a required field from a CWR line
 pub fn extract_required_validated(line: &str, start: usize, end: usize, field_name: &str, validator: Option<&dyn Fn(&str) -> Result<(), String>>, _warnings: &mut Vec<String>) -> Result<String, crate::error::CwrParseError> {
@@ -82,25 +77,25 @@ pub fn extract_optional_validated(line: &str, start: usize, end: usize, field_na
 pub fn extract_version_from_filename(filename: &str) -> Option<f32> {
     let path = std::path::Path::new(filename);
     let filename_only = path.file_name()?.to_str()?;
-    
+
     // Look for .Vxx pattern - we need to be careful about multiple extensions
     // e.g., CW060001EMI_044.V21.zip should detect V21, not zip
     let mut search_str = filename_only;
-    
+
     // If it ends with common archive extensions, remove them first
     if let Some(base) = search_str.strip_suffix(".zip") {
         search_str = base;
     } else if let Some(base) = search_str.strip_suffix(".cwr") {
         search_str = base;
     }
-    
+
     // Look for .Vxx pattern at the end
     if let Some(dot_pos) = search_str.rfind('.') {
         let version_part = &search_str[dot_pos + 1..];
-        
+
         if version_part.starts_with('V') && version_part.len() >= 3 {
             let version_digits = &version_part[1..3];
-            
+
             match version_digits {
                 "20" => Some(2.0),
                 "21" => Some(2.1),
@@ -160,5 +155,4 @@ mod tests {
         assert_eq!(extract_version_from_filename("file.V21.extra"), None);
         assert_eq!(extract_version_from_filename("file.V21.zip"), Some(2.1));
     }
-
 }

@@ -2,7 +2,7 @@ use std::process;
 use std::time::Instant;
 
 use allegro_cwr::{OutputFormat, format_int_with_commas};
-use log::{info, error};
+use log::{error, info};
 
 struct Config {
     output_path: Option<String>,
@@ -13,19 +13,14 @@ struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self {
-            output_path: None,
-            input_filename: None,
-            format: OutputFormat::Default,
-            cwr_version: None,
-        }
+        Self { output_path: None, input_filename: None, format: OutputFormat::Default, cwr_version: None }
     }
 }
 
 fn parse_args() -> Result<Config, String> {
     let mut config = Config::default();
     let mut parser = lexopt::Parser::from_env();
-    
+
     while let Ok(Some(arg)) = parser.next() {
         match arg {
             lexopt::Arg::Short('o') | lexopt::Arg::Long("output") => {
@@ -37,13 +32,12 @@ fn parse_args() -> Result<Config, String> {
             }
             lexopt::Arg::Long("cwr") => {
                 let version_str = get_value(&mut parser, "cwr")?;
-                let version: f32 = version_str.parse()
-                    .map_err(|_| format!("Invalid CWR version '{}'. Valid versions: 2.0, 2.1, 2.2", version_str))?;
-                
+                let version: f32 = version_str.parse().map_err(|_| format!("Invalid CWR version '{}'. Valid versions: 2.0, 2.1, 2.2", version_str))?;
+
                 if ![2.0, 2.1, 2.2].contains(&version) {
                     return Err(format!("Unsupported CWR version '{}'. Valid versions: 2.0, 2.1, 2.2", version));
                 }
-                
+
                 config.cwr_version = Some(version);
             }
             lexopt::Arg::Value(val) => {
@@ -61,19 +55,16 @@ fn parse_args() -> Result<Config, String> {
             }
         }
     }
-    
+
     if config.input_filename.is_none() {
         return Err("No input file specified".to_string());
     }
-    
+
     Ok(config)
 }
 
-
 fn get_value(parser: &mut lexopt::Parser, arg_name: &str) -> Result<String, String> {
-    parser.value()
-        .map(|val| val.to_string_lossy().to_string())
-        .map_err(|e| format!("Missing value for --{}: {}", arg_name, e))
+    parser.value().map(|val| val.to_string_lossy().to_string()).map_err(|e| format!("Missing value for --{}: {}", arg_name, e))
 }
 
 fn main() {
@@ -97,16 +88,14 @@ fn main() {
     let start_time = Instant::now();
 
     let result = match config.format {
-        OutputFormat::Json => {
-            match allegro_cwr_json::process_cwr_to_json_with_version(&input_filename, config.cwr_version) {
-                Ok(count) => Ok(("".to_string(), count)),
-                Err(e) => Err(e),
-            }
-        }
+        OutputFormat::Json => match allegro_cwr_json::process_cwr_to_json_with_version(&input_filename, config.cwr_version) {
+            Ok(count) => Ok(("".to_string(), count)),
+            Err(e) => Err(e),
+        },
         OutputFormat::Default | OutputFormat::Sql => {
             let db_filename = allegro_cwr_sqlite::determine_db_filename(&input_filename, config.output_path.as_deref());
             info!("Using database filename: '{}'", db_filename);
-            
+
             match allegro_cwr_sqlite::process_cwr_to_sqlite_with_version(&input_filename, &db_filename, config.cwr_version) {
                 Ok((_file_id, count, report)) => {
                     println!("{}", report);
@@ -130,11 +119,7 @@ fn main() {
         }
     };
 
-    println!("Successfully processed {} CWR records from '{}'{} in {:.2?}",
-        format_int_with_commas(count as i64), 
-        &input_filename,
-        if !db_filename.is_empty() { format!(" into '{}'", db_filename) } else { String::new() },
-        elapsed_time);
+    println!("Successfully processed {} CWR records from '{}'{} in {:.2?}", format_int_with_commas(count as i64), &input_filename, if !db_filename.is_empty() { format!(" into '{}'", db_filename) } else { String::new() }, elapsed_time);
 }
 
 fn print_help() {

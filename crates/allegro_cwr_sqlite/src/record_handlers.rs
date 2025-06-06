@@ -1,6 +1,6 @@
-use allegro_cwr::{CwrParseError, ParsingContext};
-use allegro_cwr::records::*;
 use crate::{PreparedStatements, insert_file_line_record, log_error};
+use allegro_cwr::records::*;
+use allegro_cwr::{CwrParseError, ParsingContext};
 use rusqlite::{Transaction, params};
 
 /// Helper function to reconstruct the full line from safe_slice calls
@@ -16,7 +16,9 @@ fn reconstruct_line_from_safe_slice(safe_slice: &impl Fn(usize, usize) -> Result
 }
 
 /// Generic handler for records that return CwrParseResult (with warnings)
-fn handle_record_with_warnings<T, F>(line_number: usize, tx: &Transaction, stmts: &mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>, parse_fn: fn(&str) -> Result<allegro_cwr::error::CwrParseResult<T>, CwrParseError>, insert_fn: F) -> Result<(), crate::CwrDbError>
+fn handle_record_with_warnings<T, F>(
+    line_number: usize, tx: &Transaction, stmts: &mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>, parse_fn: fn(&str) -> Result<allegro_cwr::error::CwrParseResult<T>, CwrParseError>, insert_fn: F,
+) -> Result<(), crate::CwrDbError>
 where
     F: FnOnce(&T, &mut PreparedStatements, i64) -> Result<(), rusqlite::Error>,
 {
@@ -30,7 +32,7 @@ where
             for warning in &parse_result.warnings {
                 log::warn!("Line {}: {}", line_number, warning);
             }
-            
+
             // Insert using the provided function
             insert_fn(&parse_result.record, stmts, context.file_id)?;
             let record_id = tx.last_insert_rowid();

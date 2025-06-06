@@ -1,5 +1,5 @@
 /// Macro to generate from_cwr_line method for CWR record parsing
-/// 
+///
 /// Usage:
 /// ```ignore
 /// use allegro_cwr::impl_cwr_parsing;
@@ -64,7 +64,7 @@ macro_rules! impl_cwr_parsing {
                 $(
                     let field_value = impl_cwr_parsing!(@format_field self.$field_name, $field_type);
                     let field_width = $end - $start;
-                    
+
                     // Format field to exact width (left-aligned, space-padded)
                     let formatted = format!("{:<width$}", field_value, width = field_width);
                     fields.push(formatted);
@@ -122,7 +122,7 @@ macro_rules! impl_cwr_parsing {
 }
 
 /// Macro to generate round-trip tests for CWR record parsing
-/// 
+///
 /// Usage:
 /// ```ignore
 /// use allegro_cwr::impl_cwr_parsing_test_roundtrip;
@@ -142,26 +142,26 @@ macro_rules! impl_cwr_parsing_test_roundtrip {
             #[test]
             fn test_roundtrip_parsing() {
                 let test_lines = [$($test_line),+];
-                
+
                 for (i, original_line) in test_lines.iter().enumerate() {
                     // Parse the line
                     let parse_result = $struct_name::from_cwr_line(original_line)
                         .unwrap_or_else(|e| panic!("Failed to parse test case {}: {}", i, e));
                     let record = parse_result.record;
-                    
+
                     // Convert back to CWR line
                     let regenerated_line = record.to_cwr_line();
-                    
+
                     // Should be able to round-trip the data
-                    assert_eq!(*original_line, regenerated_line, 
+                    assert_eq!(*original_line, regenerated_line,
                         "Round-trip failed for test case {}: original line and regenerated line don't match", i);
-                    
+
                     // Parse the regenerated line to ensure it's still valid
                     let reparse_result = $struct_name::from_cwr_line(&regenerated_line)
                         .unwrap_or_else(|e| panic!("Failed to reparse test case {}: {}", i, e));
-                    
+
                     // The records should be identical
-                    assert_eq!(record, reparse_result.record, 
+                    assert_eq!(record, reparse_result.record,
                         "Records differ after round-trip parsing for test case {}", i);
                 }
             }
@@ -202,7 +202,7 @@ mod tests {
     fn test_macro_generated_parsing() {
         let line = "TST12345ABCDE";
         let result = TestRecord::from_cwr_line(line).unwrap();
-        
+
         assert_eq!(result.record.record_type, "TST");
         assert_eq!(result.record.required_field, "12345");
         assert_eq!(result.record.optional_field, Some("ABCDE".to_string()));
@@ -213,7 +213,7 @@ mod tests {
     fn test_macro_with_validation_error() {
         let line = "XYZ12345ABCDE";
         let result = TestRecord::from_cwr_line(line);
-        
+
         assert!(result.is_err());
         match result {
             Err(CwrParseError::BadFormat(msg)) => {
@@ -227,7 +227,7 @@ mod tests {
     fn test_macro_with_optional_field_missing() {
         let line = "TST12345";
         let result = TestRecord::from_cwr_line(line).unwrap();
-        
+
         assert_eq!(result.record.record_type, "TST");
         assert_eq!(result.record.required_field, "12345");
         assert_eq!(result.record.optional_field, None);
@@ -239,7 +239,7 @@ mod tests {
     fn test_macro_generated_to_cwr_line() {
         let line = "TST12345ABCDE";
         let result = TestRecord::from_cwr_line(line).unwrap();
-        
+
         // Test that the generated to_cwr_line method works
         let output = result.record.to_cwr_line();
         assert_eq!(output, "TST12345ABCDE");
@@ -250,7 +250,7 @@ mod tests {
         let original_line = "TST12345ABCDE";
         let parsed = TestRecord::from_cwr_line(original_line).unwrap();
         let regenerated_line = parsed.record.to_cwr_line();
-        
+
         // Should be able to round-trip the data
         assert_eq!(original_line, regenerated_line);
     }
@@ -258,16 +258,12 @@ mod tests {
     #[test]
     fn test_macro_generated_new() {
         // Test that the generated new() method works
-        let record = TestRecord::new(
-            "TST".to_string(),
-            "12345".to_string(),
-            Some("ABCDE".to_string())
-        );
-        
+        let record = TestRecord::new("TST".to_string(), "12345".to_string(), Some("ABCDE".to_string()));
+
         assert_eq!(record.record_type, "TST");
         assert_eq!(record.required_field, "12345");
         assert_eq!(record.optional_field, Some("ABCDE".to_string()));
-        
+
         // Test that to_cwr_line works with new() created record
         let output = record.to_cwr_line();
         assert_eq!(output, "TST12345ABCDE");

@@ -40,4 +40,9 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(NetRecord, ["NET0000000100000001Non-Roman Entire Work Title                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            EN"]);
+impl_cwr_parsing_test_roundtrip!(
+    NetRecord,
+    [
+        "NET0000000100000001Non-Roman Entire Work Title                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            EN"
+    ]
+);

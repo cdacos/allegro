@@ -79,4 +79,7 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(ComRecord, ["COM0000000100000001Component Title                                          T-123456789SW1234567890123120000COMPOSER                                     FIRST                         12345678901WRITER2                                      FIRST2                        12345678901123456789012312345678901231"]);
+impl_cwr_parsing_test_roundtrip!(
+    ComRecord,
+    ["COM0000000100000001Component Title                                          T-123456789SW1234567890123120000COMPOSER                                     FIRST                         12345678901WRITER2                                      FIRST2                        12345678901123456789012312345678901231"]
+);

@@ -8,18 +8,18 @@ pub mod record_test_utils {
     pub trait CwrRecordTestable {
         /// The expected record type (e.g., "ACK", "HDR", etc.)
         fn expected_record_type() -> &'static str;
-        
+
         /// The expected minimum line length for this record type
         fn expected_line_length() -> usize;
-        
+
         /// Parse a CWR line into this record type
         fn from_cwr_line(line: &str) -> Result<Self, CwrParseError>
         where
             Self: Sized;
-        
+
         /// Convert this record to a CWR line
         fn to_cwr_line(&self) -> String;
-        
+
         /// Create a valid test instance of this record
         fn create_test_record() -> Self
         where
@@ -35,10 +35,9 @@ pub mod record_test_utils {
             let short_line = "X".repeat(T::expected_line_length() - 1);
             let result = T::from_cwr_line(&short_line);
             assert!(result.is_err(), "Should reject line that is too short");
-            
+
             if let Err(CwrParseError::BadFormat(msg)) = result {
-                assert!(msg.contains("too short") || msg.contains("short"), 
-                    "Error message should mention line is too short: {}", msg);
+                assert!(msg.contains("too short") || msg.contains("short"), "Error message should mention line is too short: {}", msg);
             } else {
                 panic!("Expected BadFormat error for short line");
             }
@@ -48,16 +47,15 @@ pub mod record_test_utils {
         pub fn test_wrong_record_type<T: CwrRecordTestable>() {
             let test_record = T::create_test_record();
             let mut line = test_record.to_cwr_line();
-            
+
             // Replace the first 3 characters with "XYZ"
             line.replace_range(0..3, "XYZ");
-            
+
             let result = T::from_cwr_line(&line);
             assert!(result.is_err(), "Should reject wrong record type");
-            
+
             if let Err(CwrParseError::BadFormat(msg)) = result {
-                assert!(msg.contains("Expected") && msg.contains(T::expected_record_type()), 
-                    "Error message should mention expected record type: {}", msg);
+                assert!(msg.contains("Expected") && msg.contains(T::expected_record_type()), "Error message should mention expected record type: {}", msg);
             } else {
                 panic!("Expected BadFormat error for wrong record type");
             }
@@ -67,15 +65,13 @@ pub mod record_test_utils {
         pub fn test_round_trip<T: CwrRecordTestable + PartialEq + std::fmt::Debug>() {
             let original = T::create_test_record();
             let line = original.to_cwr_line();
-            
+
             // Verify line length
-            assert_eq!(line.len(), T::expected_line_length(), 
-                "Generated line should match expected length");
-            
+            assert_eq!(line.len(), T::expected_line_length(), "Generated line should match expected length");
+
             // Verify it starts with correct record type
-            assert!(line.starts_with(T::expected_record_type()), 
-                "Generated line should start with correct record type");
-            
+            assert!(line.starts_with(T::expected_record_type()), "Generated line should start with correct record type");
+
             // Test parsing
             let parsed = T::from_cwr_line(&line).expect("Should parse generated line");
             assert_eq!(original, parsed, "Round-trip should preserve all data");
@@ -85,10 +81,9 @@ pub mod record_test_utils {
         pub fn test_exact_minimum_length<T: CwrRecordTestable>() {
             let test_record = T::create_test_record();
             let line = test_record.to_cwr_line();
-            
-            assert_eq!(line.len(), T::expected_line_length(), 
-                "Test record should generate exact minimum length");
-            
+
+            assert_eq!(line.len(), T::expected_line_length(), "Test record should generate exact minimum length");
+
             let result = T::from_cwr_line(&line);
             assert!(result.is_ok(), "Should accept line of exact minimum length");
         }
@@ -97,11 +92,11 @@ pub mod record_test_utils {
         pub fn test_one_char_too_short<T: CwrRecordTestable>() {
             let test_record = T::create_test_record();
             let mut line = test_record.to_cwr_line();
-            
+
             // Remove last character
             line.pop();
             assert_eq!(line.len(), T::expected_line_length() - 1);
-            
+
             let result = T::from_cwr_line(&line);
             assert!(result.is_err(), "Should reject line that is one character too short");
         }
@@ -124,9 +119,7 @@ pub mod record_test_utils {
     impl TestLineBuilder {
         /// Create a new test line builder starting with a record type
         pub fn new(record_type: &str) -> Self {
-            Self {
-                content: record_type.to_string(),
-            }
+            Self { content: record_type.to_string() }
         }
 
         /// Add a field with specific width, padding with spaces if needed
@@ -203,15 +196,12 @@ pub mod parser_test_utils {
     /// Create a temporary CWR file for testing
     pub fn create_temp_cwr_file(content: &str) -> PathBuf {
         let temp_dir = std::env::temp_dir();
-        let timestamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos();
+        let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
         let file_path = temp_dir.join(format!("test_cwr_{}.cwr", timestamp));
-        
+
         let mut file = File::create(&file_path).unwrap();
         file.write_all(content.as_bytes()).unwrap();
-        
+
         file_path
     }
 
@@ -254,10 +244,10 @@ pub mod validation_test_utils {
 
         pub fn valid_date_formats() -> Vec<&'static str> {
             vec![
-                "20050101",  // Valid date
-                "20051231",  // Valid end of year
-                "20050228",  // Valid February date
-                "20040229",  // Valid leap year date
+                "20050101", // Valid date
+                "20051231", // Valid end of year
+                "20050228", // Valid February date
+                "20040229", // Valid leap year date
             ]
         }
     }
@@ -266,25 +256,25 @@ pub mod validation_test_utils {
     pub mod time_tests {
         pub fn invalid_time_formats() -> Vec<&'static str> {
             vec![
-                "12000",    // Too short
-                "1200000",  // Too long
-                "250000",   // Invalid hour
-                "126000",   // Invalid minute
-                "120060",   // Invalid second
-                "ab0000",   // Non-numeric hour
-                "12ab00",   // Non-numeric minute
-                "1200ab",   // Non-numeric second
-                "",         // Empty
-                "      ",   // Spaces only
+                "12000",   // Too short
+                "1200000", // Too long
+                "250000",  // Invalid hour
+                "126000",  // Invalid minute
+                "120060",  // Invalid second
+                "ab0000",  // Non-numeric hour
+                "12ab00",  // Non-numeric minute
+                "1200ab",  // Non-numeric second
+                "",        // Empty
+                "      ",  // Spaces only
             ]
         }
 
         pub fn valid_time_formats() -> Vec<&'static str> {
             vec![
-                "120000",   // Valid time
-                "000000",   // Midnight
-                "235959",   // End of day
-                "123456",   // Random valid time
+                "120000", // Valid time
+                "000000", // Midnight
+                "235959", // End of day
+                "123456", // Random valid time
             ]
         }
     }

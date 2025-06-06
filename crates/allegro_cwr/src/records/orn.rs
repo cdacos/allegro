@@ -111,4 +111,9 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(OrnRecord, ["ORN0000000100000001LIBPRODUCTION TITLE                                       CD_IDENT1234567 LIBRARY NAME                                            B                         PROD12345678EPISODE TITLE                                           EPISODE123          2023AVIAV_NUMBER12345 123456789012AB1234567812345678901234567890123451"]);
+impl_cwr_parsing_test_roundtrip!(
+    OrnRecord,
+    [
+        "ORN0000000100000001LIBPRODUCTION TITLE                                       CD_IDENT1234567 LIBRARY NAME                                            B                         PROD12345678EPISODE TITLE                                           EPISODE123          2023AVIAV_NUMBER12345 123456789012AB1234567812345678901234567890123451"
+    ]
+);

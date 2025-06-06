@@ -1,9 +1,9 @@
 use crate::error::CwrParseError;
 use crate::records::*;
+use log::{error, info, warn};
 use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader, Seek};
-use log::{info, warn, error};
 
 // Context struct to hold file-level metadata like CWR version
 #[derive(Debug, Clone)]
@@ -15,37 +15,34 @@ pub struct ParsingContext {
 
 fn get_cwr_version(filename: &str, hdr_line: &str, cli_version: Option<f32>) -> Result<f32, CwrParseError> {
     use crate::util::extract_version_from_filename;
-    
+
     // Try to detect version from HDR line using enhanced heuristics
     let hdr_detected_version = detect_version_from_hdr(hdr_line)?;
-    
+
     // Try to extract version from filename
     let filename_version = extract_version_from_filename(filename);
-    
+
     // Determine final version with precedence: CLI > filename > HDR explicit > HDR heuristics
     match (cli_version, filename_version, hdr_detected_version) {
         // CLI version specified
         (Some(cli_ver), Some(filename_ver), _) => {
             if cli_ver != filename_ver {
-                info!("CLI specified CWR version {} but filename suggests {}. Using CLI version {}", 
-                    cli_ver, filename_ver, cli_ver);
+                info!("CLI specified CWR version {} but filename suggests {}. Using CLI version {}", cli_ver, filename_ver, cli_ver);
             }
             Ok(cli_ver)
         }
         (Some(cli_ver), None, Some(hdr_ver)) => {
             if cli_ver != hdr_ver {
-                warn!("CLI specified CWR version {} but file contains explicit version {}. Using CLI version {}", 
-                    cli_ver, hdr_ver, cli_ver);
+                warn!("CLI specified CWR version {} but file contains explicit version {}. Using CLI version {}", cli_ver, hdr_ver, cli_ver);
             }
             Ok(cli_ver)
         }
         (Some(cli_ver), None, None) => Ok(cli_ver),
-        
+
         // No CLI version - use filename version if available
         (None, Some(filename_ver), Some(hdr_ver)) => {
             if filename_ver != hdr_ver {
-                info!("Filename suggests CWR version {} but file contains explicit version {}. Using filename version {}", 
-                    filename_ver, hdr_ver, filename_ver);
+                info!("Filename suggests CWR version {} but file contains explicit version {}. Using filename version {}", filename_ver, hdr_ver, filename_ver);
             }
             Ok(filename_ver)
         }
@@ -53,10 +50,10 @@ fn get_cwr_version(filename: &str, hdr_line: &str, cli_version: Option<f32>) -> 
             info!("Detected CWR version {} from filename", filename_ver);
             Ok(filename_ver)
         }
-        
+
         // No CLI or filename version - use HDR version if available
         (None, None, Some(hdr_ver)) => Ok(hdr_ver),
-        
+
         // Fall back to heuristics
         (None, None, None) => {
             let heuristic_version = detect_version_by_heuristics(hdr_line);
@@ -85,7 +82,7 @@ fn detect_version_from_hdr(hdr_line: &str) -> Result<Option<f32>, CwrParseError>
             }
         }
     }
-    
+
     // Check for character set field presence (positions 87-89, indicates 2.1+)
     if hdr_line.len() >= 89 {
         if let Some(charset_field) = hdr_line.get(87..89) {
@@ -96,13 +93,13 @@ fn detect_version_from_hdr(hdr_line: &str) -> Result<Option<f32>, CwrParseError>
             }
         }
     }
-    
+
     Ok(None)
 }
 
 fn detect_version_by_heuristics(hdr_line: &str) -> f32 {
     let len = hdr_line.len();
-    
+
     if len > 104 {
         2.2
     } else if len >= 80 {
@@ -246,11 +243,7 @@ fn parse_cwr_line(line: &str, line_number: usize, context: &ParsingContext) -> R
         }
     };
 
-    Ok(ParsedRecord {
-        line_number,
-        record,
-        context: context.clone(),
-    })
+    Ok(ParsedRecord { line_number, record, context: context.clone() })
 }
 
 /// Returns an iterator that processes CWR lines and yields parsed records
@@ -272,10 +265,7 @@ pub fn process_cwr_stream_with_version(input_filename: &str, version_hint: Optio
     let hdr_line = first_line.trim_end();
 
     if !hdr_line.starts_with("HDR") {
-        return Err(CwrParseError::BadFormat(format!(
-            "File does not start with HDR record. Found: '{}'",
-            hdr_line.get(0..std::cmp::min(hdr_line.len(), 50)).unwrap_or("")
-        )));
+        return Err(CwrParseError::BadFormat(format!("File does not start with HDR record. Found: '{}'", hdr_line.get(0..std::cmp::min(hdr_line.len(), 50)).unwrap_or(""))));
     }
 
     let cwr_version = get_cwr_version(input_filename, hdr_line, version_hint)?;
@@ -286,34 +276,31 @@ pub fn process_cwr_stream_with_version(input_filename: &str, version_hint: Optio
     // Reset to start of file
     reader.seek(io::SeekFrom::Start(0))?;
 
-    Ok(reader.lines()
-        .enumerate()
-        .filter_map(move |(idx, line_result)| {
-            let line_number = idx + 1;
-            match line_result {
-                Ok(line) => {
-                    if line.is_empty() || line.trim().is_empty() {
-                        Some(Err(CwrParseError::BadFormat(format!("Line {} is empty", line_number))))
-                    } else if line.len() < 3 {
-                        Some(Err(CwrParseError::BadFormat(format!("Line {} is too short (less than 3 chars)", line_number))))
-                    } else {
-                        Some(parse_cwr_line(&line, line_number, &context))
-                    }
-                }
-                Err(io_err) => {
-                    error!("IO error reading line {}: {}", line_number, io_err);
-                    Some(Err(CwrParseError::Io(io_err)))
+    Ok(reader.lines().enumerate().filter_map(move |(idx, line_result)| {
+        let line_number = idx + 1;
+        match line_result {
+            Ok(line) => {
+                if line.is_empty() || line.trim().is_empty() {
+                    Some(Err(CwrParseError::BadFormat(format!("Line {} is empty", line_number))))
+                } else if line.len() < 3 {
+                    Some(Err(CwrParseError::BadFormat(format!("Line {} is too short (less than 3 chars)", line_number))))
+                } else {
+                    Some(parse_cwr_line(&line, line_number, &context))
                 }
             }
-        })
-    )
+            Err(io_err) => {
+                error!("IO error reading line {}: {}", line_number, io_err);
+                Some(Err(CwrParseError::Io(io_err)))
+            }
+        }
+    }))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Write;
     use std::fs;
+    use std::io::Write;
 
     #[test]
     fn test_get_cwr_version_v21_auto_detect() {
@@ -354,9 +341,9 @@ mod tests {
         while hdr_line.len() < 101 {
             hdr_line.push(' ');
         }
-        hdr_line.push_str("2.2");  // HDR says 2.2
+        hdr_line.push_str("2.2"); // HDR says 2.2
         hdr_line.push(' ');
-        
+
         let version = get_cwr_version("CW060001EMI_044.V21", &hdr_line, None).unwrap(); // filename says 2.1
         assert_eq!(version, 2.1); // filename takes precedence
     }
@@ -369,9 +356,9 @@ mod tests {
         while hdr_line.len() < 101 {
             hdr_line.push(' ');
         }
-        hdr_line.push_str("2.2");  // Add version at position 101-104
-        hdr_line.push(' ');        // Make length > 104
-        
+        hdr_line.push_str("2.2"); // Add version at position 101-104
+        hdr_line.push(' '); // Make length > 104
+
         let version = get_cwr_version("test_file.cwr", &hdr_line, None).unwrap();
         assert_eq!(version, 2.2);
     }
@@ -385,7 +372,7 @@ mod tests {
         }
         hdr_line.push_str("2.2");
         hdr_line.push(' ');
-        
+
         // CLI specifies 2.1 but file has explicit 2.2 - should use CLI version with warning
         let version = get_cwr_version("test_file.cwr", &hdr_line, Some(2.1)).unwrap();
         assert_eq!(version, 2.1);
@@ -400,7 +387,7 @@ mod tests {
         }
         hdr_line.push_str("9.9");
         hdr_line.push(' ');
-        
+
         let result = get_cwr_version("test_file.cwr", &hdr_line, None);
         assert!(result.is_err());
         match result {
@@ -459,10 +446,7 @@ mod tests {
 
     fn create_temp_cwr_file(content: &str) -> String {
         let temp_dir = std::env::temp_dir();
-        let timestamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos();
+        let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
         let file_path = temp_dir.join(format!("test_{}.cwr", timestamp));
         let mut file = File::create(&file_path).unwrap();
         file.write_all(content.as_bytes()).unwrap();
@@ -498,29 +482,29 @@ mod tests {
         fs::remove_file(&temp_file).ok();
     }
 
-    #[test] 
+    #[test]
     fn test_process_cwr_stream_valid_file() {
         let content = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221\nGRHNWR0000102.100000000000  \nTRL00000002000000022022122100                                                                                                                                                                                                                                                                                                                                                                                   ";
         let temp_file = create_temp_cwr_file(content);
         let result = process_cwr_stream(&temp_file);
         assert!(result.is_ok());
-        
+
         let records: Vec<_> = result.unwrap().collect();
         assert_eq!(records.len(), 3);
-        
+
         assert!(records[0].is_ok());
-        assert!(records[1].is_ok()); 
+        assert!(records[1].is_ok());
         assert!(records[2].is_ok());
-        
+
         let first_record = records[0].as_ref().unwrap();
         assert_eq!(first_record.line_number, 1);
         assert_eq!(first_record.record.record_type(), "HDR");
         assert_eq!(first_record.context.cwr_version, 2.1);
-        
+
         let second_record = records[1].as_ref().unwrap();
         assert_eq!(second_record.line_number, 2);
         assert_eq!(second_record.record.record_type(), "GRH");
-        
+
         fs::remove_file(&temp_file).ok();
     }
 
@@ -530,21 +514,21 @@ mod tests {
         let temp_file = create_temp_cwr_file(content);
         let result = process_cwr_stream(&temp_file);
         assert!(result.is_ok());
-        
+
         let records: Vec<_> = result.unwrap().collect();
         assert_eq!(records.len(), 3);
-        
+
         assert!(records[0].is_ok());
         assert!(records[1].is_err());
         assert!(records[2].is_ok());
-        
+
         match &records[1] {
             Err(CwrParseError::BadFormat(msg)) => {
                 assert_eq!(msg, "Line 2 is empty");
             }
             _ => panic!("Expected BadFormat error for empty line"),
         }
-        
+
         fs::remove_file(&temp_file).ok();
     }
 
@@ -553,10 +537,10 @@ mod tests {
         // Test with actual sample file
         let result = process_cwr_stream("/Users/carlos/src/personal/allegro-rs/.me/TestSample.V21");
         assert!(result.is_ok());
-        
+
         let records: Vec<_> = result.unwrap().take(10).collect(); // Just test first 10 records
         assert!(records.len() > 0);
-        
+
         // Verify first record is HDR
         assert!(records[0].is_ok());
         let first_record = records[0].as_ref().unwrap();
@@ -564,4 +548,3 @@ mod tests {
         assert_eq!(first_record.context.cwr_version, 2.1);
     }
 }
-

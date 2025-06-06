@@ -1,10 +1,6 @@
 pub fn record_type_must_be(expected: &'static str) -> impl Fn(&str) -> Result<(), String> {
     move |value: &str| {
-        if value == expected {
-            Ok(())
-        } else {
-            Err(format!("Expected record type '{}', found '{}'", expected, value))
-        }
+        if value == expected { Ok(()) } else { Err(format!("Expected record type '{}', found '{}'", expected, value)) }
     }
 }
 
@@ -12,76 +8,55 @@ pub fn date_yyyymmdd(value: &str) -> Result<(), String> {
     if value.len() != 8 {
         return Err("Date must be 8 characters (YYYYMMDD)".to_string());
     }
-    
+
     if !value.chars().all(|c| c.is_ascii_digit()) {
         return Err("Date must contain only digits".to_string());
     }
-    
+
     let year: u32 = value[0..4].parse().map_err(|_| "Invalid year")?;
     let month: u32 = value[4..6].parse().map_err(|_| "Invalid month")?;
     let day: u32 = value[6..8].parse().map_err(|_| "Invalid day")?;
-    
+
     if year < 1900 || year > 2100 {
         return Err("Year must be between 1900 and 2100".to_string());
     }
-    
+
     if month < 1 || month > 12 {
         return Err("Month must be between 01 and 12".to_string());
     }
-    
+
     if day < 1 || day > 31 {
         return Err("Day must be between 01 and 31".to_string());
     }
-    
+
     Ok(())
 }
 
 pub fn one_of(allowed: &'static [&'static str]) -> impl Fn(&str) -> Result<(), String> {
     move |value: &str| {
-        if allowed.contains(&value) {
-            Ok(())
-        } else {
-            Err(format!("Value '{}' not in allowed list: {:?}", value, allowed))
-        }
+        if allowed.contains(&value) { Ok(()) } else { Err(format!("Value '{}' not in allowed list: {:?}", value, allowed)) }
     }
 }
 
 pub fn numeric_range(min: u32, max: u32) -> impl Fn(&str) -> Result<(), String> {
     move |value: &str| {
         let num: u32 = value.parse().map_err(|_| format!("'{}' is not a valid number", value))?;
-        if num >= min && num <= max {
-            Ok(())
-        } else {
-            Err(format!("Number {} must be between {} and {}", num, min, max))
-        }
+        if num >= min && num <= max { Ok(()) } else { Err(format!("Number {} must be between {} and {}", num, min, max)) }
     }
 }
 
 pub fn alphanumeric(value: &str) -> Result<(), String> {
-    if value.chars().all(|c| c.is_alphanumeric()) {
-        Ok(())
-    } else {
-        Err("Value must contain only alphanumeric characters".to_string())
-    }
+    if value.chars().all(|c| c.is_alphanumeric()) { Ok(()) } else { Err("Value must contain only alphanumeric characters".to_string()) }
 }
 
 pub fn yes_no(value: &str) -> Result<(), String> {
-    if value == "Y" || value == "N" {
-        Ok(())
-    } else {
-        Err("Value must be 'Y' or 'N'".to_string())
-    }
+    if value == "Y" || value == "N" { Ok(()) } else { Err("Value must be 'Y' or 'N'".to_string()) }
 }
 
 pub fn works_count(value: &str) -> Result<(), String> {
     let num: u32 = value.parse().map_err(|_| format!("'{}' is not a valid number", value))?;
-    if num >= 1 && num <= 99999 {
-        Ok(())
-    } else {
-        Err(format!("Number of works {} must be between 1 and 99999", num))
-    }
+    if num >= 1 && num <= 99999 { Ok(()) } else { Err(format!("Number of works {} must be between 1 and 99999", num)) }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -156,5 +131,4 @@ mod tests {
         assert!(works_count("abc").is_err()); // non-numeric
         assert!(works_count("").is_err()); // empty
     }
-
 }

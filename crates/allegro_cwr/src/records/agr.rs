@@ -1,8 +1,8 @@
 //! AGR - Agreement Transaction Record
 
-use log::debug;
-use crate::validators::{date_yyyymmdd, one_of, yes_no, works_count};
+use crate::validators::{date_yyyymmdd, one_of, works_count, yes_no};
 use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use log::debug;
 use serde::{Deserialize, Serialize};
 
 /// AGR - Agreement Transaction Record

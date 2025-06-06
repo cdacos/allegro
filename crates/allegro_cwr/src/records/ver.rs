@@ -83,4 +83,9 @@ impl_cwr_parsing! {
     }
 }
 
-impl_cwr_parsing_test_roundtrip!(VerRecord, ["VER0000000100000001ORIGINAL WORK TITLE                                 T-987654321ENWRITER 1 LAST NAME                     WRITER 1 FIRST NAME        SOURCE                                                      98765432109876543210987WRITER 2 LAST NAME                     WRITER 2 FIRST NAME        87654321098765432109876ORIGWORK123   "]);
+impl_cwr_parsing_test_roundtrip!(
+    VerRecord,
+    [
+        "VER0000000100000001ORIGINAL WORK TITLE                                 T-987654321ENWRITER 1 LAST NAME                     WRITER 1 FIRST NAME        SOURCE                                                      98765432109876543210987WRITER 2 LAST NAME                     WRITER 2 FIRST NAME        87654321098765432109876ORIGWORK123   "
+    ]
+);

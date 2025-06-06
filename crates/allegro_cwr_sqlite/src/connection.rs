@@ -1,7 +1,7 @@
 use crate::error::CwrDbError;
+use log::info;
 use rusqlite::Connection;
 use std::path::Path;
-use log::info;
 
 /// Main database manager for CWR operations
 pub struct CwrDatabase {

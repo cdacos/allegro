@@ -13,12 +13,8 @@ impl JsonHandler {
     pub fn new() -> Self {
         // Start JSON array
         println!("[");
-        
-        JsonHandler {
-            output_count: 0,
-            error_count: 0,
-            first_record: true,
-        }
+
+        JsonHandler { output_count: 0, error_count: 0, first_record: true }
     }
 }
 
@@ -29,7 +25,7 @@ impl allegro_cwr::CwrHandler for JsonHandler {
         if !self.first_record {
             println!(",");
         }
-        
+
         // Output JSON representation of the parsed record
         println!("  {{");
         println!("    \"line_number\": {},", parsed_record.line_number);
@@ -37,7 +33,7 @@ impl allegro_cwr::CwrHandler for JsonHandler {
         println!("    \"cwr_version\": {},", parsed_record.context.cwr_version);
         println!("    \"status\": \"parsed\"");
         println!("  }}");
-        
+
         self.first_record = false;
         self.output_count += 1;
         Ok(())
@@ -47,13 +43,13 @@ impl allegro_cwr::CwrHandler for JsonHandler {
         if !self.first_record {
             println!(",");
         }
-        
+
         println!("  {{");
         println!("    \"line_number\": {},", line_number);
         println!("    \"status\": \"error\",");
         println!("    \"error_message\": \"{}\"", error.to_string().replace('"', "\\\""));
         println!("  }}");
-        
+
         self.first_record = false;
         self.error_count += 1;
         Ok(())
@@ -67,8 +63,7 @@ impl allegro_cwr::CwrHandler for JsonHandler {
     }
 
     fn get_report(&self) -> String {
-        format!("JSON processing complete:\n  Records output: {}\n  Errors: {}", 
-                self.output_count, self.error_count)
+        format!("JSON processing complete:\n  Records output: {}\n  Errors: {}", self.output_count, self.error_count)
     }
 }
 
@@ -81,13 +76,9 @@ pub fn process_cwr_to_json(input_filename: &str) -> Result<usize, Box<dyn std::e
 pub fn process_cwr_to_json_with_version(input_filename: &str, version_hint: Option<f32>) -> Result<usize, Box<dyn std::error::Error>> {
     let handler = JsonHandler::new();
     let report = allegro_cwr::process_cwr_with_handler_and_version(input_filename, handler, version_hint)?;
-    
+
     // Extract count from report
-    let output_count = report.lines()
-        .find(|line| line.contains("Records output:"))
-        .and_then(|line| line.split(':').nth(1))
-        .and_then(|s| s.trim().parse::<usize>().ok())
-        .unwrap_or(0);
-    
+    let output_count = report.lines().find(|line| line.contains("Records output:")).and_then(|line| line.split(':').nth(1)).and_then(|s| s.trim().parse::<usize>().ok()).unwrap_or(0);
+
     Ok(output_count)
 }
