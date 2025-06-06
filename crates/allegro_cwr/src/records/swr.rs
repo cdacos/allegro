@@ -79,11 +79,6 @@ pub struct SwrRecord {
     pub usa_license_ind: Option<String>,
 }
 
-impl SwrRecord {
-    fn post_process_fields(_record: &mut SwrRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for SWR
-    }
-}
 
 impl_cwr_parsing! {
     SwrRecord {

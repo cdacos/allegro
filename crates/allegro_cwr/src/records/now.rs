@@ -29,11 +29,6 @@ pub struct NowRecord {
     pub writer_position: Option<String>,
 }
 
-impl NowRecord {
-    fn post_process_fields(_record: &mut NowRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for NOW
-    }
-}
 
 impl_cwr_parsing! {
     NowRecord {

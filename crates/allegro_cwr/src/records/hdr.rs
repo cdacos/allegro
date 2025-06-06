@@ -51,11 +51,6 @@ pub struct HdrRecord {
     pub software_package_version: Option<String>,
 }
 
-impl HdrRecord {
-    fn post_process_fields(_record: &mut HdrRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for HDR
-    }
-}
 
 impl_cwr_parsing! {
     HdrRecord {

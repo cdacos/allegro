@@ -29,11 +29,6 @@ pub struct NpaRecord {
     pub language_code: Option<String>,
 }
 
-impl NpaRecord {
-    fn post_process_fields(_record: &mut NpaRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for NPA
-    }
-}
 
 impl_cwr_parsing! {
     NpaRecord {

@@ -83,11 +83,6 @@ pub struct SpuRecord {
     pub usa_license_ind: Option<String>,
 }
 
-impl SpuRecord {
-    fn post_process_fields(_record: &mut SpuRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for SPU
-    }
-}
 
 impl_cwr_parsing! {
     SpuRecord {

@@ -24,11 +24,6 @@ pub struct TrlRecord {
     pub record_count: String,
 }
 
-impl TrlRecord {
-    fn post_process_fields(_record: &mut TrlRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for TRL
-    }
-}
 
 impl_cwr_parsing! {
     TrlRecord {

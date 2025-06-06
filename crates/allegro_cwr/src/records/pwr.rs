@@ -35,11 +35,6 @@ pub struct PwrRecord {
     pub publisher_sequence_num: Option<String>,
 }
 
-impl PwrRecord {
-    fn post_process_fields(_record: &mut PwrRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for PWR
-    }
-}
 
 impl_cwr_parsing! {
     PwrRecord {

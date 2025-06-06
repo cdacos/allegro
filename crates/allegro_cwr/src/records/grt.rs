@@ -30,11 +30,6 @@ pub struct GrtRecord {
     pub total_monetary_value: Option<String>,
 }
 
-impl GrtRecord {
-    fn post_process_fields(_record: &mut GrtRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for GRT
-    }
-}
 
 impl_cwr_parsing! {
     GrtRecord {

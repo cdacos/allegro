@@ -29,11 +29,6 @@ pub struct PerRecord {
     pub performing_artist_ipi_base_number: Option<String>,
 }
 
-impl PerRecord {
-    fn post_process_fields(_record: &mut PerRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for PER
-    }
-}
 
 impl_cwr_parsing! {
     PerRecord {

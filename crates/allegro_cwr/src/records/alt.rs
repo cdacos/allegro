@@ -26,11 +26,6 @@ pub struct AltRecord {
     pub language_code: Option<String>,
 }
 
-impl AltRecord {
-    fn post_process_fields(_record: &mut AltRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for ALT
-    }
-}
 
 impl_cwr_parsing! {
     AltRecord {

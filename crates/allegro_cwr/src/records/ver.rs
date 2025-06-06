@@ -56,11 +56,6 @@ pub struct VerRecord {
     pub submitter_work_num: Option<String>,
 }
 
-impl VerRecord {
-    fn post_process_fields(_record: &mut VerRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for VER
-    }
-}
 
 impl_cwr_parsing! {
     VerRecord {

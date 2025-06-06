@@ -56,11 +56,6 @@ pub struct EwtRecord {
     pub submitter_work_num: Option<String>,
 }
 
-impl EwtRecord {
-    fn post_process_fields(_record: &mut EwtRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for EWT
-    }
-}
 
 impl_cwr_parsing! {
     EwtRecord {

@@ -38,11 +38,6 @@ pub struct NprRecord {
     pub performance_dialect: Option<String>,
 }
 
-impl NprRecord {
-    fn post_process_fields(_record: &mut NprRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for NPR
-    }
-}
 
 impl_cwr_parsing! {
     NprRecord {

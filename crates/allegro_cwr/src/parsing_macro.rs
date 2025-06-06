@@ -1,3 +1,5 @@
+#![allow(unused_mut)]
+
 /// Macro to generate from_cwr_line method for CWR record parsing
 ///
 /// Usage:
@@ -17,12 +19,14 @@
 /// ```
 #[macro_export]
 macro_rules! impl_cwr_parsing {
+    // Main pattern - handles both simple and custom post-processing cases
     (
         $struct_name:ident {
             $(
                 $field_name:ident: ($start:expr, $end:expr, $field_type:ident $(, $validator:expr)?)
             ),* $(,)?
         }
+        $(with_post_process $post_process_fn:expr)?
     ) => {
         impl $struct_name {
             /// Create a new record with required fields
@@ -33,6 +37,7 @@ macro_rules! impl_cwr_parsing {
                     )*
                 }
             }
+
 
             /// Parse a CWR line into a record (v2 with validation and warnings)
             pub fn from_cwr_line(line: &str) -> Result<$crate::error::CwrParseResult<Self>, $crate::error::CwrParseError> {
@@ -45,14 +50,15 @@ macro_rules! impl_cwr_parsing {
                     let $field_name = impl_cwr_parsing!(@extract_field line, $start, $end, stringify!($field_name), $field_type, warnings $(, $validator)?);
                 )*
 
+                #[allow(unused_mut)]
                 let mut record = Self {
                     $(
                         $field_name: impl_cwr_parsing!(@handle_result $field_name, $field_type),
                     )*
                 };
 
-                // Call post_process_fields if it exists
-                Self::post_process_fields(&mut record, &mut warnings);
+                // Call post-processing - use custom or default
+                impl_cwr_parsing!(@post_process $struct_name, record, warnings $(, $post_process_fn)?);
 
                 Ok($crate::error::CwrParseResult { record, warnings })
             }
@@ -119,6 +125,17 @@ macro_rules! impl_cwr_parsing {
         Option<String>
     };
 
+    // Helper: Custom post-processing
+    (@post_process $struct_name:ident, $record:ident, $warnings:ident, $post_process_fn:expr) => {
+        let post_process = $post_process_fn;
+        post_process(&mut $record, &mut $warnings);
+    };
+
+    // Helper: Default post-processing (no-op)
+    (@post_process $struct_name:ident, $record:ident, $warnings:ident) => {
+        // Default: do nothing
+    };
+
 }
 
 /// Macro to generate round-trip tests for CWR record parsing
@@ -182,11 +199,6 @@ mod tests {
         optional_field: Option<String>,
     }
 
-    impl TestRecord {
-        fn post_process_fields(_record: &mut TestRecord, _warnings: &mut Vec<String>) {
-            // No-op for testing
-        }
-    }
 
     impl_cwr_parsing! {
         TestRecord {

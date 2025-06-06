@@ -53,11 +53,6 @@ pub struct IpaRecord {
     pub sr_share: Option<String>,
 }
 
-impl IpaRecord {
-    fn post_process_fields(_record: &mut IpaRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for IPA
-    }
-}
 
 impl_cwr_parsing! {
     IpaRecord {

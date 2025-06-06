@@ -41,11 +41,6 @@ pub struct SwtRecord {
     pub sequence_num: Option<String>,
 }
 
-impl SwtRecord {
-    fn post_process_fields(_record: &mut SwtRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for SWT
-    }
-}
 
 impl_cwr_parsing! {
     SwtRecord {

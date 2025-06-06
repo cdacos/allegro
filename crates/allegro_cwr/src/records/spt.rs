@@ -44,11 +44,6 @@ pub struct SptRecord {
     pub sequence_num: Option<String>,
 }
 
-impl SptRecord {
-    fn post_process_fields(_record: &mut SptRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for SPT
-    }
-}
 
 impl_cwr_parsing! {
     SptRecord {

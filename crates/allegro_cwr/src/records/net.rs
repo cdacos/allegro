@@ -24,11 +24,6 @@ pub struct NetRecord {
     pub language_code: Option<String>,
 }
 
-impl NetRecord {
-    fn post_process_fields(_record: &mut NetRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for NET
-    }
-}
 
 impl_cwr_parsing! {
     NetRecord {

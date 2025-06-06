@@ -29,11 +29,6 @@ pub struct XrfRecord {
     pub validity: String,
 }
 
-impl XrfRecord {
-    fn post_process_fields(_record: &mut XrfRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for XRF
-    }
-}
 
 impl_cwr_parsing! {
     XrfRecord {

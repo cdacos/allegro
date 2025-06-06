@@ -96,11 +96,6 @@ pub struct NwrRecord {
     pub priority_flag: Option<String>,
 }
 
-impl NwrRecord {
-    fn post_process_fields(_record: &mut NwrRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for NWR
-    }
-}
 
 impl_cwr_parsing! {
     NwrRecord {

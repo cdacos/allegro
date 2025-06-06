@@ -2,7 +2,6 @@
 
 use crate::validators::{date_yyyymmdd, one_of, works_count, yes_no};
 use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
-use log::debug;
 use serde::{Deserialize, Serialize};
 
 /// AGR - Agreement Transaction Record
@@ -66,11 +65,6 @@ pub struct AgrRecord {
     pub society_assigned_agreement_number: Option<String>,
 }
 
-impl AgrRecord {
-    fn post_process_fields(record: &mut AgrRecord, warnings: &mut Vec<String>) {
-        debug!("post_process_fields hook! Record: {:?}, Warnings: {:?}", record, warnings);
-    }
-}
 
 impl_cwr_parsing! {
     AgrRecord {
@@ -93,6 +87,26 @@ impl_cwr_parsing! {
         shares_change: (105, 106, optional),
         advance_given: (106, 107, optional),
         society_assigned_agreement_number: (107, 121, optional),
+    }
+    with_post_process |record: &mut AgrRecord, warnings: &mut Vec<String>| {
+        // Check that end date is after start date
+        if let Some(end_date) = &record.agreement_end_date {
+            if end_date <= &record.agreement_start_date {
+                warnings.push("Agreement end date must be after start date".to_string());
+            }
+        }
+        
+        // Check that retention date is after agreement start date
+        if let Some(retention_date) = &record.retention_end_date {
+            if retention_date <= &record.agreement_start_date {
+                warnings.push("Retention end date must be after agreement start date".to_string());
+            }
+        }
+        
+        // Check prior royalty logic
+        if record.prior_royalty_status == "Y" && record.prior_royalty_start_date.is_none() {
+            warnings.push("Prior royalty start date required when prior royalty status is Y".to_string());
+        }
     }
 }
 

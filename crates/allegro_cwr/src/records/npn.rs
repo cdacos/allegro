@@ -29,11 +29,6 @@ pub struct NpnRecord {
     pub language_code: Option<String>,
 }
 
-impl NpnRecord {
-    fn post_process_fields(_record: &mut NpnRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for NPN
-    }
-}
 
 impl_cwr_parsing! {
     NpnRecord {

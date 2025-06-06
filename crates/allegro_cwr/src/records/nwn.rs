@@ -29,11 +29,6 @@ pub struct NwnRecord {
     pub language_code: Option<String>,
 }
 
-impl NwnRecord {
-    fn post_process_fields(_record: &mut NwnRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for NWN
-    }
-}
 
 impl_cwr_parsing! {
     NwnRecord {

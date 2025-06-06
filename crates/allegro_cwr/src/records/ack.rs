@@ -47,11 +47,6 @@ pub struct AckRecord {
     pub transaction_status: String,
 }
 
-impl AckRecord {
-    fn post_process_fields(_record: &mut AckRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for ACK
-    }
-}
 
 impl_cwr_parsing! {
     AckRecord {

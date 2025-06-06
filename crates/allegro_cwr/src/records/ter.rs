@@ -23,11 +23,6 @@ pub struct TerRecord {
     pub tis_numeric_code: String,
 }
 
-impl TerRecord {
-    fn post_process_fields(_record: &mut TerRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for TER
-    }
-}
 
 impl_cwr_parsing! {
     TerRecord {

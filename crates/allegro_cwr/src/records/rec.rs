@@ -71,11 +71,6 @@ pub struct RecRecord {
     pub submitter_recording_identifier: Option<String>,
 }
 
-impl RecRecord {
-    fn post_process_fields(_record: &mut RecRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for REC
-    }
-}
 
 impl_cwr_parsing! {
     RecRecord {

@@ -26,11 +26,6 @@ pub struct NatRecord {
     pub language_code: Option<String>,
 }
 
-impl NatRecord {
-    fn post_process_fields(_record: &mut NatRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for NAT
-    }
-}
 
 impl_cwr_parsing! {
     NatRecord {

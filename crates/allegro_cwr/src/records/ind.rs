@@ -23,11 +23,6 @@ pub struct IndRecord {
     pub number_of_players: Option<String>,
 }
 
-impl IndRecord {
-    fn post_process_fields(_record: &mut IndRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for IND
-    }
-}
 
 impl_cwr_parsing! {
     IndRecord {

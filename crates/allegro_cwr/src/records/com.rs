@@ -53,11 +53,6 @@ pub struct ComRecord {
     pub writer_2_ipi_base_number: Option<String>,
 }
 
-impl ComRecord {
-    fn post_process_fields(_record: &mut ComRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for COM
-    }
-}
 
 impl_cwr_parsing! {
     ComRecord {

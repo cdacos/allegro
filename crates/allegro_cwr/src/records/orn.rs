@@ -77,11 +77,6 @@ pub struct OrnRecord {
     pub eidr_check_digit: Option<String>,
 }
 
-impl OrnRecord {
-    fn post_process_fields(_record: &mut OrnRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for ORN
-    }
-}
 
 impl_cwr_parsing! {
     OrnRecord {

@@ -30,11 +30,6 @@ pub struct GrhRecord {
     pub submission_distribution_type: Option<String>,
 }
 
-impl GrhRecord {
-    fn post_process_fields(_record: &mut GrhRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for GRH
-    }
-}
 
 impl_cwr_parsing! {
     GrhRecord {

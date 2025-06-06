@@ -26,11 +26,6 @@ pub struct InsRecord {
     pub instrumentation_description: Option<String>,
 }
 
-impl InsRecord {
-    fn post_process_fields(_record: &mut InsRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for INS
-    }
-}
 
 impl_cwr_parsing! {
     InsRecord {

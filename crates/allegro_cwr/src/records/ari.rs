@@ -32,11 +32,6 @@ pub struct AriRecord {
     pub note: Option<String>,
 }
 
-impl AriRecord {
-    fn post_process_fields(_record: &mut AriRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for ARI
-    }
-}
 
 impl_cwr_parsing! {
     AriRecord {

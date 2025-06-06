@@ -35,11 +35,6 @@ pub struct MsgRecord {
     pub message_text: String,
 }
 
-impl MsgRecord {
-    fn post_process_fields(_record: &mut MsgRecord, _warnings: &mut Vec<String>) {
-        // No specific post-processing needed for MSG
-    }
-}
 
 impl_cwr_parsing! {
     MsgRecord {
