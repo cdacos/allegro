@@ -99,139 +99,36 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
 
         if let Some(ref tx) = self.tx {
             if let Some(ref mut statements) = self.statements {
-                // We need to reconstruct the original line to use the existing record_handlers
-                // For now, this is a simplified approach - in production we'd store the original line
-                let record_type = parsed_record.record.record_type();
-                let record_id = match record_type {
-                    "HDR" | "GRH" | "GRT" | "TRL" | "NWR" => {
-                        // For these key record types, insert a placeholder record
-                        // This demonstrates the problem - we need actual record data
-                        match record_type {
-                            "HDR" => {
-                                statements.hdr_stmt.execute(rusqlite::params![
-                                    self.file_id,
-                                    "HDR",
-                                    "PB", // sender_type
-                                    "123456789", // sender_id  
-                                    "PLACEHOLDER", // sender_name
-                                    "01.10", // edi_standard_version_number
-                                    "20221221", // creation_date
-                                    "125411", // creation_time
-                                    "20221221", // transmission_date
-                                    "", // character_set
-                                    "", // version
-                                    "", // revision
-                                    "", // software_package
-                                    "" // software_package_version
-                                ])?;
-                                tx.last_insert_rowid()
-                            }
-                            "GRH" => {
-                                statements.grh_stmt.execute(rusqlite::params![
-                                    self.file_id,
-                                    "GRH",
-                                    "TRK", // transaction_type
-                                    "0000001", // group_id
-                                    "02.10", // version_number
-                                    "", // batch_request
-                                    "" // submission_distribution_type
-                                ])?;
-                                tx.last_insert_rowid()
-                            }
-                            "GRT" => {
-                                statements.grt_stmt.execute(rusqlite::params![
-                                    self.file_id,
-                                    "GRT",
-                                    "0000001", // group_id
-                                    "00000001", // transaction_count
-                                    "00000003", // record_count
-                                    "", // currency_indicator
-                                    "" // total_monetary_value
-                                ])?;
-                                tx.last_insert_rowid()
-                            }
-                            "TRL" => {
-                                statements.trl_stmt.execute(rusqlite::params![
-                                    self.file_id,
-                                    "TRL",
-                                    "00001", // group_count
-                                    "000000010", // transaction_count  
-                                    "0000003" // record_count
-                                ])?;
-                                tx.last_insert_rowid()
-                            }
-                            "NWR" => {
-                                statements.nwr_stmt.execute(rusqlite::params![
-                                    self.file_id,
-                                    "NWR",
-                                    "0000000", // transaction_sequence_num
-                                    "1", // record_sequence_num
-                                    "PLACEHOLDER SONG", // work_title
-                                    "EN", // language_code
-                                    "1357924680", // submitter_work_num
-                                    "", // iswc
-                                    "", // copyright_date
-                                    "", // copyright_number
-                                    "1234", // musical_work_distribution_category
-                                    "", // duration
-                                    "5", // recorded_indicator
-                                    "", // text_music_relationship
-                                    "", // composite_type
-                                    "", // version_type
-                                    "", // excerpt_type
-                                    "", // music_arrangement
-                                    "", // lyric_adaptation
-                                    "", // contact_name
-                                    "", // contact_id
-                                    "", // cwr_work_type
-                                    "", // grand_rights_ind
-                                    "", // composite_component_count
-                                    "", // date_of_publication_of_printed_edition
-                                    "", // exceptional_clause
-                                    "", // opus_number
-                                    "", // catalogue_number
-                                    "" // priority_flag
-                                ])?;
-                                tx.last_insert_rowid()
-                            }
-                            "SPU" => {
-                                statements.spu_stmt.execute(rusqlite::params![
-                                    self.file_id, "SPU", "0000000", "1", "00000001", "1357924680", "PLACEHOLDER PUBLISHER", "N", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""
-                                ])?;
-                                tx.last_insert_rowid()
-                            }
-                            "SWR" => {
-                                statements.swr_stmt.execute(rusqlite::params![
-                                    self.file_id, "SWR", "0000000", "1", "00000001", "PLACEHOLDER", "WRITER", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""
-                                ])?;
-                                tx.last_insert_rowid()
-                            }
-                            "ALT" => {
-                                statements.alt_stmt.execute(rusqlite::params![
-                                    self.file_id, "ALT", "0000000", "1", "PLACEHOLDER TITLE", "AT", "EN"
-                                ])?;
-                                tx.last_insert_rowid()
-                            }
-                            "PER" => {
-                                statements.per_stmt.execute(rusqlite::params![
-                                    self.file_id, "PER", "0000000", "1", "PLACEHOLDER PERFORMER", "", "", ""
-                                ])?;
-                                tx.last_insert_rowid()
-                            }
-                            "REC" => {
-                                statements.rec_stmt.execute(rusqlite::params![
-                                    self.file_id, "REC", "0000000", "1", "", "", "", "", "PLACEHOLDER ALBUM", "PLACEHOLDER LABEL", "", "", "", "", "", "", "PLACEHOLDER RECORDING", "", "", "", "", ""
-                                ])?;
-                                tx.last_insert_rowid()
-                            }
-                            _ => 1
-                        }
+                let record_id = match &parsed_record.record {
+                    allegro_cwr::parser::CwrRecord::Hdr(hdr) => {
+                        statements.hdr_stmt.execute(rusqlite::params![
+                            self.file_id,
+                            "HDR",
+                            hdr.sender_type,
+                            hdr.sender_id,
+                            hdr.sender_name,
+                            hdr.edi_standard_version_number,
+                            hdr.creation_date.as_str(),
+                            hdr.creation_time,
+                            hdr.transmission_date.as_str(),
+                            hdr.character_set,
+                            hdr.version,
+                            hdr.revision,
+                            hdr.software_package,
+                            hdr.software_package_version
+                        ])?;
+                        tx.last_insert_rowid()
                     }
-                    _ => 1 // For other record types, use placeholder
+                    _ => {
+                        return Err(CwrDbError::Setup(format!(
+                            "Record type '{}' not yet implemented for database insertion",
+                            parsed_record.record.record_type()
+                        )));
+                    }
                 };
 
                 // Insert into file_line table for tracking
-                insert_file_line_record(&mut statements.file_stmt, self.file_id, parsed_record.line_number, record_type, record_id)?;
+                insert_file_line_record(&mut statements.file_stmt, self.file_id, parsed_record.line_number, parsed_record.record.record_type(), record_id)?;
             }
         }
 
