@@ -1,7 +1,7 @@
 //! MSG - Message Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// MSG - Message Record
@@ -48,6 +48,6 @@ impl_cwr_parsing! {
         validation_number: (32, 35, required),
         message_text: (35, 185, required),
     }
+    with_tests ["MSG0000000100000001E00000002NWRR001Record rejected due to invalid format                                                                                                                            "]
 }
 
-impl_cwr_parsing_test_roundtrip!(MsgRecord, ["MSG0000000100000001E00000002NWRR001Record rejected due to invalid format                                                                                                                            "]);

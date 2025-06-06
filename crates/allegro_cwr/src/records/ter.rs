@@ -1,7 +1,7 @@
 //! TER - Territory in Agreement Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// TER - Territory in Agreement Record
@@ -32,6 +32,6 @@ impl_cwr_parsing! {
         inclusion_exclusion_indicator: (19, 20, required),
         tis_numeric_code: (20, 24, required),
     }
+    with_tests ["TER0000000100000001I2840"]
 }
 
-impl_cwr_parsing_test_roundtrip!(TerRecord, ["TER0000000100000001I2840"]);

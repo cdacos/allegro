@@ -1,7 +1,7 @@
 //! PER - Performing Artist Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// PER - Performing Artist Record
@@ -40,6 +40,6 @@ impl_cwr_parsing! {
         performing_artist_ipi_name_num: (94, 105, optional),
         performing_artist_ipi_base_number: (105, 118, optional),
     }
+    with_tests ["PER0000000100000001SMITH                                        JOHN                          01234567890123456789012"]
 }
 
-impl_cwr_parsing_test_roundtrip!(PerRecord, ["PER0000000100000001SMITH                                        JOHN                          01234567890123456789012"]);

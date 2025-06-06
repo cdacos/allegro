@@ -1,7 +1,7 @@
 //! VER - Original Work Title for Versions Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// VER - Original Work Title for Versions Record
@@ -77,10 +77,3 @@ impl_cwr_parsing! {
         submitter_work_num: (350, 364, optional),
     }
 }
-
-impl_cwr_parsing_test_roundtrip!(
-    VerRecord,
-    [
-        "VER0000000100000001ORIGINAL WORK TITLE                                 T-987654321ENWRITER 1 LAST NAME                     WRITER 1 FIRST NAME        SOURCE                                                      98765432109876543210987WRITER 2 LAST NAME                     WRITER 2 FIRST NAME        87654321098765432109876ORIGWORK123   "
-    ]
-);

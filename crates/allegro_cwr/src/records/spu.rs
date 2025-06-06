@@ -1,7 +1,7 @@
 //! SPU - Publisher Controlled by Submitter Record / OPU - Other Publisher Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// SPU - Publisher Controlled by Submitter Record (also OPU - Other Publisher)
@@ -112,6 +112,6 @@ impl_cwr_parsing! {
         agreement_type: (180, 182, optional),
         usa_license_ind: (182, 183, optional),
     }
+    with_tests ["SPU0000000100000001011234567890PUBLISHER NAME                             N AS1234567890123456789    BMI  50.00000000000000000000000000000  N N                                                            "]
 }
 
-impl_cwr_parsing_test_roundtrip!(SpuRecord, ["SPU0000000100000001011234567890PUBLISHER NAME                             N AS1234567890123456789    BMI  50.00000000000000000000000000000  N N                                                            "]);

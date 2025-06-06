@@ -3,7 +3,7 @@
 //! Also handles REV (Revised Registration), ISW (ISWC Notification), and EXC (Existing Work in Conflict).
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// NWR - New Work Registration Record
@@ -128,6 +128,6 @@ impl_cwr_parsing! {
         catalogue_number: (234, 259, optional),
         priority_flag: (259, 260, optional),
     }
+    with_tests ["NWR0000000100000001Test Song                                               SW0000000001        SER        Y       ORI                                                                                                                                               "]
 }
 
-impl_cwr_parsing_test_roundtrip!(NwrRecord, ["NWR0000000100000001Test Song                                               SW0000000001        SER        Y       ORI                                                                                                                                               "]);

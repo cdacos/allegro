@@ -3,7 +3,7 @@
 //! The Group Trailer record marks the end of a group and contains summary counts for that group.
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// GRT - Group Trailer Record
@@ -40,6 +40,6 @@ impl_cwr_parsing! {
         currency_indicator: (24, 27, optional),
         total_monetary_value: (27, 37, optional),
     }
+    with_tests ["GRT000010000001400000365             "]
 }
 
-impl_cwr_parsing_test_roundtrip!(GrtRecord, ["GRT000010000001400000365             "]);

@@ -1,7 +1,7 @@
 //! IPA - Interested Party of Agreement Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// IPA - Interested Party of Agreement Record
@@ -72,6 +72,6 @@ impl_cwr_parsing! {
         sr_affiliation_society: (145, 148, optional),
         sr_share: (148, 153, optional),
     }
+    with_tests ["IPA0000000100000001AS           123456789JONES                                                                                                           "]
 }
 
-impl_cwr_parsing_test_roundtrip!(IpaRecord, ["IPA0000000100000001AS           123456789JONES                                                                                                           "]);

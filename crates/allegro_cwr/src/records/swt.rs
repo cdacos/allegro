@@ -1,7 +1,7 @@
 //! SWT - Writer Territory of Control Record / OWT - Other Writer Territory Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// SWT - Writer Territory of Control Record (also OWT - Other Writer Territory)
@@ -56,6 +56,6 @@ impl_cwr_parsing! {
         shares_change: (48, 49, optional),
         sequence_num: (49, 52, optional),
     }
+    with_tests ["SWT0000000100000001         I2840 "]
 }
 
-impl_cwr_parsing_test_roundtrip!(SwtRecord, ["SWT0000000100000001         I2840 "]);

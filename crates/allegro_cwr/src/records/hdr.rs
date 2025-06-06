@@ -3,7 +3,7 @@
 //! The Transmission Header record contains information about the sender and the transmission itself.
 
 use crate::validators::{date_yyyymmdd, one_of};
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// HDR - Transmission Header Record
@@ -68,6 +68,6 @@ impl_cwr_parsing! {
         software_package: (107, 137, optional),
         software_package_version: (137, 167, optional),
     }
+    with_tests ["HDR01BMI      BMI MUSIC                                    01.1020050101120000200501010123456789012345  2. 1DEV MUSIC SOFTWARE VERSION 1.0  MUSIC PACKAGE VERSION 2.0  "]
 }
 
-impl_cwr_parsing_test_roundtrip!(HdrRecord, ["HDR01BMI      BMI MUSIC                                    01.1020050101120000200501010123456789012345  2. 1DEV MUSIC SOFTWARE VERSION 1.0  MUSIC PACKAGE VERSION 2.0  "]);

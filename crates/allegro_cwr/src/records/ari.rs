@@ -1,7 +1,7 @@
 //! ARI - Additional Related Information Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// ARI - Additional Related Information Record
@@ -44,6 +44,6 @@ impl_cwr_parsing! {
         subject_code: (39, 41, optional),
         note: (41, 201, optional),
     }
+    with_tests ["ARI0000000100000001021              ALL  Additional related information note for the work                                                                                                    "]
 }
 
-impl_cwr_parsing_test_roundtrip!(AriRecord, ["ARI0000000100000001021              ALL  Additional related information note for the work                                                                                                    "]);

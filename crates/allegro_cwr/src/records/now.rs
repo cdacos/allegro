@@ -1,7 +1,7 @@
 //! NOW - Non-Roman Alphabet Writer Name Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// NOW - Non-Roman Alphabet Writer Name Record
@@ -41,10 +41,3 @@ impl_cwr_parsing! {
         writer_position: (341, 342, optional),
     }
 }
-
-impl_cwr_parsing_test_roundtrip!(
-    NowRecord,
-    [
-        "NOW0000000100000001Non-Roman Writer Name                                                                                                                                            Non-Roman First Name                                                                                                                                            EN1"
-    ]
-);

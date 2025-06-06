@@ -1,7 +1,7 @@
 //! PWR - Publisher for Writer Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// PWR - Publisher for Writer Record
@@ -48,6 +48,6 @@ impl_cwr_parsing! {
         writer_ip_num: (101, 110, optional),
         publisher_sequence_num: (110, 112, optional),
     }
+    with_tests ["PWR0000000100000001123456789PUBLISHER NAME                         SUBAGR        SOCAGR        12345678901"]
 }
 
-impl_cwr_parsing_test_roundtrip!(PwrRecord, ["PWR0000000100000001123456789PUBLISHER NAME                         SUBAGR        SOCAGR        12345678901"]);

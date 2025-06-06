@@ -3,7 +3,7 @@
 //! The Group Header record starts a new group of transactions within a CWR transmission.
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// GRH - Group Header Record
@@ -40,6 +40,6 @@ impl_cwr_parsing! {
         batch_request: (16, 26, optional),
         submission_distribution_type: (26, 28, optional),
     }
+    with_tests ["GRHAGR0000102.10            "]
 }
 
-impl_cwr_parsing_test_roundtrip!(GrhRecord, ["GRHAGR0000102.10            "]);

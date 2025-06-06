@@ -1,7 +1,7 @@
 //! ACK - Acknowledgement of Transaction Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// ACK - Acknowledgement of Transaction Record
@@ -64,6 +64,6 @@ impl_cwr_parsing! {
         processing_date: (149, 157, required),
         transaction_status: (157, 159, required),
     }
+    with_tests ["ACK0000000100000001200501011200000000100000001NWR                                                                                                    20050102AS"]
 }
 
-impl_cwr_parsing_test_roundtrip!(AckRecord, ["ACK0000000100000001200501011200000000100000001NWR                                                                                                    20050102AS"]);

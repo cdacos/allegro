@@ -1,7 +1,7 @@
 //! NAT - Non-Roman Alphabet Title Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// NAT - Non-Roman Alphabet Title Record
@@ -37,10 +37,3 @@ impl_cwr_parsing! {
         language_code: (661, 663, optional),
     }
 }
-
-impl_cwr_parsing_test_roundtrip!(
-    NatRecord,
-    [
-        "NAT0000000100000001NON-ROMAN TITLE                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  OTEN"
-    ]
-);

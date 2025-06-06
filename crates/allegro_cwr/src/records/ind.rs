@@ -1,7 +1,7 @@
 //! IND - Instrumentation Detail Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// IND - Instrumentation Detail Record
@@ -32,6 +32,6 @@ impl_cwr_parsing! {
         instrument_code: (19, 22, required),
         number_of_players: (22, 25, optional),
     }
+    with_tests ["IND0000000100000001PNO004"]
 }
 
-impl_cwr_parsing_test_roundtrip!(IndRecord, ["IND0000000100000001PNO004"]);

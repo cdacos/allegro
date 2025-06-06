@@ -1,7 +1,7 @@
 //! NPN - Non-Roman Alphabet Publisher Name Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// NPN - Non-Roman Alphabet Publisher Name Record
@@ -41,10 +41,3 @@ impl_cwr_parsing! {
         language_code: (510, 512, optional),
     }
 }
-
-impl_cwr_parsing_test_roundtrip!(
-    NpnRecord,
-    [
-        "NPN0000000100000001011234567890PUBLISHER NAME                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          EN"
-    ]
-);

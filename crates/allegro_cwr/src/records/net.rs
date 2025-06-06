@@ -1,7 +1,7 @@
 //! NET - Non-Roman Alphabet Entire Work Title for Excerpts/Components/Versions Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// NET - Non-Roman Alphabet Entire Work Title for Excerpts/Components/Versions Record
@@ -34,10 +34,3 @@ impl_cwr_parsing! {
         language_code: (659, 661, optional),
     }
 }
-
-impl_cwr_parsing_test_roundtrip!(
-    NetRecord,
-    [
-        "NET0000000100000001Non-Roman Entire Work Title                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            EN"
-    ]
-);

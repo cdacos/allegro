@@ -3,7 +3,7 @@
 //! Also handles OWR (Other Writer) records.
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// SWR - Writer Controlled by Submitter Record (also OWR - Other Writer)
@@ -106,6 +106,6 @@ impl_cwr_parsing! {
         personal_number: (167, 179, optional),
         usa_license_ind: (179, 180, optional),
     }
+    with_tests ["SWR00000010000000201234567890WRITER LAST NAME                     WRITER FIRST NAME             N WR12345678901234567890   50.000   50.000   50.000N N N 0123456789012012345678901"]
 }
 
-impl_cwr_parsing_test_roundtrip!(SwrRecord, ["SWR00000010000000201234567890WRITER LAST NAME                     WRITER FIRST NAME             N WR12345678901234567890   50.000   50.000   50.000N N N 0123456789012012345678901"]);

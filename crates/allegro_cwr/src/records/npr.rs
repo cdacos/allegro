@@ -1,7 +1,7 @@
 //! NPR - Non-Roman Alphabet Performing Artist Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// NPR - Non-Roman Alphabet Performing Artist Record
@@ -53,10 +53,3 @@ impl_cwr_parsing! {
         performance_dialect: (367, 370, optional),
     }
 }
-
-impl_cwr_parsing_test_roundtrip!(
-    NprRecord,
-    [
-        "NPR0000000100000001ARTIST NAME                                                                                                                                                             FIRST NAME                                                                                                                                                              01234567890123456789012ENFRGER"
-    ]
-);

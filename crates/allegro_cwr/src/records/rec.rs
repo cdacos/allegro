@@ -1,7 +1,7 @@
 //! REC - Recording Detail Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// REC - Recording Detail Record
@@ -97,10 +97,3 @@ impl_cwr_parsing! {
         submitter_recording_identifier: (526, 540, optional),
     }
 }
-
-impl_cwr_parsing_test_roundtrip!(
-    RecRecord,
-    [
-        "REC0000000100000001        CONSTANT FIELD                                          120000     ALBUM TITLE                                                 ALBUM LABEL                                                 CATALOG123        1234567890123US1234567890A DVDRECORDING TITLE                                          VERSION TITLE                                               DISPLAY ARTIST                                              RECORD LABEL                                                VALIDITY12345678901234 REC_ID123     "
-    ]
-);

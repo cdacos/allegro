@@ -1,7 +1,7 @@
 //! XRF - Work ID Cross Reference Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// XRF - Work ID Cross Reference Record
@@ -40,6 +40,6 @@ impl_cwr_parsing! {
         identifier_type: (36, 37, required),
         validity: (37, 38, required),
     }
+    with_tests ["XRF0000000100000001ISWT1234567890123WY"]
 }
 
-impl_cwr_parsing_test_roundtrip!(XrfRecord, ["XRF0000000100000001ISWT1234567890123WY"]);

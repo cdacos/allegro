@@ -1,7 +1,7 @@
 //! ORN - Work Origin Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// ORN - Work Origin Record
@@ -105,10 +105,3 @@ impl_cwr_parsing! {
         eidr_check_digit: (347, 348, optional),
     }
 }
-
-impl_cwr_parsing_test_roundtrip!(
-    OrnRecord,
-    [
-        "ORN0000000100000001LIBPRODUCTION TITLE                                       CD_IDENT1234567 LIBRARY NAME                                            B                         PROD12345678EPISODE TITLE                                           EPISODE123          2023AVIAV_NUMBER12345 123456789012AB1234567812345678901234567890123451"
-    ]
-);

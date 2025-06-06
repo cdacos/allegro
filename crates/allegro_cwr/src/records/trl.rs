@@ -3,7 +3,7 @@
 //! The Transmission Trailer record marks the end of a CWR transmission and contains summary counts.
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// TRL - Transmission Trailer Record
@@ -32,6 +32,6 @@ impl_cwr_parsing! {
         transaction_count: (8, 16, required),
         record_count: (16, 24, required),
     }
+    with_tests ["TRL000010000001400000367"]
 }
 
-impl_cwr_parsing_test_roundtrip!(TrlRecord, ["TRL000010000001400000367"]);

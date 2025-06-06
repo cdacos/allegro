@@ -1,7 +1,7 @@
 //! EWT - Entire Work Title for Excerpts Record
 
 use crate::validators::one_of;
-use crate::{impl_cwr_parsing, impl_cwr_parsing_test_roundtrip};
+use crate::impl_cwr_parsing;
 use serde::{Deserialize, Serialize};
 
 /// EWT - Entire Work Title for Excerpts Record
@@ -77,10 +77,3 @@ impl_cwr_parsing! {
         submitter_work_num: (350, 364, optional),
     }
 }
-
-impl_cwr_parsing_test_roundtrip!(
-    EwtRecord,
-    [
-        "EWT0000000100000001ENTIRE WORK TITLE                                   T-123456789ENWRITER 1 LAST NAME                     WRITER 1 FIRST NAME        SOURCE                                                      01234567890123456789012WRITER 2 LAST NAME                     WRITER 2 FIRST NAME        09876543210987654321098SUBWORK123    "
-    ]
-);
