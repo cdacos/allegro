@@ -1,5 +1,5 @@
-use crate::{PreparedStatements, insert_file_line_record, log_error};
 use crate::domain_conversions::CwrToSqlString;
+use crate::{PreparedStatements, insert_file_line_record, log_error};
 use allegro_cwr::records::*;
 use allegro_cwr::{CwrParseError, ParsingContext};
 use rusqlite::{Transaction, params};
@@ -548,7 +548,15 @@ pub fn parse_and_insert_orn<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 
 pub fn parse_and_insert_ins<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
     handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, InsRecord::from_cwr_line, |record, stmts, file_id| {
-        stmts.ins_stmt.execute(params![file_id, record.record_type.to_sql_string(), record.transaction_sequence_num, record.record_sequence_num, record.number_of_voices.as_deref().unwrap_or(""), record.standard_instrumentation_type.as_deref().unwrap_or(""), record.instrumentation_description.as_deref().unwrap_or(""),])?;
+        stmts.ins_stmt.execute(params![
+            file_id,
+            record.record_type.to_sql_string(),
+            record.transaction_sequence_num,
+            record.record_sequence_num,
+            record.number_of_voices.as_deref().unwrap_or(""),
+            record.standard_instrumentation_type.as_deref().unwrap_or(""),
+            record.instrumentation_description.as_deref().unwrap_or(""),
+        ])?;
         Ok(())
     })
 }

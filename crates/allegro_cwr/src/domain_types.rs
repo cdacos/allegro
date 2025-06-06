@@ -122,7 +122,6 @@ impl std::fmt::Display for RecordType {
     }
 }
 
-
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub enum YesNo {
     Yes,
@@ -150,7 +149,6 @@ impl Date {
         }
     }
 }
-
 
 // Implement CwrFieldParse for String (default case)
 impl CwrFieldParse for String {

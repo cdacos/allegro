@@ -56,7 +56,7 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
     let field_names = fields.iter().map(|f| &f.ident);
     let test_mod_name = quote::format_ident!("{}_generated_tests", name.to_string().to_lowercase());
 
-    let test_module = test_data.map(|test_data_value| {
+    let _test_module = test_data.map(|test_data_value| {
         quote! {
             #[cfg(test)]
             mod #test_mod_name {
@@ -127,7 +127,7 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
             }
         }
 
-        #test_module
+        #_test_module
     };
 
     TokenStream::from(expanded)

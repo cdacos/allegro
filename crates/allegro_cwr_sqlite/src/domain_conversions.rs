@@ -1,6 +1,6 @@
 //! SQLite conversions for CWR domain types
 
-use allegro_cwr::domain_types::{RecordType, Date};
+use allegro_cwr::domain_types::{Date, RecordType};
 
 /// Extension trait to convert CWR domain types to strings for SQLite
 pub trait CwrToSqlString {
