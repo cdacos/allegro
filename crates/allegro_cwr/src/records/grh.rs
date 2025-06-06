@@ -25,5 +25,4 @@ pub struct GrhRecord {
 
     #[cwr(title = "Optional submission/distribution type (blank for CWR)", start = 26, len = 2)]
     pub submission_distribution_type: Option<String>,
-
 }

@@ -25,5 +25,4 @@ pub struct InsRecord {
 
     #[cwr(title = "Instrumentation description (conditional)", start = 25, len = 50)]
     pub instrumentation_description: Option<String>,
-
 }

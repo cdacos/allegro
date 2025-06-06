@@ -25,5 +25,4 @@ pub struct AltRecord {
 
     #[cwr(title = "Language code (conditional)", start = 81, len = 2)]
     pub language_code: Option<String>,
-
 }

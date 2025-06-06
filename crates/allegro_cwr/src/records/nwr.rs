@@ -91,5 +91,4 @@ pub struct NwrRecord {
 
     #[cwr(title = "Priority flag (1 char, optional, v2.1+)", start = 259, len = 1)]
     pub priority_flag: Option<String>,
-
 }

@@ -46,5 +46,4 @@ pub struct HdrRecord {
 
     #[cwr(title = "Software package version (v2.2+)", start = 137, len = 30)]
     pub software_package_version: Option<String>,
-
 }

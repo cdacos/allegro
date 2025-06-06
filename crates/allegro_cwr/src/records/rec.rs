@@ -69,5 +69,4 @@ pub struct RecRecord {
 
     #[cwr(title = "Submitter recording identifier (optional, v2.2+)", start = 526, len = 14)]
     pub submitter_recording_identifier: Option<String>,
-
 }

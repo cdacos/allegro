@@ -34,5 +34,4 @@ pub struct MsgRecord {
 
     #[cwr(title = "Message text", start = 35, len = 150)]
     pub message_text: String,
-
 }

@@ -59,16 +59,7 @@ impl SqliteHandler {
             file_id
         };
 
-        Ok(SqliteHandler { 
-            conn, 
-            tx: None, 
-            file_id, 
-            processed_count: 0, 
-            error_count: 0, 
-            db_filename: db_filename.to_string(),
-            batch_size,
-            statements: None,
-        })
+        Ok(SqliteHandler { conn, tx: None, file_id, processed_count: 0, error_count: 0, db_filename: db_filename.to_string(), batch_size, statements: None })
     }
 
     fn start_batch(&mut self) -> Result<()> {
@@ -79,7 +70,7 @@ impl SqliteHandler {
             let tx: rusqlite::Transaction<'static> = unsafe { std::mem::transmute(tx) };
             let statements = statements::get_prepared_statements(&tx)?;
             let statements: statements::PreparedStatements<'static> = unsafe { std::mem::transmute(statements) };
-            
+
             self.tx = Some(tx);
             self.statements = Some(statements);
         }
@@ -104,7 +95,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
 
     fn process_record(&mut self, parsed_record: allegro_cwr::ParsedRecord) -> std::result::Result<(), Self::Error> {
         self.start_batch()?;
-        
+
         if let Some(ref mut statements) = self.statements {
             // For now, just log to file_line table - TODO: implement full record insertion
             let record_id = 1; // Placeholder
@@ -112,27 +103,27 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
         }
 
         self.processed_count += 1;
-        
+
         if self.should_commit_batch() {
             self.commit_batch()?;
         }
-        
+
         Ok(())
     }
 
     fn handle_parse_error(&mut self, line_number: usize, error: &allegro_cwr::CwrParseError) -> std::result::Result<(), Self::Error> {
         self.start_batch()?;
-        
+
         if let Some(ref mut statements) = self.statements {
             log_error(&mut statements.error_stmt, self.file_id, line_number, error.to_string())?;
         }
 
         self.error_count += 1;
-        
+
         if self.should_commit_batch() {
             self.commit_batch()?;
         }
-        
+
         Ok(())
     }
 

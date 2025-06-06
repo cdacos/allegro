@@ -75,5 +75,4 @@ pub struct OrnRecord {
 
     #[cwr(title = "EIDR/Check Digit (1 char, optional, v2.2+)", start = 347, len = 1)]
     pub eidr_check_digit: Option<String>,
-
 }

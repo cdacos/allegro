@@ -46,5 +46,4 @@ pub struct AckRecord {
 
     #[cwr(title = "Transaction status", start = 157, len = 2)]
     pub transaction_status: String,
-
 }

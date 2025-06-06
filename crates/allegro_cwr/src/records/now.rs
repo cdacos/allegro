@@ -27,5 +27,4 @@ pub struct NowRecord {
 
     #[cwr(title = "Writer position (1 char, optional)", start = 341, len = 1)]
     pub writer_position: Option<String>,
-
 }

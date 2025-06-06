@@ -438,10 +438,10 @@ mod tests {
 
     #[test]
     fn test_cwr_record_type_mapping() {
+        use crate::domain_types::{Date, RecordType};
         use crate::records::HdrRecord;
-        use crate::domain_types::{RecordType, Date};
         use chrono::NaiveDate;
-        
+
         let hdr = HdrRecord {
             record_type: RecordType::Hdr,
             sender_type: "01".to_string(),

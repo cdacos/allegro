@@ -51,5 +51,4 @@ pub struct ComRecord {
 
     #[cwr(title = "Writer 2 IPI base number (optional)", start = 295, len = 13)]
     pub writer_2_ipi_base_number: Option<String>,
-
 }

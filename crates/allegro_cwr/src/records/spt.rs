@@ -43,5 +43,4 @@ pub struct SptRecord {
 
     #[cwr(title = "Sequence number (v2.1+)", start = 55, len = 3)]
     pub sequence_num: Option<String>,
-
 }

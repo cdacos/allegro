@@ -31,5 +31,4 @@ pub struct AriRecord {
 
     #[cwr(title = "Note (conditional)", start = 41, len = 160)]
     pub note: Option<String>,
-
 }

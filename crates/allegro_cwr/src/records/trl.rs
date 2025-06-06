@@ -19,5 +19,4 @@ pub struct TrlRecord {
 
     #[cwr(title = "Record count", start = 16, len = 8)]
     pub record_count: String,
-
 }

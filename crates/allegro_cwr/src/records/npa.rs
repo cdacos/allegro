@@ -27,5 +27,4 @@ pub struct NpaRecord {
 
     #[cwr(title = "Language code (optional)", start = 348, len = 2)]
     pub language_code: Option<String>,
-
 }

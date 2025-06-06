@@ -36,5 +36,4 @@ pub struct NprRecord {
 
     #[cwr(title = "Performance dialect (conditional, v2.1+)", start = 367, len = 3)]
     pub performance_dialect: Option<String>,
-
 }

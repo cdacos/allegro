@@ -25,5 +25,4 @@ pub struct GrtRecord {
 
     #[cwr(title = "Total monetary value (optional)", start = 27, len = 10)]
     pub total_monetary_value: Option<String>,
-
 }

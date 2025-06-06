@@ -76,5 +76,4 @@ pub struct SwrRecord {
 
     #[cwr(title = "USA license indicator (1 char, optional, v2.1+)", start = 179, len = 1)]
     pub usa_license_ind: Option<String>,
-
 }

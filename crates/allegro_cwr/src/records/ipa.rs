@@ -52,5 +52,4 @@ pub struct IpaRecord {
 
     #[cwr(title = "SR share (conditional)", start = 148, len = 5)]
     pub sr_share: Option<String>,
-
 }

@@ -22,5 +22,4 @@ pub struct IndRecord {
 
     #[cwr(title = "Number of players (optional)", start = 22, len = 3)]
     pub number_of_players: Option<String>,
-
 }

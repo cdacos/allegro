@@ -40,5 +40,4 @@ pub struct SwtRecord {
 
     #[cwr(title = "Sequence number (v2.1+)", start = 49, len = 3)]
     pub sequence_num: Option<String>,
-
 }

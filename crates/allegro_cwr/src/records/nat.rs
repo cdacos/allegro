@@ -24,5 +24,4 @@ pub struct NatRecord {
 
     #[cwr(title = "Language code (optional)", start = 661, len = 2)]
     pub language_code: Option<String>,
-
 }

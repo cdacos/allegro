@@ -45,9 +45,39 @@ impl WorksCount {
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum RecordType {
-    Agr, Ack, Alt, Ari, Com, Ewt, Grh, Grt, Hdr, Ind, Ins, Ipa, Msg,
-    Nat, Net, Now, Npa, Npn, Npr, Nwr, Nwn, Orn, Per, Pwr, Rec, Spt,
-    Spu, Swr, Swt, Ter, Trl, Ver, Xrf,
+    Agr,
+    Ack,
+    Alt,
+    Ari,
+    Com,
+    Ewt,
+    Grh,
+    Grt,
+    Hdr,
+    Ind,
+    Ins,
+    Ipa,
+    Msg,
+    Nat,
+    Net,
+    Now,
+    Npa,
+    Npn,
+    Npr,
+    Nwr,
+    Nwn,
+    Orn,
+    Per,
+    Pwr,
+    Rec,
+    Spt,
+    Spu,
+    Swr,
+    Swt,
+    Ter,
+    Trl,
+    Ver,
+    Xrf,
 }
 
 impl std::fmt::Display for RecordType {
@@ -158,11 +188,7 @@ impl CwrFieldParse for String {
 impl CwrFieldParse for Option<String> {
     fn parse_cwr_field(source: &str, _field_name: &'static str, _field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
-        if trimmed.is_empty() {
-            (None, vec![])
-        } else {
-            (Some(trimmed.to_string()), vec![])
-        }
+        if trimmed.is_empty() { (None, vec![]) } else { (Some(trimmed.to_string()), vec![]) }
     }
 }
 
@@ -205,13 +231,7 @@ impl CwrFieldParse for RecordType {
             "VER" => RecordType::Ver,
             "XRF" => RecordType::Xrf,
             _ => {
-                let warnings = vec![CwrWarning {
-                    field_name,
-                    field_title,
-                    source_str: Cow::Owned(source.to_string()),
-                    level: WarningLevel::Critical,
-                    description: format!("Unknown record type: {}", trimmed),
-                }];
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Unknown record type: {}", trimmed) }];
                 return (RecordType::default(), warnings);
             }
         };
@@ -227,13 +247,7 @@ impl CwrFieldParse for YesNo {
             "Y" => (YesNo::Yes, vec![]),
             "N" => (YesNo::No, vec![]),
             _ => {
-                let warnings = vec![CwrWarning {
-                    field_name,
-                    field_title,
-                    source_str: Cow::Owned(source.to_string()),
-                    level: WarningLevel::Warning,
-                    description: format!("Invalid Yes/No value '{}', defaulting to No", trimmed),
-                }];
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid Yes/No value '{}', defaulting to No", trimmed) }];
                 (YesNo::No, warnings)
             }
         }
@@ -245,26 +259,14 @@ impl CwrFieldParse for Date {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.len() != 8 {
-            let warnings = vec![CwrWarning {
-                field_name,
-                field_title,
-                source_str: Cow::Owned(source.to_string()),
-                level: WarningLevel::Warning,
-                description: format!("Date should be 8 characters YYYYMMDD, got {}", trimmed.len()),
-            }];
+            let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Date should be 8 characters YYYYMMDD, got {}", trimmed.len()) }];
             return (Date(None), warnings);
         }
-        
+
         match NaiveDate::parse_from_str(trimmed, "%Y%m%d") {
             Ok(date) => (Date(Some(date)), vec![]),
             Err(_) => {
-                let warnings = vec![CwrWarning {
-                    field_name,
-                    field_title,
-                    source_str: Cow::Owned(source.to_string()),
-                    level: WarningLevel::Warning,
-                    description: format!("Invalid date format: {}", trimmed),
-                }];
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid date format: {}", trimmed) }];
                 (Date(None), warnings)
             }
         }
@@ -291,23 +293,11 @@ impl CwrFieldParse for WorksCount {
         match trimmed.parse::<u32>() {
             Ok(count) if count >= 1 && count <= 99999 => (WorksCount(count), vec![]),
             Ok(count) => {
-                let warnings = vec![CwrWarning {
-                    field_name,
-                    field_title,
-                    source_str: Cow::Owned(source.to_string()),
-                    level: WarningLevel::Warning,
-                    description: format!("Works count {} outside valid range 1-99999", count),
-                }];
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Works count {} outside valid range 1-99999", count) }];
                 (WorksCount(count.min(99999).max(1)), warnings)
             }
             Err(_) => {
-                let warnings = vec![CwrWarning {
-                    field_name,
-                    field_title,
-                    source_str: Cow::Owned(source.to_string()),
-                    level: WarningLevel::Warning,
-                    description: format!("Invalid number format: {}", trimmed),
-                }];
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid number format: {}", trimmed) }];
                 (WorksCount(0), warnings)
             }
         }

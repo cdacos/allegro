@@ -22,5 +22,4 @@ pub struct TerRecord {
 
     #[cwr(title = "TIS Numeric Code", start = 20, len = 4)]
     pub tis_numeric_code: String,
-
 }

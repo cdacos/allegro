@@ -34,5 +34,4 @@ pub struct PwrRecord {
 
     #[cwr(title = "Publisher sequence number (v2.2+)", start = 110, len = 2)]
     pub publisher_sequence_num: Option<String>,
-
 }

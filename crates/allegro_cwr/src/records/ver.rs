@@ -54,5 +54,4 @@ pub struct VerRecord {
 
     #[cwr(title = "Submitter work number (optional)", start = 350, len = 14)]
     pub submitter_work_num: Option<String>,
-
 }

@@ -28,5 +28,4 @@ pub struct XrfRecord {
 
     #[cwr(title = "Validity (1 char)", start = 37, len = 1)]
     pub validity: String,
-
 }

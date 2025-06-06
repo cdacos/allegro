@@ -28,5 +28,4 @@ pub struct PerRecord {
 
     #[cwr(title = "Performing artist IPI base number (optional)", start = 105, len = 13)]
     pub performing_artist_ipi_base_number: Option<String>,
-
 }
