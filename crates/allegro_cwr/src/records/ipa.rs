@@ -1,77 +1,56 @@
 //! IPA - Interested Party of Agreement Record
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
 /// IPA - Interested Party of Agreement Record
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "IPA0000000100000001AS           123456789JONES                                                                                                           ")]
 pub struct IpaRecord {
-    /// Always "IPA"
-    pub record_type: String,
+    #[cwr(title = "Always 'IPA'", start = 0, len = 3)]
+    pub record_type: RecordType,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Agreement role code (2 chars)
+    #[cwr(title = "Agreement role code", start = 19, len = 2)]
     pub agreement_role_code: String,
 
-    /// Interested party IPI name number (11 chars, optional)
+    #[cwr(title = "Interested party IPI name number (11 chars, optional)", start = 21, len = 11)]
     pub interested_party_ipi_name_num: Option<String>,
 
-    /// IPI base number (13 chars, optional)
+    #[cwr(title = "IPI base number (13 chars, optional)", start = 32, len = 13)]
     pub ipi_base_number: Option<String>,
 
-    /// Interested party number (9 chars)
+    #[cwr(title = "Interested party number", start = 45, len = 9)]
     pub interested_party_num: String,
 
-    /// Interested party last name (45 chars)
+    #[cwr(title = "Interested party last name", start = 54, len = 45)]
     pub interested_party_last_name: String,
 
-    /// Interested party writer first name (30 chars, optional)
+    #[cwr(title = "Interested party writer first name (30 chars, optional)", start = 99, len = 30)]
     pub interested_party_writer_first_name: Option<String>,
 
-    /// PR affiliation society (3 chars, conditional)
+    #[cwr(title = "PR affiliation society (3 chars, conditional)", start = 129, len = 3)]
     pub pr_affiliation_society: Option<String>,
 
-    /// PR share (5 chars, conditional)
+    #[cwr(title = "PR share (5 chars, conditional)", start = 132, len = 5)]
     pub pr_share: Option<String>,
 
-    /// MR affiliation society (3 chars, conditional)
+    #[cwr(title = "MR affiliation society (3 chars, conditional)", start = 137, len = 3)]
     pub mr_affiliation_society: Option<String>,
 
-    /// MR share (5 chars, conditional)
+    #[cwr(title = "MR share (5 chars, conditional)", start = 140, len = 5)]
     pub mr_share: Option<String>,
 
-    /// SR affiliation society (3 chars, conditional)
+    #[cwr(title = "SR affiliation society (3 chars, conditional)", start = 145, len = 3)]
     pub sr_affiliation_society: Option<String>,
 
-    /// SR share (5 chars, conditional)
+    #[cwr(title = "SR share (5 chars, conditional)", start = 148, len = 5)]
     pub sr_share: Option<String>,
+
 }
-
-
-impl_cwr_parsing! {
-    IpaRecord {
-        record_type: (0, 3, required, one_of(&["IPA"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        agreement_role_code: (19, 21, required),
-        interested_party_ipi_name_num: (21, 32, optional),
-        ipi_base_number: (32, 45, optional),
-        interested_party_num: (45, 54, required),
-        interested_party_last_name: (54, 99, required),
-        interested_party_writer_first_name: (99, 129, optional),
-        pr_affiliation_society: (129, 132, optional),
-        pr_share: (132, 137, optional),
-        mr_affiliation_society: (137, 140, optional),
-        mr_share: (140, 145, optional),
-        sr_affiliation_society: (145, 148, optional),
-        sr_share: (148, 153, optional),
-    }
-    with_test_data ["IPA0000000100000001AS           123456789JONES                                                                                                           "]
-}
-

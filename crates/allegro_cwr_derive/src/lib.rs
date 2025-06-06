@@ -56,6 +56,30 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
     let field_names = fields.iter().map(|f| &f.ident);
     let test_mod_name = quote::format_ident!("{}_generated_tests", name.to_string().to_lowercase());
     
+    let test_module = test_data.map(|test_data_value| {
+        quote! {
+            #[cfg(test)]
+            mod #test_mod_name {
+                use super::*;
+                
+                #[test]
+                fn test_parse_from_test_data() {
+                    let test_line = #test_data_value;
+                    let (record, warnings) = #name::parse(test_line);
+                    
+                    for warning in &warnings {
+                        eprintln!("Warning in {:?}: {:?}", warning.field_name, warning.description);
+                    }
+                    
+                    assert!(
+                        warnings.iter().all(|w| !w.is_critical()),
+                        "Critical warnings found in test data"
+                    );
+                }
+            }
+        }
+    });
+
     let expanded = quote! {
         impl #name {
             pub fn parse(line: &str) -> (Self, Vec<CwrWarning<'static>>) {
@@ -69,44 +93,58 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
                 
                 (record, warnings)
             }
-        }
-        
-        #[cfg(test)]
-        mod #test_mod_name {
-            use super::*;
             
-            #[test]
-            fn test_parse_from_test_data() {
-                let test_line = #test_data;
-                let (record, warnings) = #name::parse(test_line);
+            /// Compatibility method for existing parser
+            pub fn from_cwr_line(line: &str) -> Result<crate::error::CwrParseResult<Self>, crate::error::CwrParseError> {
+                let (record, warnings) = Self::parse(line);
                 
-                for warning in &warnings {
-                    eprintln!("Warning in {:?}: {:?}", warning.field_name, warning.description);
+                // Convert CwrWarning to String for compatibility
+                let string_warnings: Vec<String> = warnings.into_iter()
+                    .map(|w| format!("{}: {}", w.field_title, w.description))
+                    .collect();
+                
+                // Check for critical errors
+                let has_critical = string_warnings.iter().any(|w| w.contains("Critical"));
+                if has_critical {
+                    return Err(crate::error::CwrParseError::BadFormat(
+                        string_warnings.join("; ")
+                    ));
                 }
                 
-                assert!(
-                    warnings.iter().all(|w| !w.is_critical()),
-                    "Critical warnings found in test data"
-                );
+                Ok(crate::error::CwrParseResult {
+                    record,
+                    warnings: string_warnings,
+                })
+            }
+            
+            /// Convert record back to CWR line format
+            pub fn to_cwr_line(&self) -> String {
+                let mut line = String::new();
+                
+                // For now, we'll need to implement proper serialization
+                // This is a placeholder that won't compile yet
+                line
             }
         }
+        
+        #test_module
     };
     
     TokenStream::from(expanded)
 }
 
-fn extract_test_data(attrs: &[syn::Attribute]) -> String {
+fn extract_test_data(attrs: &[syn::Attribute]) -> Option<String> {
     for attr in attrs {
         if attr.path().is_ident("cwr") {
             let result: Result<CwrAttribute, _> = attr.parse_args();
             if let Ok(cwr_attr) = result {
                 if let Some(test_data) = cwr_attr.test_data {
-                    return test_data.value();
+                    return Some(test_data.value());
                 }
             }
         }
     }
-    panic!("CwrRecord requires #[cwr(test_data = \"...\")] attribute on the struct");
+    None
 }
 
 fn extract_field_attrs(attrs: &[syn::Attribute]) -> (String, usize, usize) {

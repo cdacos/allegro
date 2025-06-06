@@ -1,45 +1,29 @@
-//! GRH - Group Header Record
-//!
-//! The Group Header record starts a new group of transactions within a CWR transmission.
+//! /// Starts a new group of transactions within a CWR transmission.
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
-/// GRH - Group Header Record
-///
-/// Starts a new group of transactions within a CWR transmission.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+/// /// Starts a new group of transactions within a CWR transmission.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "GRHAGR0000102.10            ")]
 pub struct GrhRecord {
-    /// Always "GRH"
-    pub record_type: String,
+    #[cwr(title = "Always 'GRH'", start = 0, len = 3)]
+    pub record_type: RecordType,
 
-    /// Transaction type code (3 chars)
+    #[cwr(title = "Transaction type code", start = 3, len = 3)]
     pub transaction_type: String,
 
-    /// Group identifier within the transmission (5 chars)
+    #[cwr(title = "Group identifier within the transmission", start = 6, len = 5)]
     pub group_id: String,
 
-    /// Version number for this transaction type (5 chars)
+    #[cwr(title = "Version number for this transaction type", start = 11, len = 5)]
     pub version_number: String,
 
-    /// Optional batch request identifier (10 chars)
+    #[cwr(title = "Optional batch request identifier", start = 16, len = 10)]
     pub batch_request: Option<String>,
 
-    /// Optional submission/distribution type (2 chars, blank for CWR)
+    #[cwr(title = "Optional submission/distribution type (2 chars, blank for CWR)", start = 26, len = 2)]
     pub submission_distribution_type: Option<String>,
+
 }
-
-
-impl_cwr_parsing! {
-    GrhRecord {
-        record_type: (0, 3, required, one_of(&["GRH"])),
-        transaction_type: (3, 6, required),
-        group_id: (6, 11, required),
-        version_number: (11, 16, required),
-        batch_request: (16, 26, optional),
-        submission_distribution_type: (26, 28, optional),
-    }
-    with_test_data ["GRHAGR0000102.10            "]
-}
-

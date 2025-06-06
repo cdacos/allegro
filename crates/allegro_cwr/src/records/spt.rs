@@ -1,65 +1,47 @@
-//! SPT - Publisher Territory of Control Record / OPT - Other Publisher Territory Record
+//! SPT - Publisher Territory of Control Record (also OPT - Other Publisher Territory)
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
 /// SPT - Publisher Territory of Control Record (also OPT - Other Publisher Territory)
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "SPT0000000100000001123456789                  I2840 ")]
 pub struct SptRecord {
-    /// "SPT" or "OPT"
+    #[cwr(title = "'SPT' or 'OPT'", start = 0, len = 3)]
     pub record_type: String,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Interested party number (9 chars)
+    #[cwr(title = "Interested party number", start = 19, len = 9)]
     pub interested_party_num: String,
 
-    /// Constant - spaces (6 chars)
+    #[cwr(title = "Constant - spaces", start = 28, len = 6)]
     pub constant: String,
 
-    /// PR collection share (5 chars, conditional)
+    #[cwr(title = "PR collection share (5 chars, conditional)", start = 34, len = 5)]
     pub pr_collection_share: Option<String>,
 
-    /// MR collection share (5 chars, conditional)
+    #[cwr(title = "MR collection share (5 chars, conditional)", start = 39, len = 5)]
     pub mr_collection_share: Option<String>,
 
-    /// SR collection share (5 chars, conditional)
+    #[cwr(title = "SR collection share (5 chars, conditional)", start = 44, len = 5)]
     pub sr_collection_share: Option<String>,
 
-    /// Inclusion/Exclusion indicator (1 char)
+    #[cwr(title = "Inclusion/Exclusion indicator (1 char)", start = 49, len = 1)]
     pub inclusion_exclusion_indicator: String,
 
-    /// TIS numeric code (4 chars)
+    #[cwr(title = "TIS numeric code", start = 50, len = 4)]
     pub tis_numeric_code: String,
 
-    /// Shares change (1 char, optional)
+    #[cwr(title = "Shares change (1 char, optional)", start = 54, len = 1)]
     pub shares_change: Option<String>,
 
-    /// Sequence number (3 chars, v2.1+)
+    #[cwr(title = "Sequence number (3 chars, v2.1+)", start = 55, len = 3)]
     pub sequence_num: Option<String>,
+
 }
-
-
-impl_cwr_parsing! {
-    SptRecord {
-        record_type: (0, 3, required, one_of(&["SPT", "OPT"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        interested_party_num: (19, 28, required),
-        constant: (28, 34, required),
-        pr_collection_share: (34, 39, optional),
-        mr_collection_share: (39, 44, optional),
-        sr_collection_share: (44, 49, optional),
-        inclusion_exclusion_indicator: (49, 50, required),
-        tis_numeric_code: (50, 54, required),
-        shares_change: (54, 55, optional),
-        sequence_num: (55, 58, optional),
-    }
-    with_test_data ["SPT0000000100000001123456789                  I2840 "]
-}
-

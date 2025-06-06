@@ -1,79 +1,58 @@
 //! VER - Original Work Title for Versions Record
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
 /// VER - Original Work Title for Versions Record
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
 pub struct VerRecord {
-    /// Always "VER"
-    pub record_type: String,
+    #[cwr(title = "Always 'VER'", start = 0, len = 3)]
+    pub record_type: RecordType,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Original work title (60 chars)
+    #[cwr(title = "Original work title", start = 19, len = 60)]
     pub original_work_title: String,
 
-    /// ISWC of original work (11 chars, optional)
+    #[cwr(title = "ISWC of original work (11 chars, optional)", start = 79, len = 11)]
     pub iswc_of_original_work: Option<String>,
 
-    /// Language code (2 chars, optional)
+    #[cwr(title = "Language code (2 chars, optional)", start = 90, len = 2)]
     pub language_code: Option<String>,
 
-    /// Writer 1 last name (45 chars, optional)
+    #[cwr(title = "Writer 1 last name (45 chars, optional)", start = 92, len = 45)]
     pub writer_1_last_name: Option<String>,
 
-    /// Writer 1 first name (30 chars, optional)
+    #[cwr(title = "Writer 1 first name (30 chars, optional)", start = 137, len = 30)]
     pub writer_1_first_name: Option<String>,
 
-    /// Source (60 chars, optional)
+    #[cwr(title = "Source (60 chars, optional)", start = 167, len = 60)]
     pub source: Option<String>,
 
-    /// Writer 1 IPI name number (11 chars, optional)
+    #[cwr(title = "Writer 1 IPI name number (11 chars, optional)", start = 227, len = 11)]
     pub writer_1_ipi_name_num: Option<String>,
 
-    /// Writer 1 IPI base number (13 chars, optional)
+    #[cwr(title = "Writer 1 IPI base number (13 chars, optional)", start = 238, len = 13)]
     pub writer_1_ipi_base_number: Option<String>,
 
-    /// Writer 2 last name (45 chars, optional)
+    #[cwr(title = "Writer 2 last name (45 chars, optional)", start = 251, len = 45)]
     pub writer_2_last_name: Option<String>,
 
-    /// Writer 2 first name (30 chars, optional)
+    #[cwr(title = "Writer 2 first name (30 chars, optional)", start = 296, len = 30)]
     pub writer_2_first_name: Option<String>,
 
-    /// Writer 2 IPI name number (11 chars, optional)
+    #[cwr(title = "Writer 2 IPI name number (11 chars, optional)", start = 326, len = 11)]
     pub writer_2_ipi_name_num: Option<String>,
 
-    /// Writer 2 IPI base number (13 chars, optional)
+    #[cwr(title = "Writer 2 IPI base number (13 chars, optional)", start = 337, len = 13)]
     pub writer_2_ipi_base_number: Option<String>,
 
-    /// Submitter work number (14 chars, optional)
+    #[cwr(title = "Submitter work number (14 chars, optional)", start = 350, len = 14)]
     pub submitter_work_num: Option<String>,
-}
 
-
-impl_cwr_parsing! {
-    VerRecord {
-        record_type: (0, 3, required, one_of(&["VER"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        original_work_title: (19, 79, required),
-        iswc_of_original_work: (79, 90, optional),
-        language_code: (90, 92, optional),
-        writer_1_last_name: (92, 137, optional),
-        writer_1_first_name: (137, 167, optional),
-        source: (167, 227, optional),
-        writer_1_ipi_name_num: (227, 238, optional),
-        writer_1_ipi_base_number: (238, 251, optional),
-        writer_2_last_name: (251, 296, optional),
-        writer_2_first_name: (296, 326, optional),
-        writer_2_ipi_name_num: (326, 337, optional),
-        writer_2_ipi_base_number: (337, 350, optional),
-        submitter_work_num: (350, 364, optional),
-    }
 }

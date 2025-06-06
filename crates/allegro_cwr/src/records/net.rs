@@ -1,36 +1,25 @@
-//! NET - Non-Roman Alphabet Entire Work Title for Excerpts/Components/Versions Record
+//! Also handles NCT (Non-Roman Alphabet Title for Components) and NVT (Non-Roman Alphabet Original Title for Versions)
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
-/// NET - Non-Roman Alphabet Entire Work Title for Excerpts/Components/Versions Record
 /// Also handles NCT (Non-Roman Alphabet Title for Components) and NVT (Non-Roman Alphabet Original Title for Versions)
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
 pub struct NetRecord {
-    /// "NET", "NCT", or "NVT"
+    #[cwr(title = "'NET', 'NCT', or 'NVT'", start = 0, len = 3)]
     pub record_type: String,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Title (640 chars)
+    #[cwr(title = "Title", start = 19, len = 640)]
     pub title: String,
 
-    /// Language code (2 chars, optional)
+    #[cwr(title = "Language code (2 chars, optional)", start = 659, len = 2)]
     pub language_code: Option<String>,
-}
 
-
-impl_cwr_parsing! {
-    NetRecord {
-        record_type: (0, 3, required, one_of(&["NET", "NCT", "NVT"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        title: (19, 659, required),
-        language_code: (659, 661, optional),
-    }
 }

@@ -1,37 +1,23 @@
-//! TRL - Transmission Trailer Record
-//!
-//! The Transmission Trailer record marks the end of a CWR transmission and contains summary counts.
+//! /// Marks the end of a CWR transmission and contains summary counts.
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
-/// TRL - Transmission Trailer Record
-///
-/// Marks the end of a CWR transmission and contains summary counts.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+/// /// Marks the end of a CWR transmission and contains summary counts.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "TRL000010000001400000367")]
 pub struct TrlRecord {
-    /// Always "TRL"
-    pub record_type: String,
+    #[cwr(title = "Always 'TRL'", start = 0, len = 3)]
+    pub record_type: RecordType,
 
-    /// Group count (5 chars)
+    #[cwr(title = "Group count", start = 3, len = 5)]
     pub group_count: String,
 
-    /// Transaction count (8 chars)
+    #[cwr(title = "Transaction count", start = 8, len = 8)]
     pub transaction_count: String,
 
-    /// Record count (8 chars)
+    #[cwr(title = "Record count", start = 16, len = 8)]
     pub record_count: String,
+
 }
-
-
-impl_cwr_parsing! {
-    TrlRecord {
-        record_type: (0, 3, required, one_of(&["TRL"])),
-        group_count: (3, 8, required),
-        transaction_count: (8, 16, required),
-        record_count: (16, 24, required),
-    }
-    with_test_data ["TRL000010000001400000367"]
-}
-

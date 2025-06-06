@@ -1,73 +1,50 @@
-//! HDR - Transmission Header Record
-//!
-//! The Transmission Header record contains information about the sender and the transmission itself.
+//! /// Contains information about the sender and the transmission itself.
 
-use crate::validators::{date_yyyymmdd, one_of};
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
-/// HDR - Transmission Header Record
-///
-/// Contains information about the sender and the transmission itself.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+/// /// Contains information about the sender and the transmission itself.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "HDR01BMI      BMI MUSIC                                    01.1020050101120000200501010123456789012345  2. 1DEV MUSIC SOFTWARE VERSION 1.0  MUSIC PACKAGE VERSION 2.0  ")]
 pub struct HdrRecord {
-    /// Always "HDR"
-    pub record_type: String,
+    #[cwr(title = "Always 'HDR'", start = 0, len = 3)]
+    pub record_type: RecordType,
 
-    /// Sender type (2 chars)
+    #[cwr(title = "Sender type", start = 3, len = 2)]
     pub sender_type: String,
 
-    /// Sender ID (9 chars)
+    #[cwr(title = "Sender ID", start = 5, len = 9)]
     pub sender_id: String,
 
-    /// Sender name (45 chars)
+    #[cwr(title = "Sender name", start = 14, len = 45)]
     pub sender_name: String,
 
-    /// EDI standard version number (5 chars)
+    #[cwr(title = "EDI standard version number", start = 59, len = 5)]
     pub edi_standard_version_number: String,
 
-    /// Creation date YYYYMMDD (8 chars)
-    pub creation_date: String,
+    #[cwr(title = "Creation date YYYYMMDD", start = 64, len = 8)]
+    pub creation_date: Date,
 
-    /// Creation time HHMMSS (6 chars)
+    #[cwr(title = "Creation time HHMMSS", start = 72, len = 6)]
     pub creation_time: String,
 
-    /// Transmission date YYYYMMDD (8 chars)
-    pub transmission_date: String,
+    #[cwr(title = "Transmission date YYYYMMDD", start = 78, len = 8)]
+    pub transmission_date: Date,
 
-    /// Character set (15 chars, v2.1+)
+    #[cwr(title = "Character set (15 chars, v2.1+)", start = 86, len = 15)]
     pub character_set: Option<String>,
 
-    /// Version (3 chars, v2.2+)
+    #[cwr(title = "Version (3 chars, v2.2+)", start = 101, len = 3)]
     pub version: Option<String>,
 
-    /// Revision (3 chars, v2.2+)
+    #[cwr(title = "Revision (3 chars, v2.2+)", start = 104, len = 3)]
     pub revision: Option<String>,
 
-    /// Software package (30 chars, v2.2+)
+    #[cwr(title = "Software package (30 chars, v2.2+)", start = 107, len = 30)]
     pub software_package: Option<String>,
 
-    /// Software package version (30 chars, v2.2+)
+    #[cwr(title = "Software package version (30 chars, v2.2+)", start = 137, len = 30)]
     pub software_package_version: Option<String>,
+
 }
-
-
-impl_cwr_parsing! {
-    HdrRecord {
-        record_type: (0, 3, required, one_of(&["HDR"])),
-        sender_type: (3, 5, required),
-        sender_id: (5, 14, required),
-        sender_name: (14, 59, required),
-        edi_standard_version_number: (59, 64, required),
-        creation_date: (64, 72, required, date_yyyymmdd),
-        creation_time: (72, 78, required),
-        transmission_date: (78, 86, required, date_yyyymmdd),
-        character_set: (86, 101, optional),
-        version: (101, 104, optional),
-        revision: (104, 107, optional),
-        software_package: (107, 137, optional),
-        software_package_version: (137, 167, optional),
-    }
-    with_test_data ["HDR01BMI      BMI MUSIC                                    01.1020050101120000200501010123456789012345  2. 1DEV MUSIC SOFTWARE VERSION 1.0  MUSIC PACKAGE VERSION 2.0  "]
-}
-

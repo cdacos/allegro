@@ -1,37 +1,26 @@
 //! IND - Instrumentation Detail Record
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
 /// IND - Instrumentation Detail Record
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "IND0000000100000001PNO004")]
 pub struct IndRecord {
-    /// Always "IND"
-    pub record_type: String,
+    #[cwr(title = "Always 'IND'", start = 0, len = 3)]
+    pub record_type: RecordType,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Instrument code (3 chars)
+    #[cwr(title = "Instrument code", start = 19, len = 3)]
     pub instrument_code: String,
 
-    /// Number of players (3 chars, optional)
+    #[cwr(title = "Number of players (3 chars, optional)", start = 22, len = 3)]
     pub number_of_players: Option<String>,
+
 }
-
-
-impl_cwr_parsing! {
-    IndRecord {
-        record_type: (0, 3, required, one_of(&["IND"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        instrument_code: (19, 22, required),
-        number_of_players: (22, 25, optional),
-    }
-    with_test_data ["IND0000000100000001PNO004"]
-}
-

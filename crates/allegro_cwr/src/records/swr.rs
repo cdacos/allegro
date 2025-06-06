@@ -1,111 +1,80 @@
-//! SWR - Writer Controlled by Submitter Record
-//!
-//! Also handles OWR (Other Writer) records.
+//! SWR - Writer Controlled by Submitter Record (also OWR - Other Writer)
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
 /// SWR - Writer Controlled by Submitter Record (also OWR - Other Writer)
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "SWR00000010000000201234567890WRITER LAST NAME                     WRITER FIRST NAME             N WR12345678901234567890   50.000   50.000   50.000N N N 0123456789012012345678901")]
 pub struct SwrRecord {
-    /// "SWR" or "OWR"
+    #[cwr(title = "'SWR' or 'OWR'", start = 0, len = 3)]
     pub record_type: String,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Interested party number (9 chars, conditional)
+    #[cwr(title = "Interested party number (9 chars, conditional)", start = 19, len = 9)]
     pub interested_party_num: Option<String>,
 
-    /// Writer last name (45 chars, conditional)
+    #[cwr(title = "Writer last name (45 chars, conditional)", start = 28, len = 45)]
     pub writer_last_name: Option<String>,
 
-    /// Writer first name (30 chars, optional)
+    #[cwr(title = "Writer first name (30 chars, optional)", start = 73, len = 30)]
     pub writer_first_name: Option<String>,
 
-    /// Writer unknown indicator (1 char, conditional)
+    #[cwr(title = "Writer unknown indicator (1 char, conditional)", start = 103, len = 1)]
     pub writer_unknown_indicator: Option<String>,
 
-    /// Writer designation code (2 chars, conditional)
+    #[cwr(title = "Writer designation code (2 chars, conditional)", start = 104, len = 2)]
     pub writer_designation_code: Option<String>,
 
-    /// Tax ID number (9 chars, optional)
+    #[cwr(title = "Tax ID number (9 chars, optional)", start = 106, len = 9)]
     pub tax_id_num: Option<String>,
 
-    /// Writer IPI name number (11 chars, optional)
+    #[cwr(title = "Writer IPI name number (11 chars, optional)", start = 115, len = 11)]
     pub writer_ipi_name_num: Option<String>,
 
-    /// PR affiliation society number (3 chars, optional)
+    #[cwr(title = "PR affiliation society number (3 chars, optional)", start = 126, len = 3)]
     pub pr_affiliation_society_num: Option<String>,
 
-    /// PR ownership share (5 chars, optional)
+    #[cwr(title = "PR ownership share (5 chars, optional)", start = 129, len = 5)]
     pub pr_ownership_share: Option<String>,
 
-    /// MR society (3 chars, optional)
+    #[cwr(title = "MR society (3 chars, optional)", start = 134, len = 3)]
     pub mr_society: Option<String>,
 
-    /// MR ownership share (5 chars, optional)
+    #[cwr(title = "MR ownership share (5 chars, optional)", start = 137, len = 5)]
     pub mr_ownership_share: Option<String>,
 
-    /// SR society (3 chars, optional)
+    #[cwr(title = "SR society (3 chars, optional)", start = 142, len = 3)]
     pub sr_society: Option<String>,
 
-    /// SR ownership share (5 chars, optional)
+    #[cwr(title = "SR ownership share (5 chars, optional)", start = 145, len = 5)]
     pub sr_ownership_share: Option<String>,
 
-    /// Reversionary indicator (1 char, optional)
+    #[cwr(title = "Reversionary indicator (1 char, optional)", start = 150, len = 1)]
     pub reversionary_indicator: Option<String>,
 
-    /// First recording refusal indicator (1 char, optional)
+    #[cwr(title = "First recording refusal indicator (1 char, optional)", start = 151, len = 1)]
     pub first_recording_refusal_ind: Option<String>,
 
-    /// Work for hire indicator (1 char, optional)
+    #[cwr(title = "Work for hire indicator (1 char, optional)", start = 152, len = 1)]
     pub work_for_hire_indicator: Option<String>,
 
-    /// Filler (1 char, optional)
+    #[cwr(title = "Filler (1 char, optional)", start = 153, len = 1)]
     pub filler: Option<String>,
 
-    /// Writer IPI base number (13 chars, optional)
+    #[cwr(title = "Writer IPI base number (13 chars, optional)", start = 154, len = 13)]
     pub writer_ipi_base_number: Option<String>,
 
-    /// Personal number (12 chars, optional)
+    #[cwr(title = "Personal number (12 chars, optional)", start = 167, len = 12)]
     pub personal_number: Option<String>,
 
-    /// USA license indicator (1 char, optional, v2.1+)
+    #[cwr(title = "USA license indicator (1 char, optional, v2.1+)", start = 179, len = 1)]
     pub usa_license_ind: Option<String>,
+
 }
-
-
-impl_cwr_parsing! {
-    SwrRecord {
-        record_type: (0, 3, required, one_of(&["SWR", "OWR"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        interested_party_num: (19, 28, optional),
-        writer_last_name: (28, 73, optional),
-        writer_first_name: (73, 103, optional),
-        writer_unknown_indicator: (103, 104, optional),
-        writer_designation_code: (104, 106, optional),
-        tax_id_num: (106, 115, optional),
-        writer_ipi_name_num: (115, 126, optional),
-        pr_affiliation_society_num: (126, 129, optional),
-        pr_ownership_share: (129, 134, optional),
-        mr_society: (134, 137, optional),
-        mr_ownership_share: (137, 142, optional),
-        sr_society: (142, 145, optional),
-        sr_ownership_share: (145, 150, optional),
-        reversionary_indicator: (150, 151, optional),
-        first_recording_refusal_ind: (151, 152, optional),
-        work_for_hire_indicator: (152, 153, optional),
-        filler: (153, 154, optional),
-        writer_ipi_base_number: (154, 167, optional),
-        personal_number: (167, 179, optional),
-        usa_license_ind: (179, 180, optional),
-    }
-    with_test_data ["SWR00000010000000201234567890WRITER LAST NAME                     WRITER FIRST NAME             N WR12345678901234567890   50.000   50.000   50.000N N N 0123456789012012345678901"]
-}
-

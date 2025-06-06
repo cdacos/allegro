@@ -1,45 +1,32 @@
 //! PER - Performing Artist Record
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
 /// PER - Performing Artist Record
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "PER0000000100000001SMITH                                        JOHN                          01234567890123456789012")]
 pub struct PerRecord {
-    /// Always "PER"
-    pub record_type: String,
+    #[cwr(title = "Always 'PER'", start = 0, len = 3)]
+    pub record_type: RecordType,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Performing artist last name (45 chars)
+    #[cwr(title = "Performing artist last name", start = 19, len = 45)]
     pub performing_artist_last_name: String,
 
-    /// Performing artist first name (30 chars, optional)
+    #[cwr(title = "Performing artist first name (30 chars, optional)", start = 64, len = 30)]
     pub performing_artist_first_name: Option<String>,
 
-    /// Performing artist IPI name number (11 chars, optional)
+    #[cwr(title = "Performing artist IPI name number (11 chars, optional)", start = 94, len = 11)]
     pub performing_artist_ipi_name_num: Option<String>,
 
-    /// Performing artist IPI base number (13 chars, optional)
+    #[cwr(title = "Performing artist IPI base number (13 chars, optional)", start = 105, len = 13)]
     pub performing_artist_ipi_base_number: Option<String>,
+
 }
-
-
-impl_cwr_parsing! {
-    PerRecord {
-        record_type: (0, 3, required, one_of(&["PER"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        performing_artist_last_name: (19, 64, required),
-        performing_artist_first_name: (64, 94, optional),
-        performing_artist_ipi_name_num: (94, 105, optional),
-        performing_artist_ipi_base_number: (105, 118, optional),
-    }
-    with_test_data ["PER0000000100000001SMITH                                        JOHN                          01234567890123456789012"]
-}
-

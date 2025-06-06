@@ -1,69 +1,50 @@
 //! ACK - Acknowledgement of Transaction Record
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
 /// ACK - Acknowledgement of Transaction Record
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "ACK0000000100000001200501011200000000100000001NWR                                                                                                    20050102AS")]
 pub struct AckRecord {
-    /// Always "ACK"
-    pub record_type: String,
+    #[cwr(title = "Always 'ACK'", start = 0, len = 3)]
+    pub record_type: RecordType,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Creation date of original file YYYYMMDD (8 chars)
+    #[cwr(title = "Creation date of original file YYYYMMDD", start = 19, len = 8)]
     pub creation_date: String,
 
-    /// Creation time of original file HHMMSS (6 chars)
+    #[cwr(title = "Creation time of original file HHMMSS", start = 27, len = 6)]
     pub creation_time: String,
 
-    /// Original group ID (5 chars)
+    #[cwr(title = "Original group ID", start = 33, len = 5)]
     pub original_group_id: String,
 
-    /// Original transaction sequence number (8 chars)
+    #[cwr(title = "Original transaction sequence number", start = 38, len = 8)]
     pub original_transaction_sequence_num: String,
 
-    /// Original transaction type (3 chars)
+    #[cwr(title = "Original transaction type", start = 46, len = 3)]
     pub original_transaction_type: String,
 
-    /// Creation title (60 chars, conditional)
+    #[cwr(title = "Creation title (60 chars, conditional)", start = 49, len = 60)]
     pub creation_title: Option<String>,
 
-    /// Submitter creation number (20 chars, conditional)
+    #[cwr(title = "Submitter creation number (20 chars, conditional)", start = 109, len = 20)]
     pub submitter_creation_num: Option<String>,
 
-    /// Recipient creation number (20 chars, conditional)
+    #[cwr(title = "Recipient creation number (20 chars, conditional)", start = 129, len = 20)]
     pub recipient_creation_num: Option<String>,
 
-    /// Processing date YYYYMMDD (8 chars)
+    #[cwr(title = "Processing date YYYYMMDD", start = 149, len = 8)]
     pub processing_date: String,
 
-    /// Transaction status (2 chars)
+    #[cwr(title = "Transaction status", start = 157, len = 2)]
     pub transaction_status: String,
+
 }
-
-
-impl_cwr_parsing! {
-    AckRecord {
-        record_type: (0, 3, required, one_of(&["ACK"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        creation_date: (19, 27, required),
-        creation_time: (27, 33, required),
-        original_group_id: (33, 38, required),
-        original_transaction_sequence_num: (38, 46, required),
-        original_transaction_type: (46, 49, required),
-        creation_title: (49, 109, optional),
-        submitter_creation_num: (109, 129, optional),
-        recipient_creation_num: (129, 149, optional),
-        processing_date: (149, 157, required),
-        transaction_status: (157, 159, required),
-    }
-    with_test_data ["ACK0000000100000001200501011200000000100000001NWR                                                                                                    20050102AS"]
-}
-

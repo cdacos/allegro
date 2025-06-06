@@ -1,99 +1,73 @@
 //! REC - Recording Detail Record
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
 /// REC - Recording Detail Record
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
 pub struct RecRecord {
-    /// Always "REC"
-    pub record_type: String,
+    #[cwr(title = "Always 'REC'", start = 0, len = 3)]
+    pub record_type: RecordType,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Release date YYYYMMDD (8 chars, optional)
+    #[cwr(title = "Release date YYYYMMDD (8 chars, optional)", start = 19, len = 8)]
     pub release_date: Option<String>,
 
-    /// Constant - spaces (60 chars)
+    #[cwr(title = "Constant - spaces", start = 27, len = 60)]
     pub constant: String,
 
-    /// Release duration HHMMSS (6 chars, optional)
+    #[cwr(title = "Release duration HHMMSS (6 chars, optional)", start = 87, len = 6)]
     pub release_duration: Option<String>,
 
-    /// Constant - spaces (5 chars)
+    #[cwr(title = "Constant - spaces", start = 93, len = 5)]
     pub constant2: String,
 
-    /// Album title (60 chars, optional)
+    #[cwr(title = "Album title (60 chars, optional)", start = 98, len = 60)]
     pub album_title: Option<String>,
 
-    /// Album label (60 chars, optional)
+    #[cwr(title = "Album label (60 chars, optional)", start = 158, len = 60)]
     pub album_label: Option<String>,
 
-    /// Release catalog number (18 chars, optional)
+    #[cwr(title = "Release catalog number (18 chars, optional)", start = 218, len = 18)]
     pub release_catalog_num: Option<String>,
 
-    /// EAN (13 chars, optional)
+    #[cwr(title = "EAN (13 chars, optional)", start = 236, len = 13)]
     pub ean: Option<String>,
 
-    /// ISRC (12 chars, optional)
+    #[cwr(title = "ISRC (12 chars, optional)", start = 249, len = 12)]
     pub isrc: Option<String>,
 
-    /// Recording format (1 char, optional)
+    #[cwr(title = "Recording format (1 char, optional)", start = 261, len = 1)]
     pub recording_format: Option<String>,
 
-    /// Recording technique (1 char, optional)
+    #[cwr(title = "Recording technique (1 char, optional)", start = 262, len = 1)]
     pub recording_technique: Option<String>,
 
-    /// Media type (3 chars, optional, v2.1+)
+    #[cwr(title = "Media type (3 chars, optional, v2.1+)", start = 263, len = 3)]
     pub media_type: Option<String>,
 
-    /// Recording title (60 chars, optional, v2.2+)
+    #[cwr(title = "Recording title (60 chars, optional, v2.2+)", start = 266, len = 60)]
     pub recording_title: Option<String>,
 
-    /// Version title (60 chars, optional, v2.2+)
+    #[cwr(title = "Version title (60 chars, optional, v2.2+)", start = 326, len = 60)]
     pub version_title: Option<String>,
 
-    /// Display artist (60 chars, optional, v2.2+)
+    #[cwr(title = "Display artist (60 chars, optional, v2.2+)", start = 386, len = 60)]
     pub display_artist: Option<String>,
 
-    /// Record label (60 chars, optional, v2.2+)
+    #[cwr(title = "Record label (60 chars, optional, v2.2+)", start = 446, len = 60)]
     pub record_label: Option<String>,
 
-    /// ISRC validity (20 chars, conditional, v2.2+)
+    #[cwr(title = "ISRC validity (20 chars, conditional, v2.2+)", start = 506, len = 20)]
     pub isrc_validity: Option<String>,
 
-    /// Submitter recording identifier (14 chars, optional, v2.2+)
+    #[cwr(title = "Submitter recording identifier (14 chars, optional, v2.2+)", start = 526, len = 14)]
     pub submitter_recording_identifier: Option<String>,
-}
 
-
-impl_cwr_parsing! {
-    RecRecord {
-        record_type: (0, 3, required, one_of(&["REC"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        release_date: (19, 27, optional),
-        constant: (27, 87, required),
-        release_duration: (87, 93, optional),
-        constant2: (93, 98, required),
-        album_title: (98, 158, optional),
-        album_label: (158, 218, optional),
-        release_catalog_num: (218, 236, optional),
-        ean: (236, 249, optional),
-        isrc: (249, 261, optional),
-        recording_format: (261, 262, optional),
-        recording_technique: (262, 263, optional),
-        media_type: (263, 266, optional),
-        recording_title: (266, 326, optional),
-        version_title: (326, 386, optional),
-        display_artist: (386, 446, optional),
-        record_label: (446, 506, optional),
-        isrc_validity: (506, 526, optional),
-        submitter_recording_identifier: (526, 540, optional),
-    }
 }

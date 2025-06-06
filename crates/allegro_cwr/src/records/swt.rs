@@ -1,61 +1,44 @@
-//! SWT - Writer Territory of Control Record / OWT - Other Writer Territory Record
+//! SWT - Writer Territory of Control Record (also OWT - Other Writer Territory)
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
 /// SWT - Writer Territory of Control Record (also OWT - Other Writer Territory)
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "SWT0000000100000001         I2840 ")]
 pub struct SwtRecord {
-    /// "SWT" or "OWT"
+    #[cwr(title = "'SWT' or 'OWT'", start = 0, len = 3)]
     pub record_type: String,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Interested party number (9 chars, conditional)
+    #[cwr(title = "Interested party number (9 chars, conditional)", start = 19, len = 9)]
     pub interested_party_num: Option<String>,
 
-    /// PR collection share (5 chars, optional)
+    #[cwr(title = "PR collection share (5 chars, optional)", start = 28, len = 5)]
     pub pr_collection_share: Option<String>,
 
-    /// MR collection share (5 chars, optional)
+    #[cwr(title = "MR collection share (5 chars, optional)", start = 33, len = 5)]
     pub mr_collection_share: Option<String>,
 
-    /// SR collection share (5 chars, optional)
+    #[cwr(title = "SR collection share (5 chars, optional)", start = 38, len = 5)]
     pub sr_collection_share: Option<String>,
 
-    /// Inclusion/Exclusion indicator (1 char)
+    #[cwr(title = "Inclusion/Exclusion indicator (1 char)", start = 43, len = 1)]
     pub inclusion_exclusion_indicator: String,
 
-    /// TIS numeric code (4 chars)
+    #[cwr(title = "TIS numeric code", start = 44, len = 4)]
     pub tis_numeric_code: String,
 
-    /// Shares change (1 char, optional)
+    #[cwr(title = "Shares change (1 char, optional)", start = 48, len = 1)]
     pub shares_change: Option<String>,
 
-    /// Sequence number (3 chars, v2.1+)
+    #[cwr(title = "Sequence number (3 chars, v2.1+)", start = 49, len = 3)]
     pub sequence_num: Option<String>,
+
 }
-
-
-impl_cwr_parsing! {
-    SwtRecord {
-        record_type: (0, 3, required, one_of(&["SWT", "OWT"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        interested_party_num: (19, 28, optional),
-        pr_collection_share: (28, 33, optional),
-        mr_collection_share: (33, 38, optional),
-        sr_collection_share: (38, 43, optional),
-        inclusion_exclusion_indicator: (43, 44, required),
-        tis_numeric_code: (44, 48, required),
-        shares_change: (48, 49, optional),
-        sequence_num: (49, 52, optional),
-    }
-    with_test_data ["SWT0000000100000001         I2840 "]
-}
-

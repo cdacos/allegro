@@ -3,6 +3,7 @@
 //! This library provides core functionality to parse CWR files. For database storage,
 //! see the `allegro_cwr_sqlite` crate. For JSON output, see the `allegro_cwr_json` crate.
 
+pub mod domain_types;
 pub mod error;
 pub mod parser;
 pub mod parsing_macro;

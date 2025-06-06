@@ -1,53 +1,38 @@
 //! PWR - Publisher for Writer Record
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
 /// PWR - Publisher for Writer Record
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "PWR0000000100000001123456789PUBLISHER NAME                         SUBAGR        SOCAGR        12345678901")]
 pub struct PwrRecord {
-    /// Always "PWR"
-    pub record_type: String,
+    #[cwr(title = "Always 'PWR'", start = 0, len = 3)]
+    pub record_type: RecordType,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Publisher IP number (9 chars, conditional)
+    #[cwr(title = "Publisher IP number (9 chars, conditional)", start = 19, len = 9)]
     pub publisher_ip_num: Option<String>,
 
-    /// Publisher name (45 chars, conditional)
+    #[cwr(title = "Publisher name (45 chars, conditional)", start = 28, len = 45)]
     pub publisher_name: Option<String>,
 
-    /// Submitter agreement number (14 chars, optional)
+    #[cwr(title = "Submitter agreement number (14 chars, optional)", start = 73, len = 14)]
     pub submitter_agreement_number: Option<String>,
 
-    /// Society-assigned agreement number (14 chars, optional)
+    #[cwr(title = "Society-assigned agreement number (14 chars, optional)", start = 87, len = 14)]
     pub society_assigned_agreement_number: Option<String>,
 
-    /// Writer IP number (9 chars, conditional, v2.1+)
+    #[cwr(title = "Writer IP number (9 chars, conditional, v2.1+)", start = 101, len = 9)]
     pub writer_ip_num: Option<String>,
 
-    /// Publisher sequence number (2 chars, v2.2+)
+    #[cwr(title = "Publisher sequence number (2 chars, v2.2+)", start = 110, len = 2)]
     pub publisher_sequence_num: Option<String>,
+
 }
-
-
-impl_cwr_parsing! {
-    PwrRecord {
-        record_type: (0, 3, required, one_of(&["PWR"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        publisher_ip_num: (19, 28, optional),
-        publisher_name: (28, 73, optional),
-        submitter_agreement_number: (73, 87, optional),
-        society_assigned_agreement_number: (87, 101, optional),
-        writer_ip_num: (101, 110, optional),
-        publisher_sequence_num: (110, 112, optional),
-    }
-    with_test_data ["PWR0000000100000001123456789PUBLISHER NAME                         SUBAGR        SOCAGR        12345678901"]
-}
-

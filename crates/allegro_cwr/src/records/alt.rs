@@ -1,41 +1,29 @@
 //! ALT - Alternate Title Record
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
 /// ALT - Alternate Title Record
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "ALT0000000100000001ALTERNATE TITLE                                          ATEN")]
 pub struct AltRecord {
-    /// Always "ALT"
-    pub record_type: String,
+    #[cwr(title = "Always 'ALT'", start = 0, len = 3)]
+    pub record_type: RecordType,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Alternate title (60 chars)
+    #[cwr(title = "Alternate title", start = 19, len = 60)]
     pub alternate_title: String,
 
-    /// Title type (2 chars)
+    #[cwr(title = "Title type", start = 79, len = 2)]
     pub title_type: String,
 
-    /// Language code (2 chars, conditional)
+    #[cwr(title = "Language code (2 chars, conditional)", start = 81, len = 2)]
     pub language_code: Option<String>,
+
 }
-
-
-impl_cwr_parsing! {
-    AltRecord {
-        record_type: (0, 3, required, one_of(&["ALT"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        alternate_title: (19, 79, required),
-        title_type: (79, 81, required),
-        language_code: (81, 83, optional),
-    }
-    with_test_data ["ALT0000000100000001ALTERNATE TITLE                                          ATEN"]
-}
-

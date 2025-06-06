@@ -1,43 +1,31 @@
 //! NPA - Non-Roman Alphabet Publisher Name Record
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
 /// NPA - Non-Roman Alphabet Publisher Name Record
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
 pub struct NpaRecord {
-    /// Always "NPA"
-    pub record_type: String,
+    #[cwr(title = "Always 'NPA'", start = 0, len = 3)]
+    pub record_type: RecordType,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Interested party number (9 chars, conditional)
+    #[cwr(title = "Interested party number (9 chars, conditional)", start = 19, len = 9)]
     pub interested_party_num: Option<String>,
 
-    /// Interested party name (160 chars)
+    #[cwr(title = "Interested party name", start = 28, len = 160)]
     pub interested_party_name: String,
 
-    /// Interested party writer first name (160 chars)
+    #[cwr(title = "Interested party writer first name", start = 188, len = 160)]
     pub interested_party_writer_first_name: String,
 
-    /// Language code (2 chars, optional)
+    #[cwr(title = "Language code (2 chars, optional)", start = 348, len = 2)]
     pub language_code: Option<String>,
-}
 
-
-impl_cwr_parsing! {
-    NpaRecord {
-        record_type: (0, 3, required, one_of(&["NPA"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        interested_party_num: (19, 28, optional),
-        interested_party_name: (28, 188, required),
-        interested_party_writer_first_name: (188, 348, required),
-        language_code: (348, 350, optional),
-    }
 }

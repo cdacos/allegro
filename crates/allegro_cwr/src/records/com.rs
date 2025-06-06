@@ -1,75 +1,55 @@
 //! COM - Composite Component Record
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
 /// COM - Composite Component Record
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
 pub struct ComRecord {
-    /// Always "COM"
-    pub record_type: String,
+    #[cwr(title = "Always 'COM'", start = 0, len = 3)]
+    pub record_type: RecordType,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Title (60 chars)
+    #[cwr(title = "Title", start = 19, len = 60)]
     pub title: String,
 
-    /// ISWC of component (11 chars, optional)
+    #[cwr(title = "ISWC of component (11 chars, optional)", start = 79, len = 11)]
     pub iswc_of_component: Option<String>,
 
-    /// Submitter work number (14 chars, optional)
+    #[cwr(title = "Submitter work number (14 chars, optional)", start = 90, len = 14)]
     pub submitter_work_num: Option<String>,
 
-    /// Duration HHMMSS (6 chars, optional)
+    #[cwr(title = "Duration HHMMSS (6 chars, optional)", start = 104, len = 6)]
     pub duration: Option<String>,
 
-    /// Writer 1 last name (45 chars)
+    #[cwr(title = "Writer 1 last name", start = 110, len = 45)]
     pub writer_1_last_name: String,
 
-    /// Writer 1 first name (30 chars, optional)
+    #[cwr(title = "Writer 1 first name (30 chars, optional)", start = 155, len = 30)]
     pub writer_1_first_name: Option<String>,
 
-    /// Writer 1 IPI name number (11 chars, optional)
+    #[cwr(title = "Writer 1 IPI name number (11 chars, optional)", start = 185, len = 11)]
     pub writer_1_ipi_name_num: Option<String>,
 
-    /// Writer 2 last name (45 chars, optional)
+    #[cwr(title = "Writer 2 last name (45 chars, optional)", start = 196, len = 45)]
     pub writer_2_last_name: Option<String>,
 
-    /// Writer 2 first name (30 chars, optional)
+    #[cwr(title = "Writer 2 first name (30 chars, optional)", start = 241, len = 30)]
     pub writer_2_first_name: Option<String>,
 
-    /// Writer 2 IPI name number (11 chars, optional)
+    #[cwr(title = "Writer 2 IPI name number (11 chars, optional)", start = 271, len = 11)]
     pub writer_2_ipi_name_num: Option<String>,
 
-    /// Writer 1 IPI base number (13 chars, optional)
+    #[cwr(title = "Writer 1 IPI base number (13 chars, optional)", start = 282, len = 13)]
     pub writer_1_ipi_base_number: Option<String>,
 
-    /// Writer 2 IPI base number (13 chars, optional)
+    #[cwr(title = "Writer 2 IPI base number (13 chars, optional)", start = 295, len = 13)]
     pub writer_2_ipi_base_number: Option<String>,
-}
 
-
-impl_cwr_parsing! {
-    ComRecord {
-        record_type: (0, 3, required, one_of(&["COM"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        title: (19, 79, required),
-        iswc_of_component: (79, 90, optional),
-        submitter_work_num: (90, 104, optional),
-        duration: (104, 110, optional),
-        writer_1_last_name: (110, 155, required),
-        writer_1_first_name: (155, 185, optional),
-        writer_1_ipi_name_num: (185, 196, optional),
-        writer_2_last_name: (196, 241, optional),
-        writer_2_first_name: (241, 271, optional),
-        writer_2_ipi_name_num: (271, 282, optional),
-        writer_1_ipi_base_number: (282, 295, optional),
-        writer_2_ipi_base_number: (295, 308, optional),
-    }
 }

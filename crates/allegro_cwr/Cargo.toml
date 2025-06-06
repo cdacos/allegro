@@ -5,5 +5,7 @@ edition = "2024"
 description = "CWR (Common Works Registration) file parser library"
 
 [dependencies]
+allegro_cwr_derive = { path = "../allegro_cwr_derive" }
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
+chrono = { version = "0.4", features = ["serde"] }

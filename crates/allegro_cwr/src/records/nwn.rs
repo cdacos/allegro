@@ -1,45 +1,32 @@
 //! NWN - Non-Roman Alphabet Writer Name Record
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
 /// NWN - Non-Roman Alphabet Writer Name Record
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "NWN0000000100000001123456789WRITER LAST NAME                                                                                                                                                                EN")]
 pub struct NwnRecord {
-    /// Always "NWN"
-    pub record_type: String,
+    #[cwr(title = "Always 'NWN'", start = 0, len = 3)]
+    pub record_type: RecordType,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Interested party number (9 chars, conditional)
+    #[cwr(title = "Interested party number (9 chars, conditional)", start = 19, len = 9)]
     pub interested_party_num: Option<String>,
 
-    /// Writer last name (160 chars)
+    #[cwr(title = "Writer last name", start = 28, len = 160)]
     pub writer_last_name: String,
 
-    /// Writer first name (160 chars, optional)
+    #[cwr(title = "Writer first name (160 chars, optional)", start = 188, len = 160)]
     pub writer_first_name: Option<String>,
 
-    /// Language code (2 chars, optional)
+    #[cwr(title = "Language code (2 chars, optional)", start = 348, len = 2)]
     pub language_code: Option<String>,
+
 }
-
-
-impl_cwr_parsing! {
-    NwnRecord {
-        record_type: (0, 3, required, one_of(&["NWN"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        interested_party_num: (19, 28, optional),
-        writer_last_name: (28, 188, required),
-        writer_first_name: (188, 348, optional),
-        language_code: (348, 350, optional),
-    }
-    with_test_data ["NWN0000000100000001123456789WRITER LAST NAME                                                                                                                                                                EN"]
-}
-

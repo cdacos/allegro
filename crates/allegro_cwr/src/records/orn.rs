@@ -1,107 +1,79 @@
 //! ORN - Work Origin Record
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
 /// ORN - Work Origin Record
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
 pub struct OrnRecord {
-    /// Always "ORN"
-    pub record_type: String,
+    #[cwr(title = "Always 'ORN'", start = 0, len = 3)]
+    pub record_type: RecordType,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Intended purpose (3 chars)
+    #[cwr(title = "Intended purpose", start = 19, len = 3)]
     pub intended_purpose: String,
 
-    /// Production title (60 chars, conditional)
+    #[cwr(title = "Production title (60 chars, conditional)", start = 22, len = 60)]
     pub production_title: Option<String>,
 
-    /// CD identifier (15 chars, conditional)
+    #[cwr(title = "CD identifier (15 chars, conditional)", start = 82, len = 15)]
     pub cd_identifier: Option<String>,
 
-    /// Cut number (4 chars, optional)
+    #[cwr(title = "Cut number (4 chars, optional)", start = 97, len = 4)]
     pub cut_number: Option<String>,
 
-    /// Library (60 chars, conditional, v2.1+)
+    #[cwr(title = "Library (60 chars, conditional, v2.1+)", start = 101, len = 60)]
     pub library: Option<String>,
 
-    /// BLTVR (1 char, optional, v2.1+)
+    #[cwr(title = "BLTVR (1 char, optional, v2.1+)", start = 161, len = 1)]
     pub bltvr: Option<String>,
 
-    /// Filler (25 chars, optional, v2.1+)
+    #[cwr(title = "Filler (25 chars, optional, v2.1+)", start = 162, len = 25)]
     pub filler: Option<String>,
 
-    /// Production number (12 chars, optional, v2.1+)
+    #[cwr(title = "Production number (12 chars, optional, v2.1+)", start = 187, len = 12)]
     pub production_num: Option<String>,
 
-    /// Episode title (60 chars, optional, v2.1+)
+    #[cwr(title = "Episode title (60 chars, optional, v2.1+)", start = 199, len = 60)]
     pub episode_title: Option<String>,
 
-    /// Episode number (20 chars, optional, v2.1+)
+    #[cwr(title = "Episode number (20 chars, optional, v2.1+)", start = 259, len = 20)]
     pub episode_num: Option<String>,
 
-    /// Year of production (4 chars, optional, v2.1+)
+    #[cwr(title = "Year of production (4 chars, optional, v2.1+)", start = 279, len = 4)]
     pub year_of_production: Option<String>,
 
-    /// AVI society code (3 chars, optional, v2.1+)
+    #[cwr(title = "AVI society code (3 chars, optional, v2.1+)", start = 283, len = 3)]
     pub avi_society_code: Option<String>,
 
-    /// Audio-visual number (15 chars, optional, v2.1+)
+    #[cwr(title = "Audio-visual number (15 chars, optional, v2.1+)", start = 286, len = 15)]
     pub audio_visual_number: Option<String>,
 
-    /// V-ISAN/ISAN (12 chars, optional, v2.2+)
+    #[cwr(title = "V-ISAN/ISAN (12 chars, optional, v2.2+)", start = 301, len = 12)]
     pub v_isan_isan: Option<String>,
 
-    /// V-ISAN/Episode (4 chars, optional, v2.2+)
+    #[cwr(title = "V-ISAN/Episode (4 chars, optional, v2.2+)", start = 313, len = 4)]
     pub v_isan_episode: Option<String>,
 
-    /// V-ISAN/Check Digit 1 (1 char, optional, v2.2+)
+    #[cwr(title = "V-ISAN/Check Digit 1 (1 char, optional, v2.2+)", start = 317, len = 1)]
     pub v_isan_check_digit_1: Option<String>,
 
-    /// V-ISAN/Version (8 chars, optional, v2.2+)
+    #[cwr(title = "V-ISAN/Version (8 chars, optional, v2.2+)", start = 318, len = 8)]
     pub v_isan_version: Option<String>,
 
-    /// V-ISAN/Check Digit 2 (1 char, optional, v2.2+)
+    #[cwr(title = "V-ISAN/Check Digit 2 (1 char, optional, v2.2+)", start = 326, len = 1)]
     pub v_isan_check_digit_2: Option<String>,
 
-    /// EIDR (20 chars, optional, v2.2+)
+    #[cwr(title = "EIDR (20 chars, optional, v2.2+)", start = 327, len = 20)]
     pub eidr: Option<String>,
 
-    /// EIDR/Check Digit (1 char, optional, v2.2+)
+    #[cwr(title = "EIDR/Check Digit (1 char, optional, v2.2+)", start = 347, len = 1)]
     pub eidr_check_digit: Option<String>,
-}
 
-
-impl_cwr_parsing! {
-    OrnRecord {
-        record_type: (0, 3, required, one_of(&["ORN"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        intended_purpose: (19, 22, required),
-        production_title: (22, 82, optional),
-        cd_identifier: (82, 97, optional),
-        cut_number: (97, 101, optional),
-        library: (101, 161, optional),
-        bltvr: (161, 162, optional),
-        filler: (162, 187, optional),
-        production_num: (187, 199, optional),
-        episode_title: (199, 259, optional),
-        episode_num: (259, 279, optional),
-        year_of_production: (279, 283, optional),
-        avi_society_code: (283, 286, optional),
-        audio_visual_number: (286, 301, optional),
-        v_isan_isan: (301, 313, optional),
-        v_isan_episode: (313, 317, optional),
-        v_isan_check_digit_1: (317, 318, optional),
-        v_isan_version: (318, 326, optional),
-        v_isan_check_digit_2: (326, 327, optional),
-        eidr: (327, 347, optional),
-        eidr_check_digit: (347, 348, optional),
-    }
 }

@@ -1,41 +1,29 @@
 //! INS - Instrumentation Summary Record
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
 /// INS - Instrumentation Summary Record
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "INS000000010000000104 ORCHFULL ORCHESTRA WITH STRINGS AND BRASS SECTION   ")]
 pub struct InsRecord {
-    /// Always "INS"
-    pub record_type: String,
+    #[cwr(title = "Always 'INS'", start = 0, len = 3)]
+    pub record_type: RecordType,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Number of voices (3 chars, optional)
+    #[cwr(title = "Number of voices (3 chars, optional)", start = 19, len = 3)]
     pub number_of_voices: Option<String>,
 
-    /// Standard instrumentation type (3 chars, conditional)
+    #[cwr(title = "Standard instrumentation type (3 chars, conditional)", start = 22, len = 3)]
     pub standard_instrumentation_type: Option<String>,
 
-    /// Instrumentation description (50 chars, conditional)
+    #[cwr(title = "Instrumentation description (50 chars, conditional)", start = 25, len = 50)]
     pub instrumentation_description: Option<String>,
+
 }
-
-
-impl_cwr_parsing! {
-    InsRecord {
-        record_type: (0, 3, required, one_of(&["INS"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        number_of_voices: (19, 22, optional),
-        standard_instrumentation_type: (22, 25, optional),
-        instrumentation_description: (25, 75, optional),
-    }
-    with_test_data ["INS000000010000000104 ORCHFULL ORCHESTRA WITH STRINGS AND BRASS SECTION   "]
-}
-

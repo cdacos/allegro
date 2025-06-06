@@ -1,53 +1,38 @@
 //! MSG - Message Record
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
 /// MSG - Message Record
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "MSG0000000100000001E00000002NWRR001Record rejected due to invalid format                                                                                                                            ")]
 pub struct MsgRecord {
-    /// Always "MSG"
-    pub record_type: String,
+    #[cwr(title = "Always 'MSG'", start = 0, len = 3)]
+    pub record_type: RecordType,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Message type (1 char)
+    #[cwr(title = "Message type (1 char)", start = 19, len = 1)]
     pub message_type: String,
 
-    /// Original record sequence number (8 chars)
+    #[cwr(title = "Original record sequence number", start = 20, len = 8)]
     pub original_record_sequence_num: String,
 
-    /// Record type (3 chars)
+    #[cwr(title = "Record type", start = 28, len = 3)]
     pub record_type_field: String,
 
-    /// Message level (1 char)
+    #[cwr(title = "Message level (1 char)", start = 31, len = 1)]
     pub message_level: String,
 
-    /// Validation number (3 chars)
+    #[cwr(title = "Validation number", start = 32, len = 3)]
     pub validation_number: String,
 
-    /// Message text (150 chars)
+    #[cwr(title = "Message text", start = 35, len = 150)]
     pub message_text: String,
+
 }
-
-
-impl_cwr_parsing! {
-    MsgRecord {
-        record_type: (0, 3, required, one_of(&["MSG"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        message_type: (19, 20, required),
-        original_record_sequence_num: (20, 28, required),
-        record_type_field: (28, 31, required),
-        message_level: (31, 32, required),
-        validation_number: (32, 35, required),
-        message_text: (35, 185, required),
-    }
-    with_test_data ["MSG0000000100000001E00000002NWRR001Record rejected due to invalid format                                                                                                                            "]
-}
-

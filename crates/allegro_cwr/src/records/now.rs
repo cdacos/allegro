@@ -1,43 +1,31 @@
 //! NOW - Non-Roman Alphabet Writer Name Record
 
-use crate::validators::one_of;
-use crate::impl_cwr_parsing;
+use crate::domain_types::*;
+use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
 /// NOW - Non-Roman Alphabet Writer Name Record
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
 pub struct NowRecord {
-    /// Always "NOW"
-    pub record_type: String,
+    #[cwr(title = "Always 'NOW'", start = 0, len = 3)]
+    pub record_type: RecordType,
 
-    /// Transaction sequence number (8 chars)
+    #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
     pub transaction_sequence_num: String,
 
-    /// Record sequence number (8 chars)
+    #[cwr(title = "Record sequence number", start = 11, len = 8)]
     pub record_sequence_num: String,
 
-    /// Writer name (160 chars)
+    #[cwr(title = "Writer name", start = 19, len = 160)]
     pub writer_name: String,
 
-    /// Writer first name (160 chars)
+    #[cwr(title = "Writer first name", start = 179, len = 160)]
     pub writer_first_name: String,
 
-    /// Language code (2 chars, optional)
+    #[cwr(title = "Language code (2 chars, optional)", start = 339, len = 2)]
     pub language_code: Option<String>,
 
-    /// Writer position (1 char, optional)
+    #[cwr(title = "Writer position (1 char, optional)", start = 341, len = 1)]
     pub writer_position: Option<String>,
-}
 
-
-impl_cwr_parsing! {
-    NowRecord {
-        record_type: (0, 3, required, one_of(&["NOW"])),
-        transaction_sequence_num: (3, 11, required),
-        record_sequence_num: (11, 19, required),
-        writer_name: (19, 179, required),
-        writer_first_name: (179, 339, required),
-        language_code: (339, 341, optional),
-        writer_position: (341, 342, optional),
-    }
 }
