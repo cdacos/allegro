@@ -79,10 +79,4 @@ impl_cwr_parsing! {
     }
 }
 
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    impl_cwr_parsing_test_roundtrip!(IpaRecord, "IPA0000000100000001AS           123456789JONES                                                                                                           ");
-}
+impl_cwr_parsing_test_roundtrip!(IpaRecord, "IPA0000000100000001AS           123456789JONES                                                                                                           ");
