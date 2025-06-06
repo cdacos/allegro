@@ -97,8 +97,12 @@ fn main() {
             info!("Using database filename: '{}'", db_filename);
 
             match allegro_cwr_sqlite::process_cwr_to_sqlite_with_version(&input_filename, &db_filename, config.cwr_version) {
-                Ok((_file_id, count, report)) => {
+                Ok((file_id, count, report)) => {
                     println!("{}", report);
+                    // Generate detailed report
+                    if let Err(e) = allegro_cwr_sqlite::report::report_summary(&db_filename, file_id, config.format) {
+                        eprintln!("Warning: Could not generate detailed report: {}", e);
+                    }
                     Ok((db_filename, count))
                 }
                 Err(e) => Err(e),
