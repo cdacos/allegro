@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// NOW - Non-Roman Alphabet Writer Name Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "NOW0000000100000002PLACEHOLDER WRITER NAME                                                                                                                                         PLACEHOLDER FIRST NAME                                                                                                                                          EN1")]
 pub struct NowRecord {
     #[cwr(title = "Always 'NOW'", start = 0, len = 3)]
     pub record_type: RecordType,

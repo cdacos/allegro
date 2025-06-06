@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// Also handles NCT (Non-Roman Alphabet Title for Components) and NVT (Non-Roman Alphabet Original Title for Versions)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "NET0000000100000002PLACEHOLDER TITLE                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               EN")]
 pub struct NetRecord {
     #[cwr(title = "'NET', 'NCT', or 'NVT'", start = 0, len = 3)]
     pub record_type: String,

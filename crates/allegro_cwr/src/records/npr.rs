@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// NPR - Non-Roman Alphabet Performing Artist Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "NPR0000000100000002PLACEHOLDER PERFORMING ARTIST                                                                                                                                   PLACEHOLDER FIRST NAME                                                                                                                                          12345678901123456789012ENENABC ")]
 pub struct NprRecord {
     #[cwr(title = "Always 'NPR'", start = 0, len = 3)]
     pub record_type: RecordType,

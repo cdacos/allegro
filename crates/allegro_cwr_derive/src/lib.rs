@@ -15,7 +15,8 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
         _ => panic!("CwrRecord can only be derived for structs"),
     };
 
-    let test_data = extract_test_data(&input.attrs);
+    let test_data = extract_test_data(&input.attrs)
+        .expect("CwrRecord requires #[cwr(test_data = \"...\")] attribute");
     let field_parsers = fields.iter().map(|field| {
         let field_name = field.ident.as_ref().unwrap();
         let field_type = &field.ty;
@@ -56,7 +57,7 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
     let field_names = fields.iter().map(|f| &f.ident);
     let test_mod_name = quote::format_ident!("{}_generated_tests", name.to_string().to_lowercase());
 
-    let _test_module = test_data.map(|test_data_value| {
+    let _test_module = {
         quote! {
             #[cfg(test)]
             mod #test_mod_name {
@@ -64,7 +65,7 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
 
                 #[test]
                 fn test_parse_from_test_data() {
-                    let test_line = #test_data_value;
+                    let test_line = #test_data;
                     let (record, warnings) = #name::parse(test_line);
 
                     for warning in &warnings {
@@ -78,7 +79,7 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
                 }
             }
         }
-    });
+    };
 
     let expanded = quote! {
         impl #name {

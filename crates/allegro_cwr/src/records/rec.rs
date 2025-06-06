@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// REC - Recording Detail Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
+#[cwr(test_data = "REC000000000000002720191004                                                            000306     WASTED ON YOU - SINGLE                                      INDEPENDENT                                                                                                                                                                                                                                                                                                                                                                                                        ")]
 pub struct RecRecord {
     #[cwr(title = "Always 'REC'", start = 0, len = 3)]
     pub record_type: RecordType,
