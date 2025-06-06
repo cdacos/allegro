@@ -19,8 +19,8 @@ impl CwrToSqlString for Date {
     }
 }
 
-impl CwrToSqlString for &'static str {
+impl CwrToSqlString for String {
     fn to_sql_string(&self) -> String {
-        (*self).to_string()
+        self.clone()
     }
 }

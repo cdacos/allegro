@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 #[cwr(test_data = "HDR01BMI      BMI MUSIC                                    01.1020050101120000200501010123456789012345  2. 1DEV MUSIC SOFTWARE VERSION 1.0  MUSIC PACKAGE VERSION 2.0  ")]
 pub struct HdrRecord {
     #[cwr(title = "Always 'HDR'", start = 0, len = 3)]
-    pub record_type: &'static str,
+    pub record_type: String,
 
     #[cwr(title = "Sender type", start = 3, len = 2)]
     pub sender_type: String,

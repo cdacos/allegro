@@ -25,16 +25,9 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
         let field_name_str = field_name.to_string();
         
         if field_name_str == "record_type" {
-            // Auto-detect record type from struct name (e.g., AgrRecord -> "AGR")
-            let struct_name = name.to_string();
-            let record_type_str = if struct_name.ends_with("Record") {
-                &struct_name[..struct_name.len() - 6] // Remove "Record" suffix
-            } else {
-                &struct_name
-            }.to_uppercase(); // Convert to uppercase (Agr -> AGR)
-            
+            // For record_type field, use the actual record type from the line
             quote! {
-                let #field_name = #record_type_str;
+                let #field_name = line[0..3].to_string();
             }
         } else if skip_parse {
             quote! {
@@ -124,16 +117,7 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
                     ));
                 }
                 
-                let (mut record, warnings) = Self::parse(line);
-                
-                // Validate that the parsed record type matches the expected type for this struct
-                let line_record_type = &line[0..3];
-                let expected_record_type = record.record_type;
-                if line_record_type != expected_record_type {
-                    return Err(crate::error::CwrParseError::BadFormat(
-                        format!("Record type mismatch: expected {}, found {}", expected_record_type, line_record_type)
-                    ));
-                }
+                let (record, warnings) = Self::parse(line);
 
                 // Convert CwrWarning to String for compatibility
                 let string_warnings: Vec<String> = warnings.into_iter()
