@@ -32,6 +32,6 @@ impl_cwr_parsing! {
         transaction_count: (8, 16, required),
         record_count: (16, 24, required),
     }
-    with_tests ["TRL000010000001400000367"]
+    with_test_data ["TRL000010000001400000367"]
 }
 

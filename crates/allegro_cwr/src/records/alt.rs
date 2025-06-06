@@ -36,6 +36,6 @@ impl_cwr_parsing! {
         title_type: (79, 81, required),
         language_code: (81, 83, optional),
     }
-    with_tests ["ALT0000000100000001ALTERNATE TITLE                                          ATEN"]
+    with_test_data ["ALT0000000100000001ALTERNATE TITLE                                          ATEN"]
 }
 

@@ -19,14 +19,28 @@
 /// ```
 #[macro_export]
 macro_rules! impl_cwr_parsing {
-    // Pattern with tests first (must come before post-process only)
+    // Pattern with tests first, then post-process
     (
         $struct_name:ident {
             $(
                 $field_name:ident: ($start:expr, $end:expr, $field_type:ident $(, $validator:expr)?)
             ),* $(,)?
         }
-        with_tests [$($test_line:expr),+ $(,)?]
+        with_test_data [$($test_line:expr),+ $(,)?]
+        with_post_process $post_process_fn:expr
+    ) => {
+        impl_cwr_parsing!(@impl $struct_name { $($field_name: ($start, $end, $field_type $(, $validator)?)),* } with_post_process $post_process_fn);
+        impl_cwr_parsing!(@generate_tests $struct_name, [$($test_line),+]);
+    };
+
+    // Pattern with tests only
+    (
+        $struct_name:ident {
+            $(
+                $field_name:ident: ($start:expr, $end:expr, $field_type:ident $(, $validator:expr)?)
+            ),* $(,)?
+        }
+        with_test_data [$($test_line:expr),+ $(,)?]
     ) => {
         impl_cwr_parsing!(@impl $struct_name { $($field_name: ($start, $end, $field_type $(, $validator)?)),* });
         impl_cwr_parsing!(@generate_tests $struct_name, [$($test_line),+]);
@@ -277,7 +291,7 @@ mod tests {
             required_field: (3, 8, required),
             optional_field: (8, 13, optional),
         }
-        with_tests ["TST12345ABCDE"]
+        with_test_data ["TST12345ABCDE"]
     }
 
     #[test]

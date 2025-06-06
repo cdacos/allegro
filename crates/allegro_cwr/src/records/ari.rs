@@ -44,6 +44,6 @@ impl_cwr_parsing! {
         subject_code: (39, 41, optional),
         note: (41, 201, optional),
     }
-    with_tests ["ARI0000000100000001021              ALL  Additional related information note for the work                                                                                                    "]
+    with_test_data ["ARI0000000100000001021              ALL  Additional related information note for the work                                                                                                    "]
 }
 

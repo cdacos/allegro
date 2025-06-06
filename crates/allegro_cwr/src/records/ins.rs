@@ -36,6 +36,6 @@ impl_cwr_parsing! {
         standard_instrumentation_type: (22, 25, optional),
         instrumentation_description: (25, 75, optional),
     }
-    with_tests ["INS000000010000000104 ORCHFULL ORCHESTRA WITH STRINGS AND BRASS SECTION   "]
+    with_test_data ["INS000000010000000104 ORCHFULL ORCHESTRA WITH STRINGS AND BRASS SECTION   "]
 }
 

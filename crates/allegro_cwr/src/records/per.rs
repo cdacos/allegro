@@ -40,6 +40,6 @@ impl_cwr_parsing! {
         performing_artist_ipi_name_num: (94, 105, optional),
         performing_artist_ipi_base_number: (105, 118, optional),
     }
-    with_tests ["PER0000000100000001SMITH                                        JOHN                          01234567890123456789012"]
+    with_test_data ["PER0000000100000001SMITH                                        JOHN                          01234567890123456789012"]
 }
 

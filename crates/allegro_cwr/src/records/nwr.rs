@@ -128,6 +128,6 @@ impl_cwr_parsing! {
         catalogue_number: (234, 259, optional),
         priority_flag: (259, 260, optional),
     }
-    with_tests ["NWR0000000100000001Test Song                                               SW0000000001        SER        Y       ORI                                                                                                                                               "]
+    with_test_data ["NWR0000000100000001Test Song                                               SW0000000001        SER        Y       ORI                                                                                                                                               "]
 }
 

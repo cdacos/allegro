@@ -72,6 +72,6 @@ impl_cwr_parsing! {
         sr_affiliation_society: (145, 148, optional),
         sr_share: (148, 153, optional),
     }
-    with_tests ["IPA0000000100000001AS           123456789JONES                                                                                                           "]
+    with_test_data ["IPA0000000100000001AS           123456789JONES                                                                                                           "]
 }
 

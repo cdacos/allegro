@@ -106,6 +106,6 @@ impl_cwr_parsing! {
         personal_number: (167, 179, optional),
         usa_license_ind: (179, 180, optional),
     }
-    with_tests ["SWR00000010000000201234567890WRITER LAST NAME                     WRITER FIRST NAME             N WR12345678901234567890   50.000   50.000   50.000N N N 0123456789012012345678901"]
+    with_test_data ["SWR00000010000000201234567890WRITER LAST NAME                     WRITER FIRST NAME             N WR12345678901234567890   50.000   50.000   50.000N N N 0123456789012012345678901"]
 }
 

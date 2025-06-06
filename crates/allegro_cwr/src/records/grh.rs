@@ -40,6 +40,6 @@ impl_cwr_parsing! {
         batch_request: (16, 26, optional),
         submission_distribution_type: (26, 28, optional),
     }
-    with_tests ["GRHAGR0000102.10            "]
+    with_test_data ["GRHAGR0000102.10            "]
 }
 

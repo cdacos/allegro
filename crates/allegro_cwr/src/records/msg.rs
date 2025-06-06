@@ -48,6 +48,6 @@ impl_cwr_parsing! {
         validation_number: (32, 35, required),
         message_text: (35, 185, required),
     }
-    with_tests ["MSG0000000100000001E00000002NWRR001Record rejected due to invalid format                                                                                                                            "]
+    with_test_data ["MSG0000000100000001E00000002NWRR001Record rejected due to invalid format                                                                                                                            "]
 }
 

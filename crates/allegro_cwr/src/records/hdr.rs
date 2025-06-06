@@ -68,6 +68,6 @@ impl_cwr_parsing! {
         software_package: (107, 137, optional),
         software_package_version: (137, 167, optional),
     }
-    with_tests ["HDR01BMI      BMI MUSIC                                    01.1020050101120000200501010123456789012345  2. 1DEV MUSIC SOFTWARE VERSION 1.0  MUSIC PACKAGE VERSION 2.0  "]
+    with_test_data ["HDR01BMI      BMI MUSIC                                    01.1020050101120000200501010123456789012345  2. 1DEV MUSIC SOFTWARE VERSION 1.0  MUSIC PACKAGE VERSION 2.0  "]
 }
 

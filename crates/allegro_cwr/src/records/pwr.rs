@@ -48,6 +48,6 @@ impl_cwr_parsing! {
         writer_ip_num: (101, 110, optional),
         publisher_sequence_num: (110, 112, optional),
     }
-    with_tests ["PWR0000000100000001123456789PUBLISHER NAME                         SUBAGR        SOCAGR        12345678901"]
+    with_test_data ["PWR0000000100000001123456789PUBLISHER NAME                         SUBAGR        SOCAGR        12345678901"]
 }
 

@@ -40,6 +40,6 @@ impl_cwr_parsing! {
         currency_indicator: (24, 27, optional),
         total_monetary_value: (27, 37, optional),
     }
-    with_tests ["GRT000010000001400000365             "]
+    with_test_data ["GRT000010000001400000365             "]
 }
 

@@ -32,6 +32,6 @@ impl_cwr_parsing! {
         instrument_code: (19, 22, required),
         number_of_players: (22, 25, optional),
     }
-    with_tests ["IND0000000100000001PNO004"]
+    with_test_data ["IND0000000100000001PNO004"]
 }
 

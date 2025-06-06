@@ -64,6 +64,6 @@ impl_cwr_parsing! {
         processing_date: (149, 157, required),
         transaction_status: (157, 159, required),
     }
-    with_tests ["ACK0000000100000001200501011200000000100000001NWR                                                                                                    20050102AS"]
+    with_test_data ["ACK0000000100000001200501011200000000100000001NWR                                                                                                    20050102AS"]
 }
 

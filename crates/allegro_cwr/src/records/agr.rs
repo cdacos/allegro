@@ -88,6 +88,7 @@ impl_cwr_parsing! {
         advance_given: (106, 107, optional),
         society_assigned_agreement_number: (107, 121, optional),
     }
+    with_test_data ["AGR00000001000000011234567890123               AA20231201                Y        Y                00001                 "]
     with_post_process |record: &mut AgrRecord, warnings: &mut Vec<String>| {
         // Check that end date is after start date
         if let Some(end_date) = &record.agreement_end_date {

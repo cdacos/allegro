@@ -56,6 +56,6 @@ impl_cwr_parsing! {
         shares_change: (48, 49, optional),
         sequence_num: (49, 52, optional),
     }
-    with_tests ["SWT0000000100000001         I2840 "]
+    with_test_data ["SWT0000000100000001         I2840 "]
 }
 

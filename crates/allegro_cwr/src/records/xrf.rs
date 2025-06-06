@@ -40,6 +40,6 @@ impl_cwr_parsing! {
         identifier_type: (36, 37, required),
         validity: (37, 38, required),
     }
-    with_tests ["XRF0000000100000001ISWT1234567890123WY"]
+    with_test_data ["XRF0000000100000001ISWT1234567890123WY"]
 }
 

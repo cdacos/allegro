@@ -40,6 +40,6 @@ impl_cwr_parsing! {
         writer_first_name: (188, 348, optional),
         language_code: (348, 350, optional),
     }
-    with_tests ["NWN0000000100000001123456789WRITER LAST NAME                                                                                                                                                                EN"]
+    with_test_data ["NWN0000000100000001123456789WRITER LAST NAME                                                                                                                                                                EN"]
 }
 

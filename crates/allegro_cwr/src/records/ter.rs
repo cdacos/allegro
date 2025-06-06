@@ -32,6 +32,6 @@ impl_cwr_parsing! {
         inclusion_exclusion_indicator: (19, 20, required),
         tis_numeric_code: (20, 24, required),
     }
-    with_tests ["TER0000000100000001I2840"]
+    with_test_data ["TER0000000100000001I2840"]
 }
 
