@@ -2,11 +2,14 @@
 //!
 //! This crate provides JSON output functionality for CWR records.
 
+use serde_json;
+
 /// JSON implementation of CwrHandler trait
 pub struct JsonHandler {
     output_count: usize,
     error_count: usize,
     first_record: bool,
+    context_written: bool,
 }
 
 impl Default for JsonHandler {
@@ -17,10 +20,10 @@ impl Default for JsonHandler {
 
 impl JsonHandler {
     pub fn new() -> Self {
-        // Start JSON array
-        println!("[");
+        // Start JSON object
+        println!("{{");
 
-        JsonHandler { output_count: 0, error_count: 0, first_record: true }
+        JsonHandler { output_count: 0, error_count: 0, first_record: true, context_written: false }
     }
 }
 
@@ -28,17 +31,46 @@ impl allegro_cwr::CwrHandler for JsonHandler {
     type Error = std::io::Error;
 
     fn process_record(&mut self, parsed_record: allegro_cwr::ParsedRecord) -> Result<(), Self::Error> {
+        // Write context once at the beginning
+        if !self.context_written {
+            println!("  \"context\": {{");
+            println!("    \"cwr_version\": {},", parsed_record.context.cwr_version);
+            println!("    \"file_id\": {}", parsed_record.context.file_id);
+            println!("  }},");
+            println!("  \"records\": [");
+            self.context_written = true;
+        }
+
         if !self.first_record {
             println!(",");
         }
 
-        // Output JSON representation of the parsed record
-        println!("  {{");
-        println!("    \"line_number\": {},", parsed_record.line_number);
-        println!("    \"record_type\": \"{}\",", parsed_record.record.record_type());
-        println!("    \"cwr_version\": {},", parsed_record.context.cwr_version);
-        println!("    \"status\": \"parsed\"");
-        println!("  }}");
+        // Create a simplified record without context
+        let record_without_context = serde_json::json!({
+            "line_number": parsed_record.line_number,
+            "record": parsed_record.record,
+            "warnings": parsed_record.warnings
+        });
+
+        match serde_json::to_string_pretty(&record_without_context) {
+            Ok(json_str) => {
+                // Indent the JSON to match our array formatting
+                let indented_json = json_str.lines()
+                    .map(|line| format!("    {}", line))
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                println!("{}", indented_json);
+            }
+            Err(e) => {
+                // Fallback to basic metadata if serialization fails
+                println!("    {{");
+                println!("      \"line_number\": {},", parsed_record.line_number);
+                println!("      \"record_type\": \"{}\",", parsed_record.record.record_type());
+                println!("      \"status\": \"serialization_error\",");
+                println!("      \"error_message\": \"{}\"", e.to_string().replace('"', "\\\""));
+                println!("    }}");
+            }
+        }
 
         self.first_record = false;
         self.output_count += 1;
@@ -46,44 +78,44 @@ impl allegro_cwr::CwrHandler for JsonHandler {
     }
 
     fn handle_parse_error(&mut self, line_number: usize, error: &allegro_cwr::CwrParseError) -> Result<(), Self::Error> {
+        // Initialize context if this is the first thing we encounter
+        if !self.context_written {
+            println!("  \"context\": {{");
+            println!("    \"cwr_version\": null,");
+            println!("    \"file_id\": 0");
+            println!("  }},");
+            println!("  \"records\": [");
+            self.context_written = true;
+        }
+
         if !self.first_record {
             println!(",");
         }
 
-        println!("  {{");
-        println!("    \"line_number\": {},", line_number);
-        println!("    \"status\": \"error\",");
-        println!("    \"error_message\": \"{}\"", error.to_string().replace('"', "\\\""));
-        println!("  }}");
+        println!("    {{");
+        println!("      \"line_number\": {},", line_number);
+        println!("      \"status\": \"error\",");
+        println!("      \"error_message\": \"{}\"", error.to_string().replace('"', "\\\""));
+        println!("    }}");
 
         self.first_record = false;
         self.error_count += 1;
         Ok(())
     }
 
-    fn handle_warnings(&mut self, line_number: usize, record_type: &str, warnings: &[String]) -> Result<(), Self::Error> {
-        for warning in warnings {
-            if !self.first_record {
-                println!(",");
-            }
-
-            println!("  {{");
-            println!("    \"line_number\": {},", line_number);
-            println!("    \"record_type\": \"{}\",", record_type);
-            println!("    \"status\": \"warning\",");
-            println!("    \"warning_message\": \"{}\"", warning.replace('"', "\\\""));
-            println!("  }}");
-
-            self.first_record = false;
-            self.error_count += 1;
-        }
+    fn handle_warnings(&mut self, _line_number: usize, _record_type: &str, warnings: &[String]) -> Result<(), Self::Error> {
+        // Warnings are now included in each record's warnings array, so we don't need separate warning objects
+        self.error_count += warnings.len();
         Ok(())
     }
 
     fn finalize(&mut self) -> Result<(), Self::Error> {
-        // End JSON array
-        println!();
-        println!("]");
+        // Close records array and main object
+        if self.context_written {
+            println!();
+            println!("  ]");
+        }
+        println!("}}");
         Ok(())
     }
 

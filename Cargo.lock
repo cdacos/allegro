@@ -47,6 +47,7 @@ version = "0.1.0"
 dependencies = [
  "allegro_cwr",
  "log",
+ "serde_json",
 ]
 
 [[package]]

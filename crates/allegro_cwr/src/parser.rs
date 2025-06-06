@@ -6,7 +6,7 @@ use std::io;
 use std::io::{BufRead, BufReader, Seek};
 
 // Context struct to hold file-level metadata like CWR version
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct ParsingContext {
     pub cwr_version: f32, // e.g., 2.0, 2.1, 2.2
     pub file_id: i64,     // Database file_id for this file
@@ -110,40 +110,73 @@ fn detect_version_by_heuristics(hdr_line: &str) -> f32 {
 }
 
 /// Enum containing all possible parsed CWR record types
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub enum CwrRecord {
+    #[serde(rename = "hdr")]
     Hdr(HdrRecord),
+    #[serde(rename = "grh")]
     Grh(GrhRecord),
+    #[serde(rename = "grt")]
     Grt(GrtRecord),
+    #[serde(rename = "trl")]
     Trl(TrlRecord),
+    #[serde(rename = "agr")]
     Agr(AgrRecord),
+    #[serde(rename = "nwr")]
     Nwr(NwrRecord),
+    #[serde(rename = "ack")]
     Ack(AckRecord),
+    #[serde(rename = "ter")]
     Ter(TerRecord),
+    #[serde(rename = "ipa")]
     Ipa(IpaRecord),
+    #[serde(rename = "npa")]
     Npa(NpaRecord),
+    #[serde(rename = "spu")]
     Spu(SpuRecord),
+    #[serde(rename = "npn")]
     Npn(NpnRecord),
+    #[serde(rename = "spt")]
     Spt(SptRecord),
+    #[serde(rename = "swr")]
     Swr(SwrRecord),
+    #[serde(rename = "nwn")]
     Nwn(NwnRecord),
+    #[serde(rename = "swt")]
     Swt(SwtRecord),
+    #[serde(rename = "pwr")]
     Pwr(PwrRecord),
+    #[serde(rename = "alt")]
     Alt(AltRecord),
+    #[serde(rename = "nat")]
     Nat(NatRecord),
+    #[serde(rename = "ewt")]
     Ewt(EwtRecord),
+    #[serde(rename = "ver")]
     Ver(VerRecord),
+    #[serde(rename = "per")]
     Per(PerRecord),
+    #[serde(rename = "npr")]
     Npr(NprRecord),
+    #[serde(rename = "rec")]
     Rec(RecRecord),
+    #[serde(rename = "orn")]
     Orn(OrnRecord),
+    #[serde(rename = "ins")]
     Ins(InsRecord),
+    #[serde(rename = "ind")]
     Ind(IndRecord),
+    #[serde(rename = "com")]
     Com(ComRecord),
+    #[serde(rename = "msg")]
     Msg(MsgRecord),
+    #[serde(rename = "net")]
     Net(NetRecord),
+    #[serde(rename = "now")]
     Now(NowRecord),
+    #[serde(rename = "ari")]
     Ari(AriRecord),
+    #[serde(rename = "xrf")]
     Xrf(XrfRecord),
 }
 
@@ -188,7 +221,7 @@ impl CwrRecord {
 }
 
 /// Represents a parsed CWR record with its metadata
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct ParsedRecord {
     pub line_number: usize,
     pub record: CwrRecord,
