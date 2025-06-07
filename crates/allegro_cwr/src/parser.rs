@@ -595,9 +595,12 @@ mod tests {
     fn create_temp_cwr_file(content: &str) -> String {
         let temp_dir = std::env::temp_dir();
         let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-        let file_path = temp_dir.join(format!("test_{}.cwr", timestamp));
+        let thread_id = std::thread::current().id();
+        let file_path = temp_dir.join(format!("test_{}_{:?}.cwr", timestamp, thread_id));
         let mut file = File::create(&file_path).unwrap();
         file.write_all(content.as_bytes()).unwrap();
+        file.flush().unwrap();
+        drop(file);
         file_path.to_string_lossy().to_string()
     }
 
