@@ -1,9 +1,9 @@
 - Do not add comments.
 - The Rust 2024 Edition is now stable
 - Do not add code that silently skips over unhappy paths. Be explicit!
-- When writing CWR tests always take exact examples from the file .me/TestSample.V21 (.me/ is gitignored in project root)
+- Use the .me/ git-ignored folder for your test files (.me/TestSample.V21 is a real CWR file for reference)
 - Logging: Use `log` crate with appropriate levels (info, warn, error). To see logs, set RUST_LOG=info (or debug) when running
 - Never change tests to match what the code does. Always ask the user what the right answer should be!
-- Put any test files you create in the .me/ folder in the project root
 - Thou shall not write Rust code that panics!
 - This app is designed for huge files. We need to stream, avoid allocating increasing amounts of memory.
+- Follow SOLID principles, use liberal modularization with Rust modules
