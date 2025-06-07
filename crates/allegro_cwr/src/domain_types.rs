@@ -43,84 +43,7 @@ impl WorksCount {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
-pub enum RecordType {
-    Agr,
-    Ack,
-    Alt,
-    Ari,
-    Com,
-    Ewt,
-    Grh,
-    Grt,
-    #[default]
-    Hdr,
-    Ind,
-    Ins,
-    Ipa,
-    Msg,
-    Nat,
-    Net,
-    Now,
-    Npa,
-    Npn,
-    Npr,
-    Nwr,
-    Nwn,
-    Orn,
-    Per,
-    Pwr,
-    Rec,
-    Spt,
-    Spu,
-    Swr,
-    Swt,
-    Ter,
-    Trl,
-    Ver,
-    Xrf,
-}
 
-impl std::fmt::Display for RecordType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self {
-            RecordType::Agr => "AGR",
-            RecordType::Ack => "ACK",
-            RecordType::Alt => "ALT",
-            RecordType::Ari => "ARI",
-            RecordType::Com => "COM",
-            RecordType::Ewt => "EWT",
-            RecordType::Grh => "GRH",
-            RecordType::Grt => "GRT",
-            RecordType::Hdr => "HDR",
-            RecordType::Ind => "IND",
-            RecordType::Ins => "INS",
-            RecordType::Ipa => "IPA",
-            RecordType::Msg => "MSG",
-            RecordType::Nat => "NAT",
-            RecordType::Net => "NET",
-            RecordType::Now => "NOW",
-            RecordType::Npa => "NPA",
-            RecordType::Npn => "NPN",
-            RecordType::Npr => "NPR",
-            RecordType::Nwr => "NWR",
-            RecordType::Nwn => "NWN",
-            RecordType::Orn => "ORN",
-            RecordType::Per => "PER",
-            RecordType::Pwr => "PWR",
-            RecordType::Rec => "REC",
-            RecordType::Spt => "SPT",
-            RecordType::Spu => "SPU",
-            RecordType::Swr => "SWR",
-            RecordType::Swt => "SWT",
-            RecordType::Ter => "TER",
-            RecordType::Trl => "TRL",
-            RecordType::Ver => "VER",
-            RecordType::Xrf => "XRF",
-        };
-        write!(f, "{}", s)
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub enum YesNo {
@@ -165,52 +88,6 @@ impl CwrFieldParse for Option<String> {
     }
 }
 
-// Implement CwrFieldParse for RecordType
-impl CwrFieldParse for RecordType {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
-        let trimmed = source.trim();
-        let record_type = match trimmed {
-            "AGR" => RecordType::Agr,
-            "ACK" => RecordType::Ack,
-            "ALT" => RecordType::Alt,
-            "ARI" => RecordType::Ari,
-            "COM" => RecordType::Com,
-            "EWT" => RecordType::Ewt,
-            "GRH" => RecordType::Grh,
-            "GRT" => RecordType::Grt,
-            "HDR" => RecordType::Hdr,
-            "IND" => RecordType::Ind,
-            "INS" => RecordType::Ins,
-            "IPA" => RecordType::Ipa,
-            "MSG" => RecordType::Msg,
-            "NAT" => RecordType::Nat,
-            "NET" | "NCT" | "NVT" => RecordType::Net,
-            "NOW" => RecordType::Now,
-            "NPA" => RecordType::Npa,
-            "NPN" => RecordType::Npn,
-            "NPR" => RecordType::Npr,
-            "NWR" | "REV" | "ISW" | "EXC" => RecordType::Nwr,
-            "NWN" => RecordType::Nwn,
-            "ORN" => RecordType::Orn,
-            "PER" => RecordType::Per,
-            "PWR" => RecordType::Pwr,
-            "REC" => RecordType::Rec,
-            "SPT" | "OPT" => RecordType::Spt,
-            "SPU" | "OPU" => RecordType::Spu,
-            "SWR" | "OWR" => RecordType::Swr,
-            "SWT" | "OWT" => RecordType::Swt,
-            "TER" => RecordType::Ter,
-            "TRL" => RecordType::Trl,
-            "VER" => RecordType::Ver,
-            "XRF" => RecordType::Xrf,
-            _ => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Unknown record type: {}", trimmed) }];
-                return (RecordType::default(), warnings);
-            }
-        };
-        (record_type, vec![])
-    }
-}
 
 // Implement CwrFieldParse for YesNo
 impl CwrFieldParse for YesNo {
