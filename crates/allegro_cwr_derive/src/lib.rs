@@ -102,9 +102,13 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
 
                 #(#field_parsers)*
 
-                let record = Self {
+                let mut record = Self {
                     #(#field_names,)*
                 };
+
+                // Validate cross-field relationships and business rules
+                let validation_warnings = <Self as crate::records::CwrRecord>::validate(&mut record);
+                warnings.extend(validation_warnings);
 
                 (record, warnings)
             }
@@ -187,6 +191,11 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
 
             fn into_registry(self) -> crate::cwr_registry::CwrRegistry {
                 #registry_variant
+            }
+
+            fn validate(&mut self) -> Vec<crate::domain_types::CwrWarning<'static>> {
+                // Default implementation: no cross-field validation
+                Vec::new()
             }
         }
 

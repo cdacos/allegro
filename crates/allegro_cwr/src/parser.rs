@@ -236,7 +236,7 @@ mod tests {
         let hdr = HdrRecord {
             record_type: "HDR".to_string(),
             sender_type: SenderType::NumericPrefix("01".to_string()),
-            sender_id: "BMI".to_string(),
+            sender_id: SenderId("BMI".to_string()),
             sender_name: "BMI MUSIC".to_string(),
             edi_standard_version_number: EdiStandardVersion("01.10".to_string()),
             creation_date: Date(NaiveDate::from_ymd_opt(2005, 1, 1)),

@@ -13,7 +13,7 @@ pub struct HdrRecord {
     pub sender_type: SenderType,
 
     #[cwr(title = "Sender ID", start = 5, len = 9)]
-    pub sender_id: String,
+    pub sender_id: SenderId,
 
     #[cwr(title = "Sender name", start = 14, len = 45)]
     pub sender_name: String,
@@ -45,3 +45,6 @@ pub struct HdrRecord {
     #[cwr(title = "Software package version (v2.2+)", start = 137, len = 30)]
     pub software_package_version: Option<String>,
 }
+
+// TODO: Override validate() method to add HDR-specific cross-field validation
+// This will require a mechanism to override auto-generated trait methods

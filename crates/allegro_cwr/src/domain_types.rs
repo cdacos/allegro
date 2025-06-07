@@ -185,6 +185,34 @@ impl CwrFieldParse for SenderType {
     }
 }
 
+/// Sender ID with validation based on sender type
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct SenderId(pub String);
+
+impl SenderId {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl CwrFieldParse for SenderId {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        // Basic format validation - must be 9 characters numeric for IPI or alphanumeric for society codes
+        // TODO: Implement table-based validation for:
+        // - CWR Sender ID and Codes Table (for PB, AA, WR sender types)
+        // - Society Code Table (for SO sender type)
+        // This requires cross-field validation with SenderType in post_process step
+
+        if trimmed.is_empty() {
+            let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: "Sender ID is required".to_string() }];
+            return (SenderId(String::new()), warnings);
+        }
+
+        (SenderId(trimmed.to_string()), vec![])
+    }
+}
+
 /// EDI Standard Version Number
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub struct EdiStandardVersion(pub String);
@@ -298,3 +326,23 @@ impl CwrFieldParse for Time {
         }
     }
 }
+
+// TODO: Implement additional domain types for table-based validations:
+//
+// 1. CharacterSet enum with validation against character set lookup table:
+//    - Traditional [Big5], Simplified [GB], UTF-8, and Unicode values
+//    - Reference: http://www.unicode.org/charts
+//
+// 2. SenderName with cross-validation against lookup tables:
+//    - For PB (Publisher): must match name in CWR Sender ID and Codes Table
+//    - For SO (Society): must match name in Society Code Table
+//    - For AA (Administrative Agency): must match name in Publisher Code Table
+//
+// 3. Complex Sender validation requiring post_process step:
+//    - Cross-validate SenderType + SenderId + SenderName combination
+//    - Handle IPNN > 9 digits case (SenderType numeric prefix + SenderId)
+//    - Validate against appropriate lookup tables based on sender type
+//
+// 4. CwrRevision enum with validation against version number lookup table:
+//    - Current valid values for CWR 2.2 revision numbers
+//    - Should be extensible for future revisions

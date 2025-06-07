@@ -59,7 +59,7 @@ pub fn parse_and_insert_hdr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             file_id,
             record.record_type.to_sql_string(),
             record.sender_type.as_str(),
-            record.sender_id,
+            record.sender_id.as_str(),
             record.sender_name,
             record.edi_standard_version_number.as_str(),
             record.creation_date.to_sql_string(),

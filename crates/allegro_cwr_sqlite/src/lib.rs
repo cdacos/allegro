@@ -105,7 +105,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                             self.file_id,
                             "HDR",
                             hdr.sender_type.as_str(),
-                            hdr.sender_id,
+                            hdr.sender_id.as_str(),
                             hdr.sender_name,
                             hdr.edi_standard_version_number.as_str(),
                             hdr.creation_date.as_str(),
