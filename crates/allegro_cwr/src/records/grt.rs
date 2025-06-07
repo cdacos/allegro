@@ -1,10 +1,8 @@
-//! /// Marks the end of a group and contains summary counts for that group.
-
 use crate::domain_types::*;
 use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
-/// /// Marks the end of a group and contains summary counts for that group.
+/// Marks the end of a group and contains summary counts for that group.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
 #[cwr(test_data = "GRT000010000001400000365             ")]
 pub struct GrtRecord {

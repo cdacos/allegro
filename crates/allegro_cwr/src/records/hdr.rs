@@ -1,10 +1,8 @@
-//! /// Contains information about the sender and the transmission itself.
-
 use crate::domain_types::*;
 use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
-/// /// Contains information about the sender and the transmission itself.
+/// Contains information about the sender and the transmission itself.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
 #[cwr(test_data = "HDR01BMI      BMI MUSIC                                    01.1020050101120000200501010123456789012345  2. 1DEV MUSIC SOFTWARE VERSION 1.0  MUSIC PACKAGE VERSION 2.0  ")]
 pub struct HdrRecord {

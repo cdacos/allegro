@@ -1,5 +1,3 @@
-//! SPU - Publisher Controlled by Submitter Record (also OPU - Other Publisher)
-
 use crate::domain_types::*;
 use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};

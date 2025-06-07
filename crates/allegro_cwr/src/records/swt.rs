@@ -1,5 +1,3 @@
-//! SWT - Writer Territory of Control Record (also OWT - Other Writer Territory)
-
 use crate::domain_types::*;
 use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};

@@ -1,10 +1,8 @@
-//! /// Used for NWR, REV, ISW, and EXC record types.
-
 use crate::domain_types::*;
 use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
-/// /// Used for NWR, REV, ISW, and EXC record types.
+/// Used for NWR, REV, ISW, and EXC record types.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
 #[cwr(codes = ["NWR", "REV", "ISW", "EXC"], test_data = "NWR0000000100000001Test Song                                               SW0000000001        SER        Y       ORI                                                                                                                                               ")]
 pub struct NwrRecord {

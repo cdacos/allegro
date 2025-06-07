@@ -1,10 +1,8 @@
-//! /// Marks the end of a CWR transmission and contains summary counts.
-
 use crate::domain_types::*;
 use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
-/// /// Marks the end of a CWR transmission and contains summary counts.
+/// Marks the end of a CWR transmission and contains summary counts.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
 #[cwr(test_data = "TRL000010000001400000367")]
 pub struct TrlRecord {

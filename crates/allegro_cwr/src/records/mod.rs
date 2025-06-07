@@ -2,8 +2,6 @@
 //!
 //! This module contains typed representations of CWR records that mirror the
 //! wire format structure. These serve as an intermediate layer between raw
-//! CWR lines and business domain objects.
-
 use crate::cwr_registry::CwrRegistry;
 use crate::error::CwrParseError;
 

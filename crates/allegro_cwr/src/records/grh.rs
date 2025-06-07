@@ -1,10 +1,8 @@
-//! /// Starts a new group of transactions within a CWR transmission.
-
 use crate::domain_types::*;
 use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
 
-/// /// Starts a new group of transactions within a CWR transmission.
+/// Starts a new group of transactions within a CWR transmission.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
 #[cwr(test_data = "GRHAGR0000102.10            ")]
 pub struct GrhRecord {

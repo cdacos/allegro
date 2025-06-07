@@ -1,5 +1,3 @@
-//! SWR - Writer Controlled by Submitter Record (also OWR - Other Writer)
-
 use crate::domain_types::*;
 use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};

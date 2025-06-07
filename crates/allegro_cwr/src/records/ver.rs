@@ -1,5 +1,3 @@
-//! VER - Original Work Title for Versions Record
-
 use crate::domain_types::*;
 use allegro_cwr_derive::CwrRecord;
 use serde::{Deserialize, Serialize};
