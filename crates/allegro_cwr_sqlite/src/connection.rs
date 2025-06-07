@@ -1,4 +1,5 @@
 use crate::error::CwrDbError;
+use log::info;
 use rusqlite::Connection;
 use std::path::Path;
 
@@ -46,23 +47,18 @@ pub fn determine_db_filename(input_filename: &str, output_path: Option<&str>) ->
 pub fn setup_database(db_filename: &str) -> Result<(), CwrDbError> {
     // Schema is embedded directly into the binary at compile time
     const SCHEMA_SQL: &str = include_str!("schema.sql");
-    
+
     let conn = Connection::open(db_filename)?;
 
     // Check if tables already exist to avoid erroring on re-runs
-    let table_count: i64 = conn.query_row(
-        "SELECT count(*) FROM sqlite_master WHERE type='table' AND name LIKE 'cwr_%'", 
-        [], 
-        |row| row.get(0)
-    )?;
+    let table_count: i64 = conn.query_row("SELECT count(*) FROM sqlite_master WHERE type='table' AND name LIKE 'cwr_%'", [], |row| row.get(0))?;
 
     if table_count == 0 {
-        println!("Applying embedded schema...");
+        info!("Applying embedded schema");
         conn.execute_batch(SCHEMA_SQL)?;
     } else {
-        println!("Database schema already exists, ready for import.");
+        info!("Database schema already exists, ready for import");
     }
 
     Ok(())
 }
-

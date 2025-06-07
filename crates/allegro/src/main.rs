@@ -1,82 +1,118 @@
 use std::process;
 use std::time::Instant;
 
-use allegro_cwr::{process_cwr_file_with_output, format_int_with_commas, OutputFormat};
+use allegro_cwr::{OutputFormat, format_int_with_commas};
+use log::{error, info};
 
-fn main() {
-    let mut output_path = None;
-    let mut input_filename = None;
-    let mut format = OutputFormat::Default;
-    
+struct Config {
+    output_path: Option<String>,
+    input_filename: Option<String>,
+    format: OutputFormat,
+    cwr_version: Option<f32>,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self { output_path: None, input_filename: None, format: OutputFormat::Default, cwr_version: None }
+    }
+}
+
+fn parse_args() -> Result<Config, String> {
+    let mut config = Config::default();
     let mut parser = lexopt::Parser::from_env();
-    while let Ok(arg) = parser.next() {
+
+    while let Ok(Some(arg)) = parser.next() {
         match arg {
-            Some(lexopt::Arg::Short('o')) | Some(lexopt::Arg::Long("output")) => {
-                match parser.value() {
-                    Ok(val) => output_path = Some(val.to_string_lossy().to_string()),
-                    Err(e) => {
-                        eprintln!("Error: Missing value for --output: {}", e);
-                        process::exit(1);
-                    }
-                }
+            lexopt::Arg::Short('o') | lexopt::Arg::Long("output") => {
+                config.output_path = Some(get_value(&mut parser, "output")?);
             }
-            Some(lexopt::Arg::Short('f')) | Some(lexopt::Arg::Long("format")) => {
-                match parser.value() {
-                    Ok(val) => {
-                        let format_str = val.to_string_lossy().to_lowercase();
-                        format = match format_str.as_str() {
-                            "sql" => OutputFormat::Sql,
-                            "json" => OutputFormat::Json,
-                            _ => {
-                                eprintln!("Error: Invalid format '{}'. Valid formats are: sql, json", format_str);
-                                process::exit(1);
-                            }
-                        };
-                    }
-                    Err(e) => {
-                        eprintln!("Error: Missing value for --format: {}", e);
-                        process::exit(1);
-                    }
-                }
+            lexopt::Arg::Short('f') | lexopt::Arg::Long("format") => {
+                let format_str = get_value(&mut parser, "format")?;
+                config.format = format_str.parse()?;
             }
-            Some(lexopt::Arg::Value(val)) => {
-                if input_filename.is_some() {
-                    eprintln!("Error: Multiple input files specified");
-                    process::exit(1);
+            lexopt::Arg::Long("cwr") => {
+                let version_str = get_value(&mut parser, "cwr")?;
+                let version: f32 = version_str.parse().map_err(|_| format!("Invalid CWR version '{}'. Valid versions: 2.0, 2.1, 2.2", version_str))?;
+
+                if ![2.0, 2.1, 2.2].contains(&version) {
+                    return Err(format!("Unsupported CWR version '{}'. Valid versions: 2.0, 2.1, 2.2", version));
                 }
-                input_filename = Some(val.to_string_lossy().to_string());
+
+                config.cwr_version = Some(version);
             }
-            Some(lexopt::Arg::Short('h')) | Some(lexopt::Arg::Long("help")) => {
+            lexopt::Arg::Value(val) => {
+                if config.input_filename.is_some() {
+                    return Err("Multiple input files specified".to_string());
+                }
+                config.input_filename = Some(val.to_string_lossy().to_string());
+            }
+            lexopt::Arg::Short('h') | lexopt::Arg::Long("help") => {
                 print_help();
                 process::exit(0);
             }
-            Some(_) => {
-                eprintln!("Error: Unknown argument");
-                print_help();
-                process::exit(1);
+            _ => {
+                return Err("Unknown argument".to_string());
             }
-            None => break,
         }
     }
-    
-    let input_filename = match input_filename {
-        Some(filename) => filename,
-        None => {
-            eprintln!("Error: No input file specified");
+
+    if config.input_filename.is_none() {
+        return Err("No input file specified".to_string());
+    }
+
+    Ok(config)
+}
+
+fn get_value(parser: &mut lexopt::Parser, arg_name: &str) -> Result<String, String> {
+    parser.value().map(|val| val.to_string_lossy().to_string()).map_err(|e| format!("Missing value for --{}: {}", arg_name, e))
+}
+
+fn main() {
+    // Initialize logging - use RUST_LOG environment variable to control level
+    // e.g., RUST_LOG=info cargo run or RUST_LOG=debug cargo run
+    env_logger::init();
+
+    let config = match parse_args() {
+        Ok(config) => config,
+        Err(e) => {
+            error!("Configuration error: {}", e);
             print_help();
             process::exit(1);
         }
     };
 
-    println!("Processing input file: {}...", input_filename);
+    let input_filename = config.input_filename.expect("input_filename already validated during parsing");
+
+    info!("Processing input file: {}", input_filename);
 
     let start_time = Instant::now();
 
-    let result = process_cwr_file_with_output(&input_filename, output_path.as_deref(), format);
+    let result = match config.format {
+        OutputFormat::Json => match allegro_cwr_json::process_cwr_to_json_with_version(&input_filename, config.cwr_version) {
+            Ok(count) => Ok(("".to_string(), count)),
+            Err(e) => Err(e),
+        },
+        OutputFormat::Default | OutputFormat::Sql => {
+            let db_filename = allegro_cwr_sqlite::determine_db_filename(&input_filename, config.output_path.as_deref());
+            info!("Using database filename: '{}'", db_filename);
+
+            match allegro_cwr_sqlite::process_cwr_to_sqlite_with_version(&input_filename, &db_filename, config.cwr_version) {
+                Ok((file_id, count, report)) => {
+                    println!("{}", report);
+                    // Generate detailed report
+                    if let Err(e) = allegro_cwr_sqlite::report::report_summary(&db_filename, file_id, config.format) {
+                        eprintln!("Warning: Could not generate detailed report: {}", e);
+                    }
+                    Ok((db_filename, count))
+                }
+                Err(e) => Err(e),
+            }
+        }
+    };
 
     let elapsed_time = start_time.elapsed();
 
-    println!("Done!");
+    info!("Processing completed");
 
     // Handle the result of file processing
     let (db_filename, count) = match result {
@@ -87,11 +123,7 @@ fn main() {
         }
     };
 
-    if !db_filename.is_empty() {
-        println!("Successfully processed {} CWR records from '{}' into '{}' in {:.2?}.", format_int_with_commas(count as i64), &input_filename, db_filename, elapsed_time);
-    } else {
-        println!("Successfully processed {} CWR records from '{}' in {:.2?}.", format_int_with_commas(count as i64), &input_filename, elapsed_time);
-    }
+    println!("Successfully processed {} CWR records from '{}'{} in {:.2?}", format_int_with_commas(count as i64), &input_filename, if !db_filename.is_empty() { format!(" into '{}'", db_filename) } else { String::new() }, elapsed_time);
 }
 
 fn print_help() {
@@ -102,7 +134,8 @@ fn print_help() {
     eprintln!();
     eprintln!("Options:");
     eprintln!("  -o, --output <file>      Output database file path");
-    eprintln!("  -f, --format <format>    Output format (sql, json)");
+    eprintln!("  -f, --format <format>    Output format ({})", OutputFormat::valid_formats());
+    eprintln!("      --cwr <version>      CWR version (2.0, 2.1, 2.2). Auto-detected from filename (.Vxx) or file content if not specified");
     eprintln!("  -h, --help               Show this help message");
     eprintln!();
     eprintln!("By default, creates <input_filename>.db, or numbered variants if it exists");

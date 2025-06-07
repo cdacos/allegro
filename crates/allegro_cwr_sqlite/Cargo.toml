@@ -5,4 +5,9 @@ edition = "2024"
 description = "SQLite database operations for CWR (Common Works Registration) files"
 
 [dependencies]
-rusqlite = { version = "0.35.0", features = ["bundled"] }
+rusqlite = { version = "0.35.0", features = ["bundled", "serde_json"] }
+allegro_cwr = { path = "../allegro_cwr" }
+log = "0.4"
+
+[dev-dependencies]
+tempfile = "3.0"

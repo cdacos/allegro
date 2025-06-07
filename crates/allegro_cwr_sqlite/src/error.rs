@@ -19,6 +19,12 @@ impl From<std::io::Error> for CwrDbError {
     }
 }
 
+impl From<allegro_cwr::CwrParseError> for CwrDbError {
+    fn from(err: allegro_cwr::CwrParseError) -> Self {
+        CwrDbError::Setup(err.to_string())
+    }
+}
+
 impl fmt::Display for CwrDbError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

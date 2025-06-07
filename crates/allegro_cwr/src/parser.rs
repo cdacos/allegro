@@ -1,228 +1,46 @@
-use allegro_cwr_sqlite::{statements::get_prepared_statements, log_error, insert_file_record};
+use crate::cwr_registry::CwrRegistry;
 use crate::error::CwrParseError;
-use crate::{error, record_handlers};
-use rusqlite::Connection;
+use crate::util::get_cwr_version;
+use log::{error, info};
 use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader, Seek};
 
-// Context struct to hold file-level metadata like CWR version
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct ParsingContext {
-    pub cwr_version: f32, // e.g., 2.0, 2.1, 2.2
-    pub file_id: i64,     // Database file_id for this file
-                          // Add other metadata like charset later if needed
+    pub cwr_version: f32,
+    pub file_id: i64,
 }
 
-fn get_cwr_version(hdr_line: &str) -> Result<f32, CwrParseError> {
-    // Define valid CWR versions
-    let valid_cwr_versions = [2.0, 2.1, 2.2];
-
-    // Determine version based on header line length
-    let cwr_version = if hdr_line.len() < 87 {
-        2.0
-    } else if hdr_line.len() > 104 {
-        // Try to parse version from specific position in header
-        if let Some(version_str) = hdr_line.get(101..104) {
-            match version_str.trim().parse::<f32>() {
-                Ok(version) => version,
-                Err(_) => return Err(CwrParseError::BadFormat(format!("Invalid CWR version value: {}", version_str))),
-            }
-        } else {
-            return Err(CwrParseError::BadFormat("Unable to extract CWR version from header".to_string()));
-        }
-    } else {
-        2.1
-    };
-
-    // Validate the version
-    if valid_cwr_versions.contains(&cwr_version) { Ok(cwr_version) } else { Err(CwrParseError::BadFormat(format!("Invalid CWR version: {}", cwr_version))) }
+/// Represents a parsed CWR record with its metadata
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct ParsedRecord {
+    pub line_number: usize,
+    pub record: CwrRegistry,
+    pub context: ParsingContext,
+    pub warnings: Vec<String>,
 }
 
-pub fn process_and_load_file(input_filename: &str, db_filename: &str) -> Result<(i64, usize), CwrParseError> {
-    let file = File::open(input_filename)?;
-    // Use BufReader::new directly, we need to consume the first line separately
-    let mut reader = BufReader::new(file);
+/// Parses a single CWR line and returns the parsed record
+fn parse_cwr_line(line: &str, line_number: usize, context: &ParsingContext) -> Result<ParsedRecord, CwrParseError> {
+    let record_type = line.get(0..3).ok_or_else(|| CwrParseError::BadFormat(format!("Line {} is too short (less than 3 chars)", line_number)))?;
 
-    // --- Read the first line to determine CWR version ---
-    let mut first_line = String::new();
-    let bytes_read = reader.read_line(&mut first_line)?;
-    if bytes_read == 0 {
-        return Err(CwrParseError::BadFormat("File is empty".to_string()));
-    }
-    let hdr_line = first_line.trim_end(); // Remove trailing newline chars
+    let (record, warnings) = crate::cwr_registry::parse_by_record_type(record_type, line)?;
 
-    if !hdr_line.starts_with("HDR") {
-        return Err(CwrParseError::BadFormat(format!(
-            "File does not start with HDR record. Found: '{}'",
-            hdr_line.get(0..std::cmp::min(hdr_line.len(), 50)).unwrap_or("") // Show first 50 chars
-        )));
-    }
-
-    // --- Setup Database and Transaction ---
-    let mut conn = Connection::open(db_filename)?;
-    // Set PRAGMAs before transaction
-    conn.pragma_update(None, "journal_mode", "OFF")?;
-    conn.pragma_update(None, "synchronous", "OFF")?;
-    conn.pragma_update(None, "temp_store", "MEMORY")?;
-
-    // Start transaction *before* preparing statements
-    let tx = conn.transaction()?;
-    let mut line_number: usize = 0; // Start at 0, HDR is line 1
-
-    let file_id = {
-        // Scope for file insertion
-        let mut prepared_statements = get_prepared_statements(&tx)?;
-        insert_file_record(&tx, &mut prepared_statements.file_insert_stmt, input_filename)?
-    };
-
-    {
-        // Scope for the main processing loop
-        let mut prepared_statements = get_prepared_statements(&tx)?;
-        
-        let context = ParsingContext { 
-            cwr_version: get_cwr_version(hdr_line)?, 
-            file_id 
-        };
-        println!("Determined CWR Version: {}", context.cwr_version); // Log detected version
-
-        // Reset the position to the start of the file
-        reader.seek(io::SeekFrom::Start(0))?;
-
-        for line_result in reader.lines() {
-            line_number += 1; // Increment for subsequent lines
-            let line = match line_result {
-                Ok(l) => l,
-                Err(io_err) => {
-                    // Log IO error reading the line
-                    let parse_err = CwrParseError::Io(io_err);
-                    if let Err(log_err) = error::log_cwr_parse_error(&mut prepared_statements, context.file_id, line_number, &parse_err) {
-                        eprintln!("CRITICAL Error: Failed to log IO error to database on line {}: {} (Original error was: {})", line_number, log_err, parse_err);
-                        return Err(CwrParseError::from(log_err));
-                    }
-                    eprintln!("Aborting transaction due to IO error reading line {}: {}", line_number, parse_err);
-                    return Err(parse_err); // Abort on IO Error
-                }
-            };
-
-            if line.is_empty() || line.trim().is_empty() {
-                continue;
-            }
-
-            if line.len() < 3 {
-                log_error(&mut prepared_statements.error_stmt, context.file_id, line_number, format!("Line {} is too short (less than 3 chars), skipping.", line_number))?;
-                continue;
-            }
-
-            let record_type = &line[0..3];
-
-            // --- Define the Safe Slice Helper Closure for the current line ---
-            let safe_slice = |start: usize, end: usize| -> Result<Option<String>, CwrParseError> {
-                let slice_opt = if end > line.len() { if start >= line.len() { None } else { line.get(start..line.len()) } } else { line.get(start..end) };
-                match slice_opt {
-                    Some(slice) => {
-                        let trimmed = slice.trim();
-                        if trimmed.is_empty() { Ok(None) } else { Ok(Some(trimmed.to_string())) }
-                    }
-                    None => Ok(None),
-                }
-            };
-            // --- End of Safe Slice Definition ---
-
-            // Use a separate scope to handle the result processing cleanly
-            let process_result: Result<(), CwrParseError> = {
-                match record_type {
-                    // Apply the pattern: call handler, set flag on success
-                    "HDR" => record_handlers::parse_and_insert_hdr(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "GRH" => record_handlers::parse_and_insert_grh(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "GRT" => record_handlers::parse_and_insert_grt(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "TRL" => record_handlers::parse_and_insert_trl(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "AGR" => record_handlers::parse_and_insert_agr(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "NWR" | "REV" | "ISW" | "EXC" => record_handlers::parse_and_insert_nwr(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "ACK" => record_handlers::parse_and_insert_ack(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "TER" => record_handlers::parse_and_insert_ter(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "IPA" => record_handlers::parse_and_insert_ipa(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "NPA" => record_handlers::parse_and_insert_npa(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "SPU" | "OPU" => record_handlers::parse_and_insert_spu(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "NPN" => record_handlers::parse_and_insert_npn(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "SPT" | "OPT" => record_handlers::parse_and_insert_spt(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "SWR" | "OWR" => record_handlers::parse_and_insert_swr(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "NWN" => record_handlers::parse_and_insert_nwn(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "SWT" | "OWT" => record_handlers::parse_and_insert_swt(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "PWR" => record_handlers::parse_and_insert_pwr(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "ALT" => record_handlers::parse_and_insert_alt(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "NAT" => record_handlers::parse_and_insert_nat(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "EWT" => record_handlers::parse_and_insert_ewt(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "VER" => record_handlers::parse_and_insert_ver(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "PER" => record_handlers::parse_and_insert_per(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "NPR" => record_handlers::parse_and_insert_npr(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "REC" => record_handlers::parse_and_insert_rec(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "ORN" => record_handlers::parse_and_insert_orn(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "INS" => record_handlers::parse_and_insert_ins(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "IND" => record_handlers::parse_and_insert_ind(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "COM" => record_handlers::parse_and_insert_com(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "MSG" => record_handlers::parse_and_insert_msg(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "NET" | "NCT" | "NVT" => record_handlers::parse_and_insert_net(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "NOW" => record_handlers::parse_and_insert_now(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "ARI" => record_handlers::parse_and_insert_ari(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    "XRF" => record_handlers::parse_and_insert_xrf(line_number, &tx, &mut prepared_statements, &context, &safe_slice),
-                    _ => {
-                        // Unrecognized record type
-                        log_error(&mut prepared_statements.error_stmt, context.file_id, line_number, format!("Unrecognized record type '{}', skipping.", record_type))?;
-                        // known_record_processed remains false
-                        Ok(()) // Still Ok overall, just skipped this line
-                    }
-                }
-            }; // End of inner scope for process_result
-
-            // Check the result of processing this line
-            match process_result {
-                Ok(_) => {}
-                Err(e) => {
-                    // An error occurred processing this line (e.g., BadFormat from validation, or DB error from macro)
-
-                    if let Err(log_err) = error::log_cwr_parse_error(&mut prepared_statements, context.file_id, line_number, &e) {
-                        // If logging *itself* fails, we have a serious problem (likely DB issue). Abort immediately.
-                        eprintln!("CRITICAL Error: Failed to log error to database on line {}: {} (Original error was: {})", line_number, log_err, e);
-                        // Return the database error that occurred during logging.
-                        return Err(CwrParseError::from(log_err));
-                    }
-
-                    // Logging succeeded. Now decide if the *original* error warrants stopping.
-                    match e {
-                        // BadFormat errors are logged per record, but we continue processing the file.
-                        CwrParseError::BadFormat(_) => {
-                            // Logged above. Continue to the next line.
-                            // No action needed here, the loop will just continue.
-                        }
-                        // IO errors (reading the file) or DB errors (during parsing/insertion, *not* during logging)
-                        // are usually fatal for the whole process.
-                        CwrParseError::Io(_) | CwrParseError::Db(_) => {
-                            eprintln!("Aborting transaction due to unrecoverable error: {}", e);
-                            // Propagate the original error to trigger transaction rollback.
-                            return Err(e);
-                        }
-                    }
-                }
-            }
-        }
-
-        // Drop prepared_statements to release the borrow on tx
-        drop(prepared_statements);
-    }
-
-    // Commit the transaction *only if* all lines were processed without error
-    tx.commit()?;
-
-    Ok((file_id, line_number))
+    Ok(ParsedRecord { line_number, record, context: context.clone(), warnings })
 }
 
-/// Streams JSON output for each CWR record without using a database
-pub fn process_and_stream_json(input_filename: &str) -> Result<usize, CwrParseError> {
+/// Returns an iterator that processes CWR lines and yields parsed records
+pub fn process_cwr_stream(input_filename: &str) -> Result<impl Iterator<Item = Result<ParsedRecord, CwrParseError>>, CwrParseError> {
+    process_cwr_stream_with_version(input_filename, None)
+}
+
+/// Returns an iterator that processes CWR lines and yields parsed records with optional version hint
+pub fn process_cwr_stream_with_version(input_filename: &str, version_hint: Option<f32>) -> Result<impl Iterator<Item = Result<ParsedRecord, CwrParseError>>, CwrParseError> {
     let file = File::open(input_filename)?;
     let mut reader = BufReader::new(file);
 
-    // --- Read the first line to determine CWR version ---
+    // Read the first line to determine CWR version
     let mut first_line = String::new();
     let bytes_read = reader.read_line(&mut first_line)?;
     if bytes_read == 0 {
@@ -231,172 +49,313 @@ pub fn process_and_stream_json(input_filename: &str) -> Result<usize, CwrParseEr
     let hdr_line = first_line.trim_end();
 
     if !hdr_line.starts_with("HDR") {
-        return Err(CwrParseError::BadFormat(format!(
-            "File does not start with HDR record. Found: '{}'",
-            hdr_line.get(0..std::cmp::min(hdr_line.len(), 50)).unwrap_or("")
-        )));
+        return Err(CwrParseError::BadFormat(format!("File does not start with HDR record. Found: '{}'", hdr_line.get(0..std::cmp::min(hdr_line.len(), 50)).unwrap_or(""))));
     }
 
-    let cwr_version = get_cwr_version(hdr_line)?;
-    println!("Determined CWR Version: {}", cwr_version);
+    let cwr_version = get_cwr_version(input_filename, hdr_line, version_hint)?;
+    info!("Determined CWR version: {}", cwr_version);
+
+    let context = ParsingContext { cwr_version, file_id: 0 };
 
     // Reset to start of file
     reader.seek(io::SeekFrom::Start(0))?;
 
-    let mut line_number: usize = 0;
-    let mut first_record = true;
-
-    // Start JSON array
-    println!("[");
-
-    for line_result in reader.lines() {
-        line_number += 1;
-        let line = match line_result {
-            Ok(l) => l,
-            Err(io_err) => {
-                eprintln!("IO error reading line {}: {}", line_number, io_err);
-                return Err(CwrParseError::Io(io_err));
-            }
-        };
-
-        if line.is_empty() || line.trim().is_empty() {
-            continue;
-        }
-
-        if line.len() < 3 {
-            eprintln!("Line {} is too short (less than 3 chars), skipping.", line_number);
-            continue;
-        }
-
-        let record_type = &line[0..3];
-
-        // Output JSON for this record
-        if !first_record {
-            println!(",");
-        }
-        
-        stream_record_as_json(record_type, &line, line_number, cwr_version)?;
-        first_record = false;
-    }
-
-    // End JSON array
-    println!();
-    println!("]");
-
-    Ok(line_number)
-}
-
-fn stream_record_as_json(record_type: &str, line: &str, line_number: usize, cwr_version: f32) -> Result<(), CwrParseError> {
-    // Helper function to safely extract field
-    let safe_extract = |start: usize, end: usize| -> Option<String> {
-        if end > line.len() {
-            if start >= line.len() {
-                None
-            } else {
-                line.get(start..line.len()).map(|s| s.trim().to_string()).filter(|s| !s.is_empty())
-            }
-        } else {
-            line.get(start..end).map(|s| s.trim().to_string()).filter(|s| !s.is_empty())
-        }
-    };
-
-    // Helper to escape JSON strings
-    let escape_json = |s: &str| -> String {
-        s.replace('\\', "\\\\")
-         .replace('"', "\\\"")
-         .replace('\n', "\\n")
-         .replace('\r', "\\r")
-         .replace('\t', "\\t")
-    };
-
-    // Helper to output optional field
-    let output_field = |name: &str, value: Option<String>, first: &mut bool| {
-        if let Some(val) = value {
-            if !*first {
-                print!(",");
-            }
-            print!("\n    \"{}\": \"{}\"", name, escape_json(&val));
-            *first = false;
-        }
-    };
-
-    print!("  {{");
-    print!("\n    \"record_type\": \"{}\",", record_type);
-    print!("\n    \"line_number\": {},", line_number);
-    print!("\n    \"cwr_version\": {}", cwr_version);
-
-    let mut first_field = false;
-
-    // Parse common fields based on record type
-    match record_type {
-        "HDR" => {
-            output_field("sender_type", safe_extract(3, 5), &mut first_field);
-            output_field("sender_id", safe_extract(5, 14), &mut first_field);
-            output_field("sender_name", safe_extract(14, 59), &mut first_field);
-            output_field("edi_version", safe_extract(59, 64), &mut first_field);
-            output_field("creation_date", safe_extract(64, 72), &mut first_field);
-            output_field("creation_time", safe_extract(72, 78), &mut first_field);
-            output_field("transmission_date", safe_extract(78, 86), &mut first_field);
-        }
-        "GRH" => {
-            output_field("transaction_type", safe_extract(3, 6), &mut first_field);
-            output_field("group_id", safe_extract(6, 11), &mut first_field);
-            output_field("version_number", safe_extract(11, 16), &mut first_field);
-        }
-        "NWR" | "REV" | "ISW" | "EXC" => {
-            output_field("transaction_sequence_num", safe_extract(3, 11), &mut first_field);
-            output_field("record_sequence_num", safe_extract(11, 19), &mut first_field);
-            output_field("work_title", safe_extract(19, 79), &mut first_field);
-            output_field("language_code", safe_extract(79, 81), &mut first_field);
-            output_field("submitter_work_num", safe_extract(81, 95), &mut first_field);
-            output_field("iswc", safe_extract(95, 106), &mut first_field);
-            output_field("copyright_date", safe_extract(106, 114), &mut first_field);
-            output_field("musical_work_distribution_category", safe_extract(126, 129), &mut first_field);
-            output_field("duration", safe_extract(129, 135), &mut first_field);
-            output_field("recorded_indicator", safe_extract(135, 136), &mut first_field);
-            output_field("version_type", safe_extract(142, 145), &mut first_field);
-        }
-        "TRL" => {
-            output_field("group_count", safe_extract(3, 8), &mut first_field);
-            output_field("transaction_count", safe_extract(8, 16), &mut first_field);
-            output_field("record_count", safe_extract(16, 24), &mut first_field);
-        }
-        _ => {
-            // For other record types, just output the raw data
-            output_field("raw_data", Some(line.to_string()), &mut first_field);
-        }
-    }
-
-    print!("\n  }}");
-    Ok(())
-}
-
-// Helper macro for mandatory fields. Logs error to DB (using prepared statement) and returns "" if missing/empty.
-// Propagates DB errors or fundamental slice errors.
-#[macro_export]
-macro_rules! get_mandatory_field {
-    ($stmts:expr, $slice_fn:expr, $start:expr, $end:expr, $line_num:expr, $file_id:expr, $rec_type:expr, $field_name:expr) => {
-        // Match on the result of the slice function
-        match $slice_fn($start, $end) {
-            // Case 1: Slice function itself returned an error (rare with current safe_slice, but good practice)
-            Err(slice_err) => Err(slice_err), // Propagate the underlying error
-
-            // Case 2: Slice succeeded and found a non-empty value
-            Ok(Some(value)) => Ok(value), // Return the found value
-
-            // Case 3: Slice succeeded but returned None (missing or empty/whitespace field)
-            Ok(None) => {
-                // Construct the error description
-                let error_description = format!("{} missing or empty mandatory field '{}' (Expected at {}-{}). Using fallback ''.", $rec_type, $field_name, $start + 1, $end); // Use 1-based indexing for user message
-
-                match $stmts.error_stmt.execute(params![$file_id, $line_num as i64, error_description]) {
-                    // Subcase 3a: Database insertion failed
-                    Err(db_err) => Err(CwrParseError::Db(db_err)), // Propagate the DB error
-                    // Subcase 3b: Database insertion succeeded
-                    Ok(_) => Ok(String::new()), // Return the fallback empty string
+    Ok(reader.lines().enumerate().map(move |(idx, line_result)| {
+        let line_number = idx + 1;
+        match line_result {
+            Ok(line) => {
+                if line.is_empty() || line.trim().is_empty() {
+                    Err(CwrParseError::BadFormat(format!("Line {} is empty", line_number)))
+                } else if line.len() < 3 {
+                    Err(CwrParseError::BadFormat(format!("Line {} is too short (less than 3 chars)", line_number)))
+                } else {
+                    parse_cwr_line(&line, line_number, &context)
                 }
             }
-        }? // Use '?' *after* the match block to propagate any Err returned from the match arms
-        // This ensures the macro returns Result<String, CwrParseError>
-    };
+            Err(io_err) => {
+                error!("IO error reading line {}: {}", line_number, io_err);
+                Err(CwrParseError::Io(io_err))
+            }
+        }
+    }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use std::io::Write;
+
+    #[test]
+    fn test_get_cwr_version_v21_auto_detect() {
+        // TestSample.V21 HDR line - should auto-detect as 2.1 by heuristics
+        let hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221";
+        let result = get_cwr_version("test_file.cwr", hdr_line, None);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 2.1);
+    }
+
+    #[test]
+    fn test_get_cwr_version_cli_override() {
+        // CLI version should override auto-detection
+        let hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221";
+        let result = get_cwr_version("test_file.cwr", hdr_line, Some(2.0));
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 2.0);
+    }
+
+    #[test]
+    fn test_get_cwr_version_filename_detection() {
+        // Filename version should be detected when no CLI version specified
+        let hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221";
+        let result = get_cwr_version("CW060001EMI_044.V21", hdr_line, None);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 2.1);
+    }
+
+    #[test]
+    fn test_get_cwr_version_cli_vs_filename() {
+        // CLI version should override filename version
+        let hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221";
+        let result = get_cwr_version("CW060001EMI_044.V21", hdr_line, Some(2.2));
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 2.2);
+    }
+
+    #[test]
+    fn test_get_cwr_version_filename_vs_hdr() {
+        // Filename version should override HDR version when no CLI version
+        let mut hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221".to_string();
+        while hdr_line.len() < 101 {
+            hdr_line.push(' ');
+        }
+        hdr_line.push_str("2.2"); // HDR says 2.2
+        hdr_line.push(' ');
+
+        let result = get_cwr_version("CW060001EMI_044.V21", &hdr_line, None);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 2.1); // filename takes precedence
+    }
+
+    #[test]
+    fn test_get_cwr_version_explicit_v22() {
+        // Create a v2.2 line with explicit version at position 101-104
+        let mut hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221".to_string();
+        // Pad to position 101
+        while hdr_line.len() < 101 {
+            hdr_line.push(' ');
+        }
+        hdr_line.push_str("2.2"); // Add version at position 101-104
+        hdr_line.push(' '); // Make length > 104
+
+        let result = get_cwr_version("test_file.cwr", &hdr_line, None);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 2.2);
+    }
+
+    #[test]
+    fn test_get_cwr_version_explicit_conflicts_with_cli() {
+        // Test warning when explicit version conflicts with CLI version
+        let mut hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221".to_string();
+        while hdr_line.len() < 101 {
+            hdr_line.push(' ');
+        }
+        hdr_line.push_str("2.2");
+        hdr_line.push(' ');
+
+        // CLI specifies 2.1 but file has explicit 2.2 - should use CLI version with warning
+        let result = get_cwr_version("test_file.cwr", &hdr_line, Some(2.1));
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 2.1);
+    }
+
+    #[test]
+    fn test_get_cwr_version_invalid_explicit() {
+        // Invalid explicit version should return error
+        let mut hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221".to_string();
+        while hdr_line.len() < 101 {
+            hdr_line.push(' ');
+        }
+        hdr_line.push_str("9.9");
+        hdr_line.push(' ');
+
+        let result = get_cwr_version("test_file.cwr", &hdr_line, None);
+        assert!(result.is_err());
+        match result {
+            Err(CwrParseError::BadFormat(msg)) => {
+                assert!(msg.contains("Invalid CWR version in header: 9.9"));
+            }
+            _ => assert!(false, "Expected BadFormat error"),
+        }
+    }
+
+    #[test]
+    fn test_parse_cwr_line_too_short() {
+        let context = ParsingContext { cwr_version: 2.2, file_id: 0 };
+        let result = parse_cwr_line("AB", 1, &context);
+        assert!(result.is_err());
+        match result {
+            Err(CwrParseError::BadFormat(msg)) => {
+                assert_eq!(msg, "Line 1 is too short (less than 3 chars)");
+            }
+            _ => assert!(false, "Expected BadFormat error"),
+        }
+    }
+
+    #[test]
+    fn test_parse_cwr_line_unknown_record_type() {
+        let context = ParsingContext { cwr_version: 2.2, file_id: 0 };
+        let result = parse_cwr_line("XYZ00000001000000012005010112000000001000000001NWR", 1, &context);
+        assert!(result.is_err());
+        match result {
+            Err(CwrParseError::BadFormat(msg)) => {
+                assert_eq!(msg, "Unrecognized record type 'XYZ'");
+            }
+            _ => assert!(false, "Expected BadFormat error"),
+        }
+    }
+
+    #[test]
+    fn test_parse_cwr_line_valid_hdr() {
+        let context = ParsingContext { cwr_version: 2.0, file_id: 0 };
+        // Real HDR line from TestSample.V21
+        let line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221";
+        let result = parse_cwr_line(line, 1, &context);
+        assert!(result.is_ok());
+        let parsed = result.unwrap();
+        assert_eq!(parsed.line_number, 1);
+        assert_eq!(parsed.record.record_type(), "HDR");
+    }
+
+    #[test]
+    fn test_cwr_record_type_mapping() {
+        use crate::domain_types::Date;
+        use crate::records::HdrRecord;
+        use chrono::NaiveDate;
+
+        let hdr = HdrRecord {
+            record_type: "HDR".to_string(),
+            sender_type: "01".to_string(),
+            sender_id: "BMI".to_string(),
+            sender_name: "BMI MUSIC".to_string(),
+            edi_standard_version_number: "01.10".to_string(),
+            creation_date: Date(NaiveDate::from_ymd_opt(2005, 1, 1)),
+            creation_time: "120000".to_string(),
+            transmission_date: Date(NaiveDate::from_ymd_opt(2005, 1, 1)),
+            character_set: None,
+            version: None,
+            revision: None,
+            software_package: None,
+            software_package_version: None,
+        };
+        let cwr_record = CwrRegistry::Hdr(hdr);
+        assert_eq!(cwr_record.record_type(), "HDR");
+    }
+
+    fn create_temp_cwr_file(content: &str) -> Result<String, std::io::Error> {
+        let temp_dir = std::env::temp_dir();
+        let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "System time error"))?.as_nanos();
+        let thread_id = std::thread::current().id();
+        let file_path = temp_dir.join(format!("test_{}_{:?}.cwr", timestamp, thread_id));
+        let mut file = File::create(&file_path)?;
+        file.write_all(content.as_bytes())?;
+        file.flush()?;
+        drop(file);
+        Ok(file_path.to_string_lossy().to_string())
+    }
+
+    #[test]
+    fn test_process_cwr_stream_empty_file() {
+        let temp_file = create_temp_cwr_file("").unwrap();
+        let result = process_cwr_stream(&temp_file);
+        assert!(result.is_err());
+        match result {
+            Err(CwrParseError::BadFormat(msg)) => {
+                assert_eq!(msg, "File is empty");
+            }
+            _ => assert!(false, "Expected BadFormat error"),
+        }
+        fs::remove_file(&temp_file).ok();
+    }
+
+    #[test]
+    fn test_process_cwr_stream_no_hdr() {
+        let content = "TRL00000001000000012005010100";
+        let temp_file = create_temp_cwr_file(content).unwrap();
+        let result = process_cwr_stream(&temp_file);
+        assert!(result.is_err());
+        match result {
+            Err(CwrParseError::BadFormat(msg)) => {
+                assert!(msg.starts_with("File does not start with HDR record"));
+            }
+            _ => assert!(false, "Expected BadFormat error"),
+        }
+        fs::remove_file(&temp_file).ok();
+    }
+
+    #[test]
+    fn test_process_cwr_stream_valid_file() {
+        let content = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221\nGRHNWR0000102.100000000000  \nTRL00000002000000022022122100                                                                                                                                                                                                                                                                                                                                                                                   ";
+        let temp_file = create_temp_cwr_file(content).unwrap();
+        let result = process_cwr_stream(&temp_file);
+        assert!(result.is_ok());
+
+        let records: Vec<_> = result.unwrap().collect();
+        assert_eq!(records.len(), 3);
+
+        assert!(records[0].is_ok());
+        assert!(records[1].is_ok());
+        assert!(records[2].is_ok());
+
+        let first_record = records[0].as_ref().unwrap();
+        assert_eq!(first_record.line_number, 1);
+        assert_eq!(first_record.record.record_type(), "HDR");
+        assert_eq!(first_record.context.cwr_version, 2.1);
+
+        let second_record = records[1].as_ref().unwrap();
+        assert_eq!(second_record.line_number, 2);
+        assert_eq!(second_record.record.record_type(), "GRH");
+
+        fs::remove_file(&temp_file).ok();
+    }
+
+    #[test]
+    fn test_process_cwr_stream_empty_line() {
+        let content = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221\n\nTRL00000002000000022022122100                                                                                                                                                                                                                                                                                                                                                                                   ";
+        let temp_file = create_temp_cwr_file(content).unwrap();
+        let result = process_cwr_stream(&temp_file);
+        assert!(result.is_ok());
+
+        let records: Vec<_> = result.unwrap().collect();
+        assert_eq!(records.len(), 3);
+
+        assert!(records[0].is_ok());
+        assert!(records[1].is_err());
+        assert!(records[2].is_ok());
+
+        match &records[1] {
+            Err(CwrParseError::BadFormat(msg)) => {
+                assert_eq!(msg, "Line 2 is empty");
+            }
+            _ => assert!(false, "Expected BadFormat error for empty line"),
+        }
+
+        fs::remove_file(&temp_file).ok();
+    }
+
+    #[test]
+    fn test_process_cwr_stream_real_sample() {
+        // Test with actual sample file
+        let result = process_cwr_stream("../../.me/TestSample.V21");
+        assert!(result.is_ok());
+
+        let records: Vec<_> = result.unwrap().take(10).collect(); // Just test first 10 records
+        assert!(!records.is_empty());
+
+        // Verify first record is HDR
+        assert!(records[0].is_ok());
+        let first_record = records[0].as_ref().unwrap();
+        assert_eq!(first_record.record.record_type(), "HDR");
+        assert_eq!(first_record.context.cwr_version, 2.1);
+    }
 }

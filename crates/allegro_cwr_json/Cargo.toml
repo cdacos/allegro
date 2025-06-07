@@ -1,0 +1,9 @@
+[package]
+name = "allegro_cwr_json"
+version = "0.1.0"
+edition = "2024"
+description = "JSON output handler for CWR (Common Works Registration) files"
+
+[dependencies]
+allegro_cwr = { path = "../allegro_cwr" }
+serde_json = "1.0"

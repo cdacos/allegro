@@ -2,7 +2,15 @@
 <module type="EMPTY_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/allegro-cwr-sqlite/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/allegro-cwr/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/allegro/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/allegro_cwr/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/allegro_cwr/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/allegro_cwr_derive/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/allegro_cwr_json/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/allegro_cwr_sqlite/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/allegro_cwr_types/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
