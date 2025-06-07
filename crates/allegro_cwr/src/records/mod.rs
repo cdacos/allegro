@@ -104,6 +104,8 @@ pub use trl::TrlRecord;
 pub use ver::VerRecord;
 pub use xrf::XrfRecord;
 
+// Records now use #[cwr(validator = function_name)] for custom validation
+
 #[cfg(test)]
 mod tests {
     use super::*;
