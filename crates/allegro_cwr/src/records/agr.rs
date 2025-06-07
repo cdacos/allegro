@@ -65,4 +65,3 @@ pub struct AgrRecord {
     #[cwr(title = "Society assigned agreement number (optional, v2.1+)", start = 107, len = 14)]
     pub society_assigned_agreement_number: Option<String>,
 }
-

@@ -1,4 +1,7 @@
-use crate::{AckRecord, AgrRecord, AltRecord, AriRecord, ComRecord, EwtRecord, GrhRecord, GrtRecord, HdrRecord, IndRecord, InsRecord, IpaRecord, MsgRecord, NatRecord, NetRecord, NowRecord, NpaRecord, NpnRecord, NprRecord, NwnRecord, NwrRecord, OrnRecord, PerRecord, PwrRecord, RecRecord, SptRecord, SpuRecord, SwrRecord, SwtRecord, TerRecord, TrlRecord, VerRecord, XrfRecord};
+use crate::{
+    AckRecord, AgrRecord, AltRecord, AriRecord, ComRecord, EwtRecord, GrhRecord, GrtRecord, HdrRecord, IndRecord, InsRecord, IpaRecord, MsgRecord, NatRecord, NetRecord, NowRecord, NpaRecord, NpnRecord, NprRecord, NwnRecord, NwrRecord, OrnRecord, PerRecord, PwrRecord, RecRecord, SptRecord, SpuRecord, SwrRecord,
+    SwtRecord, TerRecord, TrlRecord, VerRecord, XrfRecord,
+};
 
 /// Enum containing all possible parsed CWR record types
 #[derive(Debug, Clone, serde::Serialize)]

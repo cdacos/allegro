@@ -2,8 +2,6 @@
 //!
 //! This crate provides JSON output functionality for CWR records.
 
-use serde_json;
-
 /// JSON implementation of CwrHandler trait
 pub struct JsonHandler {
     output_count: usize,
@@ -55,10 +53,7 @@ impl allegro_cwr::CwrHandler for JsonHandler {
         match serde_json::to_string_pretty(&record_without_context) {
             Ok(json_str) => {
                 // Indent the JSON to match our array formatting
-                let indented_json = json_str.lines()
-                    .map(|line| format!("    {}", line))
-                    .collect::<Vec<_>>()
-                    .join("\n");
+                let indented_json = json_str.lines().map(|line| format!("    {}", line)).collect::<Vec<_>>().join("\n");
                 println!("{}", indented_json);
             }
             Err(e) => {

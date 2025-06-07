@@ -6,7 +6,9 @@ use serde::{Deserialize, Serialize};
 
 /// ORN - Work Origin Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(test_data = "ORN0000000100000002LSAMPLE PRODUCTION                                                                                                                                                                                    2022123456789012345678901234567890123456789012345612345678901234561234567890123456ABC123456789012345678912345678901234567890123456701234567890123456789 1")]
+#[cwr(
+    test_data = "ORN0000000100000002LSAMPLE PRODUCTION                                                                                                                                                                                    2022123456789012345678901234567890123456789012345612345678901234561234567890123456ABC123456789012345678912345678901234567890123456701234567890123456789 1"
+)]
 pub struct OrnRecord {
     #[cwr(title = "Always 'ORN'", start = 0, len = 3)]
     pub record_type: String,

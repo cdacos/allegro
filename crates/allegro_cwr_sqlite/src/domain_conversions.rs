@@ -7,7 +7,6 @@ pub trait CwrToSqlString {
     fn to_sql_string(&self) -> String;
 }
 
-
 impl CwrToSqlString for Date {
     fn to_sql_string(&self) -> String {
         self.as_str()

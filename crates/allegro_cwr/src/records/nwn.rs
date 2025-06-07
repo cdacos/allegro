@@ -6,7 +6,9 @@ use serde::{Deserialize, Serialize};
 
 /// NWN - Non-Roman Alphabet Writer Name Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(test_data = "NWN0000000100000001123456789WRITER LAST NAME                                                                                                                                                                                                                                                                                                                                                                                                     EN  ")]
+#[cwr(
+    test_data = "NWN0000000100000001123456789WRITER LAST NAME                                                                                                                                                                                                                                                                                                                                                                                                     EN  "
+)]
 pub struct NwnRecord {
     #[cwr(title = "Always 'NWN'", start = 0, len = 3)]
     pub record_type: String,

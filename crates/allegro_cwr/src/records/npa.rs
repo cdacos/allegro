@@ -6,7 +6,9 @@ use serde::{Deserialize, Serialize};
 
 /// NPA - Non-Roman Alphabet Publisher Name Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(test_data = "NPA000000010000000212345678 PLACEHOLDER INTERESTED PARTY NAME                                                                                                                               PLACEHOLDER FIRST NAME                                                                                                                                          EN")]
+#[cwr(
+    test_data = "NPA000000010000000212345678 PLACEHOLDER INTERESTED PARTY NAME                                                                                                                               PLACEHOLDER FIRST NAME                                                                                                                                          EN"
+)]
 pub struct NpaRecord {
     #[cwr(title = "Always 'NPA'", start = 0, len = 3)]
     pub record_type: String,

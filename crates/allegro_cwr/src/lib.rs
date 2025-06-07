@@ -3,12 +3,12 @@
 //! This library provides core functionality to parse CWR files. For database storage,
 //! see the `allegro_cwr_sqlite` crate. For JSON output, see the `allegro_cwr_json` crate.
 
+pub mod cwr_record;
 pub mod domain_types;
 pub mod error;
 pub mod parser;
 pub mod records;
 pub mod util;
-pub mod cwr_record;
 
 #[derive(Debug, Clone)]
 pub enum OutputFormat {

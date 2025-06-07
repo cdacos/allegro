@@ -43,8 +43,6 @@ impl WorksCount {
     }
 }
 
-
-
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub enum YesNo {
     Yes,
@@ -87,7 +85,6 @@ impl CwrFieldParse for Option<String> {
         if trimmed.is_empty() { (None, vec![]) } else { (Some(trimmed.to_string()), vec![]) }
     }
 }
-
 
 // Implement CwrFieldParse for YesNo
 impl CwrFieldParse for YesNo {

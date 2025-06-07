@@ -15,15 +15,14 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
         _ => panic!("CwrRecord can only be derived for structs"),
     };
 
-    let test_data = extract_test_data(&input.attrs)
-        .expect("CwrRecord requires #[cwr(test_data = \"...\")] attribute");
+    let test_data = extract_test_data(&input.attrs).expect("CwrRecord requires #[cwr(test_data = \"...\")] attribute");
     let field_parsers = fields.iter().map(|field| {
         let field_name = field.ident.as_ref().unwrap();
         let field_type = &field.ty;
         let (title, start, len, skip_parse) = extract_field_attrs(&field.attrs);
 
         let field_name_str = field_name.to_string();
-        
+
         if field_name_str == "record_type" {
             // For record_type field, use the actual record type from the line
             quote! {
@@ -116,7 +115,7 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
                         "Line too short to contain record type".to_string()
                     ));
                 }
-                
+
                 let (record, warnings) = Self::parse(line);
 
                 // Convert CwrWarning to String for compatibility
@@ -165,12 +164,7 @@ fn extract_field_attrs(attrs: &[syn::Attribute]) -> (String, usize, usize, bool)
         if attr.path().is_ident("cwr") {
             let result: Result<CwrFieldAttribute, _> = attr.parse_args();
             if let Ok(field_attr) = result {
-                return (
-                    field_attr.title.value(), 
-                    field_attr.start.base10_parse().unwrap(), 
-                    field_attr.len.base10_parse().unwrap(),
-                    field_attr.skip_parse
-                );
+                return (field_attr.title.value(), field_attr.start.base10_parse().unwrap(), field_attr.len.base10_parse().unwrap(), field_attr.skip_parse);
             }
         }
     }
@@ -220,23 +214,23 @@ impl syn::parse::Parse for CwrFieldAttribute {
 
         while !input.is_empty() {
             let ident: syn::Ident = input.parse()?;
-            
+
             match ident.to_string().as_str() {
                 "title" => {
                     input.parse::<syn::Token![=]>()?;
                     title = Some(input.parse()?);
-                },
+                }
                 "start" => {
                     input.parse::<syn::Token![=]>()?;
                     start = Some(input.parse()?);
-                },
+                }
                 "len" => {
                     input.parse::<syn::Token![=]>()?;
                     len = Some(input.parse()?);
-                },
+                }
                 "skip_parse" => {
                     skip_parse = true;
-                },
+                }
                 _ => return Err(syn::Error::new(ident.span(), "Unknown field attribute")),
             }
 
@@ -245,11 +239,6 @@ impl syn::parse::Parse for CwrFieldAttribute {
             }
         }
 
-        Ok(CwrFieldAttribute { 
-            title: title.ok_or_else(|| input.error("Missing 'title' attribute"))?, 
-            start: start.ok_or_else(|| input.error("Missing 'start' attribute"))?, 
-            len: len.ok_or_else(|| input.error("Missing 'len' attribute"))?,
-            skip_parse
-        })
+        Ok(CwrFieldAttribute { title: title.ok_or_else(|| input.error("Missing 'title' attribute"))?, start: start.ok_or_else(|| input.error("Missing 'start' attribute"))?, len: len.ok_or_else(|| input.error("Missing 'len' attribute"))?, skip_parse })
     }
 }
