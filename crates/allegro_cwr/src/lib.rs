@@ -7,6 +7,7 @@ mod cwr_handler;
 pub mod cwr_registry;
 pub mod domain_types;
 pub mod error;
+pub mod lookups;
 pub mod parser;
 pub mod records;
 pub mod util;

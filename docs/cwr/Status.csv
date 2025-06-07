@@ -1,0 +1,14 @@
+﻿Status,Description,ACK Type
+Conflict,"The status assigned to a transaction that has been received, has passed all validity checks, but does not agree with information previously submitted from another Submitter.",ACK2
+Transaction Accepted,"The transaction has passed all of the mandatory edits. Any field and record rejects, and status re possible duplicate works will be noted in messages.",ACK1
+Registration Accepted – Not Ready for Payment,"The status code which indicates that the submitted claim was accepted, no changes were made to the submitted claim data (other than the possible addition of IPI Name Numbers or an ISWC). However the work share may not yet be “ready for payment”.",ACK2
+Registration Accepted with Changes – Not Ready for Payment,"The status code which indicates that the submitted claim was accepted, but changes were made to changes to the submitted claim data (other than the addition of IPI Name Numbers or an ISWC), Furthermore the work share is not yet “ready for payment”.",ACK2
+Registration Accepted – Ready for Payment,"The status code which indicates that the submitted claim was accepted, no changes were made to changes to the submitted claim data (other than the addition of IPI Name Numbers or an ISWC). Furthermore the work share is “ready for payment”.",ACK2
+Registration Accepted with Changes –Ready for Payment,"The status code which indicates that the submitted claim was accepted, but changes were made to changes to the submitted claim data (other than the addition of IPI Name Numbers or an ISWC), Furthermore the work share is “ready for payment”.",ACK2
+Rejected,The status assigned to a transaction that does not meet the technical or editi requirements,ACK1
+No Participation,This status code indicates that no claim relevant to the Recipient can be found in the transaction. Specifically that there is no relevant recipient code or TIS claim on an SPU/SPT record.,ACK1
+De-registered,The publisher’s claim to this work has been de- registered.,ACK2
+Unknown Work in DRW,The Recipient has no record of the Submitter’s claim to the work sent in a DRW transaction.,ACK2
+Unable to De-register,The Recipient was unable to retract the Submitter’s claim to the work sent in a DRW transaction.,ACK2
+No Society Agreement Number,The transaction was rejected as no Society Agreement Number was supplied where one was required by an edit.,ACK1
+Wrong Society Agreement Number,The transaction was rejection as Society Agreement Number was supplied but it is either an invalid number or does not relate to the interested parties on the submitted work.,ACK1

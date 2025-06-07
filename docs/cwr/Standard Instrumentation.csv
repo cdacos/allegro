@@ -1,0 +1,51 @@
+Name,Code,Definition,Other
+Audience,AUD,,Audience
+Band,BND,"Large group of woodwinds and brass with optional percussion, keyboard, and double bass",Band
+Brass Band,BBA,Large group of brasses (approximately 25 players) with optional percussion,Brass Band
+Brass Choir,BRC,Group of brasses with optional percussion (usually 10-20 players),Brass Choir
+Brass Quartet,BQU,"2 trumpets, horn, trombone or tuba",Brass Quartet
+Brass Quintet,BQN,"2 trumpets, horn, trombone, tuba",Brass Quintet
+Brass Sextet,BXT,"2 trumpets, 2 horns, trombone, tuba",Brass Sextet
+Brass Trio,BTR,"Trumpet, horn, trombone",Brass Trio
+Chamber Ensemble,CEN,Mixed group of single players on a part; does not denote size of group,Chamber Ensemble
+Chorus,CHO,Multiple voices on a part,Chorus
+Chorus and Orchestra,CAO,Multiple voices with orchestra,Chorus and Orchestra
+"Chorus, Boys’",BCH,Multiple boys’ voices on a part,"Chorus, Boys'"
+"Chorus, Children’s",CCH,Multiple treble voices on a part,"Chorus, Children's"
+"Chorus, Double",DCH,Two choruses,"Chorus, Double"
+"Chorus, Men’s",MCH,Multiple men’s voices on a part,"Chorus, Men's"
+"Chorus, Mixed",MXC,Multiple voices on a part (usually SATB),"Chorus, Mixed"
+"Chorus, Treble",TCH,Multiple children’s voices on a part,"Chorus, Treble"
+"Chorus, Unison",UCH,Multiple voices on a single part,"Chorus, Unison"
+"Chorus, Women's",WCH,Multiple women’s voices on a part,"Chorus, Women's"
+"Chorus, Youth",YCH,Multiple young voices on a part,"Chorus, Youth"
+Clarinet Choir,CLC,Multiple clarinets (usually 10-20),Clarinet Choir
+Clarinet Quintet,CQN,Clarinet and string quartet,Clarinet Quintet
+Concert Band,CBA,"Large group of woodwinds and brass with optional percussion, keyboard, and double bass",Concert Band
+Flute Choir,FLC,Multiple flutes (usually 10-20),Flute Choir
+Gamelan,GML,"Indonesian percussion ensemble, usually including gongs, chimes, mallet percussion, and drums",Gamelan
+Guitar Quartet,GQT,4 guitars,Guitar Quartet
+Horn Choir,HNC,Multiple horns (10-20 players),Horn Choir
+Jazz Ensemble,JZE,"Multiple saxophones, trumpets, trombones with rhythm section of piano, double bass, drum set, guitar",Jazz Ensemble
+Oboe Quartet,OQU,Oboe and string trio,Oboe Quartet
+"Orchestra, Chamber",COR,Orchestra with fewer winds and strings than full orchestra (usually 20-25 players),"Orchestra, Chamber"
+"Orchestra, Full",ORC,"Large group of multiple strings with woodwinds, brass and percussion","Orchestra, Full"
+"Orchestra, String",SOR,Multiple strings on a part (usually 16 or more),"Orchestra, String"
+Percussion Ensemble,PCE,Multiple players on various instruments,Percussion Ensemble
+Piano Duo,PDU,2 pianists on two pianos,Piano Duo
+Piano Four Hands,PFH,2 pianists on one piano,Piano Four Hands
+Piano Quartet,PQU,Piano and string trio,Piano Quartet
+Piano Quintet,PQN,Piano and string quartet,Piano Quintet
+Piano Trio,PTR,"Violin, cello, piano",Piano Trio
+Saxophone Quartet,SQT,4 saxophones,Saxophone Quartet
+String Octet,SOC,Double string quartet,String Octet
+String Quartet,SQU,"2 violins, viola, cello",String Quartet
+String Quintet,SQN,"2 violins, viola, cello and one other stringed instrument",String Quintet
+String Trio,SGT,"Violin, viola, cello",String Trio
+Symphonic Band,SBA,"Large group of woodwinds and brass with optional percussion, keyboard, and double bass",Symphonic Band
+Trombone Choir,TBC,Multiple trombones (usually 10-20),Trombone Choir
+Trumpet Choir,TPC,Multiple trumpets (usually 10-20),Trumpet Choir
+Tuba Choir,TUC,Multiple tubas (usually 10-20),Tuba Choir
+Wind Ensemble,WEN,"Large group of woodwinds and brass with optional percussion, keyboard, and double bass",Wind Ensemble
+Woodwind Quartet,WQR,"Flute, oboe, clarinet, bassoon",Woodwind Quartet
+Woodwind Quintet,WQN,"Flute, oboe, clarinet, bassoon, horn",Woodwind Quintet

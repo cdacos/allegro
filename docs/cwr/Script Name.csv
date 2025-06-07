@@ -1,0 +1,199 @@
+Name,Code,Definition
+Adlam,Adlm ,166
+Afaka,Afak ,439
+Caucasian Albanian,Aghb ,239
+"Ahom, Tai Ahom",Ahom ,338
+Arabic,Arab ,160
+Arabic (Nastaliq variant),Aran ,161
+Imperial Aramaic,Armi ,124
+Armenian,Armn ,230
+Avestan,Avst ,134
+Balinese,Bali ,360
+Bamum,Bamu ,435
+Bassa Vah,Bass ,259
+Batak,Batk ,365
+Bengali (Bangla),Beng ,325
+Bhaiksuki,Bhks ,334
+Blissymbols,Blis ,550
+Bopomofo,Bopo ,285
+Brahmi,Brah ,300
+Braille,Brai ,570
+Buginese,Bugi ,367
+Buhid,Buhd ,372
+Chakma,Cakm ,349
+Unified Canadian Aboriginal Syllabics,Cans ,440
+Carian,Cari ,201
+Cham,Cham ,358
+Cherokee,Cher ,445
+Cirth,Cirt ,291
+Coptic,Copt ,204
+Cypro-Minoan,Cpmn ,402
+Cypriot syllabary,Cprt,403
+Cyrillic,Cyrl,220
+Cyrillic (Old Church Slavonic variant),Cyrs,221
+Devanagari (Nagari),Deva,315
+Dogra,Dogr,328
+Deseret (Mormon),Dsrt,250
+"Duployan shorthand, Duployan stenography",Dupl,755
+Egyptian demotic,Egyd,70
+Egyptian hieratic,Egyh,60
+Egyptian hieroglyphs,Egyp,50
+Elbasan,Elba,226
+Ethiopic (Geʻez),Ethi,430
+Khutsuri (Asomtavruli and Nuskhuri),Geok,241
+Georgian (Mkhedruli and Mtavruli),Geor,240
+Glagolitic,Glag,225
+Gunjala Gondi,Gong,312
+Masaram Gondi,Gonm,313
+Gothic,Goth,206
+Grantha,Gran,343
+Greek,Grek,200
+Gujarati,Gujr,320
+Gurmukhi,Guru,310
+Han with Bopomofo (alias for Han + Bopomofo),Hang,286
+"Hangul (Hangŭl, Hangeul)",Hani,500
+"Han (Hanzi, Kanji, Hanja)",Hano,371
+Hanunoo (Hanunóo),Hans,501
+Han (Simplified variant),Hant,502
+Han (Traditional variant),Hatr,127
+Hatran,Hebr,125
+Hebrew,Hira,410
+Hiragana,Hanb,503
+"Anatolian Hieroglyphs (Luwian Hieroglyphs, Hittite Hieroglyphs)",Hmng,450
+Pahawh Hmong,Hmnp,451
+Nyiakeng Puachue Hmong,Hrkt,412
+Japanese syllabaries (alias for Hiragana + Katakana),Hung,176
+Old Hungarian (Hungarian Runic),Inds,610
+Indus (Harappan),Ital,210
+"Old Italic (Etruscan, Oscan, etc.)",Jamo,284
+Jamo (alias for Jamo subset of Hangul),Java,361
+Javanese,Jurc,510
+Japanese (alias for Han + Hiragana + Katakana),Kali,357
+Jurchen,Kana,411
+Kayah Li,Khar,305
+Katakana,Khmr,355
+Kharoshthi,Khoj,322
+Khmer,Kitl,505
+Khojki,Kits,288
+Khitan large script,Knda,345
+Khitan small script,Kore,287
+Kannada,Kpel,436
+Korean (alias for Hangul + Han),Kthi,317
+Kpelle,Lana,351
+Kaithi,Laoo,356
+Tai Tham (Lanna),Latf,217
+Lao,Latg,216
+Latin (Fraktur variant),Latn,215
+Latin (Gaelic variant),Leke,364
+Latin,Lepc,335
+Leke,Limb,336
+Lepcha (Róng),Hluw,80
+Limbu,Jpan,413
+Linear A,Lina,400
+Linear B,Linb,401
+Lisu (Fraser),Lisu,399
+Loma,Loma,437
+Lycian,Lyci,202
+Lydian,Lydi,116
+Mahajani,Mahj,314
+Makasar,Maka,366
+"Mandaic, Mandaean",Mand,140
+Manichaean,Mani,139
+Marchen,Marc,332
+Mayan hieroglyphs,Maya,90
+"Medefaidrin (Oberi Okaime, Oberi Ɔkaimɛ)",Medf,265
+Mende Kikakui,Mend,438
+Meroitic Cursive,Merc,101
+Meroitic Hieroglyphs,Mero,100
+Malayalam,Mlym,347
+"Modi, Moḍī",Modi,324
+Mongolian,Mong,145
+"Moon (Moon code, Moon script, Moon type)",Moon,218
+"Mro, Mru",Mroo,264
+"Meitei Mayek (Meithei, Meetei)",Mtei,337
+Multani,Mult,323
+Myanmar (Burmese),Mymr,350
+Old North Arabian (Ancient North Arabian),Nbat,159
+Nabataean,Newa,333
+"Newa, Newar, Newari, Nepāla lipi",Narb,106
+"Naxi Dongba (na21ɕi33 to33ba21, NakhiTomba)",Nkdb,85
+"Nakhi Geba (na21ɕi33 gʌ21ba21, 'Na-'Khi 2Ggŏ-1baw, Nakhi Geba)",Nkgb,420
+N’Ko,Nkoo,165
+Nüshu,Nshu,499
+Ogham,Ogam,212
+"Ol Chiki (Ol Cemet’, Ol, Santali)",Olck,261
+"Old Turkic, Orkhon Runic",Orkh,175
+Oriya (Odia),Orya,327
+Osage,Osge,219
+Osmanya,Osma,260
+Palmyrene,Palm,126
+Pau Cin Hau,Pauc,263
+Old Permic,Perm,227
+Phags-pa,Phag,331
+Inscriptional Pahlavi,Phli,131
+Psalter Pahlavi,Phlp,132
+Book Pahlavi,Phlv,133
+Phoenician,Phnx,115
+Klingon (KLI pIqaD),Piqd,293
+Miao (Pollard),Plrd,282
+Inscriptional Parthian,Prti,130
+Reserved for private use (start),Qaaa,900
+(Private use),Qaai,908
+Reserved for private use (end),Qabx,949
+"Rejang (Redjang, Kaganga)",Rjng,363
+Hanifi Rohingya,Rohg,167
+Rongorongo,Roro,620
+Runic,Runr,211
+Samaritan,Samr,123
+Sarati,Sara,292
+Old South Arabian,Sarb,105
+Saurashtra,Saur,344
+SignWriting,Sgnw,95
+Shavian (Shaw),Shaw,281
+"Sharada, Śāradā",Shrd,319
+Shuishu,Shui,530
+"Siddham, Siddhaṃ, Siddhamātṛkā",Sidd,302
+"Khudawadi, Sindhi",Sind,318
+Sinhala,Sinh,348
+Sogdian,Sogd,141
+Old Sogdian,Sogo,142
+Sora Sompeng,Sora,398
+Soyombo,Soyo,329
+Sundanese,Sund,362
+Syloti Nagri,Sylo,316
+Syriac,Syrc,135
+Syriac (Estrangelo variant),Syre,138
+Syriac (Western variant),Syrj,137
+Syriac (Eastern variant),Syrn,136
+Tagbanwa,Tagb,373
+"Takri, Ṭākrī, Ṭāṅkrī",Takr,321
+Tai Le,Tale,353
+New Tai Lue,Talu,354
+Tamil,Taml,346
+Tangut,Tang,520
+Tai Viet,Tavt,359
+Telugu,Telu,340
+Tengwar,Teng,290
+Tifinagh (Berber),Tfng,120
+"Tagalog (Baybayin, Alibata)",Tglg,370
+Thaana,Thaa,170
+Thai,Thai,352
+Tibetan,Tibt,330
+Tirhuta,Tirh,326
+Ugaritic,Ugar,40
+Vai,Vaii,470
+Visible Speech,Visp,280
+Warang Citi (Varang Kshiti),Wara,262
+Wancho,Wcho,283
+Woleai,Wole,480
+Old Persian,Xpeo,30
+"Cuneiform, Sumero-Akkadian",Xsux,20
+Yi,Yiii,460
+"Zanabazar Square (Zanabazarin Dörböljin Useg, Xewtee Dörböljin Bicig, Horizontal Square Script)",Zanb,339
+Code for inherited script,Zinh,994
+Mathematical notation,Zmth,995
+Symbols,Zsym,996
+Symbols (emoji variant),Zsye,993
+Code for unwritten documents,Zxxx,997
+Code for undetermined script,Zyyy,998
+Code for uncoded script,Zzzz,999

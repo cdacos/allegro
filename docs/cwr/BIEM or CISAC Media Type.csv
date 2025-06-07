@@ -1,0 +1,52 @@
+Name,Code,Definition
+45 rpm 17 cm Single,S,VINYL
+45 rpm 17 cm EP,EP,VINYL
+45 rpm (12 inches) Maxi Single,DS,VINYL
+Disco Single Remix (12 inches),RDS,VINYL
+Maxi Single Remix (7 inches),RMS,VINYL
+LP 33 rpm 17cm EP,EPM,VINYL
+LP 33 rpm 25 cm,MLP,VINYL
+LP 33 rpm 30 cm,LP,VINYL
+LP Compilation,LP2,VINYL
+LP identical to a CD,LP3,VINYL
+LP Compilation identical to a CD Compilation,LP4,VINYL
+CD Single 2 tracks,SCD,COMPACT DISC
+CD Singles 3&5 inches,CDS,COMPACT DISC
+CD Maxi-single,CDM,COMPACT DISC
+CD Maxi single remix,RCD,COMPACT DISC
+CD-LP (5 inches),CD,COMPACT DISC
+CD Compilation,CD2,COMPACT DISC
+SACD,SA,COMPACT DISC
+SACD Compilation,SA2,COMPACT DISC
+CD Extra Single 2 tracks,CES,CD-EXTRA
+CD Extra Single,CXS,CD-EXTRA
+CD Extra Maxi Single,CXM,CD-EXTRA
+CD Extra Maxi Remix,RCE,CD-EXTRA
+CD Extra EP,CEP,CD-EXTRA
+CD Extra LP,CE,CD-EXTRA
+CD Extra Compilation,CE2,CD-EXTRA
+MC single,SMC,MUSICASSETTE
+MC single identical to a CDS,SM2,MUSICASSETTE
+MC maxi,MMC,MUSICASSETTE
+MC EP,EMC,MUSICASSETTE
+MC Remix,RMC,MUSICASSETTE
+MC,MCP,MUSICASSETTE
+MC LP,MC,MUSICASSETTE
+MC Compilation,MC2,MUSICASSETTE
+MC identical to a CD,MC3,MUSICASSETTE
+MC Compilation identical to a CD compilation,MC4,MUSICASSETTE
+Double MC,DMC,MUSICASSETTE
+MD Single/ Maxi Single,MDS,MINIDISC
+MD Maxi Remix,MDR,MINIDISC
+MD EP,MDP,MINIDISC
+MD,MD,MINIDISC
+MD Compilation,MD2,MINIDISC
+DCC,DC,DIGITAL COMPACT CASSETTE
+DCC Compilation,DC2,DIGITAL COMPACT CASSETTE
+DVD-Audio,DV1,DVD
+DVD-Video,DV2,DVD
+DVD-Rom,DV3,DVD
+DVD-Single,DV4,DVD
+Downloading of a title,DW,DOWNLOADING
+Downloading of a Single/Maxi Single,DM,DOWNLOADING
+Downloading of LP,DL,DOWNLOADING
