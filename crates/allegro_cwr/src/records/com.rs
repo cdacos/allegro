@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 /// COM - Composite Component Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
 #[cwr(
+    validator = com_custom_validate,
     test_data = "COM0000000100000002PLACEHOLDER TITLE                                    12345678901234567890PLACEHOLDER WRITER                      FIRSTNAME           12345678901PLACEHOLDER WRITER 2                     FIRSTNAME 2         123456789011234567890123456789012345                                                                                        "
 )]
 pub struct ComRecord {
@@ -27,7 +28,7 @@ pub struct ComRecord {
     pub submitter_work_num: Option<String>,
 
     #[cwr(title = "Duration HHMMSS (optional)", start = 104, len = 6)]
-    pub duration: Option<String>,
+    pub duration: Option<Duration>,
 
     #[cwr(title = "Writer 1 last name", start = 110, len = 45)]
     pub writer_1_last_name: String,
@@ -52,4 +53,35 @@ pub struct ComRecord {
 
     #[cwr(title = "Writer 2 IPI base number (optional)", start = 295, len = 13)]
     pub writer_2_ipi_base_number: Option<String>,
+}
+
+// Custom validation function for COM record
+fn com_custom_validate(record: &mut ComRecord) -> Vec<CwrWarning<'static>> {
+    let mut warnings = Vec::new();
+
+    // Business rule: Title cannot be empty
+    if record.title.trim().is_empty() {
+        warnings.push(CwrWarning { field_name: "title", field_title: "Title", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Component title cannot be empty".to_string() });
+    }
+
+    // Business rule: Writer 1 last name cannot be empty (required field)
+    if record.writer_1_last_name.trim().is_empty() {
+        warnings.push(CwrWarning { field_name: "writer_1_last_name", field_title: "Writer 1 last name", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Writer 1 last name cannot be empty".to_string() });
+    }
+
+    // Business rule: ISWC format validation (if provided)
+    if let Some(ref iswc) = record.iswc_of_component {
+        let iswc_trimmed = iswc.trim();
+        if !iswc_trimmed.is_empty() && iswc_trimmed.len() != 11 {
+            warnings.push(CwrWarning { field_name: "iswc_of_component", field_title: "ISWC of component (optional)", source_str: std::borrow::Cow::Owned(iswc.clone()), level: WarningLevel::Warning, description: "ISWC should be exactly 11 characters (T-NNNNNNNN-C format)".to_string() });
+        }
+    }
+
+    // TODO: Additional business rules requiring broader context:
+    // - Must follow a NWR record with composite type (requires parsing context)
+    // - Component count must match the composite component count in NWR record (requires cross-record validation)
+    // - IPI Name Number must match IPI system entry if provided (requires IPI lookup)
+    // - IPI Base Number must match IPI system entry if provided (requires IPI lookup)
+
+    warnings
 }

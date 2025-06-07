@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 /// EWT - Entire Work Title for Excerpts Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
 #[cwr(
+    validator = ewt_custom_validate,
     test_data = "EWT0000000100000002PLACEHOLDER ENTIRE WORK TITLE                        1234567890 EN PLACEHOLDER WRITER 1                      FIRSTNAME 1         PLACEHOLDER SOURCE                                      12345678901123456789012PLACEHOLDER WRITER 2                     FIRSTNAME 2         123456789011234567890123456789012345                                                                                                                    "
 )]
 pub struct EwtRecord {
@@ -55,4 +56,49 @@ pub struct EwtRecord {
 
     #[cwr(title = "Submitter work number (optional)", start = 350, len = 14)]
     pub submitter_work_num: Option<String>,
+}
+
+// Custom validation function for EWT record
+fn ewt_custom_validate(record: &mut EwtRecord) -> Vec<CwrWarning<'static>> {
+    let mut warnings = Vec::new();
+
+    // Business rule: Entire work title cannot be empty
+    if record.entire_work_title.trim().is_empty() {
+        warnings.push(CwrWarning { field_name: "entire_work_title", field_title: "Entire work title", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Entire work title cannot be empty".to_string() });
+    }
+
+    // Business rule: ISWC format validation (if provided)
+    if let Some(ref iswc) = record.iswc_of_entire_work {
+        let iswc_trimmed = iswc.trim();
+        if !iswc_trimmed.is_empty() && iswc_trimmed.len() != 11 {
+            warnings.push(CwrWarning { field_name: "iswc_of_entire_work", field_title: "ISWC of entire work (optional)", source_str: std::borrow::Cow::Owned(iswc.clone()), level: WarningLevel::Warning, description: "ISWC should be exactly 11 characters (T-NNNNNNNN-C format)".to_string() });
+        }
+    }
+
+    // Business rule: Writer 1 last name should be provided if any writer 1 info is given
+    if ((record.writer_1_first_name.is_some() && record.writer_1_first_name.as_ref().is_some_and(|s| !s.trim().is_empty()))
+        || (record.writer_1_ipi_name_num.is_some() && record.writer_1_ipi_name_num.as_ref().is_some_and(|s| !s.trim().is_empty()))
+        || (record.writer_1_ipi_base_number.is_some() && record.writer_1_ipi_base_number.as_ref().is_some_and(|s| !s.trim().is_empty())))
+        && (record.writer_1_last_name.is_none() || record.writer_1_last_name.as_ref().is_none_or(|s| s.trim().is_empty()))
+    {
+        warnings.push(CwrWarning { field_name: "writer_1_last_name", field_title: "Writer 1 last name (optional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Warning, description: "Writer 1 last name should be provided when other writer 1 information is given".to_string() });
+    }
+
+    // Business rule: Writer 2 last name should be provided if any writer 2 info is given
+    if ((record.writer_2_first_name.is_some() && record.writer_2_first_name.as_ref().is_some_and(|s| !s.trim().is_empty()))
+        || (record.writer_2_ipi_name_num.is_some() && record.writer_2_ipi_name_num.as_ref().is_some_and(|s| !s.trim().is_empty()))
+        || (record.writer_2_ipi_base_number.is_some() && record.writer_2_ipi_base_number.as_ref().is_some_and(|s| !s.trim().is_empty())))
+        && (record.writer_2_last_name.is_none() || record.writer_2_last_name.as_ref().is_none_or(|s| s.trim().is_empty()))
+    {
+        warnings.push(CwrWarning { field_name: "writer_2_last_name", field_title: "Writer 2 last name (optional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Warning, description: "Writer 2 last name should be provided when other writer 2 information is given".to_string() });
+    }
+
+    // TODO: Additional business rules requiring broader context:
+    // - Must follow a NWR/REV record (requires parsing context)
+    // - Language codes must be valid ISO 639-1 codes (requires lookup table)
+    // - IPI Name Number must match IPI system entry if provided (requires IPI lookup)
+    // - IPI Base Number must match IPI system entry if provided (requires IPI lookup)
+    // - Entire work should not be the same as the current work (requires cross-record validation)
+
+    warnings
 }

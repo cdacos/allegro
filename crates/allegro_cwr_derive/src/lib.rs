@@ -2,6 +2,33 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{Data, DeriveInput, Fields, LitInt, LitStr, parse_macro_input};
 
+/// Derive macro for CWR record parsing with optional custom validation.
+///
+/// # Attributes
+/// - `codes`: Optional array of record codes this struct handles (e.g., `["NWR", "REV"]`)
+/// - `validator`: Optional custom validation function name
+/// - `test_data`: Required test data string for auto-generated tests (put last since it's long)
+///
+/// # Custom Validator
+/// If you specify `validator = my_function`, define it with this exact signature:
+/// ```rust,ignore
+/// fn my_function(record: &mut YourRecord) -> Vec<crate::domain_types::CwrWarning<'static>> {
+///     // Your validation logic here
+///     Vec::new()
+/// }
+/// ```
+///
+/// # Example
+/// ```rust,ignore
+/// #[derive(CwrRecord)]
+/// #[cwr(validator = hdr_custom_validate, test_data = "HDR...")]
+/// pub struct HdrRecord { /* fields */ }
+///
+/// fn hdr_custom_validate(record: &mut HdrRecord) -> Vec<CwrWarning<'static>> {
+///     // Custom validation logic
+///     Vec::new()
+/// }
+/// ```
 #[proc_macro_derive(CwrRecord, attributes(cwr))]
 pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -18,6 +45,7 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
     let test_data = extract_test_data(&input.attrs).expect("CwrRecord requires #[cwr(test_data = \"...\")] attribute");
     let record_codes = extract_record_codes(&input.attrs, name);
     let registry_variant = generate_registry_variant(name);
+    let validator_fn = extract_validator(&input.attrs);
     let field_parsers = fields.iter().map(|field| {
         let field_name = field.ident.as_ref().unwrap();
         let field_type = &field.ty;
@@ -71,6 +99,16 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
     let field_names = fields.iter().map(|f| &f.ident);
     let test_mod_name = quote::format_ident!("{}_generated_tests", name.to_string().to_lowercase());
 
+    let validator_implementation = if let Some(validator_fn) = validator_fn {
+        quote! {
+            #validator_fn(self)
+        }
+    } else {
+        quote! {
+            Vec::new()
+        }
+    };
+
     let _test_module = {
         quote! {
             #[cfg(test)]
@@ -102,9 +140,13 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
 
                 #(#field_parsers)*
 
-                let record = Self {
+                let mut record = Self {
                     #(#field_names,)*
                 };
+
+                // Validate cross-field relationships and business rules
+                let validation_warnings = <Self as crate::records::CwrRecord>::validate(&mut record);
+                warnings.extend(validation_warnings);
 
                 (record, warnings)
             }
@@ -188,6 +230,10 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
             fn into_registry(self) -> crate::cwr_registry::CwrRegistry {
                 #registry_variant
             }
+
+            fn validate(&mut self) -> Vec<crate::domain_types::CwrWarning<'static>> {
+                #validator_implementation
+            }
         }
 
         #_test_module
@@ -203,6 +249,20 @@ fn extract_test_data(attrs: &[syn::Attribute]) -> Option<String> {
             if let Ok(cwr_attr) = result {
                 if let Some(test_data) = cwr_attr.test_data {
                     return Some(test_data.value());
+                }
+            }
+        }
+    }
+    None
+}
+
+fn extract_validator(attrs: &[syn::Attribute]) -> Option<syn::Ident> {
+    for attr in attrs {
+        if attr.path().is_ident("cwr") {
+            let result: Result<CwrAttribute, _> = attr.parse_args();
+            if let Ok(cwr_attr) = result {
+                if let Some(validator) = cwr_attr.validator {
+                    return Some(validator);
                 }
             }
         }
@@ -260,12 +320,14 @@ fn extract_field_attrs(attrs: &[syn::Attribute]) -> (String, usize, usize, bool)
 struct CwrAttribute {
     test_data: Option<LitStr>,
     codes: Option<Vec<LitStr>>,
+    validator: Option<syn::Ident>,
 }
 
 impl syn::parse::Parse for CwrAttribute {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let mut test_data = None;
         let mut codes = None;
+        let mut validator = None;
 
         while !input.is_empty() {
             let ident: syn::Ident = input.parse()?;
@@ -285,6 +347,8 @@ impl syn::parse::Parse for CwrAttribute {
                     }
                 }
                 codes = Some(code_list);
+            } else if ident == "validator" {
+                validator = Some(input.parse()?);
             } else {
                 return Err(syn::Error::new(ident.span(), "Unknown attribute"));
             }
@@ -294,7 +358,7 @@ impl syn::parse::Parse for CwrAttribute {
             }
         }
 
-        Ok(CwrAttribute { test_data, codes })
+        Ok(CwrAttribute { test_data, codes, validator })
     }
 }
 

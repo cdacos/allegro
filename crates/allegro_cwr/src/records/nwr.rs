@@ -1,10 +1,11 @@
 use crate::domain_types::*;
 use allegro_cwr_derive::CwrRecord;
+use chrono::Timelike;
 use serde::{Deserialize, Serialize};
 
 /// Used for NWR, REV, ISW, and EXC record types.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(codes = ["NWR", "REV", "ISW", "EXC"], test_data = "NWR0000000100000001Test Song                                               SW0000000001        SER        Y       ORI                                                                                                                                               ")]
+#[cwr(codes = ["NWR", "REV", "ISW", "EXC"], validator = nwr_custom_validate, test_data = "NWR0000000100000001Test Song                                               SW0000000001        SER        Y       ORI                                                                                                                                               ")]
 pub struct NwrRecord {
     #[cwr(title = "'NWR', 'REV', 'ISW', or 'EXC'", start = 0, len = 3)]
     pub record_type: String,
@@ -28,7 +29,7 @@ pub struct NwrRecord {
     pub iswc: Option<String>,
 
     #[cwr(title = "Copyright date (optional)", start = 106, len = 8)]
-    pub copyright_date: Option<String>,
+    pub copyright_date: Option<Date>,
 
     #[cwr(title = "Copyright number (optional)", start = 114, len = 12)]
     pub copyright_number: Option<String>,
@@ -37,10 +38,10 @@ pub struct NwrRecord {
     pub musical_work_distribution_category: String,
 
     #[cwr(title = "Duration HHMMSS (conditional)", start = 129, len = 6)]
-    pub duration: Option<String>,
+    pub duration: Option<Duration>,
 
     #[cwr(title = "Recorded indicator (1 char)", start = 135, len = 1)]
-    pub recorded_indicator: String,
+    pub recorded_indicator: FlagYNU,
 
     #[cwr(title = "Text music relationship (optional)", start = 136, len = 3)]
     pub text_music_relationship: Option<String>,
@@ -70,16 +71,16 @@ pub struct NwrRecord {
     pub cwr_work_type: Option<String>,
 
     #[cwr(title = "Grand rights indicator (1 char, conditional)", start = 196, len = 1)]
-    pub grand_rights_ind: Option<String>,
+    pub grand_rights_ind: Option<FlagYNU>,
 
     #[cwr(title = "Composite component count (conditional)", start = 197, len = 3)]
-    pub composite_component_count: Option<String>,
+    pub composite_component_count: Option<CompositeComponentCount>,
 
     #[cwr(title = "Date of publication of printed edition (optional)", start = 200, len = 8)]
-    pub date_of_publication_of_printed_edition: Option<String>,
+    pub date_of_publication_of_printed_edition: Option<Date>,
 
     #[cwr(title = "Exceptional clause (1 char, optional)", start = 208, len = 1)]
-    pub exceptional_clause: Option<String>,
+    pub exceptional_clause: Option<FlagYNU>,
 
     #[cwr(title = "Opus number (optional)", start = 209, len = 25)]
     pub opus_number: Option<String>,
@@ -88,5 +89,58 @@ pub struct NwrRecord {
     pub catalogue_number: Option<String>,
 
     #[cwr(title = "Priority flag (1 char, optional, v2.1+)", start = 259, len = 1)]
-    pub priority_flag: Option<String>,
+    pub priority_flag: Option<FlagYNU>,
+}
+
+// Custom validation function for NWR record
+fn nwr_custom_validate(record: &mut NwrRecord) -> Vec<CwrWarning<'static>> {
+    let mut warnings = Vec::new();
+
+    // Business rule: Duration required if Musical Work Distribution Category = "SER"
+    if record.musical_work_distribution_category == "SER" && (record.duration.is_none() || record.duration.as_ref().is_none_or(|d| d.0.is_none())) {
+        warnings.push(CwrWarning { field_name: "duration", field_title: "Duration HHMMSS (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Duration is required when Musical Work Distribution Category is 'SER'".to_string() });
+    }
+
+    // Business rule: Duration must be > 0 if present
+    if let Some(ref duration) = record.duration {
+        if let Some(ref time) = duration.0 {
+            let total_seconds = time.hour() * 3600 + time.minute() * 60 + time.second();
+            if total_seconds == 0 {
+                warnings.push(CwrWarning { field_name: "duration", field_title: "Duration HHMMSS (conditional)", source_str: std::borrow::Cow::Owned(duration.as_str()), level: WarningLevel::Warning, description: "Duration should be greater than 00:00:00 if specified".to_string() });
+            }
+        }
+    }
+
+    // Business rule: Music Arrangement required if Version Type = "MOD"
+    if record.version_type == "MOD" {
+        if record.music_arrangement.is_none() || record.music_arrangement.as_ref().is_none_or(|s| s.trim().is_empty()) {
+            warnings.push(CwrWarning { field_name: "music_arrangement", field_title: "Music arrangement (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Music Arrangement is required when Version Type is 'MOD'".to_string() });
+        }
+
+        if record.lyric_adaptation.is_none() || record.lyric_adaptation.as_ref().is_none_or(|s| s.trim().is_empty()) {
+            warnings.push(CwrWarning { field_name: "lyric_adaptation", field_title: "Lyric adaptation (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Lyric Adaptation is required when Version Type is 'MOD'".to_string() });
+        }
+    }
+
+    // Business rule: Composite Component Count required for ASCAP when Composite Type is present
+    if record.composite_type.is_some() && record.composite_type.as_ref().is_some_and(|s| !s.trim().is_empty()) && (record.composite_component_count.is_none() || record.composite_component_count.as_ref().is_none_or(|c| c.0.is_none())) {
+        warnings.push(CwrWarning {
+            field_name: "composite_component_count",
+            field_title: "Composite component count (conditional)",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Warning,
+            description: "Composite Component Count should be specified when Composite Type is present (required for ASCAP)".to_string(),
+        });
+    }
+
+    // TODO: Additional business rules requiring broader context:
+    // - Grand Rights Indicator required for UK societies
+    // - Some societies (BMI) may require duration for "JAZ" category
+    // - Submitter Work # must be unique per publisher (requires context)
+    // - ISWC format validation
+    // - Language code validation against Language Code Table
+    // - Various lookup table validations for categorical fields
+    // - Version-specific validations for v2.1+ fields (Priority Flag)
+
+    warnings
 }
