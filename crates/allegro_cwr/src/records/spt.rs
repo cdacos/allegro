@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// SPT - Publisher Territory of Control Record (also OPT - Other Publisher Territory)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(test_data = "SPT0000000000000002ABKC           025000750000000I0840N001")]
+#[cwr(codes = ["SPT", "OPT"], test_data = "SPT0000000000000002ABKC           025000750000000I0840N001")]
 pub struct SptRecord {
     #[cwr(title = "'SPT' or 'OPT'", start = 0, len = 3)]
     pub record_type: String,

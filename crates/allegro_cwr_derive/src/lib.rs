@@ -16,6 +16,8 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
     };
 
     let test_data = extract_test_data(&input.attrs).expect("CwrRecord requires #[cwr(test_data = \"...\")] attribute");
+    let record_codes = extract_record_codes(&input.attrs, &name);
+    let registry_variant = generate_registry_variant(&name);
     let field_parsers = fields.iter().map(|field| {
         let field_name = field.ident.as_ref().unwrap();
         let field_type = &field.ty;
@@ -139,6 +141,46 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
 
         }
 
+        // Generate CwrRecord trait implementation
+        impl crate::records::CwrRecord for #name {
+            fn record_codes() -> &'static [&'static str] {
+                #record_codes
+            }
+
+            fn from_cwr_line(line: &str) -> Result<crate::records::ParseResult<Self>, crate::error::CwrParseError> {
+                // Validate record type matches what we expect
+                if line.len() < 3 {
+                    return Err(crate::error::CwrParseError::BadFormat(
+                        "Line too short to contain record type".to_string()
+                    ));
+                }
+
+                let (record, warnings) = Self::parse(line);
+
+                // Convert CwrWarning to String for compatibility
+                let string_warnings: Vec<String> = warnings.into_iter()
+                    .map(|w| format!("{}: {}", w.field_title, w.description))
+                    .collect();
+
+                // Check for critical errors
+                let has_critical = string_warnings.iter().any(|w| w.contains("Critical"));
+                if has_critical {
+                    return Err(crate::error::CwrParseError::BadFormat(
+                        string_warnings.join("; ")
+                    ));
+                }
+
+                Ok(crate::records::ParseResult {
+                    record,
+                    warnings: string_warnings,
+                })
+            }
+
+            fn into_registry(self) -> crate::cwr_registry::CwrRegistry {
+                #registry_variant
+            }
+        }
+
         #_test_module
     };
 
@@ -159,6 +201,41 @@ fn extract_test_data(attrs: &[syn::Attribute]) -> Option<String> {
     None
 }
 
+fn extract_record_codes(attrs: &[syn::Attribute], name: &syn::Ident) -> quote::__private::TokenStream {
+    // First check for explicit codes attribute
+    for attr in attrs {
+        if attr.path().is_ident("cwr") {
+            let result: Result<CwrAttribute, _> = attr.parse_args();
+            if let Ok(cwr_attr) = result {
+                if let Some(codes) = cwr_attr.codes {
+                    let code_strings: Vec<_> = codes.iter().map(|s| s.value()).collect();
+                    return quote! { &[#(#code_strings),*] };
+                }
+            }
+        }
+    }
+
+    // Fallback: infer from struct name
+    // HdrRecord -> ["HDR"], SpuRecord -> ["SPU"], etc.
+    let name_str = name.to_string();
+    if let Some(prefix) = name_str.strip_suffix("Record") {
+        let code = prefix.to_uppercase();
+        return quote! { &[#code] };
+    }
+
+    panic!("Could not determine record codes for struct: {}", name_str);
+}
+
+fn generate_registry_variant(name: &syn::Ident) -> quote::__private::TokenStream {
+    let name_str = name.to_string();
+    if let Some(prefix) = name_str.strip_suffix("Record") {
+        let variant_ident = quote::format_ident!("{}", prefix);
+        return quote! { crate::cwr_registry::CwrRegistry::#variant_ident(self) };
+    }
+
+    panic!("Could not determine registry variant for struct: {}", name_str);
+}
+
 fn extract_field_attrs(attrs: &[syn::Attribute]) -> (String, usize, usize, bool) {
     for attr in attrs {
         if attr.path().is_ident("cwr") {
@@ -173,11 +250,13 @@ fn extract_field_attrs(attrs: &[syn::Attribute]) -> (String, usize, usize, bool)
 
 struct CwrAttribute {
     test_data: Option<LitStr>,
+    codes: Option<Vec<LitStr>>,
 }
 
 impl syn::parse::Parse for CwrAttribute {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let mut test_data = None;
+        let mut codes = None;
 
         while !input.is_empty() {
             let ident: syn::Ident = input.parse()?;
@@ -185,6 +264,18 @@ impl syn::parse::Parse for CwrAttribute {
 
             if ident == "test_data" {
                 test_data = Some(input.parse()?);
+            } else if ident == "codes" {
+                // Parse array of strings: ["HDR", "NWR", ...]
+                let content;
+                syn::bracketed!(content in input);
+                let mut code_list = Vec::new();
+                while !content.is_empty() {
+                    code_list.push(content.parse()?);
+                    if !content.is_empty() {
+                        content.parse::<syn::Token![,]>()?;
+                    }
+                }
+                codes = Some(code_list);
             } else {
                 return Err(syn::Error::new(ident.span(), "Unknown attribute"));
             }
@@ -194,7 +285,7 @@ impl syn::parse::Parse for CwrAttribute {
             }
         }
 
-        Ok(CwrAttribute { test_data })
+        Ok(CwrAttribute { test_data, codes })
     }
 }
 

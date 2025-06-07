@@ -4,8 +4,8 @@
 //! wire format structure. These serve as an intermediate layer between raw
 //! CWR lines and business domain objects.
 
-use crate::error::CwrParseError;
 use crate::cwr_registry::CwrRegistry;
+use crate::error::CwrParseError;
 
 /// Result type returned by record parsing functions
 #[derive(Debug)]
@@ -18,12 +18,12 @@ pub struct ParseResult<T> {
 pub trait CwrRecord {
     /// The 3-character record type codes this record handles
     fn record_codes() -> &'static [&'static str];
-    
+
     /// Parse a CWR line into this specific record type
     fn from_cwr_line(line: &str) -> Result<ParseResult<Self>, CwrParseError>
     where
         Self: Sized;
-    
+
     /// Convert this record into the registry enum variant
     fn into_registry(self) -> CwrRegistry;
 }
@@ -96,3 +96,47 @@ pub use ter::TerRecord;
 pub use trl::TrlRecord;
 pub use ver::VerRecord;
 pub use xrf::XrfRecord;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_hdr_record_trait() {
+        // Test that HdrRecord implements CwrRecord trait correctly
+        let codes = HdrRecord::record_codes();
+        assert_eq!(codes, &["HDR"]);
+
+        // Test parsing
+        let line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221";
+        let result = HdrRecord::from_cwr_line(line);
+        assert!(result.is_ok());
+
+        let parse_result = result.unwrap();
+        let registry = parse_result.record.into_registry();
+        assert_eq!(registry.record_type(), "HDR");
+    }
+
+    #[test]
+    fn test_nwr_record_trait() {
+        // Test that NwrRecord implements CwrRecord trait with multiple codes
+        let codes = NwrRecord::record_codes();
+        assert_eq!(codes, &["NWR", "REV", "ISW", "EXC"]);
+
+        // Test parsing
+        let line = "NWR0000000100000001Test Song                                               SW0000000001        SER        Y       ORI                                                                                                                                               ";
+        let result = NwrRecord::from_cwr_line(line);
+        assert!(result.is_ok());
+
+        let parse_result = result.unwrap();
+        let registry = parse_result.record.into_registry();
+        assert_eq!(registry.record_type(), "NWR");
+    }
+
+    #[test]
+    fn test_spu_record_trait() {
+        // Test that SpuRecord implements CwrRecord trait with multiple codes
+        let codes = SpuRecord::record_codes();
+        assert_eq!(codes, &["SPU", "OPU"]);
+    }
+}

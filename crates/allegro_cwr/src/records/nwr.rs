@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// /// Used for NWR, REV, ISW, and EXC record types.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(test_data = "NWR0000000100000001Test Song                                               SW0000000001        SER        Y       ORI                                                                                                                                               ")]
+#[cwr(codes = ["NWR", "REV", "ISW", "EXC"], test_data = "NWR0000000100000001Test Song                                               SW0000000001        SER        Y       ORI                                                                                                                                               ")]
 pub struct NwrRecord {
     #[cwr(title = "'NWR', 'REV', 'ISW', or 'EXC'", start = 0, len = 3)]
     pub record_type: String,

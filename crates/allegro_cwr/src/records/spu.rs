@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// SPU - Publisher Controlled by Submitter Record (also OPU - Other Publisher)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(test_data = "SPU0000000100000001011234567890PUBLISHER NAME                             N AS1234567890123456789    BMI  50.00000000000000000000000000000  N N                                                            ")]
+#[cwr(codes = ["SPU", "OPU"], test_data = "SPU0000000100000001011234567890PUBLISHER NAME                             N AS1234567890123456789    BMI  50.00000000000000000000000000000  N N                                                            ")]
 pub struct SpuRecord {
     #[cwr(title = "'SPU' or 'OPU'", start = 0, len = 3)]
     pub record_type: String,

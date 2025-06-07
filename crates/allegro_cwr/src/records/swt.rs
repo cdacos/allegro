@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// SWT - Writer Territory of Control Record (also OWT - Other Writer Territory)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(test_data = "SWT0000000000000227WOMA     050000000000000I2100N001")]
+#[cwr(codes = ["SWT", "OWT"], test_data = "SWT0000000000000227WOMA     050000000000000I2100N001")]
 pub struct SwtRecord {
     #[cwr(title = "'SWT' or 'OWT'", start = 0, len = 3)]
     pub record_type: String,
