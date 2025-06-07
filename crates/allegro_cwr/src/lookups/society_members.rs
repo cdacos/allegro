@@ -1,7 +1,7 @@
 //! Society members lookup table with transmitter codes
 
-use std::collections::HashMap;
 use once_cell::sync::Lazy;
+use std::collections::HashMap;
 
 /// Society member transmitter codes mapping
 pub static SOCIETY_TRANSMITTER_CODES: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {

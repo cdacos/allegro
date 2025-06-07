@@ -1,7 +1,7 @@
 //! Society codes lookup table from CWR specification
 
-use std::collections::HashMap;
 use once_cell::sync::Lazy;
+use std::collections::HashMap;
 
 /// Society codes mapping from society name to numeric code
 pub static SOCIETY_CODES: Lazy<HashMap<&'static str, u16>> = Lazy::new(|| {

@@ -199,9 +199,9 @@ impl CwrFieldParse for SenderId {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::society_codes::is_valid_society_code;
         use crate::lookups::society_members::is_valid_transmitter_code;
-        
+
         let trimmed = source.trim();
-        
+
         if trimmed.is_empty() {
             let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: "Sender ID is required".to_string() }];
             return (SenderId(String::new()), warnings);
@@ -211,43 +211,24 @@ impl CwrFieldParse for SenderId {
 
         // Basic validation - for full validation we need SenderType context
         // This is a preliminary validation, full validation happens in post_process
-        
+
         // Check if it looks like a society code (alpha characters)
         if trimmed.chars().all(|c| c.is_ascii_alphabetic() || c.is_ascii_whitespace()) {
-            let normalized = trimmed.replace(' ', " "); // Normalize spaces
-            if !is_valid_society_code(&normalized) {
-                warnings.push(CwrWarning {
-                    field_name,
-                    field_title,
-                    source_str: Cow::Owned(source.to_string()),
-                    level: WarningLevel::Warning,
-                    description: format!("Sender ID '{}' not found in society codes table - may be invalid for SO sender type", trimmed),
-                });
+            if !is_valid_society_code(trimmed) {
+                warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Sender ID '{}' not found in society codes table - may be invalid for SO sender type", trimmed) });
             }
         }
         // Check if it looks like a transmitter code (alphanumeric, typically 3-4 chars)
         else if trimmed.len() <= 4 && trimmed.chars().all(|c| c.is_ascii_alphanumeric()) {
             if !is_valid_transmitter_code(trimmed) {
-                warnings.push(CwrWarning {
-                    field_name,
-                    field_title,
-                    source_str: Cow::Owned(source.to_string()),
-                    level: WarningLevel::Info,
-                    description: format!("Sender ID '{}' not found in transmitter codes table - may be a custom code", trimmed),
-                });
+                warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Info, description: format!("Sender ID '{}' not found in transmitter codes table - may be a custom code", trimmed) });
             }
         }
         // Check if it looks like an IPI number (9+ digits)
         else if trimmed.len() >= 9 && trimmed.chars().all(|c| c.is_ascii_digit()) {
             // IPI number format validation - should be 9-11 digits
             if trimmed.len() > 11 {
-                warnings.push(CwrWarning {
-                    field_name,
-                    field_title,
-                    source_str: Cow::Owned(source.to_string()),
-                    level: WarningLevel::Warning,
-                    description: format!("IPI number '{}' is longer than standard 11 digits", trimmed),
-                });
+                warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("IPI number '{}' is longer than standard 11 digits", trimmed) });
             }
         }
 
@@ -648,7 +629,7 @@ impl CurrencyCode {
 impl CwrFieldParse for CurrencyCode {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::currency_codes::is_valid_currency_code;
-        
+
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (CurrencyCode(None), vec![])
@@ -657,13 +638,7 @@ impl CwrFieldParse for CurrencyCode {
             if is_valid_currency_code(&uppercase_code) {
                 (CurrencyCode(Some(uppercase_code)), vec![])
             } else {
-                let warnings = vec![CwrWarning { 
-                    field_name, 
-                    field_title, 
-                    source_str: Cow::Owned(source.to_string()), 
-                    level: WarningLevel::Warning, 
-                    description: format!("Currency code '{}' not found in ISO 4217 table", trimmed) 
-                }];
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Currency code '{}' not found in ISO 4217 table", trimmed) }];
                 (CurrencyCode(Some(uppercase_code)), warnings)
             }
         } else {
@@ -925,11 +900,16 @@ impl TisNumericCode {
 
 impl CwrFieldParse for TisNumericCode {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        use crate::lookups::tis_codes::is_valid_tis_code;
+
         let trimmed = source.trim();
         match trimmed.parse::<u16>() {
             Ok(code) if code > 0 => {
-                // TODO: Validate against TIS lookup table
-                (TisNumericCode(code), vec![])
+                let mut warnings = vec![];
+                if !is_valid_tis_code(code) {
+                    warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("TIS Numeric Code {} not found in ISO 3166-1 territory codes table", code) });
+                }
+                (TisNumericCode(code), warnings)
             }
             Ok(_) => {
                 let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: "TIS Numeric Code must be greater than 0".to_string() }];
@@ -962,12 +942,17 @@ impl AgreementRoleCode {
 
 impl CwrFieldParse for AgreementRoleCode {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        use crate::lookups::agreement_role_codes::is_valid_agreement_role_code;
+
         let trimmed = source.trim();
         match trimmed {
             "AS" => (AgreementRoleCode::Assignor, vec![]),
             "AC" => (AgreementRoleCode::Acquirer, vec![]),
             _ => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid agreement role code '{}', must be AS (Assignor) or AC (Acquirer)", trimmed) }];
+                let mut warnings = vec![];
+                if !is_valid_agreement_role_code(trimmed) {
+                    warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid agreement role code '{}', must be AS (Assignor) or AC (Acquirer)", trimmed) });
+                }
                 (AgreementRoleCode::Assignor, warnings)
             }
         }
@@ -1121,6 +1106,8 @@ impl PublisherType {
 
 impl CwrFieldParse for Option<PublisherType> {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        use crate::lookups::publisher_types::is_valid_publisher_type;
+
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])
@@ -1131,7 +1118,10 @@ impl CwrFieldParse for Option<PublisherType> {
                 "SE" => (Some(PublisherType::SubPublisher), vec![]),
                 "E" => (Some(PublisherType::Unclassified), vec![]),
                 _ => {
-                    let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid publisher type '{}', must be AS, PA, SE, or E", trimmed) }];
+                    let mut warnings = vec![];
+                    if !is_valid_publisher_type(trimmed) {
+                        warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid publisher type '{}', must be AS, PA, SE, or E", trimmed) });
+                    }
                     (Some(PublisherType::Unknown), warnings)
                 }
             }
@@ -1139,14 +1129,80 @@ impl CwrFieldParse for Option<PublisherType> {
     }
 }
 
-// TODO: Implement additional domain types for table-based validations:
-//
-// 1. SenderName with cross-validation against lookup tables:
-//    - For PB (Publisher): must match name in CWR Sender ID and Codes Table
-//    - For SO (Society): must match name in Society Code Table
-//    - For AA (Administrative Agency): must match name in Publisher Code Table
-//
-// 2. Complex Sender validation requiring post_process step:
+/// Sender name for HDR record with context-aware validation
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct SenderName(pub String);
+
+impl SenderName {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl CwrFieldParse for SenderName {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        
+        if trimmed.is_empty() {
+            let warnings = vec![CwrWarning { 
+                field_name, 
+                field_title, 
+                source_str: Cow::Owned(source.to_string()), 
+                level: WarningLevel::Critical, 
+                description: "Sender Name is required".to_string() 
+            }];
+            return (SenderName(String::new()), warnings);
+        }
+
+        // Basic validation - comprehensive validation requires SenderType context in post_process
+        // This validates general format and checks against known society names
+        let mut warnings = vec![];
+        
+        // Check if it might be a society name (contains letters and possibly spaces)
+        if trimmed.chars().any(|c| c.is_ascii_alphabetic()) {
+            use crate::lookups::society_codes::is_valid_society_code;
+            
+            // Try exact match against society codes first
+            if !is_valid_society_code(trimmed) {
+                // Try with common variations (remove spaces, convert to uppercase)
+                let normalized_variants = vec![
+                    trimmed.replace(" ", ""),
+                    trimmed.replace(" ", "").to_uppercase(),
+                    trimmed.to_uppercase(),
+                    trimmed.replace("-", "").replace(" ", ""),
+                ];
+                
+                let mut found_match = false;
+                for variant in &normalized_variants {
+                    if is_valid_society_code(variant) {
+                        found_match = true;
+                        break;
+                    }
+                }
+                
+                // For now, skip the expensive transmitter code check
+                // Full validation will be done in post_process with SenderType context
+                
+                if !found_match {
+                    warnings.push(CwrWarning {
+                        field_name,
+                        field_title,
+                        source_str: Cow::Owned(source.to_string()),
+                        level: WarningLevel::Warning,
+                        description: format!(
+                            "Sender Name '{}' not found in society lookup tables - validation will be performed in post-process with SenderType context", 
+                            trimmed
+                        ),
+                    });
+                }
+            }
+        }
+
+        (SenderName(trimmed.to_string()), warnings)
+    }
+}
+
+// TODO: Implement complex Sender validation requiring post_process step:
 //    - Cross-validate SenderType + SenderId + SenderName combination
 //    - Handle IPNN > 9 digits case (SenderType numeric prefix + SenderId)
 //    - Validate against appropriate lookup tables based on sender type

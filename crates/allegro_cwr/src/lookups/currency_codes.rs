@@ -1,7 +1,7 @@
 //! ISO 4217 currency codes lookup table
 
-use std::collections::HashSet;
 use once_cell::sync::Lazy;
+use std::collections::HashSet;
 
 /// ISO 4217 currency codes (common subset)
 pub static CURRENCY_CODES: Lazy<HashSet<&'static str>> = Lazy::new(|| {

@@ -1,7 +1,7 @@
 //! Agreement role codes lookup table
 
-use std::collections::HashMap;
 use once_cell::sync::Lazy;
+use std::collections::HashMap;
 
 /// Agreement role codes mapping
 pub static AGREEMENT_ROLE_CODES: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {

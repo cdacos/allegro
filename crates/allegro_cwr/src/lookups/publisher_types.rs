@@ -1,7 +1,7 @@
 //! Publisher types lookup table
 
-use std::collections::HashMap;
 use once_cell::sync::Lazy;
+use std::collections::HashMap;
 
 /// Publisher type codes mapping
 pub static PUBLISHER_TYPES: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
