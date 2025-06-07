@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 /// IPA - Interested Party of Agreement Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(validator = ipa_custom_validate, test_data = "IPA0000000100000001AS           123456789JONES                                                                                                           ")]
+#[cwr(validator = ipa_custom_validate, test_data = "IPA0000000100000001AS                        123456789JONES                                                                      BMI01000   00000   00000")]
 pub struct IpaRecord {
     #[cwr(title = "Always 'IPA'", start = 0, len = 3)]
     pub record_type: String,

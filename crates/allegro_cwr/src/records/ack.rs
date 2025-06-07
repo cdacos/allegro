@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 /// ACK - Acknowledgement of Transaction Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(validator = ack_custom_validate, test_data = "ACK0000000100000001200501011200000000100000001NWR                                                                                                    20050102AS")]
+#[cwr(validator = ack_custom_validate, test_data = "ACK0000000100000001200501011200000000100000001NWRTEST WORK TITLE                                          SW123456789012345678                    20050102AS   ")]
 pub struct AckRecord {
     #[cwr(title = "Always 'ACK'", start = 0, len = 3)]
     pub record_type: String,
