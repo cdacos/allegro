@@ -141,6 +141,13 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
 
         }
 
+        // Generate RecordType trait implementation
+        impl crate::records::RecordType for #name {
+            fn record_type(&self) -> &str {
+                &self.record_type
+            }
+        }
+
         // Generate CwrRecord trait implementation
         impl crate::records::CwrRecord for #name {
             fn record_codes() -> &'static [&'static str] {

@@ -14,6 +14,11 @@ pub struct ParseResult<T> {
     pub warnings: Vec<String>,
 }
 
+/// Trait for getting the record type from any record instance
+pub trait RecordType {
+    fn record_type(&self) -> &str;
+}
+
 /// Trait that all CWR record types must implement
 pub trait CwrRecord {
     /// The 3-character record type codes this record handles
