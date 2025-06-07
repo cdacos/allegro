@@ -89,11 +89,11 @@ fn spu_custom_validate(record: &mut SpuRecord) -> Vec<CwrWarning<'static>> {
     // SPU-specific validations (vs OPU)
     if record.record_type == "SPU" {
         // For SPU records: Interested Party #, Publisher Name, and Publisher Type are required
-        if record.interested_party_num.is_none() || record.interested_party_num.as_ref().map_or(true, |s| s.trim().is_empty()) {
+        if record.interested_party_num.is_none() || record.interested_party_num.as_ref().is_none_or(|s| s.trim().is_empty()) {
             warnings.push(CwrWarning { field_name: "interested_party_num", field_title: "Interested party number (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Interested Party Number is required for SPU records".to_string() });
         }
 
-        if record.publisher_name.is_none() || record.publisher_name.as_ref().map_or(true, |s| s.trim().is_empty()) {
+        if record.publisher_name.is_none() || record.publisher_name.as_ref().is_none_or(|s| s.trim().is_empty()) {
             warnings.push(CwrWarning { field_name: "publisher_name", field_title: "Publisher name (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Publisher Name is required for SPU records".to_string() });
         }
 

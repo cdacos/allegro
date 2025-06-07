@@ -45,7 +45,7 @@ fn swt_custom_validate(record: &mut SwtRecord) -> Vec<CwrWarning<'static>> {
     let mut warnings = Vec::new();
 
     // Business rule: Interested party number should be provided for most cases
-    if record.interested_party_num.is_none() || record.interested_party_num.as_ref().map_or(true, |s| s.trim().is_empty()) {
+    if record.interested_party_num.is_none() || record.interested_party_num.as_ref().is_none_or(|s| s.trim().is_empty()) {
         warnings.push(CwrWarning { field_name: "interested_party_num", field_title: "Interested party number (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Warning, description: "Interested party number is typically required for writer territory records".to_string() });
     }
 

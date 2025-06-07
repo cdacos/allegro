@@ -99,31 +99,22 @@ fn npr_custom_validate(record: &mut NprRecord) -> Vec<CwrWarning<'static>> {
 
     // Validate language code format if present (ISO 639-1)
     if let Some(ref lang_code) = record.language_code {
-        if !lang_code.trim().is_empty() {
-            if lang_code.len() != 2 {
-                warnings.push(CwrWarning { field_name: "language_code", field_title: "Language code (optional)", source_str: std::borrow::Cow::Owned(lang_code.clone()), level: WarningLevel::Warning, description: "Language code should be 2 characters (ISO 639-1)".to_string() });
-            }
-            // TODO: Validate against ISO 639-1 language code table
+        if !lang_code.trim().is_empty() && lang_code.len() != 2 {
+            warnings.push(CwrWarning { field_name: "language_code", field_title: "Language code (optional)", source_str: std::borrow::Cow::Owned(lang_code.clone()), level: WarningLevel::Warning, description: "Language code should be 2 characters (ISO 639-1)".to_string() });
         }
     }
 
     // Validate performance language format if present (ISO 639-1)
     if let Some(ref perf_lang) = record.performance_language {
-        if !perf_lang.trim().is_empty() {
-            if perf_lang.len() != 2 {
-                warnings.push(CwrWarning { field_name: "performance_language", field_title: "Performance language (conditional, v2.1+)", source_str: std::borrow::Cow::Owned(perf_lang.clone()), level: WarningLevel::Warning, description: "Performance language should be 2 characters (ISO 639-1)".to_string() });
-            }
-            // TODO: Validate against ISO 639-1 language code table
+        if !perf_lang.trim().is_empty() && perf_lang.len() != 2 {
+            warnings.push(CwrWarning { field_name: "performance_language", field_title: "Performance language (conditional, v2.1+)", source_str: std::borrow::Cow::Owned(perf_lang.clone()), level: WarningLevel::Warning, description: "Performance language should be 2 characters (ISO 639-1)".to_string() });
         }
     }
 
     // Validate performance dialect format if present
     if let Some(ref dialect) = record.performance_dialect {
-        if !dialect.trim().is_empty() {
-            if dialect.len() != 3 {
-                warnings.push(CwrWarning { field_name: "performance_dialect", field_title: "Performance dialect (conditional, v2.1+)", source_str: std::borrow::Cow::Owned(dialect.clone()), level: WarningLevel::Warning, description: "Performance dialect should be 3 characters if specified".to_string() });
-            }
-            // TODO: Validate against dialect lookup table
+        if !dialect.trim().is_empty() && dialect.len() != 3 {
+            warnings.push(CwrWarning { field_name: "performance_dialect", field_title: "Performance dialect (conditional, v2.1+)", source_str: std::borrow::Cow::Owned(dialect.clone()), level: WarningLevel::Warning, description: "Performance dialect should be 3 characters if specified".to_string() });
         }
     }
 

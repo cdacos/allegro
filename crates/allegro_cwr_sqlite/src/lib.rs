@@ -11,6 +11,8 @@ pub mod record_handlers;
 pub mod report;
 pub mod statements;
 
+use domain_conversions::{CwrToSqlString, CwrToSqlInt, opt_domain_to_string, opt_domain_to_int};
+
 // Re-export main types and functions
 pub use connection::{CwrDatabase, determine_db_filename, setup_database};
 pub use error::CwrDbError;
@@ -111,7 +113,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                             hdr.creation_date.as_str(),
                             hdr.creation_time.as_str(),
                             hdr.transmission_date.as_str(),
-                            hdr.character_set,
+                            opt_domain_to_string(&hdr.character_set),
                             hdr.version.as_str(),
                             hdr.revision.as_str(),
                             hdr.software_package,
@@ -120,15 +122,15 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         tx.last_insert_rowid()
                     }
                     allegro_cwr::cwr_registry::CwrRegistry::Grh(grh) => {
-                        statements.grh_stmt.execute(rusqlite::params![self.file_id, "GRH", grh.transaction_type, grh.group_id, grh.version_number, grh.batch_request, grh.submission_distribution_type])?;
+                        statements.grh_stmt.execute(rusqlite::params![self.file_id, "GRH", grh.transaction_type.to_sql_string(), grh.group_id.to_sql_int(), grh.version_number.as_str(), grh.batch_request, grh.submission_distribution_type])?;
                         tx.last_insert_rowid()
                     }
                     allegro_cwr::cwr_registry::CwrRegistry::Grt(grt) => {
-                        statements.grt_stmt.execute(rusqlite::params![self.file_id, "GRT", grt.group_id, grt.transaction_count, grt.record_count, grt.currency_indicator, grt.total_monetary_value])?;
+                        statements.grt_stmt.execute(rusqlite::params![self.file_id, "GRT", grt.group_id.to_sql_int(), grt.transaction_count.to_sql_int(), grt.record_count.to_sql_int(), grt.currency_indicator.as_str(), grt.total_monetary_value])?;
                         tx.last_insert_rowid()
                     }
                     allegro_cwr::cwr_registry::CwrRegistry::Trl(trl) => {
-                        statements.trl_stmt.execute(rusqlite::params![self.file_id, "TRL", trl.group_count, trl.transaction_count, trl.record_count])?;
+                        statements.trl_stmt.execute(rusqlite::params![self.file_id, "TRL", trl.group_count.to_sql_int(), trl.transaction_count.to_sql_int(), trl.record_count.to_sql_int()])?;
                         tx.last_insert_rowid()
                     }
                     allegro_cwr::cwr_registry::CwrRegistry::Agr(agr) => {
@@ -143,12 +145,12 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                             agr.agreement_start_date.as_str(),
                             agr.agreement_end_date.as_ref().map(|d| d.as_str()),
                             agr.retention_end_date.as_ref().map(|d| d.as_str()),
-                            agr.prior_royalty_status.as_str(),
+                            agr.prior_royalty_status.to_sql_string(),
                             agr.prior_royalty_start_date.as_ref().map(|d| d.as_str()),
-                            agr.post_term_collection_status.as_str(),
+                            agr.post_term_collection_status.to_sql_string(),
                             agr.post_term_collection_end_date.as_ref().map(|d| d.as_str()),
                             agr.date_of_signature_of_agreement.as_ref().map(|d| d.as_str()),
-                            agr.number_of_works.as_str(),
+                            agr.number_of_works.to_sql_int(),
                             agr.sales_manufacture_clause,
                             agr.shares_change,
                             agr.advance_given,
@@ -169,7 +171,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                             nwr.copyright_date,
                             nwr.copyright_number,
                             nwr.musical_work_distribution_category,
-                            nwr.duration,
+                            opt_domain_to_string(&nwr.duration),
                             nwr.recorded_indicator,
                             nwr.text_music_relationship,
                             nwr.composite_type,
@@ -181,7 +183,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                             nwr.contact_id,
                             nwr.cwr_work_type,
                             nwr.grand_rights_ind,
-                            nwr.composite_component_count,
+                            opt_domain_to_int(&nwr.composite_component_count),
                             nwr.date_of_publication_of_printed_edition,
                             nwr.exceptional_clause,
                             nwr.opus_number,
@@ -196,22 +198,22 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                             spu.record_type,
                             spu.transaction_sequence_num,
                             spu.record_sequence_num,
-                            spu.publisher_sequence_num,
+                            opt_domain_to_int(&spu.publisher_sequence_num),
                             spu.interested_party_num,
                             spu.publisher_name,
                             spu.publisher_unknown_indicator,
-                            spu.publisher_type,
+                            opt_domain_to_string(&spu.publisher_type),
                             spu.tax_id_num,
                             spu.publisher_ipi_name_num,
                             spu.submitter_agreement_number,
                             spu.pr_affiliation_society_num,
-                            spu.pr_ownership_share,
+                            opt_domain_to_int(&spu.pr_ownership_share),
                             spu.mr_society,
-                            spu.mr_ownership_share,
+                            opt_domain_to_int(&spu.mr_ownership_share),
                             spu.sr_society,
-                            spu.sr_ownership_share,
+                            opt_domain_to_int(&spu.sr_ownership_share),
                             spu.special_agreements_indicator,
-                            spu.first_recording_refusal_ind,
+                            opt_domain_to_string(&spu.first_recording_refusal_ind),
                             spu.filler,
                             spu.publisher_ipi_base_number,
                             spu.international_standard_agreement_code,
@@ -235,14 +237,14 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                             swr.tax_id_num,
                             swr.writer_ipi_name_num,
                             swr.pr_affiliation_society_num,
-                            swr.pr_ownership_share,
+                            opt_domain_to_int(&swr.pr_ownership_share),
                             swr.mr_society,
-                            swr.mr_ownership_share,
+                            opt_domain_to_int(&swr.mr_ownership_share),
                             swr.sr_society,
-                            swr.sr_ownership_share,
-                            swr.reversionary_indicator,
-                            swr.first_recording_refusal_ind,
-                            swr.work_for_hire_indicator,
+                            opt_domain_to_int(&swr.sr_ownership_share),
+                            opt_domain_to_string(&swr.reversionary_indicator),
+                            opt_domain_to_string(&swr.first_recording_refusal_ind),
+                            opt_domain_to_string(&swr.work_for_hire_indicator),
                             swr.filler,
                             swr.writer_ipi_base_number,
                             swr.personal_number,
@@ -251,7 +253,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         tx.last_insert_rowid()
                     }
                     allegro_cwr::cwr_registry::CwrRegistry::Alt(alt) => {
-                        statements.alt_stmt.execute(rusqlite::params![self.file_id, "ALT", alt.transaction_sequence_num, alt.record_sequence_num, alt.alternate_title, alt.title_type, alt.language_code])?;
+                        statements.alt_stmt.execute(rusqlite::params![self.file_id, "ALT", alt.transaction_sequence_num, alt.record_sequence_num, alt.alternate_title, alt.title_type.to_sql_string(), alt.language_code])?;
                         tx.last_insert_rowid()
                     }
                     allegro_cwr::cwr_registry::CwrRegistry::Per(per) => {
@@ -273,8 +275,8 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                             rec.release_catalog_num,
                             rec.ean,
                             rec.isrc,
-                            rec.recording_format,
-                            rec.recording_technique,
+                            opt_domain_to_string(&rec.recording_format),
+                            opt_domain_to_string(&rec.recording_technique),
                             rec.media_type,
                             rec.recording_title,
                             rec.version_title,
@@ -305,7 +307,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         tx.last_insert_rowid()
                     }
                     allegro_cwr::cwr_registry::CwrRegistry::Ter(ter) => {
-                        statements.ter_stmt.execute(rusqlite::params![self.file_id, "TER", ter.transaction_sequence_num, ter.record_sequence_num, ter.inclusion_exclusion_indicator, ter.tis_numeric_code])?;
+                        statements.ter_stmt.execute(rusqlite::params![self.file_id, "TER", ter.transaction_sequence_num, ter.record_sequence_num, ter.inclusion_exclusion_indicator.to_sql_string(), ter.tis_numeric_code.to_sql_int()])?;
                         tx.last_insert_rowid()
                     }
                     allegro_cwr::cwr_registry::CwrRegistry::Ipa(ipa) => {
@@ -314,18 +316,18 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                             "IPA",
                             ipa.transaction_sequence_num,
                             ipa.record_sequence_num,
-                            ipa.agreement_role_code,
+                            ipa.agreement_role_code.to_sql_string(),
                             ipa.interested_party_ipi_name_num,
                             ipa.ipi_base_number,
                             ipa.interested_party_num,
                             ipa.interested_party_last_name,
                             ipa.interested_party_writer_first_name,
                             ipa.pr_affiliation_society,
-                            ipa.pr_share,
+                            opt_domain_to_int(&ipa.pr_share),
                             ipa.mr_affiliation_society,
-                            ipa.mr_share,
+                            opt_domain_to_int(&ipa.mr_share),
                             ipa.sr_affiliation_society,
-                            ipa.sr_share
+                            opt_domain_to_int(&ipa.sr_share)
                         ])?;
                         tx.last_insert_rowid()
                     }
@@ -361,12 +363,12 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                             spt.record_sequence_num,
                             spt.interested_party_num,
                             spt.constant,
-                            spt.pr_collection_share,
-                            spt.mr_collection_share,
-                            spt.sr_collection_share,
-                            spt.inclusion_exclusion_indicator,
-                            spt.tis_numeric_code,
-                            spt.shares_change,
+                            opt_domain_to_int(&spt.pr_collection_share),
+                            opt_domain_to_int(&spt.mr_collection_share),
+                            opt_domain_to_int(&spt.sr_collection_share),
+                            spt.inclusion_exclusion_indicator.to_sql_string(),
+                            spt.tis_numeric_code.to_sql_int(),
+                            opt_domain_to_string(&spt.shares_change),
                             spt.sequence_num
                         ])?;
                         tx.last_insert_rowid()
@@ -382,22 +384,22 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                             swt.transaction_sequence_num,
                             swt.record_sequence_num,
                             swt.interested_party_num,
-                            swt.pr_collection_share,
-                            swt.mr_collection_share,
-                            swt.sr_collection_share,
-                            swt.inclusion_exclusion_indicator,
-                            swt.tis_numeric_code,
-                            swt.shares_change,
+                            opt_domain_to_int(&swt.pr_collection_share),
+                            opt_domain_to_int(&swt.mr_collection_share),
+                            opt_domain_to_int(&swt.sr_collection_share),
+                            swt.inclusion_exclusion_indicator.to_sql_string(),
+                            swt.tis_numeric_code.to_sql_int(),
+                            opt_domain_to_string(&swt.shares_change),
                             swt.sequence_num
                         ])?;
                         tx.last_insert_rowid()
                     }
                     allegro_cwr::cwr_registry::CwrRegistry::Pwr(pwr) => {
-                        statements.pwr_stmt.execute(rusqlite::params![self.file_id, "PWR", pwr.transaction_sequence_num, pwr.record_sequence_num, pwr.publisher_ip_num, pwr.publisher_name, pwr.submitter_agreement_number, pwr.society_assigned_agreement_number, pwr.writer_ip_num, pwr.publisher_sequence_num])?;
+                        statements.pwr_stmt.execute(rusqlite::params![self.file_id, "PWR", pwr.transaction_sequence_num, pwr.record_sequence_num, pwr.publisher_ip_num, pwr.publisher_name, pwr.submitter_agreement_number, pwr.society_assigned_agreement_number, pwr.writer_ip_num, opt_domain_to_int(&pwr.publisher_sequence_num)])?;
                         tx.last_insert_rowid()
                     }
                     allegro_cwr::cwr_registry::CwrRegistry::Nat(nat) => {
-                        statements.nat_stmt.execute(rusqlite::params![self.file_id, "NAT", nat.transaction_sequence_num, nat.record_sequence_num, nat.title, nat.title_type, nat.language_code])?;
+                        statements.nat_stmt.execute(rusqlite::params![self.file_id, "NAT", nat.transaction_sequence_num, nat.record_sequence_num, nat.title, nat.title_type.to_sql_string(), nat.language_code])?;
                         tx.last_insert_rowid()
                     }
                     allegro_cwr::cwr_registry::CwrRegistry::Ewt(ewt) => {
@@ -490,7 +492,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                             com.title,
                             com.iswc_of_component,
                             com.submitter_work_num,
-                            com.duration,
+                            opt_domain_to_string(&com.duration),
                             com.writer_1_last_name,
                             com.writer_1_first_name,
                             com.writer_1_ipi_name_num,
@@ -519,7 +521,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         tx.last_insert_rowid()
                     }
                     allegro_cwr::cwr_registry::CwrRegistry::Xrf(xrf) => {
-                        statements.xrf_stmt.execute(rusqlite::params![self.file_id, "XRF", xrf.transaction_sequence_num, xrf.record_sequence_num, xrf.organisation_code, xrf.identifier, xrf.identifier_type, xrf.validity])?;
+                        statements.xrf_stmt.execute(rusqlite::params![self.file_id, "XRF", xrf.transaction_sequence_num, xrf.record_sequence_num, xrf.organisation_code, xrf.identifier, xrf.identifier_type, opt_domain_to_string(&xrf.validity)])?;
                         tx.last_insert_rowid()
                     }
                 };

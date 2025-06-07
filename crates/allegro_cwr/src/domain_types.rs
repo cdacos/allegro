@@ -427,7 +427,7 @@ impl CwrFieldParse for GroupId {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         match trimmed.parse::<u32>() {
-            Ok(id) if id >= 1 && id <= 99999 => (GroupId(id), vec![]),
+            Ok(id) if (1..=99999).contains(&id) => (GroupId(id), vec![]),
             Ok(id) => {
                 let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Group ID {} outside valid range 1-99999", id) }];
                 (GroupId(id.clamp(1, 99999)), warnings)
@@ -479,7 +479,7 @@ impl CwrFieldParse for PublisherSequenceNumber {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         match trimmed.parse::<u8>() {
-            Ok(num) if num >= 1 && num <= 99 => (PublisherSequenceNumber(num), vec![]),
+            Ok(num) if (1..=99).contains(&num) => (PublisherSequenceNumber(num), vec![]),
             Ok(num) => {
                 let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Publisher sequence number {} outside valid range 1-99", num) }];
                 (PublisherSequenceNumber(num.clamp(1, 99)), warnings)

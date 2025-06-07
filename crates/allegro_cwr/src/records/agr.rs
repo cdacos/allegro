@@ -69,29 +69,25 @@ fn agr_custom_validate(record: &mut AgrRecord) -> Vec<CwrWarning<'static>> {
     let mut warnings = Vec::new();
 
     // Business rule: Prior Royalty Start Date required if Prior Royalty Status = "D"
-    if matches!(record.prior_royalty_status, PriorRoyaltyStatus::Designated) {
-        if record.prior_royalty_start_date.is_none() || record.prior_royalty_start_date.as_ref().map_or(true, |d| d.0.is_none()) {
-            warnings.push(CwrWarning {
-                field_name: "prior_royalty_start_date",
-                field_title: "Prior royalty start date YYYYMMDD (conditional)",
-                source_str: std::borrow::Cow::Borrowed(""),
-                level: WarningLevel::Critical,
-                description: "Prior Royalty Start Date is required when Prior Royalty Status is 'D' (Designated)".to_string(),
-            });
-        }
+    if matches!(record.prior_royalty_status, PriorRoyaltyStatus::Designated) && (record.prior_royalty_start_date.is_none() || record.prior_royalty_start_date.as_ref().is_none_or(|d| d.0.is_none())) {
+        warnings.push(CwrWarning {
+            field_name: "prior_royalty_start_date",
+            field_title: "Prior royalty start date YYYYMMDD (conditional)",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Critical,
+            description: "Prior Royalty Start Date is required when Prior Royalty Status is 'D' (Designated)".to_string(),
+        });
     }
 
     // Business rule: Post-term Collection End Date required if Post-term Collection Status = "D"
-    if matches!(record.post_term_collection_status, PostTermCollectionStatus::Designated) {
-        if record.post_term_collection_end_date.is_none() || record.post_term_collection_end_date.as_ref().map_or(true, |d| d.0.is_none()) {
-            warnings.push(CwrWarning {
-                field_name: "post_term_collection_end_date",
-                field_title: "Post-term collection end date YYYYMMDD (conditional)",
-                source_str: std::borrow::Cow::Borrowed(""),
-                level: WarningLevel::Critical,
-                description: "Post-term Collection End Date is required when Post-term Collection Status is 'D' (Designated)".to_string(),
-            });
-        }
+    if matches!(record.post_term_collection_status, PostTermCollectionStatus::Designated) && (record.post_term_collection_end_date.is_none() || record.post_term_collection_end_date.as_ref().is_none_or(|d| d.0.is_none())) {
+        warnings.push(CwrWarning {
+            field_name: "post_term_collection_end_date",
+            field_title: "Post-term collection end date YYYYMMDD (conditional)",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Critical,
+            description: "Post-term Collection End Date is required when Post-term Collection Status is 'D' (Designated)".to_string(),
+        });
     }
 
     // Business rule: Date validations

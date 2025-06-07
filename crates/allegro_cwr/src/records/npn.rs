@@ -67,11 +67,8 @@ fn npn_custom_validate(record: &mut NpnRecord) -> Vec<CwrWarning<'static>> {
 
     // Validate language code format if present (ISO 639-1)
     if let Some(ref lang_code) = record.language_code {
-        if !lang_code.trim().is_empty() {
-            if lang_code.len() != 2 {
-                warnings.push(CwrWarning { field_name: "language_code", field_title: "Language code (optional)", source_str: std::borrow::Cow::Owned(lang_code.clone()), level: WarningLevel::Warning, description: "Language code should be 2 characters (ISO 639-1)".to_string() });
-            }
-            // TODO: Validate against ISO 639-1 language code table
+        if !lang_code.trim().is_empty() && lang_code.len() != 2 {
+            warnings.push(CwrWarning { field_name: "language_code", field_title: "Language code (optional)", source_str: std::borrow::Cow::Owned(lang_code.clone()), level: WarningLevel::Warning, description: "Language code should be 2 characters (ISO 639-1)".to_string() });
         }
     }
 

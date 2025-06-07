@@ -76,23 +76,15 @@ fn ewt_custom_validate(record: &mut EwtRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Business rule: Writer 1 last name should be provided if any writer 1 info is given
-    if (record.writer_1_first_name.is_some() && record.writer_1_first_name.as_ref().map_or(false, |s| !s.trim().is_empty()))
-        || (record.writer_1_ipi_name_num.is_some() && record.writer_1_ipi_name_num.as_ref().map_or(false, |s| !s.trim().is_empty()))
-        || (record.writer_1_ipi_base_number.is_some() && record.writer_1_ipi_base_number.as_ref().map_or(false, |s| !s.trim().is_empty()))
-    {
-        if record.writer_1_last_name.is_none() || record.writer_1_last_name.as_ref().map_or(true, |s| s.trim().is_empty()) {
-            warnings.push(CwrWarning { field_name: "writer_1_last_name", field_title: "Writer 1 last name (optional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Warning, description: "Writer 1 last name should be provided when other writer 1 information is given".to_string() });
-        }
+    if ((record.writer_1_first_name.is_some() && record.writer_1_first_name.as_ref().is_some_and(|s| !s.trim().is_empty()))
+        || (record.writer_1_ipi_name_num.is_some() && record.writer_1_ipi_name_num.as_ref().is_some_and(|s| !s.trim().is_empty())) || (record.writer_1_ipi_base_number.is_some() && record.writer_1_ipi_base_number.as_ref().is_some_and(|s| !s.trim().is_empty()))) && (record.writer_1_last_name.is_none() || record.writer_1_last_name.as_ref().is_none_or(|s| s.trim().is_empty())) {
+        warnings.push(CwrWarning { field_name: "writer_1_last_name", field_title: "Writer 1 last name (optional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Warning, description: "Writer 1 last name should be provided when other writer 1 information is given".to_string() });
     }
 
     // Business rule: Writer 2 last name should be provided if any writer 2 info is given
-    if (record.writer_2_first_name.is_some() && record.writer_2_first_name.as_ref().map_or(false, |s| !s.trim().is_empty()))
-        || (record.writer_2_ipi_name_num.is_some() && record.writer_2_ipi_name_num.as_ref().map_or(false, |s| !s.trim().is_empty()))
-        || (record.writer_2_ipi_base_number.is_some() && record.writer_2_ipi_base_number.as_ref().map_or(false, |s| !s.trim().is_empty()))
-    {
-        if record.writer_2_last_name.is_none() || record.writer_2_last_name.as_ref().map_or(true, |s| s.trim().is_empty()) {
-            warnings.push(CwrWarning { field_name: "writer_2_last_name", field_title: "Writer 2 last name (optional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Warning, description: "Writer 2 last name should be provided when other writer 2 information is given".to_string() });
-        }
+    if ((record.writer_2_first_name.is_some() && record.writer_2_first_name.as_ref().is_some_and(|s| !s.trim().is_empty()))
+        || (record.writer_2_ipi_name_num.is_some() && record.writer_2_ipi_name_num.as_ref().is_some_and(|s| !s.trim().is_empty())) || (record.writer_2_ipi_base_number.is_some() && record.writer_2_ipi_base_number.as_ref().is_some_and(|s| !s.trim().is_empty()))) && (record.writer_2_last_name.is_none() || record.writer_2_last_name.as_ref().is_none_or(|s| s.trim().is_empty())) {
+        warnings.push(CwrWarning { field_name: "writer_2_last_name", field_title: "Writer 2 last name (optional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Warning, description: "Writer 2 last name should be provided when other writer 2 information is given".to_string() });
     }
 
     // TODO: Additional business rules requiring broader context:

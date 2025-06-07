@@ -66,20 +66,20 @@ fn ipa_custom_validate(record: &mut IpaRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Business rule: If share > 0, corresponding society must be provided
-    if pr_share > 0 && (record.pr_affiliation_society.is_none() || record.pr_affiliation_society.as_ref().map_or(true, |s| s.trim().is_empty())) {
+    if pr_share > 0 && (record.pr_affiliation_society.is_none() || record.pr_affiliation_society.as_ref().is_none_or(|s| s.trim().is_empty())) {
         warnings.push(CwrWarning { field_name: "pr_affiliation_society", field_title: "PR affiliation society (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "PR affiliation society is required when PR share > 0".to_string() });
     }
 
-    if mr_share > 0 && (record.mr_affiliation_society.is_none() || record.mr_affiliation_society.as_ref().map_or(true, |s| s.trim().is_empty())) {
+    if mr_share > 0 && (record.mr_affiliation_society.is_none() || record.mr_affiliation_society.as_ref().is_none_or(|s| s.trim().is_empty())) {
         warnings.push(CwrWarning { field_name: "mr_affiliation_society", field_title: "MR affiliation society (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "MR affiliation society is required when MR share > 0".to_string() });
     }
 
-    if sr_share > 0 && (record.sr_affiliation_society.is_none() || record.sr_affiliation_society.as_ref().map_or(true, |s| s.trim().is_empty())) {
+    if sr_share > 0 && (record.sr_affiliation_society.is_none() || record.sr_affiliation_society.as_ref().is_none_or(|s| s.trim().is_empty())) {
         warnings.push(CwrWarning { field_name: "sr_affiliation_society", field_title: "SR affiliation society (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "SR affiliation society is required when SR share > 0".to_string() });
     }
 
     // Business rule: Writer first name only allowed for OS/OG agreements with assignor role
-    if matches!(record.agreement_role_code, AgreementRoleCode::Acquirer) && record.interested_party_writer_first_name.is_some() && !record.interested_party_writer_first_name.as_ref().map_or(true, |s| s.trim().is_empty()) {
+    if matches!(record.agreement_role_code, AgreementRoleCode::Acquirer) && record.interested_party_writer_first_name.is_some() && !record.interested_party_writer_first_name.as_ref().is_none_or(|s| s.trim().is_empty()) {
         warnings.push(CwrWarning {
             field_name: "interested_party_writer_first_name",
             field_title: "Interested party writer first name (optional)",

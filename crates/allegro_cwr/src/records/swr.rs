@@ -81,7 +81,7 @@ fn swr_custom_validate(record: &mut SwrRecord) -> Vec<CwrWarning<'static>> {
     let mut warnings = Vec::new();
 
     // Business rule: Writer identification - either Interested Party Number or Writer Last Name required
-    if (record.interested_party_num.is_none() || record.interested_party_num.as_ref().map_or(true, |s| s.trim().is_empty())) && (record.writer_last_name.is_none() || record.writer_last_name.as_ref().map_or(true, |s| s.trim().is_empty())) {
+    if (record.interested_party_num.is_none() || record.interested_party_num.as_ref().is_none_or(|s| s.trim().is_empty())) && (record.writer_last_name.is_none() || record.writer_last_name.as_ref().is_none_or(|s| s.trim().is_empty())) {
         warnings.push(CwrWarning { field_name: "interested_party_num", field_title: "Interested party number (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Either Interested Party Number or Writer Last Name must be provided".to_string() });
     }
 
@@ -95,15 +95,15 @@ fn swr_custom_validate(record: &mut SwrRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Business rule: If ownership share > 0, corresponding society should be provided
-    if pr_share > 0 && (record.pr_affiliation_society_num.is_none() || record.pr_affiliation_society_num.as_ref().map_or(true, |s| s.trim().is_empty())) {
+    if pr_share > 0 && (record.pr_affiliation_society_num.is_none() || record.pr_affiliation_society_num.as_ref().is_none_or(|s| s.trim().is_empty())) {
         warnings.push(CwrWarning { field_name: "pr_affiliation_society_num", field_title: "PR affiliation society number (optional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Warning, description: "PR affiliation society number should be provided when PR ownership share > 0".to_string() });
     }
 
-    if mr_share > 0 && (record.mr_society.is_none() || record.mr_society.as_ref().map_or(true, |s| s.trim().is_empty())) {
+    if mr_share > 0 && (record.mr_society.is_none() || record.mr_society.as_ref().is_none_or(|s| s.trim().is_empty())) {
         warnings.push(CwrWarning { field_name: "mr_society", field_title: "MR society (optional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Warning, description: "MR society should be provided when MR ownership share > 0".to_string() });
     }
 
-    if sr_share > 0 && (record.sr_society.is_none() || record.sr_society.as_ref().map_or(true, |s| s.trim().is_empty())) {
+    if sr_share > 0 && (record.sr_society.is_none() || record.sr_society.as_ref().is_none_or(|s| s.trim().is_empty())) {
         warnings.push(CwrWarning { field_name: "sr_society", field_title: "SR society (optional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Warning, description: "SR society should be provided when SR ownership share > 0".to_string() });
     }
 

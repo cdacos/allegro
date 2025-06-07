@@ -30,10 +30,8 @@ fn grt_custom_validate(record: &mut GrtRecord) -> Vec<CwrWarning<'static>> {
     let mut warnings = Vec::new();
 
     // Business rule: Currency Indicator is mandatory if Total Monetary Value is provided
-    if record.total_monetary_value.is_some() && record.total_monetary_value.as_ref().map_or(false, |v| !v.trim().is_empty()) {
-        if record.currency_indicator.0.is_none() {
-            warnings.push(CwrWarning { field_name: "currency_indicator", field_title: "Currency indicator (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Currency Indicator is mandatory when Total Monetary Value is provided".to_string() });
-        }
+    if record.total_monetary_value.is_some() && record.total_monetary_value.as_ref().is_some_and(|v| !v.trim().is_empty()) && record.currency_indicator.0.is_none() {
+        warnings.push(CwrWarning { field_name: "currency_indicator", field_title: "Currency indicator (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Currency Indicator is mandatory when Total Monetary Value is provided".to_string() });
     }
 
     // Business rule: Group ID must match the preceding GRH record

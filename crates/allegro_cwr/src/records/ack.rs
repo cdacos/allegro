@@ -51,17 +51,13 @@ fn ack_custom_validate(record: &mut AckRecord) -> Vec<CwrWarning<'static>> {
     let mut warnings = Vec::new();
 
     // Business rule: Creation Title required if ACK responds to NWR or REV transaction
-    if matches!(record.original_transaction_type, TransactionType::Nwr | TransactionType::Rev) {
-        if record.creation_title.is_none() || record.creation_title.as_ref().map_or(true, |s| s.trim().is_empty()) {
-            warnings.push(CwrWarning { field_name: "creation_title", field_title: "Creation title (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Creation Title is required when ACK responds to NWR or REV transaction".to_string() });
-        }
+    if matches!(record.original_transaction_type, TransactionType::Nwr | TransactionType::Rev) && (record.creation_title.is_none() || record.creation_title.as_ref().is_none_or(|s| s.trim().is_empty())) {
+        warnings.push(CwrWarning { field_name: "creation_title", field_title: "Creation title (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Creation Title is required when ACK responds to NWR or REV transaction".to_string() });
     }
 
     // Business rule: Submitter Creation # required if ACK is response to a transaction
-    if !matches!(record.original_transaction_type, TransactionType::Agr) {
-        if record.submitter_creation_num.is_none() || record.submitter_creation_num.as_ref().map_or(true, |s| s.trim().is_empty()) {
-            warnings.push(CwrWarning { field_name: "submitter_creation_num", field_title: "Submitter creation number (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Submitter Creation Number is required when ACK responds to a transaction".to_string() });
-        }
+    if !matches!(record.original_transaction_type, TransactionType::Agr) && (record.submitter_creation_num.is_none() || record.submitter_creation_num.as_ref().is_none_or(|s| s.trim().is_empty())) {
+        warnings.push(CwrWarning { field_name: "submitter_creation_num", field_title: "Submitter creation number (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Submitter Creation Number is required when ACK responds to a transaction".to_string() });
     }
 
     // Special case validation for HDR/TRL problems

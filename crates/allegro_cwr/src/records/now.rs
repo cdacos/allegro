@@ -57,21 +57,15 @@ fn now_custom_validate(record: &mut NowRecord) -> Vec<CwrWarning<'static>> {
 
     // Validate language code format if present (ISO 639-1)
     if let Some(ref lang_code) = record.language_code {
-        if !lang_code.trim().is_empty() {
-            if lang_code.len() != 2 {
-                warnings.push(CwrWarning { field_name: "language_code", field_title: "Language code (optional)", source_str: std::borrow::Cow::Owned(lang_code.clone()), level: WarningLevel::Warning, description: "Language code should be 2 characters (ISO 639-1)".to_string() });
-            }
-            // TODO: Validate against ISO 639-1 language code table
+        if !lang_code.trim().is_empty() && lang_code.len() != 2 {
+            warnings.push(CwrWarning { field_name: "language_code", field_title: "Language code (optional)", source_str: std::borrow::Cow::Owned(lang_code.clone()), level: WarningLevel::Warning, description: "Language code should be 2 characters (ISO 639-1)".to_string() });
         }
     }
 
     // Validate writer position if present
     if let Some(ref position) = record.writer_position {
-        if !position.trim().is_empty() {
-            if position.len() != 1 {
-                warnings.push(CwrWarning { field_name: "writer_position", field_title: "Writer position (1 char, optional)", source_str: std::borrow::Cow::Owned(position.clone()), level: WarningLevel::Warning, description: "Writer position must be exactly 1 character if specified".to_string() });
-            }
-            // TODO: Validate writer position against lookup table
+        if !position.trim().is_empty() && position.len() != 1 {
+            warnings.push(CwrWarning { field_name: "writer_position", field_title: "Writer position (1 char, optional)", source_str: std::borrow::Cow::Owned(position.clone()), level: WarningLevel::Warning, description: "Writer position must be exactly 1 character if specified".to_string() });
         }
     }
 

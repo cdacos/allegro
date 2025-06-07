@@ -35,7 +35,7 @@ fn alt_custom_validate(record: &mut AltRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Business rule: Language code required for translated and transliterated titles
-    if matches!(record.title_type, TitleType::TranslatedTitle | TitleType::TransliterationTrans | TitleType::TransliterationAlt) && (record.language_code.is_none() || record.language_code.as_ref().map_or(true, |s| s.trim().is_empty())) {
+    if matches!(record.title_type, TitleType::TranslatedTitle | TitleType::TransliterationTrans | TitleType::TransliterationAlt) && (record.language_code.is_none() || record.language_code.as_ref().is_none_or(|s| s.trim().is_empty())) {
         warnings.push(CwrWarning { field_name: "language_code", field_title: "Language code (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Language code is required for translated and transliterated titles".to_string() });
     }
 
