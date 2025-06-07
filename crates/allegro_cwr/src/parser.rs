@@ -1,4 +1,4 @@
-use crate::cwr_record::CwrRecord;
+use crate::cwr_registry::CwrRegistry;
 use crate::error::CwrParseError;
 use crate::util::get_cwr_version;
 use log::{error, info};
@@ -18,7 +18,7 @@ pub struct ParsingContext {
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct ParsedRecord {
     pub line_number: usize,
-    pub record: CwrRecord,
+    pub record: CwrRegistry,
     pub context: ParsingContext,
     pub warnings: Vec<String>,
 }
@@ -27,7 +27,7 @@ pub struct ParsedRecord {
 fn parse_cwr_line(line: &str, line_number: usize, context: &ParsingContext) -> Result<ParsedRecord, CwrParseError> {
     let record_type = line.get(0..3).ok_or_else(|| CwrParseError::BadFormat(format!("Line {} is too short (less than 3 chars)", line_number)))?;
 
-    let (record, warnings) = crate::cwr_record::parse_by_record_type(record_type, line)?;
+    let (record, warnings) = crate::cwr_registry::parse_by_record_type(record_type, line)?;
 
     Ok(ParsedRecord { line_number, record, context: context.clone(), warnings })
 }
@@ -243,7 +243,7 @@ mod tests {
             software_package: None,
             software_package_version: None,
         };
-        let cwr_record = CwrRecord::Hdr(hdr);
+        let cwr_record = CwrRegistry::Hdr(hdr);
         assert_eq!(cwr_record.record_type(), "HDR");
     }
 

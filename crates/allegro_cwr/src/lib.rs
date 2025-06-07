@@ -4,7 +4,7 @@
 //! see the `allegro_cwr_sqlite` crate. For JSON output, see the `allegro_cwr_json` crate.
 
 mod cwr_handler;
-pub mod cwr_record;
+pub mod cwr_registry;
 pub mod domain_types;
 pub mod error;
 pub mod parser;
@@ -37,6 +37,7 @@ impl std::str::FromStr for OutputFormat {
 }
 
 // Re-export commonly used items
+pub use crate::cwr_registry::get_all_record_type_codes;
 pub use crate::error::CwrParseError;
 pub use crate::parser::{ParsedRecord, ParsingContext, process_cwr_stream, process_cwr_stream_with_version};
 pub use crate::records::*;
