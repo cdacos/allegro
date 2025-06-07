@@ -1,9 +1,9 @@
-- Do not add comments.
-- The Rust 2024 Edition is now stable
-- Do not add code that silently skips over unhappy paths. Be explicit!
-- Use the .me/ git-ignored folder for your test files (.me/TestSample.V21 is a real CWR file for reference)
-- Logging: Use `log` crate with appropriate levels (info, warn, error). To see logs, set RUST_LOG=info (or debug) when running
-- Never change tests to match what the code does. Always ask the user what the right answer should be!
-- Thou shall not write Rust code that panics!
-- This app is designed for huge files. We need to stream, avoid allocating increasing amounts of memory.
-- Follow SOLID principles, use liberal modularization with Rust modules
+- No comments
+- Rust 2024 Edition
+- Explicit error handling, no silent failures
+- Use .me/ folder for test files (with real CWR sample)
+- Use log crate for logging
+- Don't change tests to match code - ask for correct behavior
+- No panicking code
+- Stream processing for huge files, avoid memory allocation growth
+- SOLID principles with liberal Rust modularization
