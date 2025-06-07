@@ -683,7 +683,7 @@ mod tests {
     #[test]
     fn test_process_cwr_stream_real_sample() {
         // Test with actual sample file
-        let result = process_cwr_stream("/Users/carlos/src/personal/allegro-rs/.me/TestSample.V21");
+        let result = process_cwr_stream("../../.me/TestSample.V21");
         assert!(result.is_ok());
 
         let records: Vec<_> = result.unwrap().take(10).collect(); // Just test first 10 records
