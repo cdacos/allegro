@@ -229,22 +229,22 @@ mod tests {
 
     #[test]
     fn test_cwr_record_type_mapping() {
-        use crate::domain_types::Date;
+        use crate::domain_types::*;
         use crate::records::HdrRecord;
-        use chrono::NaiveDate;
+        use chrono::{NaiveDate, NaiveTime};
 
         let hdr = HdrRecord {
             record_type: "HDR".to_string(),
-            sender_type: "01".to_string(),
+            sender_type: SenderType::NumericPrefix("01".to_string()),
             sender_id: "BMI".to_string(),
             sender_name: "BMI MUSIC".to_string(),
-            edi_standard_version_number: "01.10".to_string(),
+            edi_standard_version_number: EdiStandardVersion("01.10".to_string()),
             creation_date: Date(NaiveDate::from_ymd_opt(2005, 1, 1)),
-            creation_time: "120000".to_string(),
+            creation_time: Time(NaiveTime::from_hms_opt(12, 0, 0)),
             transmission_date: Date(NaiveDate::from_ymd_opt(2005, 1, 1)),
             character_set: None,
-            version: None,
-            revision: None,
+            version: CwrVersion(None),
+            revision: CwrRevision(None),
             software_package: None,
             software_package_version: None,
         };

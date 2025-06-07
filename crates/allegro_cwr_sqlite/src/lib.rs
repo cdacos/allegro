@@ -104,16 +104,16 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         statements.hdr_stmt.execute(rusqlite::params![
                             self.file_id,
                             "HDR",
-                            hdr.sender_type,
+                            hdr.sender_type.as_str(),
                             hdr.sender_id,
                             hdr.sender_name,
-                            hdr.edi_standard_version_number,
+                            hdr.edi_standard_version_number.as_str(),
                             hdr.creation_date.as_str(),
-                            hdr.creation_time,
+                            hdr.creation_time.as_str(),
                             hdr.transmission_date.as_str(),
                             hdr.character_set,
-                            hdr.version,
-                            hdr.revision,
+                            hdr.version.as_str(),
+                            hdr.revision.as_str(),
                             hdr.software_package,
                             hdr.software_package_version
                         ])?;

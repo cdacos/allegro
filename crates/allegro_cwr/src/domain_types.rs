@@ -1,6 +1,6 @@
 //! Domain types for CWR field parsing
 
-use chrono::NaiveDate;
+use chrono::{NaiveDate, NaiveTime};
 use std::borrow::Cow;
 
 /// Warning levels for CWR parsing
@@ -139,6 +139,161 @@ impl CwrFieldParse for WorksCount {
             Err(_) => {
                 let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid number format: {}", trimmed) }];
                 (WorksCount(0), warnings)
+            }
+        }
+    }
+}
+
+/// Sender type for HDR record
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub enum SenderType {
+    #[default]
+    Publisher,
+    Society,
+    Writer,
+    AdministrativeAgency,
+    /// For IPNN > 9 digits, this contains the leading digits
+    NumericPrefix(String),
+}
+
+impl SenderType {
+    pub fn as_str(&self) -> &str {
+        match self {
+            SenderType::Publisher => "PB",
+            SenderType::Society => "SO",
+            SenderType::Writer => "WR",
+            SenderType::AdministrativeAgency => "AA",
+            SenderType::NumericPrefix(s) => s,
+        }
+    }
+}
+
+impl CwrFieldParse for SenderType {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        match trimmed {
+            "PB" => (SenderType::Publisher, vec![]),
+            "SO" => (SenderType::Society, vec![]),
+            "WR" => (SenderType::Writer, vec![]),
+            "AA" => (SenderType::AdministrativeAgency, vec![]),
+            s if s.chars().all(|c| c.is_ascii_digit()) && s.len() <= 2 => (SenderType::NumericPrefix(s.to_string()), vec![]),
+            _ => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid sender type '{}', must be PB, SO, WR, AA, or 2-digit numeric prefix", trimmed) }];
+                (SenderType::Publisher, warnings)
+            }
+        }
+    }
+}
+
+/// EDI Standard Version Number
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct EdiStandardVersion(pub String);
+
+impl EdiStandardVersion {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl CwrFieldParse for EdiStandardVersion {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        if trimmed == "01.10" {
+            (EdiStandardVersion(trimmed.to_string()), vec![])
+        } else {
+            let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("EDI Standard Version must be '01.10', got '{}'", trimmed) }];
+            (EdiStandardVersion("01.10".to_string()), warnings)
+        }
+    }
+}
+
+/// CWR Version (2.2)
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct CwrVersion(pub Option<String>);
+
+impl CwrVersion {
+    pub fn as_str(&self) -> String {
+        match &self.0 {
+            Some(v) => v.clone(),
+            None => String::new(),
+        }
+    }
+}
+
+impl CwrFieldParse for CwrVersion {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        if trimmed.is_empty() {
+            (CwrVersion(None), vec![])
+        } else if trimmed == "2.2" {
+            (CwrVersion(Some(trimmed.to_string())), vec![])
+        } else {
+            let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("CWR Version must be '2.2' if specified, got '{}'", trimmed) }];
+            (CwrVersion(Some("2.2".to_string())), warnings)
+        }
+    }
+}
+
+/// CWR Revision Number
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct CwrRevision(pub Option<u32>);
+
+impl CwrRevision {
+    pub fn as_str(&self) -> String {
+        match &self.0 {
+            Some(r) => r.to_string(),
+            None => String::new(),
+        }
+    }
+}
+
+impl CwrFieldParse for CwrRevision {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        if trimmed.is_empty() {
+            (CwrRevision(None), vec![])
+        } else {
+            match trimmed.parse::<u32>() {
+                Ok(1) => (CwrRevision(Some(1)), vec![]),
+                Ok(rev) => {
+                    let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("CWR Revision number {} may not be valid, current valid value is 1", rev) }];
+                    (CwrRevision(Some(rev)), warnings)
+                }
+                Err(_) => {
+                    let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid revision number format: {}", trimmed) }];
+                    (CwrRevision(Some(1)), warnings)
+                }
+            }
+        }
+    }
+}
+
+/// Time in HHMMSS format
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct Time(pub Option<NaiveTime>);
+
+impl Time {
+    pub fn as_str(&self) -> String {
+        match &self.0 {
+            Some(time) => time.format("%H%M%S").to_string(),
+            None => String::new(),
+        }
+    }
+}
+
+impl CwrFieldParse for Time {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        if trimmed.len() != 6 {
+            let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Time should be 6 characters HHMMSS, got {}", trimmed.len()) }];
+            return (Time(None), warnings);
+        }
+
+        match NaiveTime::parse_from_str(trimmed, "%H%M%S") {
+            Ok(time) => (Time(Some(time)), vec![]),
+            Err(_) => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid time format: {}", trimmed) }];
+                (Time(None), warnings)
             }
         }
     }
