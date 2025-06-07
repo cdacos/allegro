@@ -3,6 +3,10 @@ use crate::records::*;
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
+type ParseResult = Result<(CwrRegistry, Vec<String>), CwrParseError>;
+type ParseFunction = fn(&str) -> ParseResult;
+type ParserMap = HashMap<&'static str, ParseFunction>;
+
 /// Enum containing all possible parsed CWR record types.
 /// Note: This represents the record types we parse INTO, not the input codes.
 /// For example, REV/ISW/EXC codes all parse into CwrRegistry::Nwr variants.
@@ -86,22 +90,20 @@ impl CwrRegistry {
 
 use crate::records::CwrRecord;
 
-fn register_record<T: CwrRecord + 'static>(
-    map: &mut HashMap<&'static str, fn(&str) -> Result<(CwrRegistry, Vec<String>), CwrParseError>>
-) {
-    let parser_fn = |line: &str| -> Result<(CwrRegistry, Vec<String>), CwrParseError> {
+fn register_record<T: CwrRecord + 'static>(map: &mut ParserMap) {
+    let parser_fn = |line: &str| -> ParseResult {
         let result = T::from_cwr_line(line)?;
         Ok((result.record.into_registry(), result.warnings))
     };
-    
+
     for &code in T::record_codes() {
         map.insert(code, parser_fn);
     }
 }
 
-static RECORD_PARSERS: LazyLock<HashMap<&'static str, fn(&str) -> Result<(CwrRegistry, Vec<String>), CwrParseError>>> = LazyLock::new(|| {
+static RECORD_PARSERS: LazyLock<ParserMap> = LazyLock::new(|| {
     let mut map = HashMap::new();
-    
+
     // Register all record types - each one declares its own codes
     register_record::<HdrRecord>(&mut map);
     register_record::<GrhRecord>(&mut map);
@@ -136,11 +138,11 @@ static RECORD_PARSERS: LazyLock<HashMap<&'static str, fn(&str) -> Result<(CwrReg
     register_record::<NowRecord>(&mut map);
     register_record::<AriRecord>(&mut map);
     register_record::<XrfRecord>(&mut map);
-    
+
     map
 });
 
-pub fn parse_by_record_type(record_type: &str, line: &str) -> Result<(CwrRegistry, Vec<String>), CwrParseError> {
+pub fn parse_by_record_type(record_type: &str, line: &str) -> ParseResult {
     let parser_fn = RECORD_PARSERS.get(record_type).ok_or_else(|| CwrParseError::BadFormat(format!("Unrecognized record type '{}'", record_type)))?;
 
     parser_fn(line)

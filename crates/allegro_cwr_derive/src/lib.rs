@@ -16,8 +16,8 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
     };
 
     let test_data = extract_test_data(&input.attrs).expect("CwrRecord requires #[cwr(test_data = \"...\")] attribute");
-    let record_codes = extract_record_codes(&input.attrs, &name);
-    let registry_variant = generate_registry_variant(&name);
+    let record_codes = extract_record_codes(&input.attrs, name);
+    let registry_variant = generate_registry_variant(name);
     let field_parsers = fields.iter().map(|field| {
         let field_name = field.ident.as_ref().unwrap();
         let field_type = &field.ty;

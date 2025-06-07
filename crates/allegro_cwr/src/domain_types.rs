@@ -32,8 +32,6 @@ pub trait CwrFieldParse: Sized + Default {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>);
 }
 
-// Domain types
-
 #[derive(Debug, Clone, PartialEq, Default, serde::Serialize, serde::Deserialize)]
 pub struct WorksCount(pub u32);
 
@@ -71,14 +69,12 @@ impl Date {
     }
 }
 
-// Implement CwrFieldParse for String (default case)
 impl CwrFieldParse for String {
     fn parse_cwr_field(source: &str, _field_name: &'static str, _field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         (source.trim().to_string(), vec![])
     }
 }
 
-// Implement for Option<String>
 impl CwrFieldParse for Option<String> {
     fn parse_cwr_field(source: &str, _field_name: &'static str, _field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
@@ -86,7 +82,6 @@ impl CwrFieldParse for Option<String> {
     }
 }
 
-// Implement CwrFieldParse for YesNo
 impl CwrFieldParse for YesNo {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
@@ -101,7 +96,6 @@ impl CwrFieldParse for YesNo {
     }
 }
 
-// Implement CwrFieldParse for Date
 impl CwrFieldParse for Date {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
@@ -120,7 +114,6 @@ impl CwrFieldParse for Date {
     }
 }
 
-// Implement CwrFieldParse for Option<Date>
 impl CwrFieldParse for Option<Date> {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();

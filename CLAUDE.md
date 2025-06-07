@@ -1,4 +1,4 @@
-- No comments
+- Minimal comments - only for non-obvious business rules that would surprise a domain-familiar developer
 - Rust 2024 Edition
 - Explicit error handling, no silent failures
 - Use .me/ folder for test files (with real CWR sample)
@@ -8,3 +8,4 @@
 - Stream processing for huge files, avoid memory allocation growth
 - SOLID principles with liberal Rust modularization
 - After a working code change run cargo fmt & cargo clippy
+- CWR spec is slow moving, records do not change frequently

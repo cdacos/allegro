@@ -6,12 +6,10 @@ use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader, Seek};
 
-// Context struct to hold file-level metadata like CWR version
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct ParsingContext {
-    pub cwr_version: f32, // e.g., 2.0, 2.1, 2.2
-    pub file_id: i64,     // Database file_id for this file
-                          // Add other metadata like charset later if needed
+    pub cwr_version: f32,
+    pub file_id: i64,
 }
 
 /// Represents a parsed CWR record with its metadata
@@ -92,32 +90,36 @@ mod tests {
     fn test_get_cwr_version_v21_auto_detect() {
         // TestSample.V21 HDR line - should auto-detect as 2.1 by heuristics
         let hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221";
-        let version = get_cwr_version("test_file.cwr", hdr_line, None).unwrap();
-        assert_eq!(version, 2.1);
+        let result = get_cwr_version("test_file.cwr", hdr_line, None);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 2.1);
     }
 
     #[test]
     fn test_get_cwr_version_cli_override() {
         // CLI version should override auto-detection
         let hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221";
-        let version = get_cwr_version("test_file.cwr", hdr_line, Some(2.0)).unwrap();
-        assert_eq!(version, 2.0);
+        let result = get_cwr_version("test_file.cwr", hdr_line, Some(2.0));
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 2.0);
     }
 
     #[test]
     fn test_get_cwr_version_filename_detection() {
         // Filename version should be detected when no CLI version specified
         let hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221";
-        let version = get_cwr_version("CW060001EMI_044.V21", hdr_line, None).unwrap();
-        assert_eq!(version, 2.1);
+        let result = get_cwr_version("CW060001EMI_044.V21", hdr_line, None);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 2.1);
     }
 
     #[test]
     fn test_get_cwr_version_cli_vs_filename() {
         // CLI version should override filename version
         let hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221";
-        let version = get_cwr_version("CW060001EMI_044.V21", hdr_line, Some(2.2)).unwrap();
-        assert_eq!(version, 2.2);
+        let result = get_cwr_version("CW060001EMI_044.V21", hdr_line, Some(2.2));
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 2.2);
     }
 
     #[test]
@@ -130,8 +132,9 @@ mod tests {
         hdr_line.push_str("2.2"); // HDR says 2.2
         hdr_line.push(' ');
 
-        let version = get_cwr_version("CW060001EMI_044.V21", &hdr_line, None).unwrap(); // filename says 2.1
-        assert_eq!(version, 2.1); // filename takes precedence
+        let result = get_cwr_version("CW060001EMI_044.V21", &hdr_line, None);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 2.1); // filename takes precedence
     }
 
     #[test]
@@ -145,8 +148,9 @@ mod tests {
         hdr_line.push_str("2.2"); // Add version at position 101-104
         hdr_line.push(' '); // Make length > 104
 
-        let version = get_cwr_version("test_file.cwr", &hdr_line, None).unwrap();
-        assert_eq!(version, 2.2);
+        let result = get_cwr_version("test_file.cwr", &hdr_line, None);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 2.2);
     }
 
     #[test]
@@ -160,8 +164,9 @@ mod tests {
         hdr_line.push(' ');
 
         // CLI specifies 2.1 but file has explicit 2.2 - should use CLI version with warning
-        let version = get_cwr_version("test_file.cwr", &hdr_line, Some(2.1)).unwrap();
-        assert_eq!(version, 2.1);
+        let result = get_cwr_version("test_file.cwr", &hdr_line, Some(2.1));
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 2.1);
     }
 
     #[test]
@@ -180,7 +185,7 @@ mod tests {
             Err(CwrParseError::BadFormat(msg)) => {
                 assert!(msg.contains("Invalid CWR version in header: 9.9"));
             }
-            _ => panic!("Expected BadFormat error"),
+            _ => assert!(false, "Expected BadFormat error"),
         }
     }
 
@@ -193,7 +198,7 @@ mod tests {
             Err(CwrParseError::BadFormat(msg)) => {
                 assert_eq!(msg, "Line 1 is too short (less than 3 chars)");
             }
-            _ => panic!("Expected BadFormat error"),
+            _ => assert!(false, "Expected BadFormat error"),
         }
     }
 
@@ -206,7 +211,7 @@ mod tests {
             Err(CwrParseError::BadFormat(msg)) => {
                 assert_eq!(msg, "Unrecognized record type 'XYZ'");
             }
-            _ => panic!("Expected BadFormat error"),
+            _ => assert!(false, "Expected BadFormat error"),
         }
     }
 
@@ -268,7 +273,7 @@ mod tests {
             Err(CwrParseError::BadFormat(msg)) => {
                 assert_eq!(msg, "File is empty");
             }
-            _ => panic!("Expected BadFormat error"),
+            _ => assert!(false, "Expected BadFormat error"),
         }
         fs::remove_file(&temp_file).ok();
     }
@@ -283,7 +288,7 @@ mod tests {
             Err(CwrParseError::BadFormat(msg)) => {
                 assert!(msg.starts_with("File does not start with HDR record"));
             }
-            _ => panic!("Expected BadFormat error"),
+            _ => assert!(false, "Expected BadFormat error"),
         }
         fs::remove_file(&temp_file).ok();
     }
@@ -332,7 +337,7 @@ mod tests {
             Err(CwrParseError::BadFormat(msg)) => {
                 assert_eq!(msg, "Line 2 is empty");
             }
-            _ => panic!("Expected BadFormat error for empty line"),
+            _ => assert!(false, "Expected BadFormat error for empty line"),
         }
 
         fs::remove_file(&temp_file).ok();
