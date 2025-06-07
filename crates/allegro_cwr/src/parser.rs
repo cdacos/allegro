@@ -31,11 +31,13 @@ fn parse_cwr_line(line: &str, line_number: usize, context: &ParsingContext) -> R
 }
 
 /// Returns an iterator that processes CWR lines and yields parsed records
+#[must_use]
 pub fn process_cwr_stream(input_filename: &str) -> Result<impl Iterator<Item = Result<ParsedRecord, CwrParseError>>, CwrParseError> {
     process_cwr_stream_with_version(input_filename, None)
 }
 
 /// Returns an iterator that processes CWR lines and yields parsed records with optional version hint
+#[must_use]
 pub fn process_cwr_stream_with_version(input_filename: &str, version_hint: Option<f32>) -> Result<impl Iterator<Item = Result<ParsedRecord, CwrParseError>>, CwrParseError> {
     let file = File::open(input_filename)?;
     let mut reader = BufReader::new(file);
@@ -252,21 +254,21 @@ mod tests {
         assert_eq!(cwr_record.record_type(), "HDR");
     }
 
-    fn create_temp_cwr_file(content: &str) -> String {
+    fn create_temp_cwr_file(content: &str) -> Result<String, std::io::Error> {
         let temp_dir = std::env::temp_dir();
-        let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "System time error"))?.as_nanos();
         let thread_id = std::thread::current().id();
         let file_path = temp_dir.join(format!("test_{}_{:?}.cwr", timestamp, thread_id));
-        let mut file = File::create(&file_path).unwrap();
-        file.write_all(content.as_bytes()).unwrap();
-        file.flush().unwrap();
+        let mut file = File::create(&file_path)?;
+        file.write_all(content.as_bytes())?;
+        file.flush()?;
         drop(file);
-        file_path.to_string_lossy().to_string()
+        Ok(file_path.to_string_lossy().to_string())
     }
 
     #[test]
     fn test_process_cwr_stream_empty_file() {
-        let temp_file = create_temp_cwr_file("");
+        let temp_file = create_temp_cwr_file("").unwrap();
         let result = process_cwr_stream(&temp_file);
         assert!(result.is_err());
         match result {
@@ -281,7 +283,7 @@ mod tests {
     #[test]
     fn test_process_cwr_stream_no_hdr() {
         let content = "TRL00000001000000012005010100";
-        let temp_file = create_temp_cwr_file(content);
+        let temp_file = create_temp_cwr_file(content).unwrap();
         let result = process_cwr_stream(&temp_file);
         assert!(result.is_err());
         match result {
@@ -296,7 +298,7 @@ mod tests {
     #[test]
     fn test_process_cwr_stream_valid_file() {
         let content = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221\nGRHNWR0000102.100000000000  \nTRL00000002000000022022122100                                                                                                                                                                                                                                                                                                                                                                                   ";
-        let temp_file = create_temp_cwr_file(content);
+        let temp_file = create_temp_cwr_file(content).unwrap();
         let result = process_cwr_stream(&temp_file);
         assert!(result.is_ok());
 
@@ -322,7 +324,7 @@ mod tests {
     #[test]
     fn test_process_cwr_stream_empty_line() {
         let content = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221\n\nTRL00000002000000022022122100                                                                                                                                                                                                                                                                                                                                                                                   ";
-        let temp_file = create_temp_cwr_file(content);
+        let temp_file = create_temp_cwr_file(content).unwrap();
         let result = process_cwr_stream(&temp_file);
         assert!(result.is_ok());
 

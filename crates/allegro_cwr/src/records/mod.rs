@@ -23,6 +23,7 @@ pub trait CwrRecord {
     fn record_codes() -> &'static [&'static str];
 
     /// Parse a CWR line into this specific record type
+    #[must_use]
     fn from_cwr_line(line: &str) -> Result<ParseResult<Self>, CwrParseError>
     where
         Self: Sized;

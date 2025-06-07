@@ -110,6 +110,7 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
             }
 
             /// Compatibility method for existing parser
+            #[must_use]
             pub fn from_cwr_line(line: &str) -> Result<crate::error::CwrParseResult<Self>, crate::error::CwrParseError> {
                 // Validate record type matches what we expect
                 if line.len() < 3 {
@@ -154,6 +155,7 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
                 #record_codes
             }
 
+            #[must_use]
             fn from_cwr_line(line: &str) -> Result<crate::records::ParseResult<Self>, crate::error::CwrParseError> {
                 // Validate record type matches what we expect
                 if line.len() < 3 {

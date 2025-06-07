@@ -47,6 +47,7 @@ pub use cwr_handler::CwrHandler;
 use log::info;
 
 /// Generic function to process CWR file with any handler that implements CwrHandler trait
+#[must_use]
 pub fn process_cwr_with_handler<H: CwrHandler>(input_filename: &str, handler: H) -> Result<String, Box<dyn std::error::Error>>
 where
     H::Error: 'static,
@@ -55,6 +56,7 @@ where
 }
 
 /// Generic function to process CWR file with any handler that implements CwrHandler trait and optional version hint
+#[must_use]
 pub fn process_cwr_with_handler_and_version<H: CwrHandler>(input_filename: &str, mut handler: H, version_hint: Option<f32>) -> Result<String, Box<dyn std::error::Error>>
 where
     H::Error: 'static,

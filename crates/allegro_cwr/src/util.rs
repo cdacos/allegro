@@ -53,6 +53,7 @@ pub fn extract_version_from_filename(filename: &str) -> Option<f32> {
     }
 }
 
+#[must_use]
 pub fn get_cwr_version(filename: &str, hdr_line: &str, cli_version: Option<f32>) -> Result<f32, CwrParseError> {
     use log::{info, warn};
 
