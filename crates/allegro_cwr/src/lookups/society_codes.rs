@@ -146,7 +146,7 @@ pub static SOCIETY_CODES: Lazy<HashMap<&'static str, u16>> = Lazy::new(|| {
     m.insert("KOPIOSTO", 138); // Finland
     m.insert("COPY-DAN BILLEDKUNST", 139); // Denmark
     m.insert("UACRR", 140); // Ukraine
-    m.insert("ATN", 141); // Chile (formerly known as GESATCH)
+    m.insert("ATN-1", 141); // Chile (formerly known as GESATCH)
     m.insert("DALRO", 142); // South Africa
     m.insert("TEATERAUTOR", 143); // Bulgaria
     m.insert("HAA", 144); // Croatia
@@ -203,7 +203,7 @@ pub static SOCIETY_CODES: Lazy<HashMap<&'static str, u16>> = Lazy::new(|| {
     m.insert("VEVAM", 195); // Netherlands
     m.insert("WGA", 196); // United States
     m.insert("WGJ", 197); // Japan
-    m.insert("ZAMP", 198); // Slovenia
+    m.insert("ZAMP-1", 198); // Slovenia
     m.insert("ZAPA", 199); // Poland
     m.insert("MSG", 200); // Turkey
     m.insert("ABRAMUS", 201); // Brazil
