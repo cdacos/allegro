@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 /// PWR - Publisher for Writer Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(test_data = "PWR0000000000000325ABKC     ABKCO MUSIC INC.                                                         WOMA     01")]
+#[cwr(validator = pwr_custom_validate, test_data = "PWR0000000000000325ABKC     ABKCO MUSIC INC.                                                         WOMA     01")]
 pub struct PwrRecord {
     #[cwr(title = "Always 'PWR'", start = 0, len = 3)]
     pub record_type: String,
@@ -31,5 +31,27 @@ pub struct PwrRecord {
     pub writer_ip_num: Option<String>,
 
     #[cwr(title = "Publisher sequence number (v2.2+)", start = 110, len = 2)]
-    pub publisher_sequence_num: Option<String>,
+    pub publisher_sequence_num: Option<PublisherSequenceNumber>,
+}
+
+// Custom validation function for PWR record
+fn pwr_custom_validate(record: &mut PwrRecord) -> Vec<CwrWarning<'static>> {
+    let mut warnings = Vec::new();
+
+    // Business rule: Publisher identification - either Publisher IP Number or Publisher Name required
+    if (record.publisher_ip_num.is_none() || record.publisher_ip_num.as_ref().map_or(true, |s| s.trim().is_empty())) && (record.publisher_name.is_none() || record.publisher_name.as_ref().map_or(true, |s| s.trim().is_empty())) {
+        warnings.push(CwrWarning { field_name: "publisher_ip_num", field_title: "Publisher IP number (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Either Publisher IP Number or Publisher Name must be provided".to_string() });
+    }
+
+    // Business rule: Publisher sequence numbers must be sequential within a work
+    // This requires cross-record validation which would be implemented in a post-processing step
+
+    // TODO: Additional business rules requiring broader context:
+    // - Must follow a SWR record (requires parsing context)
+    // - Publisher IP numbers must be valid IPI numbers (requires IPI lookup)
+    // - Agreement numbers must follow proper format (submitter vs society-assigned)
+    // - Writer IP number cross-validation with preceding SWR record
+    // - Publisher sequence numbers must be sequential starting from 01
+
+    warnings
 }

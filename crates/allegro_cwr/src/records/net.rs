@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 /// Also handles NCT (Non-Roman Alphabet Title for Components) and NVT (Non-Roman Alphabet Original Title for Versions)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
 #[cwr(
+    validator = net_custom_validate,
     codes = ["NET", "NCT", "NVT"],
     test_data = "NET0000000100000002PLACEHOLDER TITLE                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               EN"
 )]
@@ -23,4 +24,44 @@ pub struct NetRecord {
 
     #[cwr(title = "Language code (optional)", start = 659, len = 2)]
     pub language_code: Option<String>,
+}
+
+// Custom validation function for NET/NCT/NVT records
+fn net_custom_validate(record: &mut NetRecord) -> Vec<CwrWarning<'static>> {
+    let mut warnings = Vec::new();
+
+    // Validate record type
+    match record.record_type.as_str() {
+        "NET" | "NCT" | "NVT" => {}
+        _ => {
+            warnings.push(CwrWarning { field_name: "record_type", field_title: "'NET', 'NCT', or 'NVT'", source_str: std::borrow::Cow::Owned(record.record_type.clone()), level: WarningLevel::Critical, description: "Record type must be 'NET', 'NCT', or 'NVT'".to_string() });
+        }
+    }
+
+    // Validate transaction sequence number is numeric
+    if !record.transaction_sequence_num.chars().all(|c| c.is_ascii_digit()) {
+        warnings.push(CwrWarning { field_name: "transaction_sequence_num", field_title: "Transaction sequence number", source_str: std::borrow::Cow::Owned(record.transaction_sequence_num.clone()), level: WarningLevel::Critical, description: "Transaction sequence number must be numeric".to_string() });
+    }
+
+    // Validate record sequence number is numeric
+    if !record.record_sequence_num.chars().all(|c| c.is_ascii_digit()) {
+        warnings.push(CwrWarning { field_name: "record_sequence_num", field_title: "Record sequence number", source_str: std::borrow::Cow::Owned(record.record_sequence_num.clone()), level: WarningLevel::Critical, description: "Record sequence number must be numeric".to_string() });
+    }
+
+    // Validate title is not empty
+    if record.title.trim().is_empty() {
+        warnings.push(CwrWarning { field_name: "title", field_title: "Title", source_str: std::borrow::Cow::Owned(record.title.clone()), level: WarningLevel::Critical, description: "Title cannot be empty".to_string() });
+    }
+
+    // Validate language code format if present (ISO 639-1)
+    if let Some(ref lang_code) = record.language_code {
+        if !lang_code.trim().is_empty() {
+            if lang_code.len() != 2 {
+                warnings.push(CwrWarning { field_name: "language_code", field_title: "Language code (optional)", source_str: std::borrow::Cow::Owned(lang_code.clone()), level: WarningLevel::Warning, description: "Language code should be 2 characters (ISO 639-1)".to_string() });
+            }
+            // TODO: Validate against ISO 639-1 language code table
+        }
+    }
+
+    warnings
 }

@@ -31,7 +31,7 @@ pub struct HdrRecord {
     pub transmission_date: Date,
 
     #[cwr(title = "Character set (v2.1+)", start = 86, len = 15)]
-    pub character_set: Option<String>,
+    pub character_set: Option<CharacterSet>,
 
     #[cwr(title = "Version (v2.2+)", start = 101, len = 3)]
     pub version: CwrVersion,

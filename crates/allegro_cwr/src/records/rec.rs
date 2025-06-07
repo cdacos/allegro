@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 /// REC - Recording Detail Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
 #[cwr(
+    validator = rec_custom_validate,
     test_data = "REC000000000000002720191004                                                            000306     WASTED ON YOU - SINGLE                                      INDEPENDENT                                                                                                                                                                                                                                                                                                                                                                                                        "
 )]
 pub struct RecRecord {
@@ -18,13 +19,13 @@ pub struct RecRecord {
     pub record_sequence_num: String,
 
     #[cwr(title = "Release date YYYYMMDD (optional)", start = 19, len = 8)]
-    pub release_date: Option<String>,
+    pub release_date: Option<Date>,
 
     #[cwr(title = "Constant - spaces", start = 27, len = 60)]
     pub constant: String,
 
     #[cwr(title = "Release duration HHMMSS (optional)", start = 87, len = 6)]
-    pub release_duration: Option<String>,
+    pub release_duration: Option<Duration>,
 
     #[cwr(title = "Constant - spaces", start = 93, len = 5)]
     pub constant2: String,
@@ -45,10 +46,10 @@ pub struct RecRecord {
     pub isrc: Option<String>,
 
     #[cwr(title = "Recording format (1 char, optional)", start = 261, len = 1)]
-    pub recording_format: Option<String>,
+    pub recording_format: Option<RecordingFormat>,
 
     #[cwr(title = "Recording technique (1 char, optional)", start = 262, len = 1)]
-    pub recording_technique: Option<String>,
+    pub recording_technique: Option<RecordingTechnique>,
 
     #[cwr(title = "Media type (optional, v2.1+)", start = 263, len = 3)]
     pub media_type: Option<String>,
@@ -70,4 +71,33 @@ pub struct RecRecord {
 
     #[cwr(title = "Submitter recording identifier (optional, v2.2+)", start = 526, len = 14)]
     pub submitter_recording_identifier: Option<String>,
+}
+
+// Custom validation function for REC record
+fn rec_custom_validate(record: &mut RecRecord) -> Vec<CwrWarning<'static>> {
+    let mut warnings = Vec::new();
+
+    // Business rule: ISRC format validation (if provided)
+    if let Some(ref isrc) = record.isrc {
+        let isrc_trimmed = isrc.trim();
+        if !isrc_trimmed.is_empty() && isrc_trimmed.len() != 12 {
+            warnings.push(CwrWarning { field_name: "isrc", field_title: "ISRC (optional)", source_str: std::borrow::Cow::Owned(isrc.clone()), level: WarningLevel::Warning, description: "ISRC should be exactly 12 characters (CCXXXYYNNNNN format)".to_string() });
+        }
+    }
+
+    // Business rule: EAN format validation (if provided)
+    if let Some(ref ean) = record.ean {
+        let ean_trimmed = ean.trim();
+        if !ean_trimmed.is_empty() && (ean_trimmed.len() != 13 || !ean_trimmed.chars().all(|c| c.is_ascii_digit())) {
+            warnings.push(CwrWarning { field_name: "ean", field_title: "EAN (optional)", source_str: std::borrow::Cow::Owned(ean.clone()), level: WarningLevel::Warning, description: "EAN should be exactly 13 numeric digits".to_string() });
+        }
+    }
+
+    // TODO: Additional business rules requiring broader context:
+    // - Must follow a NWR/REV record (requires parsing context)
+    // - Media type codes must be valid (requires lookup table)
+    // - ISRC validity format validation (requires country code validation)
+    // - Release date should not be in the future (requires current date context)
+
+    warnings
 }

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 /// INS - Instrumentation Summary Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(test_data = "INS000000010000000104 ORCHFULL ORCHESTRA WITH STRINGS AND BRASS SECTION    ")]
+#[cwr(validator = ins_custom_validate, test_data = "INS000000010000000104 ORCHFULL ORCHESTRA WITH STRINGS AND BRASS SECTION    ")]
 pub struct InsRecord {
     #[cwr(title = "Always 'INS'", start = 0, len = 3)]
     pub record_type: String,
@@ -23,4 +23,64 @@ pub struct InsRecord {
 
     #[cwr(title = "Instrumentation description (conditional)", start = 25, len = 50)]
     pub instrumentation_description: Option<String>,
+}
+
+// Custom validation function for INS record
+fn ins_custom_validate(record: &mut InsRecord) -> Vec<CwrWarning<'static>> {
+    let mut warnings = Vec::new();
+
+    // Validate record type
+    if record.record_type != "INS" {
+        warnings.push(CwrWarning { field_name: "record_type", field_title: "Always 'INS'", source_str: std::borrow::Cow::Owned(record.record_type.clone()), level: WarningLevel::Critical, description: "Record type must be 'INS'".to_string() });
+    }
+
+    // Validate transaction sequence number is numeric
+    if !record.transaction_sequence_num.chars().all(|c| c.is_ascii_digit()) {
+        warnings.push(CwrWarning { field_name: "transaction_sequence_num", field_title: "Transaction sequence number", source_str: std::borrow::Cow::Owned(record.transaction_sequence_num.clone()), level: WarningLevel::Critical, description: "Transaction sequence number must be numeric".to_string() });
+    }
+
+    // Validate record sequence number is numeric
+    if !record.record_sequence_num.chars().all(|c| c.is_ascii_digit()) {
+        warnings.push(CwrWarning { field_name: "record_sequence_num", field_title: "Record sequence number", source_str: std::borrow::Cow::Owned(record.record_sequence_num.clone()), level: WarningLevel::Critical, description: "Record sequence number must be numeric".to_string() });
+    }
+
+    // Validate number of voices if present
+    if let Some(ref voices) = record.number_of_voices {
+        if !voices.trim().is_empty() {
+            if !voices.chars().all(|c| c.is_ascii_digit()) {
+                warnings.push(CwrWarning { field_name: "number_of_voices", field_title: "Number of voices (optional)", source_str: std::borrow::Cow::Owned(voices.clone()), level: WarningLevel::Warning, description: "Number of voices must be numeric if specified".to_string() });
+            } else if let Ok(num) = voices.parse::<u16>() {
+                if num == 0 {
+                    warnings.push(CwrWarning { field_name: "number_of_voices", field_title: "Number of voices (optional)", source_str: std::borrow::Cow::Owned(voices.clone()), level: WarningLevel::Warning, description: "Number of voices should be greater than 0 if specified".to_string() });
+                }
+            }
+        }
+    }
+
+    // Validate standard instrumentation type if present
+    if let Some(ref inst_type) = record.standard_instrumentation_type {
+        if !inst_type.trim().is_empty() && inst_type.len() != 3 {
+            warnings.push(CwrWarning {
+                field_name: "standard_instrumentation_type",
+                field_title: "Standard instrumentation type (conditional)",
+                source_str: std::borrow::Cow::Owned(inst_type.clone()),
+                level: WarningLevel::Critical,
+                description: "Standard instrumentation type must be exactly 3 characters if specified".to_string(),
+            });
+        }
+        // TODO: Validate against standard instrumentation type lookup table
+    }
+
+    // Conditional validation: at least one of standard_instrumentation_type or instrumentation_description must be present
+    if record.standard_instrumentation_type.as_ref().map(|s| s.trim().is_empty()).unwrap_or(true) && record.instrumentation_description.as_ref().map(|s| s.trim().is_empty()).unwrap_or(true) {
+        warnings.push(CwrWarning {
+            field_name: "standard_instrumentation_type",
+            field_title: "Standard instrumentation type (conditional)",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Critical,
+            description: "Either standard instrumentation type or instrumentation description must be provided".to_string(),
+        });
+    }
+
+    warnings
 }

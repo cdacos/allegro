@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 /// NWN - Non-Roman Alphabet Writer Name Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
 #[cwr(
+    validator = nwn_custom_validate,
     test_data = "NWN0000000100000001123456789WRITER LAST NAME                                                                                                                                                                                                                                                                                                                                                                                                     EN  "
 )]
 pub struct NwnRecord {
@@ -28,4 +29,54 @@ pub struct NwnRecord {
 
     #[cwr(title = "Language code (optional)", start = 348, len = 2)]
     pub language_code: Option<String>,
+}
+
+// Custom validation function for NWN record
+fn nwn_custom_validate(record: &mut NwnRecord) -> Vec<CwrWarning<'static>> {
+    let mut warnings = Vec::new();
+
+    // Validate record type
+    if record.record_type != "NWN" {
+        warnings.push(CwrWarning { field_name: "record_type", field_title: "Always 'NWN'", source_str: std::borrow::Cow::Owned(record.record_type.clone()), level: WarningLevel::Critical, description: "Record type must be 'NWN'".to_string() });
+    }
+
+    // Validate transaction sequence number is numeric
+    if !record.transaction_sequence_num.chars().all(|c| c.is_ascii_digit()) {
+        warnings.push(CwrWarning { field_name: "transaction_sequence_num", field_title: "Transaction sequence number", source_str: std::borrow::Cow::Owned(record.transaction_sequence_num.clone()), level: WarningLevel::Critical, description: "Transaction sequence number must be numeric".to_string() });
+    }
+
+    // Validate record sequence number is numeric
+    if !record.record_sequence_num.chars().all(|c| c.is_ascii_digit()) {
+        warnings.push(CwrWarning { field_name: "record_sequence_num", field_title: "Record sequence number", source_str: std::borrow::Cow::Owned(record.record_sequence_num.clone()), level: WarningLevel::Critical, description: "Record sequence number must be numeric".to_string() });
+    }
+
+    // Validate interested party number format if present
+    if let Some(ref ip_num) = record.interested_party_num {
+        if !ip_num.trim().is_empty() {
+            if ip_num.len() != 9 {
+                warnings.push(CwrWarning { field_name: "interested_party_num", field_title: "Interested party number (conditional)", source_str: std::borrow::Cow::Owned(ip_num.clone()), level: WarningLevel::Warning, description: "Interested party number should be 9 characters if specified".to_string() });
+            }
+            // Basic IPI format validation (usually numeric)
+            if !ip_num.chars().all(|c| c.is_ascii_digit() || c.is_ascii_whitespace()) {
+                warnings.push(CwrWarning { field_name: "interested_party_num", field_title: "Interested party number (conditional)", source_str: std::borrow::Cow::Owned(ip_num.clone()), level: WarningLevel::Warning, description: "Interested party number should be numeric".to_string() });
+            }
+        }
+    }
+
+    // Validate writer last name is not empty
+    if record.writer_last_name.trim().is_empty() {
+        warnings.push(CwrWarning { field_name: "writer_last_name", field_title: "Writer last name", source_str: std::borrow::Cow::Owned(record.writer_last_name.clone()), level: WarningLevel::Critical, description: "Writer last name cannot be empty".to_string() });
+    }
+
+    // Validate language code format if present (ISO 639-1)
+    if let Some(ref lang_code) = record.language_code {
+        if !lang_code.trim().is_empty() {
+            if lang_code.len() != 2 {
+                warnings.push(CwrWarning { field_name: "language_code", field_title: "Language code (optional)", source_str: std::borrow::Cow::Owned(lang_code.clone()), level: WarningLevel::Warning, description: "Language code should be 2 characters (ISO 639-1)".to_string() });
+            }
+            // TODO: Validate against ISO 639-1 language code table
+        }
+    }
+
+    warnings
 }

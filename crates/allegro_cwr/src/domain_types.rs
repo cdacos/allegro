@@ -327,22 +327,771 @@ impl CwrFieldParse for Time {
     }
 }
 
+/// Character Set for CWR files (v2.1+)
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub enum CharacterSet {
+    #[default]
+    Ascii,
+    TraditionalBig5,
+    SimplifiedGb,
+    Utf8,
+    Unicode,
+}
+
+impl CharacterSet {
+    pub fn as_str(&self) -> &str {
+        match self {
+            CharacterSet::Ascii => "",
+            CharacterSet::TraditionalBig5 => "Traditional [Big5]",
+            CharacterSet::SimplifiedGb => "Simplified [GB]",
+            CharacterSet::Utf8 => "UTF-8",
+            CharacterSet::Unicode => "Unicode",
+        }
+    }
+}
+
+impl CwrFieldParse for Option<CharacterSet> {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        if trimmed.is_empty() {
+            (None, vec![])
+        } else {
+            match trimmed {
+                "Traditional [Big5]" => (Some(CharacterSet::TraditionalBig5), vec![]),
+                "Simplified [GB]" => (Some(CharacterSet::SimplifiedGb), vec![]),
+                "UTF-8" => (Some(CharacterSet::Utf8), vec![]),
+                "Unicode" => (Some(CharacterSet::Unicode), vec![]),
+                _ => {
+                    let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid character set '{}', must be 'Traditional [Big5]', 'Simplified [GB]', 'UTF-8', or 'Unicode'", trimmed) }];
+                    (Some(CharacterSet::Ascii), warnings)
+                }
+            }
+        }
+    }
+}
+
+/// Transaction Type for GRH records
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub enum TransactionType {
+    #[default]
+    Nwr,
+    Rev,
+    Agr,
+    Ack,
+    Isw,
+    Exc,
+}
+
+impl TransactionType {
+    pub fn as_str(&self) -> &str {
+        match self {
+            TransactionType::Nwr => "NWR",
+            TransactionType::Rev => "REV",
+            TransactionType::Agr => "AGR",
+            TransactionType::Ack => "ACK",
+            TransactionType::Isw => "ISW",
+            TransactionType::Exc => "EXC",
+        }
+    }
+}
+
+impl CwrFieldParse for TransactionType {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        match trimmed {
+            "NWR" => (TransactionType::Nwr, vec![]),
+            "REV" => (TransactionType::Rev, vec![]),
+            "AGR" => (TransactionType::Agr, vec![]),
+            "ACK" => (TransactionType::Ack, vec![]),
+            "ISW" => (TransactionType::Isw, vec![]),
+            "EXC" => (TransactionType::Exc, vec![]),
+            _ => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid transaction type '{}', must be NWR, REV, AGR, ACK, ISW, or EXC", trimmed) }];
+                (TransactionType::Nwr, warnings)
+            }
+        }
+    }
+}
+
+/// Group ID for sequentially numbered groups
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct GroupId(pub u32);
+
+impl GroupId {
+    pub fn as_str(&self) -> String {
+        format!("{:05}", self.0)
+    }
+}
+
+impl CwrFieldParse for GroupId {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        match trimmed.parse::<u32>() {
+            Ok(id) if id >= 1 && id <= 99999 => (GroupId(id), vec![]),
+            Ok(id) => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Group ID {} outside valid range 1-99999", id) }];
+                (GroupId(id.clamp(1, 99999)), warnings)
+            }
+            Err(_) => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid group ID format: {}", trimmed) }];
+                (GroupId(1), warnings)
+            }
+        }
+    }
+}
+
+/// CWR Version Number (e.g., "02.20" for v2.2)
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct CwrVersionNumber(pub String);
+
+impl CwrVersionNumber {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl CwrFieldParse for CwrVersionNumber {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        match trimmed {
+            "02.20" => (CwrVersionNumber(trimmed.to_string()), vec![]),
+            "02.10" => (CwrVersionNumber(trimmed.to_string()), vec![]),
+            "02.00" => (CwrVersionNumber(trimmed.to_string()), vec![]),
+            _ => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid CWR version number '{}', expected format like '02.20'", trimmed) }];
+                (CwrVersionNumber("02.20".to_string()), warnings)
+            }
+        }
+    }
+}
+
+/// Publisher sequence number (must be sequential starting from 1)
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct PublisherSequenceNumber(pub u8);
+
+impl PublisherSequenceNumber {
+    pub fn as_str(&self) -> String {
+        format!("{:02}", self.0)
+    }
+}
+
+impl CwrFieldParse for PublisherSequenceNumber {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        match trimmed.parse::<u8>() {
+            Ok(num) if num >= 1 && num <= 99 => (PublisherSequenceNumber(num), vec![]),
+            Ok(num) => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Publisher sequence number {} outside valid range 1-99", num) }];
+                (PublisherSequenceNumber(num.clamp(1, 99)), warnings)
+            }
+            Err(_) => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid publisher sequence number format: {}", trimmed) }];
+                (PublisherSequenceNumber(1), warnings)
+            }
+        }
+    }
+}
+
+impl CwrFieldParse for Option<PublisherSequenceNumber> {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        if trimmed.is_empty() || trimmed == "00" {
+            (None, vec![])
+        } else {
+            let (seq_num, warnings) = PublisherSequenceNumber::parse_cwr_field(source, field_name, field_title);
+            (Some(seq_num), warnings)
+        }
+    }
+}
+
+/// Ownership share percentage (0-100.00% stored as 0-10000)
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct OwnershipShare(pub u16);
+
+impl OwnershipShare {
+    pub fn as_str(&self) -> String {
+        format!("{:05}", self.0)
+    }
+
+    pub fn as_percentage(&self) -> f32 {
+        self.0 as f32 / 100.0
+    }
+}
+
+impl CwrFieldParse for Option<OwnershipShare> {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        if trimmed.is_empty() || trimmed == "00000" {
+            (None, vec![])
+        } else {
+            match trimmed.parse::<u16>() {
+                Ok(share) if share <= 10000 => (Some(OwnershipShare(share)), vec![]),
+                Ok(share) => {
+                    let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Ownership share {} exceeds maximum 100.00% (10000)", share) }];
+                    (Some(OwnershipShare(share.min(10000))), warnings)
+                }
+                Err(_) => {
+                    let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid ownership share format: {}", trimmed) }];
+                    (None, warnings)
+                }
+            }
+        }
+    }
+}
+
+/// Transaction count for group/file trailers
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct TransactionCount(pub u32);
+
+impl TransactionCount {
+    pub fn as_str(&self) -> String {
+        format!("{:08}", self.0)
+    }
+}
+
+impl CwrFieldParse for TransactionCount {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        match trimmed.parse::<u32>() {
+            Ok(count) if count <= 99999999 => (TransactionCount(count), vec![]),
+            Ok(count) => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Transaction count {} exceeds maximum 99999999", count) }];
+                (TransactionCount(count.min(99999999)), warnings)
+            }
+            Err(_) => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid transaction count format: {}", trimmed) }];
+                (TransactionCount(0), warnings)
+            }
+        }
+    }
+}
+
+/// Record count for group/file trailers
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct RecordCount(pub u32);
+
+impl RecordCount {
+    pub fn as_str(&self) -> String {
+        format!("{:08}", self.0)
+    }
+}
+
+impl CwrFieldParse for RecordCount {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        match trimmed.parse::<u32>() {
+            Ok(count) if count <= 99999999 => (RecordCount(count), vec![]),
+            Ok(count) => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Record count {} exceeds maximum 99999999", count) }];
+                (RecordCount(count.min(99999999)), warnings)
+            }
+            Err(_) => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid record count format: {}", trimmed) }];
+                (RecordCount(0), warnings)
+            }
+        }
+    }
+}
+
+/// ISO 4217 currency code
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct CurrencyCode(pub Option<String>);
+
+impl CurrencyCode {
+    pub fn as_str(&self) -> String {
+        self.0.as_deref().unwrap_or("").to_string()
+    }
+}
+
+impl CwrFieldParse for CurrencyCode {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        if trimmed.is_empty() {
+            (CurrencyCode(None), vec![])
+        } else if trimmed.len() == 3 && trimmed.chars().all(|c| c.is_ascii_alphabetic()) {
+            // TODO: Validate against ISO 4217 currency code table
+            (CurrencyCode(Some(trimmed.to_uppercase())), vec![])
+        } else {
+            let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid currency code '{}', should be 3-letter ISO 4217 code", trimmed) }];
+            (CurrencyCode(Some(trimmed.to_uppercase())), warnings)
+        }
+    }
+}
+
+/// Group count for file trailers (5 digits, so we use u32)
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct GroupCount(pub u32);
+
+impl GroupCount {
+    pub fn as_str(&self) -> String {
+        format!("{:05}", self.0)
+    }
+}
+
+impl CwrFieldParse for GroupCount {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        match trimmed.parse::<u32>() {
+            Ok(count) if count <= 99999 => (GroupCount(count), vec![]),
+            Ok(count) => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Group count {} exceeds maximum 99999", count) }];
+                (GroupCount(count.min(99999)), warnings)
+            }
+            Err(_) => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid group count format: {}", trimmed) }];
+                (GroupCount(0), warnings)
+            }
+        }
+    }
+}
+
+/// Prior royalty status for AGR records
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub enum PriorRoyaltyStatus {
+    #[default]
+    None, // N - No entitlement to prior royalties
+    Acquired,   // A - Entitlement to all prior royalties
+    Designated, // D - Entitlement to prior royalties from designated date
+}
+
+impl PriorRoyaltyStatus {
+    pub fn as_str(&self) -> &str {
+        match self {
+            PriorRoyaltyStatus::None => "N",
+            PriorRoyaltyStatus::Acquired => "A",
+            PriorRoyaltyStatus::Designated => "D",
+        }
+    }
+}
+
+impl CwrFieldParse for PriorRoyaltyStatus {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        match trimmed {
+            "N" => (PriorRoyaltyStatus::None, vec![]),
+            "A" => (PriorRoyaltyStatus::Acquired, vec![]),
+            "D" => (PriorRoyaltyStatus::Designated, vec![]),
+            _ => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid prior royalty status '{}', must be N, A, or D", trimmed) }];
+                (PriorRoyaltyStatus::None, warnings)
+            }
+        }
+    }
+}
+
+/// Post-term collection status for AGR records
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub enum PostTermCollectionStatus {
+    #[default]
+    None, // N - No post-term collection
+    Original,   // O - Original agreement terms
+    Designated, // D - Designated end date
+}
+
+impl PostTermCollectionStatus {
+    pub fn as_str(&self) -> &str {
+        match self {
+            PostTermCollectionStatus::None => "N",
+            PostTermCollectionStatus::Original => "O",
+            PostTermCollectionStatus::Designated => "D",
+        }
+    }
+}
+
+impl CwrFieldParse for PostTermCollectionStatus {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        match trimmed {
+            "N" => (PostTermCollectionStatus::None, vec![]),
+            "O" => (PostTermCollectionStatus::Original, vec![]),
+            "D" => (PostTermCollectionStatus::Designated, vec![]),
+            _ => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid post-term collection status '{}', must be N, O, or D", trimmed) }];
+                (PostTermCollectionStatus::None, warnings)
+            }
+        }
+    }
+}
+
+/// Duration in HHMMSS format
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct Duration(pub Option<chrono::NaiveTime>);
+
+impl Duration {
+    pub fn as_str(&self) -> String {
+        match &self.0 {
+            Some(time) => time.format("%H%M%S").to_string(),
+            None => "000000".to_string(),
+        }
+    }
+}
+
+impl CwrFieldParse for Option<Duration> {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        if trimmed.is_empty() || trimmed == "000000" {
+            (None, vec![])
+        } else if trimmed.len() != 6 {
+            let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Duration should be 6 characters HHMMSS, got {}", trimmed.len()) }];
+            (None, warnings)
+        } else {
+            match chrono::NaiveTime::parse_from_str(trimmed, "%H%M%S") {
+                Ok(time) => (Some(Duration(Some(time))), vec![]),
+                Err(_) => {
+                    let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid duration format: {}", trimmed) }];
+                    (None, warnings)
+                }
+            }
+        }
+    }
+}
+
+/// Flag type for Y/N/U (Yes/No/Unknown) values
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub enum FlagYNU {
+    #[default]
+    Unknown,
+    Yes,
+    No,
+}
+
+impl FlagYNU {
+    pub fn as_str(&self) -> &str {
+        match self {
+            FlagYNU::Yes => "Y",
+            FlagYNU::No => "N",
+            FlagYNU::Unknown => "U",
+        }
+    }
+}
+
+impl CwrFieldParse for FlagYNU {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        match trimmed {
+            "Y" => (FlagYNU::Yes, vec![]),
+            "N" => (FlagYNU::No, vec![]),
+            "U" => (FlagYNU::Unknown, vec![]),
+            "" => (FlagYNU::Unknown, vec![]), // Default for empty
+            _ => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid flag value '{}', must be Y, N, or U", trimmed) }];
+                (FlagYNU::Unknown, warnings)
+            }
+        }
+    }
+}
+
+impl CwrFieldParse for Option<FlagYNU> {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        if trimmed.is_empty() {
+            (None, vec![])
+        } else {
+            let (flag, warnings) = FlagYNU::parse_cwr_field(source, field_name, field_title);
+            (Some(flag), warnings)
+        }
+    }
+}
+
+/// Composite component count (for ASCAP composite works)
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct CompositeComponentCount(pub Option<u16>);
+
+impl CompositeComponentCount {
+    pub fn as_str(&self) -> String {
+        match &self.0 {
+            Some(count) => format!("{:03}", count),
+            None => "000".to_string(),
+        }
+    }
+}
+
+impl CwrFieldParse for Option<CompositeComponentCount> {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        if trimmed.is_empty() || trimmed == "000" {
+            (None, vec![])
+        } else {
+            match trimmed.parse::<u16>() {
+                Ok(count) if count > 0 && count <= 999 => (Some(CompositeComponentCount(Some(count))), vec![]),
+                Ok(count) => {
+                    let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Composite component count {} outside valid range 1-999", count) }];
+                    (Some(CompositeComponentCount(Some(count.clamp(1, 999)))), warnings)
+                }
+                Err(_) => {
+                    let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid composite component count format: {}", trimmed) }];
+                    (None, warnings)
+                }
+            }
+        }
+    }
+}
+
+/// Inclusion/Exclusion indicator for territory records
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub enum InclusionExclusionIndicator {
+    #[default]
+    Included,
+    Excluded,
+}
+
+impl InclusionExclusionIndicator {
+    pub fn as_str(&self) -> &str {
+        match self {
+            InclusionExclusionIndicator::Included => "I",
+            InclusionExclusionIndicator::Excluded => "E",
+        }
+    }
+}
+
+impl CwrFieldParse for InclusionExclusionIndicator {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        match trimmed {
+            "I" => (InclusionExclusionIndicator::Included, vec![]),
+            "E" => (InclusionExclusionIndicator::Excluded, vec![]),
+            _ => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid inclusion/exclusion indicator '{}', must be I (Included) or E (Excluded)", trimmed) }];
+                (InclusionExclusionIndicator::Included, warnings)
+            }
+        }
+    }
+}
+
+/// TIS (Territory Information System) numeric code
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct TisNumericCode(pub u16);
+
+impl TisNumericCode {
+    pub fn as_str(&self) -> String {
+        format!("{:04}", self.0)
+    }
+}
+
+impl CwrFieldParse for TisNumericCode {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        match trimmed.parse::<u16>() {
+            Ok(code) if code > 0 => {
+                // TODO: Validate against TIS lookup table
+                (TisNumericCode(code), vec![])
+            }
+            Ok(_) => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: "TIS Numeric Code must be greater than 0".to_string() }];
+                (TisNumericCode(1), warnings)
+            }
+            Err(_) => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid TIS Numeric Code format: {}", trimmed) }];
+                (TisNumericCode(1), warnings)
+            }
+        }
+    }
+}
+
+/// Agreement role code for IPA records
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub enum AgreementRoleCode {
+    #[default]
+    Assignor,
+    Acquirer,
+}
+
+impl AgreementRoleCode {
+    pub fn as_str(&self) -> &str {
+        match self {
+            AgreementRoleCode::Assignor => "AS",
+            AgreementRoleCode::Acquirer => "AC",
+        }
+    }
+}
+
+impl CwrFieldParse for AgreementRoleCode {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        match trimmed {
+            "AS" => (AgreementRoleCode::Assignor, vec![]),
+            "AC" => (AgreementRoleCode::Acquirer, vec![]),
+            _ => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid agreement role code '{}', must be AS (Assignor) or AC (Acquirer)", trimmed) }];
+                (AgreementRoleCode::Assignor, warnings)
+            }
+        }
+    }
+}
+
+/// Title type for alternate title records
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub enum TitleType {
+    #[default]
+    AlternateTitle, // AT - Alternate Title
+    TransliterationAlt,   // AL - Transliterated Alternate Title
+    TranslatedTitle,      // TT - Translated Title
+    TransliterationTrans, // TL - Transliterated Translated Title
+    FictionalTitle,       // FT - Fictional Title (v2.1+)
+    OriginalTitle,        // OT - Original Title (v2.1+)
+}
+
+impl TitleType {
+    pub fn as_str(&self) -> &str {
+        match self {
+            TitleType::AlternateTitle => "AT",
+            TitleType::TransliterationAlt => "AL",
+            TitleType::TranslatedTitle => "TT",
+            TitleType::TransliterationTrans => "TL",
+            TitleType::FictionalTitle => "FT",
+            TitleType::OriginalTitle => "OT",
+        }
+    }
+}
+
+impl CwrFieldParse for TitleType {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        match trimmed {
+            "AT" => (TitleType::AlternateTitle, vec![]),
+            "AL" => (TitleType::TransliterationAlt, vec![]),
+            "TT" => (TitleType::TranslatedTitle, vec![]),
+            "TL" => (TitleType::TransliterationTrans, vec![]),
+            "FT" => (TitleType::FictionalTitle, vec![]),
+            "OT" => (TitleType::OriginalTitle, vec![]),
+            _ => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid title type '{}', must be AT, AL, TT, TL, FT, or OT", trimmed) }];
+                (TitleType::AlternateTitle, warnings)
+            }
+        }
+    }
+}
+
+/// Recording format for REC records
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub enum RecordingFormat {
+    #[default]
+    Unknown,
+    Stereo,       // S - Stereo
+    Mono,         // M - Mono
+    Quadrophonic, // Q - Quadrophonic
+}
+
+impl RecordingFormat {
+    pub fn as_str(&self) -> &str {
+        match self {
+            RecordingFormat::Unknown => " ",
+            RecordingFormat::Stereo => "S",
+            RecordingFormat::Mono => "M",
+            RecordingFormat::Quadrophonic => "Q",
+        }
+    }
+}
+
+impl CwrFieldParse for Option<RecordingFormat> {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        if trimmed.is_empty() {
+            (None, vec![])
+        } else {
+            match trimmed {
+                "S" => (Some(RecordingFormat::Stereo), vec![]),
+                "M" => (Some(RecordingFormat::Mono), vec![]),
+                "Q" => (Some(RecordingFormat::Quadrophonic), vec![]),
+                _ => {
+                    let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid recording format '{}', must be S (Stereo), M (Mono), or Q (Quadrophonic)", trimmed) }];
+                    (Some(RecordingFormat::Unknown), warnings)
+                }
+            }
+        }
+    }
+}
+
+/// Recording technique for REC records
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub enum RecordingTechnique {
+    #[default]
+    Unknown,
+    Analog,  // A - Analog
+    Digital, // D - Digital
+}
+
+impl RecordingTechnique {
+    pub fn as_str(&self) -> &str {
+        match self {
+            RecordingTechnique::Unknown => " ",
+            RecordingTechnique::Analog => "A",
+            RecordingTechnique::Digital => "D",
+        }
+    }
+}
+
+impl CwrFieldParse for Option<RecordingTechnique> {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        if trimmed.is_empty() {
+            (None, vec![])
+        } else {
+            match trimmed {
+                "A" => (Some(RecordingTechnique::Analog), vec![]),
+                "D" => (Some(RecordingTechnique::Digital), vec![]),
+                _ => {
+                    let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid recording technique '{}', must be A (Analog) or D (Digital)", trimmed) }];
+                    (Some(RecordingTechnique::Unknown), warnings)
+                }
+            }
+        }
+    }
+}
+
+/// Publisher type for SPU records
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub enum PublisherType {
+    #[default]
+    Unknown,
+    AdministeringPublisher, // AS - Administering Publisher
+    OriginalPublisher,      // PA - Original Publisher (Assignor)
+    SubPublisher,           // SE - Sub-Publisher
+    IncomeParticipant,      // PA - Income Participant
+    Unclassified,           // E  - Unclassified (catch-all)
+}
+
+impl PublisherType {
+    pub fn as_str(&self) -> &str {
+        match self {
+            PublisherType::Unknown => "",
+            PublisherType::AdministeringPublisher => "AS",
+            PublisherType::OriginalPublisher => "PA",
+            PublisherType::SubPublisher => "SE",
+            PublisherType::IncomeParticipant => "PA",
+            PublisherType::Unclassified => "E",
+        }
+    }
+}
+
+impl CwrFieldParse for Option<PublisherType> {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        if trimmed.is_empty() {
+            (None, vec![])
+        } else {
+            match trimmed {
+                "AS" => (Some(PublisherType::AdministeringPublisher), vec![]),
+                "PA" => (Some(PublisherType::OriginalPublisher), vec![]),
+                "SE" => (Some(PublisherType::SubPublisher), vec![]),
+                "E" => (Some(PublisherType::Unclassified), vec![]),
+                _ => {
+                    let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid publisher type '{}', must be AS, PA, SE, or E", trimmed) }];
+                    (Some(PublisherType::Unknown), warnings)
+                }
+            }
+        }
+    }
+}
+
 // TODO: Implement additional domain types for table-based validations:
 //
-// 1. CharacterSet enum with validation against character set lookup table:
-//    - Traditional [Big5], Simplified [GB], UTF-8, and Unicode values
-//    - Reference: http://www.unicode.org/charts
-//
-// 2. SenderName with cross-validation against lookup tables:
+// 1. SenderName with cross-validation against lookup tables:
 //    - For PB (Publisher): must match name in CWR Sender ID and Codes Table
 //    - For SO (Society): must match name in Society Code Table
 //    - For AA (Administrative Agency): must match name in Publisher Code Table
 //
-// 3. Complex Sender validation requiring post_process step:
+// 2. Complex Sender validation requiring post_process step:
 //    - Cross-validate SenderType + SenderId + SenderName combination
 //    - Handle IPNN > 9 digits case (SenderType numeric prefix + SenderId)
 //    - Validate against appropriate lookup tables based on sender type
-//
-// 4. CwrRevision enum with validation against version number lookup table:
-//    - Current valid values for CWR 2.2 revision numbers
-//    - Should be extensible for future revisions

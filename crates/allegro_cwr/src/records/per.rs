@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 /// PER - Performing Artist Record
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
-#[cwr(test_data = "PER0000050400000429DEVVON TERRELL                                                                                     ")]
+#[cwr(validator = per_custom_validate, test_data = "PER0000050400000429DEVVON TERRELL                                                                                     ")]
 pub struct PerRecord {
     #[cwr(title = "Always 'PER'", start = 0, len = 3)]
     pub record_type: String,
@@ -26,4 +26,22 @@ pub struct PerRecord {
 
     #[cwr(title = "Performing artist IPI base number (optional)", start = 105, len = 13)]
     pub performing_artist_ipi_base_number: Option<String>,
+}
+
+// Custom validation function for PER record
+fn per_custom_validate(record: &mut PerRecord) -> Vec<CwrWarning<'static>> {
+    let mut warnings = Vec::new();
+
+    // Business rule: Performing artist last name cannot be empty
+    if record.performing_artist_last_name.trim().is_empty() {
+        warnings.push(CwrWarning { field_name: "performing_artist_last_name", field_title: "Performing artist last name", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Performing artist last name cannot be empty".to_string() });
+    }
+
+    // TODO: Additional business rules requiring broader context:
+    // - Must follow a NWR/REV record (requires parsing context)
+    // - IPI Name Number must match IPI system entry if provided (requires IPI lookup)
+    // - IPI Base Number must match IPI system entry if provided (requires IPI lookup)
+    // - Performing artist names should not duplicate writer names in same work (requires cross-record validation)
+
+    warnings
 }
