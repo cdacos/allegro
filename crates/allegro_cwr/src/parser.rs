@@ -31,13 +31,11 @@ fn parse_cwr_line(line: &str, line_number: usize, context: &ParsingContext) -> R
 }
 
 /// Returns an iterator that processes CWR lines and yields parsed records
-#[must_use]
 pub fn process_cwr_stream(input_filename: &str) -> Result<impl Iterator<Item = Result<ParsedRecord, CwrParseError>>, CwrParseError> {
     process_cwr_stream_with_version(input_filename, None)
 }
 
 /// Returns an iterator that processes CWR lines and yields parsed records with optional version hint
-#[must_use]
 pub fn process_cwr_stream_with_version(input_filename: &str, version_hint: Option<f32>) -> Result<impl Iterator<Item = Result<ParsedRecord, CwrParseError>>, CwrParseError> {
     let file = File::open(input_filename)?;
     let mut reader = BufReader::new(file);

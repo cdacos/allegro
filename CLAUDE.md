@@ -11,6 +11,7 @@
 ## Code Quality
 - **Minimal Comments** - Only document non-obvious business rules that would surprise an experienced developer
 - **Automated Checks** - Run `cargo fmt` and `cargo clippy` after every working change
+- **Warning-Free Code** - Avoid compiler and clippy warnings as they create noise; if uncertain about best practices, ask for clarification
 - **Type Safety** - Leverage Rust's type system for domain modeling (e.g., newtype patterns for IDs)
 - **Must Use** - Annotate functions returning `Result` with `#[must_use]` to prevent ignored errors
 - **String Types** - Use `&str` by default, `String` when data must outlive input, `Cow<str>` for conditional normalization
