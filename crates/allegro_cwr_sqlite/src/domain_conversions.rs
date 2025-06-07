@@ -145,6 +145,18 @@ impl CwrToSqlString for Time {
     }
 }
 
+impl CwrToSqlString for YesNo {
+    fn to_sql_string(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
+impl CwrToSqlString for CompositeComponentCount {
+    fn to_sql_string(&self) -> String {
+        self.as_str()
+    }
+}
+
 // Integer conversions for numeric domain types
 impl CwrToSqlInt for OwnershipShare {
     fn to_sql_int(&self) -> i64 {

@@ -1,4 +1,4 @@
-use crate::domain_conversions::CwrToSqlString;
+use crate::domain_conversions::{CwrToSqlInt, CwrToSqlString, opt_domain_to_int, opt_domain_to_string};
 use crate::{PreparedStatements, insert_file_line_record, log_error};
 use allegro_cwr::records::*;
 use allegro_cwr::{CwrParseError, ParsingContext};
@@ -65,7 +65,7 @@ pub fn parse_and_insert_hdr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.creation_date.to_sql_string(),
             record.creation_time.as_str(),
             record.transmission_date.to_sql_string(),
-            record.character_set.as_deref().unwrap_or(""),
+            opt_domain_to_string(&record.character_set).as_deref().unwrap_or(""),
             record.version.as_str(),
             record.revision.as_str(),
             record.software_package.as_deref().unwrap_or(""),
@@ -83,9 +83,9 @@ pub fn parse_and_insert_grh<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.record_type.to_sql_string(),
             "0", // transaction_sequence_num - not in GRH record
             "0", // record_sequence_num - not in GRH record
-            record.group_id,
-            record.transaction_type,
-            record.version_number,
+            record.group_id.to_sql_int(),
+            record.transaction_type.to_sql_string(),
+            record.version_number.to_sql_string(),
             record.batch_request.as_deref().unwrap_or(""),
         ])?;
         Ok(())
@@ -100,9 +100,9 @@ pub fn parse_and_insert_grt<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.record_type.to_sql_string(),
             "0", // transaction_sequence_num - not in GRT record
             "0", // record_sequence_num - not in GRT record
-            record.group_id,
-            record.transaction_count,
-            record.record_count,
+            record.group_id.to_sql_int(),
+            record.transaction_count.to_sql_int(),
+            record.record_count.to_sql_int(),
         ])?;
         Ok(())
     })
@@ -111,7 +111,7 @@ pub fn parse_and_insert_grt<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 // TRL - Transmission Trailer
 pub fn parse_and_insert_trl<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
     handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, TrlRecord::from_cwr_line, |record, stmts, file_id| {
-        stmts.trl_stmt.execute(params![file_id, record.record_type.to_sql_string(), record.group_count, record.transaction_count, record.record_count,])?;
+        stmts.trl_stmt.execute(params![file_id, record.record_type.to_sql_string(), record.group_count.to_sql_int(), record.transaction_count.to_sql_int(), record.record_count.to_sql_int()])?;
         Ok(())
     })
 }
@@ -119,7 +119,7 @@ pub fn parse_and_insert_trl<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 // ALT - Alternate Title
 pub fn parse_and_insert_alt<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
     handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, AltRecord::from_cwr_line, |record, stmts, file_id| {
-        stmts.alt_stmt.execute(params![file_id, record.record_type.to_sql_string(), record.transaction_sequence_num, record.record_sequence_num, record.alternate_title, record.title_type, record.language_code.as_deref().unwrap_or(""),])?;
+        stmts.alt_stmt.execute(params![file_id, record.record_type.to_sql_string(), record.transaction_sequence_num, record.record_sequence_num, record.alternate_title, record.title_type.to_sql_string(), record.language_code.as_deref().unwrap_or("")])?;
         Ok(())
     })
 }
@@ -148,7 +148,7 @@ pub fn parse_and_insert_agr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             &record.date_of_signature_of_agreement.as_ref().map(|d| d.as_str()).unwrap_or_default(),
             &record.number_of_works.as_str(),
             record.sales_manufacture_clause.as_deref().unwrap_or(""),
-            record.shares_change.as_deref().unwrap_or(""),
+            &opt_domain_to_string(&record.shares_change).unwrap_or_default(),
             record.advance_given.as_deref().unwrap_or(""),
             record.society_assigned_agreement_number.as_deref().unwrap_or(""),
         ])?;
@@ -167,11 +167,11 @@ pub fn parse_and_insert_nwr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.language_code.as_deref().unwrap_or(""),
             record.submitter_work_num,
             record.iswc.as_deref().unwrap_or(""),
-            record.copyright_date.as_deref().unwrap_or(""),
+            &opt_domain_to_string(&record.copyright_date).unwrap_or_default(),
             record.copyright_number.as_deref().unwrap_or(""),
             record.musical_work_distribution_category,
-            record.duration.as_deref().unwrap_or(""),
-            record.recorded_indicator,
+            &opt_domain_to_string(&record.duration).unwrap_or_default(),
+            record.recorded_indicator.to_sql_string(),
             record.text_music_relationship.as_deref().unwrap_or(""),
             record.composite_type.as_deref().unwrap_or(""),
             record.version_type,
@@ -181,13 +181,13 @@ pub fn parse_and_insert_nwr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.contact_name.as_deref().unwrap_or(""),
             record.contact_id.as_deref().unwrap_or(""),
             record.cwr_work_type.as_deref().unwrap_or(""),
-            record.grand_rights_ind.as_deref().unwrap_or(""),
-            record.composite_component_count.as_deref().unwrap_or(""),
-            record.date_of_publication_of_printed_edition.as_deref().unwrap_or(""),
-            record.exceptional_clause.as_deref().unwrap_or(""),
+            &opt_domain_to_string(&record.grand_rights_ind).unwrap_or_default(),
+            &opt_domain_to_int(&record.composite_component_count).unwrap_or(0).to_string(),
+            &opt_domain_to_string(&record.date_of_publication_of_printed_edition).unwrap_or_default(),
+            &opt_domain_to_string(&record.exceptional_clause).unwrap_or_default(),
             record.opus_number.as_deref().unwrap_or(""),
             record.catalogue_number.as_deref().unwrap_or(""),
-            record.priority_flag.as_deref().unwrap_or(""),
+            &opt_domain_to_string(&record.priority_flag).unwrap_or_default(),
         ])?;
         Ok(())
     })
@@ -200,16 +200,16 @@ pub fn parse_and_insert_ack<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.record_type.to_sql_string(),
             record.transaction_sequence_num,
             record.record_sequence_num,
-            record.creation_date,
-            record.creation_time,
-            record.original_group_id,
-            record.original_transaction_sequence_num,
-            record.original_transaction_type,
+            record.creation_date.to_sql_string(),
+            record.creation_time.to_sql_string(),
+            record.original_group_id.to_sql_int(),
+            record.original_transaction_sequence_num.to_sql_int(),
+            record.original_transaction_type.to_sql_string(),
             record.creation_title.as_deref().unwrap_or(""),
             record.submitter_creation_num.as_deref().unwrap_or(""),
             record.recipient_creation_num.as_deref().unwrap_or(""),
-            record.processing_date,
-            record.transaction_status,
+            record.processing_date.to_sql_string(),
+            record.transaction_status.to_sql_string(),
         ])?;
         Ok(())
     })
@@ -217,7 +217,7 @@ pub fn parse_and_insert_ack<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 
 pub fn parse_and_insert_ter<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
     handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, TerRecord::from_cwr_line, |record, stmts, file_id| {
-        stmts.ter_stmt.execute(params![file_id, record.record_type.to_sql_string(), record.transaction_sequence_num, record.record_sequence_num, record.inclusion_exclusion_indicator, record.tis_numeric_code,])?;
+        stmts.ter_stmt.execute(params![file_id, record.record_type.to_sql_string(), record.transaction_sequence_num, record.record_sequence_num, record.inclusion_exclusion_indicator.to_sql_string(), record.tis_numeric_code.to_sql_int(),])?;
         Ok(())
     })
 }
@@ -229,18 +229,18 @@ pub fn parse_and_insert_ipa<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.record_type.to_sql_string(),
             record.transaction_sequence_num,
             record.record_sequence_num,
-            record.agreement_role_code,
+            record.agreement_role_code.to_sql_string(),
             record.interested_party_ipi_name_num.as_deref().unwrap_or(""),
             record.ipi_base_number.as_deref().unwrap_or(""),
             record.interested_party_num,
             record.interested_party_last_name,
             record.interested_party_writer_first_name.as_deref().unwrap_or(""),
             record.pr_affiliation_society.as_deref().unwrap_or(""),
-            record.pr_share.as_deref().unwrap_or(""),
+            &opt_domain_to_int(&record.pr_share).unwrap_or(0).to_string(),
             record.mr_affiliation_society.as_deref().unwrap_or(""),
-            record.mr_share.as_deref().unwrap_or(""),
+            &opt_domain_to_int(&record.mr_share).unwrap_or(0).to_string(),
             record.sr_affiliation_society.as_deref().unwrap_or(""),
-            record.sr_share.as_deref().unwrap_or(""),
+            &opt_domain_to_int(&record.sr_share).unwrap_or(0).to_string(),
         ])?;
         Ok(())
     })
@@ -260,22 +260,22 @@ pub fn parse_and_insert_spu<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.record_type,
             record.transaction_sequence_num,
             record.record_sequence_num,
-            record.publisher_sequence_num,
+            record.publisher_sequence_num.to_sql_int(),
             record.interested_party_num,
             record.publisher_name,
-            record.publisher_unknown_indicator,
-            record.publisher_type.as_deref().unwrap_or(""),
+            &opt_domain_to_string(&record.publisher_unknown_indicator).unwrap_or_default(),
+            &opt_domain_to_string(&record.publisher_type).unwrap_or_default(),
             record.tax_id_num.as_deref().unwrap_or(""),
             record.publisher_ipi_name_num.as_deref().unwrap_or(""),
             record.submitter_agreement_number.as_deref().unwrap_or(""),
             record.pr_affiliation_society_num.as_deref().unwrap_or(""),
-            record.pr_ownership_share.as_deref().unwrap_or(""),
+            &opt_domain_to_int(&record.pr_ownership_share).unwrap_or(0).to_string(),
             record.mr_society.as_deref().unwrap_or(""),
-            record.mr_ownership_share.as_deref().unwrap_or(""),
+            &opt_domain_to_int(&record.mr_ownership_share).unwrap_or(0).to_string(),
             record.sr_society.as_deref().unwrap_or(""),
-            record.sr_ownership_share.as_deref().unwrap_or(""),
-            record.special_agreements_indicator.as_deref().unwrap_or(""),
-            record.first_recording_refusal_ind.as_deref().unwrap_or(""),
+            &opt_domain_to_int(&record.sr_ownership_share).unwrap_or(0).to_string(),
+            &opt_domain_to_string(&record.special_agreements_indicator).unwrap_or_default(),
+            &opt_domain_to_string(&record.first_recording_refusal_ind).unwrap_or_default(),
             record.filler.as_deref().unwrap_or(""),
             record.publisher_ipi_base_number.as_deref().unwrap_or(""),
             record.international_standard_agreement_code.as_deref().unwrap_or(""),
@@ -289,7 +289,7 @@ pub fn parse_and_insert_spu<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 
 pub fn parse_and_insert_npn<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
     handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, NpnRecord::from_cwr_line, |record, stmts, file_id| {
-        stmts.npn_stmt.execute(params![file_id, record.record_type.to_sql_string(), record.transaction_sequence_num, record.record_sequence_num, record.publisher_sequence_num, record.interested_party_num, record.publisher_name, record.language_code.as_deref().unwrap_or(""),])?;
+        stmts.npn_stmt.execute(params![file_id, record.record_type.to_sql_string(), record.transaction_sequence_num, record.record_sequence_num, record.publisher_sequence_num.to_sql_int(), record.interested_party_num, record.publisher_name, record.language_code.as_deref().unwrap_or(""),])?;
         Ok(())
     })
 }
@@ -303,12 +303,12 @@ pub fn parse_and_insert_spt<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.record_sequence_num,
             record.interested_party_num,
             record.constant.as_str(),
-            record.pr_collection_share.as_deref().unwrap_or(""),
-            record.mr_collection_share.as_deref().unwrap_or(""),
-            record.sr_collection_share.as_deref().unwrap_or(""),
+            &opt_domain_to_int(&record.pr_collection_share).unwrap_or(0).to_string(),
+            &opt_domain_to_int(&record.mr_collection_share).unwrap_or(0).to_string(),
+            &opt_domain_to_int(&record.sr_collection_share).unwrap_or(0).to_string(),
             record.inclusion_exclusion_indicator.as_str(),
             record.tis_numeric_code.as_str(),
-            record.shares_change.as_deref().unwrap_or(""),
+            &opt_domain_to_string(&record.shares_change).unwrap_or_default(),
             record.sequence_num.as_deref().unwrap_or(""),
         ])?;
         Ok(())
@@ -330,14 +330,14 @@ pub fn parse_and_insert_swr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.tax_id_num.as_deref().unwrap_or(""),
             record.writer_ipi_name_num.as_deref().unwrap_or(""),
             record.pr_affiliation_society_num.as_deref().unwrap_or(""),
-            record.pr_ownership_share.as_deref().unwrap_or(""),
+            &opt_domain_to_int(&record.pr_ownership_share).unwrap_or(0).to_string(),
             record.mr_society.as_deref().unwrap_or(""),
-            record.mr_ownership_share.as_deref().unwrap_or(""),
+            &opt_domain_to_int(&record.mr_ownership_share).unwrap_or(0).to_string(),
             record.sr_society.as_deref().unwrap_or(""),
-            record.sr_ownership_share.as_deref().unwrap_or(""),
-            record.reversionary_indicator.as_deref().unwrap_or(""),
-            record.first_recording_refusal_ind.as_deref().unwrap_or(""),
-            record.work_for_hire_indicator.as_deref().unwrap_or(""),
+            &opt_domain_to_int(&record.sr_ownership_share).unwrap_or(0).to_string(),
+            &opt_domain_to_string(&record.reversionary_indicator).unwrap_or_default(),
+            &opt_domain_to_string(&record.first_recording_refusal_ind).unwrap_or_default(),
+            &opt_domain_to_string(&record.work_for_hire_indicator).unwrap_or_default(),
             record.filler.as_deref().unwrap_or(""),
             record.writer_ipi_base_number.as_deref().unwrap_or(""),
             record.personal_number.as_deref().unwrap_or(""),
@@ -362,12 +362,12 @@ pub fn parse_and_insert_swt<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.transaction_sequence_num,
             record.record_sequence_num,
             record.interested_party_num,
-            record.pr_collection_share.as_deref().unwrap_or(""),
-            record.mr_collection_share.as_deref().unwrap_or(""),
-            record.sr_collection_share.as_deref().unwrap_or(""),
+            &opt_domain_to_int(&record.pr_collection_share).unwrap_or(0).to_string(),
+            &opt_domain_to_int(&record.mr_collection_share).unwrap_or(0).to_string(),
+            &opt_domain_to_int(&record.sr_collection_share).unwrap_or(0).to_string(),
             record.inclusion_exclusion_indicator.as_str(),
             record.tis_numeric_code.as_str(),
-            record.shares_change.as_deref().unwrap_or(""),
+            &opt_domain_to_string(&record.shares_change).unwrap_or_default(),
             record.sequence_num.as_deref().unwrap_or(""),
         ])?;
         Ok(())
@@ -386,7 +386,7 @@ pub fn parse_and_insert_pwr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.submitter_agreement_number.as_deref().unwrap_or(""),
             record.society_assigned_agreement_number.as_deref().unwrap_or(""),
             record.writer_ip_num,
-            record.publisher_sequence_num.as_deref().unwrap_or(""),
+            &opt_domain_to_int(&record.publisher_sequence_num).unwrap_or(0).to_string(),
         ])?;
         Ok(())
     })
@@ -394,7 +394,7 @@ pub fn parse_and_insert_pwr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 
 pub fn parse_and_insert_nat<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
     handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, NatRecord::from_cwr_line, |record, stmts, file_id| {
-        stmts.nat_stmt.execute(params![file_id, record.record_type.to_sql_string(), record.transaction_sequence_num, record.record_sequence_num, record.title, record.title_type, record.language_code.as_deref().unwrap_or(""),])?;
+        stmts.nat_stmt.execute(params![file_id, record.record_type.to_sql_string(), record.transaction_sequence_num, record.record_sequence_num, record.title, record.title_type.to_sql_string(), record.language_code.as_deref().unwrap_or(""),])?;
         Ok(())
     })
 }
@@ -491,17 +491,17 @@ pub fn parse_and_insert_rec<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.record_type.to_sql_string(),
             record.transaction_sequence_num,
             record.record_sequence_num,
-            record.release_date.as_deref().unwrap_or(""),
+            &opt_domain_to_string(&record.release_date).unwrap_or_default(),
             record.constant.as_str(),
-            record.release_duration.as_deref().unwrap_or(""),
+            &opt_domain_to_string(&record.release_duration).unwrap_or_default(),
             record.constant.as_str(),
             record.album_title.as_deref().unwrap_or(""),
             record.album_label.as_deref().unwrap_or(""),
             record.release_catalog_num.as_deref().unwrap_or(""),
             record.ean.as_deref().unwrap_or(""),
             record.isrc.as_deref().unwrap_or(""),
-            record.recording_format.as_deref().unwrap_or(""),
-            record.recording_technique.as_deref().unwrap_or(""),
+            &opt_domain_to_string(&record.recording_format).unwrap_or_default(),
+            &opt_domain_to_string(&record.recording_technique).unwrap_or_default(),
             record.media_type.as_deref().unwrap_or(""),
             record.recording_title.as_deref().unwrap_or(""),
             record.version_title.as_deref().unwrap_or(""),
@@ -578,7 +578,7 @@ pub fn parse_and_insert_com<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.title,
             record.iswc_of_component.as_deref().unwrap_or(""),
             record.submitter_work_num.as_deref().unwrap_or(""),
-            record.duration.as_deref().unwrap_or(""),
+            &opt_domain_to_string(&record.duration).unwrap_or_default(),
             &record.writer_1_last_name,
             record.writer_1_first_name.as_deref().unwrap_or(""),
             record.writer_1_ipi_name_num.as_deref().unwrap_or(""),

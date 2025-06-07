@@ -3,12 +3,12 @@ use quote::quote;
 use syn::{Data, DeriveInput, Fields, LitInt, LitStr, parse_macro_input};
 
 /// Derive macro for CWR record parsing with optional custom validation.
-/// 
+///
 /// # Attributes
 /// - `codes`: Optional array of record codes this struct handles (e.g., `["NWR", "REV"]`)
 /// - `validator`: Optional custom validation function name
 /// - `test_data`: Required test data string for auto-generated tests (put last since it's long)
-/// 
+///
 /// # Custom Validator
 /// If you specify `validator = my_function`, define it with this exact signature:
 /// ```rust,ignore
@@ -17,13 +17,13 @@ use syn::{Data, DeriveInput, Fields, LitInt, LitStr, parse_macro_input};
 ///     Vec::new()
 /// }
 /// ```
-/// 
+///
 /// # Example
 /// ```rust,ignore
 /// #[derive(CwrRecord)]
 /// #[cwr(validator = hdr_custom_validate, test_data = "HDR...")]
 /// pub struct HdrRecord { /* fields */ }
-/// 
+///
 /// fn hdr_custom_validate(record: &mut HdrRecord) -> Vec<CwrWarning<'static>> {
 ///     // Custom validation logic
 ///     Vec::new()
@@ -269,7 +269,6 @@ fn extract_validator(attrs: &[syn::Attribute]) -> Option<syn::Ident> {
     }
     None
 }
-
 
 fn extract_record_codes(attrs: &[syn::Attribute], name: &syn::Ident) -> quote::__private::TokenStream {
     // First check for explicit codes attribute
