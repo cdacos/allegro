@@ -907,7 +907,7 @@ impl CwrFieldParse for TisNumericCode {
             Ok(code) if code > 0 => {
                 let mut warnings = vec![];
                 if !is_valid_tis_code(code) {
-                    warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("TIS Numeric Code {} not found in ISO 3166-1 territory codes table", code) });
+                    warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("TIS Numeric Code {} not found in official CISAC TIS territory codes table", code) });
                 }
                 (TisNumericCode(code), warnings)
             }
@@ -1142,36 +1142,25 @@ impl SenderName {
 impl CwrFieldParse for SenderName {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
-        
+
         if trimmed.is_empty() {
-            let warnings = vec![CwrWarning { 
-                field_name, 
-                field_title, 
-                source_str: Cow::Owned(source.to_string()), 
-                level: WarningLevel::Critical, 
-                description: "Sender Name is required".to_string() 
-            }];
+            let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: "Sender Name is required".to_string() }];
             return (SenderName(String::new()), warnings);
         }
 
         // Basic validation - comprehensive validation requires SenderType context in post_process
         // This validates general format and checks against known society names
         let mut warnings = vec![];
-        
+
         // Check if it might be a society name (contains letters and possibly spaces)
         if trimmed.chars().any(|c| c.is_ascii_alphabetic()) {
             use crate::lookups::society_codes::is_valid_society_code;
-            
+
             // Try exact match against society codes first
             if !is_valid_society_code(trimmed) {
                 // Try with common variations (remove spaces, convert to uppercase)
-                let normalized_variants = vec![
-                    trimmed.replace(" ", ""),
-                    trimmed.replace(" ", "").to_uppercase(),
-                    trimmed.to_uppercase(),
-                    trimmed.replace("-", "").replace(" ", ""),
-                ];
-                
+                let normalized_variants = vec![trimmed.replace(" ", ""), trimmed.replace(" ", "").to_uppercase(), trimmed.to_uppercase(), trimmed.replace("-", "").replace(" ", "")];
+
                 let mut found_match = false;
                 for variant in &normalized_variants {
                     if is_valid_society_code(variant) {
@@ -1179,21 +1168,12 @@ impl CwrFieldParse for SenderName {
                         break;
                     }
                 }
-                
+
                 // For now, skip the expensive transmitter code check
                 // Full validation will be done in post_process with SenderType context
-                
+
                 if !found_match {
-                    warnings.push(CwrWarning {
-                        field_name,
-                        field_title,
-                        source_str: Cow::Owned(source.to_string()),
-                        level: WarningLevel::Warning,
-                        description: format!(
-                            "Sender Name '{}' not found in society lookup tables - validation will be performed in post-process with SenderType context", 
-                            trimmed
-                        ),
-                    });
+                    warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Sender Name '{}' not found in society lookup tables - validation will be performed in post-process with SenderType context", trimmed) });
                 }
             }
         }
