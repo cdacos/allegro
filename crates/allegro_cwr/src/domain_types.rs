@@ -197,19 +197,61 @@ impl SenderId {
 
 impl CwrFieldParse for SenderId {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        use crate::lookups::society_codes::is_valid_society_code;
+        use crate::lookups::society_members::is_valid_transmitter_code;
+        
         let trimmed = source.trim();
-        // Basic format validation - must be 9 characters numeric for IPI or alphanumeric for society codes
-        // TODO: Implement table-based validation for:
-        // - CWR Sender ID and Codes Table (for PB, AA, WR sender types)
-        // - Society Code Table (for SO sender type)
-        // This requires cross-field validation with SenderType in post_process step
-
+        
         if trimmed.is_empty() {
             let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: "Sender ID is required".to_string() }];
             return (SenderId(String::new()), warnings);
         }
 
-        (SenderId(trimmed.to_string()), vec![])
+        let mut warnings = vec![];
+
+        // Basic validation - for full validation we need SenderType context
+        // This is a preliminary validation, full validation happens in post_process
+        
+        // Check if it looks like a society code (alpha characters)
+        if trimmed.chars().all(|c| c.is_ascii_alphabetic() || c.is_ascii_whitespace()) {
+            let normalized = trimmed.replace(' ', " "); // Normalize spaces
+            if !is_valid_society_code(&normalized) {
+                warnings.push(CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Warning,
+                    description: format!("Sender ID '{}' not found in society codes table - may be invalid for SO sender type", trimmed),
+                });
+            }
+        }
+        // Check if it looks like a transmitter code (alphanumeric, typically 3-4 chars)
+        else if trimmed.len() <= 4 && trimmed.chars().all(|c| c.is_ascii_alphanumeric()) {
+            if !is_valid_transmitter_code(trimmed) {
+                warnings.push(CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Info,
+                    description: format!("Sender ID '{}' not found in transmitter codes table - may be a custom code", trimmed),
+                });
+            }
+        }
+        // Check if it looks like an IPI number (9+ digits)
+        else if trimmed.len() >= 9 && trimmed.chars().all(|c| c.is_ascii_digit()) {
+            // IPI number format validation - should be 9-11 digits
+            if trimmed.len() > 11 {
+                warnings.push(CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Warning,
+                    description: format!("IPI number '{}' is longer than standard 11 digits", trimmed),
+                });
+            }
+        }
+
+        (SenderId(trimmed.to_string()), warnings)
     }
 }
 
@@ -605,12 +647,25 @@ impl CurrencyCode {
 
 impl CwrFieldParse for CurrencyCode {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        use crate::lookups::currency_codes::is_valid_currency_code;
+        
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (CurrencyCode(None), vec![])
         } else if trimmed.len() == 3 && trimmed.chars().all(|c| c.is_ascii_alphabetic()) {
-            // TODO: Validate against ISO 4217 currency code table
-            (CurrencyCode(Some(trimmed.to_uppercase())), vec![])
+            let uppercase_code = trimmed.to_uppercase();
+            if is_valid_currency_code(&uppercase_code) {
+                (CurrencyCode(Some(uppercase_code)), vec![])
+            } else {
+                let warnings = vec![CwrWarning { 
+                    field_name, 
+                    field_title, 
+                    source_str: Cow::Owned(source.to_string()), 
+                    level: WarningLevel::Warning, 
+                    description: format!("Currency code '{}' not found in ISO 4217 table", trimmed) 
+                }];
+                (CurrencyCode(Some(uppercase_code)), warnings)
+            }
         } else {
             let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid currency code '{}', should be 3-letter ISO 4217 code", trimmed) }];
             (CurrencyCode(Some(trimmed.to_uppercase())), warnings)

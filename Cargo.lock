@@ -30,6 +30,7 @@ dependencies = [
  "allegro_cwr_derive",
  "chrono",
  "log",
+ "once_cell",
  "serde",
 ]
 
