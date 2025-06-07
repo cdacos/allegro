@@ -32,10 +32,10 @@ pub fn extract_version_from_filename(filename: &str) -> Option<f32> {
 
     // Look for .Vxx pattern at the end
     if let Some(dot_pos) = search_str.rfind('.') {
-        let version_part = &search_str[dot_pos + 1..];
+        let version_part = search_str.get(dot_pos + 1..)?;
 
         if version_part.starts_with('V') && version_part.len() >= 3 {
-            let version_digits = &version_part[1..3];
+            let version_digits = version_part.get(1..3)?;
 
             match version_digits {
                 "20" => Some(2.0),

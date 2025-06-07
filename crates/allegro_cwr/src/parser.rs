@@ -231,11 +231,9 @@ pub struct ParsedRecord {
 
 /// Parses a single CWR line and returns the parsed record
 fn parse_cwr_line(line: &str, line_number: usize, context: &ParsingContext) -> Result<ParsedRecord, CwrParseError> {
-    if line.len() < 3 {
-        return Err(CwrParseError::BadFormat(format!("Line {} is too short (less than 3 chars)", line_number)));
-    }
-
-    let record_type = &line[0..3];
+    let record_type = line.get(0..3).ok_or_else(|| {
+        CwrParseError::BadFormat(format!("Line {} is too short (less than 3 chars)", line_number))
+    })?;
 
     // Parse into the appropriate record struct
     let (record, warnings) = match record_type {
