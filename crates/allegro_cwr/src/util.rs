@@ -1,3 +1,5 @@
+use crate::CwrParseError;
+
 /// Formats an integer with commas as thousands separators.
 pub fn format_int_with_commas(num: i64) -> String {
     let s = num.to_string();
@@ -48,6 +50,103 @@ pub fn extract_version_from_filename(filename: &str) -> Option<f32> {
         }
     } else {
         None
+    }
+}
+
+
+pub fn get_cwr_version(filename: &str, hdr_line: &str, cli_version: Option<f32>) -> Result<f32, CwrParseError> {
+    use log::{info, warn};
+
+    // Try to detect version from HDR line using enhanced heuristics
+    let hdr_detected_version = detect_version_from_hdr(hdr_line)?;
+
+    // Try to extract version from filename
+    let filename_version = extract_version_from_filename(filename);
+
+    // Determine final version with precedence: CLI > filename > HDR explicit > HDR heuristics
+    match (cli_version, filename_version, hdr_detected_version) {
+        // CLI version specified
+        (Some(cli_ver), Some(filename_ver), _) => {
+            if cli_ver != filename_ver {
+                info!("CLI specified CWR version {} but filename suggests {}. Using CLI version {}", cli_ver, filename_ver, cli_ver);
+            }
+            Ok(cli_ver)
+        }
+        (Some(cli_ver), None, Some(hdr_ver)) => {
+            if cli_ver != hdr_ver {
+                warn!("CLI specified CWR version {} but file contains explicit version {}. Using CLI version {}", cli_ver, hdr_ver, cli_ver);
+            }
+            Ok(cli_ver)
+        }
+        (Some(cli_ver), None, None) => Ok(cli_ver),
+
+        // No CLI version - use filename version if available
+        (None, Some(filename_ver), Some(hdr_ver)) => {
+            if filename_ver != hdr_ver {
+                info!("Filename suggests CWR version {} but file contains explicit version {}. Using filename version {}", filename_ver, hdr_ver, filename_ver);
+            }
+            Ok(filename_ver)
+        }
+        (None, Some(filename_ver), None) => {
+            info!("Detected CWR version {} from filename", filename_ver);
+            Ok(filename_ver)
+        }
+
+        // No CLI or filename version - use HDR version if available
+        (None, None, Some(hdr_ver)) => Ok(hdr_ver),
+
+        // Fall back to heuristics
+        (None, None, None) => {
+            let heuristic_version = detect_version_by_heuristics(hdr_line);
+            info!("Auto-detected CWR version: {}", heuristic_version);
+            Ok(heuristic_version)
+        }
+    }
+}
+
+fn detect_version_from_hdr(hdr_line: &str) -> Result<Option<f32>, CwrParseError> {
+    // Check for explicit version field at position 101-104 (CWR 2.2+)
+    if hdr_line.len() > 104 {
+        if let Some(version_str) = hdr_line.get(101..104) {
+            let trimmed = version_str.trim();
+            if !trimmed.is_empty() {
+                match trimmed.parse::<f32>() {
+                    Ok(version) => {
+                        if [2.0, 2.1, 2.2].contains(&version) {
+                            return Ok(Some(version));
+                        } else {
+                            return Err(CwrParseError::BadFormat(format!("Invalid CWR version in header: {}", version)));
+                        }
+                    }
+                    Err(_) => return Err(CwrParseError::BadFormat(format!("Invalid CWR version format in header: {}", trimmed))),
+                }
+            }
+        }
+    }
+
+    // Check for character set field presence (positions 87-89, indicates 2.1+)
+    if hdr_line.len() >= 89 {
+        if let Some(charset_field) = hdr_line.get(87..89) {
+            let trimmed = charset_field.trim();
+            if !trimmed.is_empty() {
+                // Character set field present suggests 2.1+, but we can't distinguish 2.1 from 2.2 without explicit version
+                return Ok(None); // Let heuristics handle it
+            }
+        }
+    }
+
+    Ok(None)
+}
+
+fn detect_version_by_heuristics(hdr_line: &str) -> f32 {
+    let len = hdr_line.len();
+
+    if len > 104 {
+        2.2
+    } else if len >= 80 {
+        2.1
+    } else {
+        2.0
     }
 }
 

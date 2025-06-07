@@ -100,7 +100,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
         if let Some(ref tx) = self.tx {
             if let Some(ref mut statements) = self.statements {
                 let record_id = match &parsed_record.record {
-                    allegro_cwr::parser::CwrRecord::Hdr(hdr) => {
+                    allegro_cwr::cwr_record::CwrRecord::Hdr(hdr) => {
                         statements.hdr_stmt.execute(rusqlite::params![
                             self.file_id,
                             "HDR",
@@ -119,7 +119,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Grh(grh) => {
+                    allegro_cwr::cwr_record::CwrRecord::Grh(grh) => {
                         statements.grh_stmt.execute(rusqlite::params![
                             self.file_id,
                             "GRH",
@@ -131,7 +131,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Grt(grt) => {
+                    allegro_cwr::cwr_record::CwrRecord::Grt(grt) => {
                         statements.grt_stmt.execute(rusqlite::params![
                             self.file_id,
                             "GRT",
@@ -143,7 +143,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Trl(trl) => {
+                    allegro_cwr::cwr_record::CwrRecord::Trl(trl) => {
                         statements.trl_stmt.execute(rusqlite::params![
                             self.file_id,
                             "TRL",
@@ -153,7 +153,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Agr(agr) => {
+                    allegro_cwr::cwr_record::CwrRecord::Agr(agr) => {
                         statements.agr_stmt.execute(rusqlite::params![
                             self.file_id,
                             "AGR",
@@ -178,7 +178,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Nwr(nwr) => {
+                    allegro_cwr::cwr_record::CwrRecord::Nwr(nwr) => {
                         statements.nwr_stmt.execute(rusqlite::params![
                             self.file_id,
                             nwr.record_type,
@@ -212,7 +212,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Spu(spu) => {
+                    allegro_cwr::cwr_record::CwrRecord::Spu(spu) => {
                         statements.spu_stmt.execute(rusqlite::params![
                             self.file_id,
                             spu.record_type,
@@ -243,7 +243,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Swr(swr) => {
+                    allegro_cwr::cwr_record::CwrRecord::Swr(swr) => {
                         statements.swr_stmt.execute(rusqlite::params![
                             self.file_id,
                             swr.record_type,
@@ -272,7 +272,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Alt(alt) => {
+                    allegro_cwr::cwr_record::CwrRecord::Alt(alt) => {
                         statements.alt_stmt.execute(rusqlite::params![
                             self.file_id,
                             "ALT",
@@ -284,7 +284,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Per(per) => {
+                    allegro_cwr::cwr_record::CwrRecord::Per(per) => {
                         statements.per_stmt.execute(rusqlite::params![
                             self.file_id,
                             "PER",
@@ -297,7 +297,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Rec(rec) => {
+                    allegro_cwr::cwr_record::CwrRecord::Rec(rec) => {
                         statements.rec_stmt.execute(rusqlite::params![
                             self.file_id,
                             "REC",
@@ -324,7 +324,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Ack(ack) => {
+                    allegro_cwr::cwr_record::CwrRecord::Ack(ack) => {
                         statements.ack_stmt.execute(rusqlite::params![
                             self.file_id,
                             "ACK",
@@ -343,7 +343,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Ter(ter) => {
+                    allegro_cwr::cwr_record::CwrRecord::Ter(ter) => {
                         statements.ter_stmt.execute(rusqlite::params![
                             self.file_id,
                             "TER",
@@ -354,7 +354,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Ipa(ipa) => {
+                    allegro_cwr::cwr_record::CwrRecord::Ipa(ipa) => {
                         statements.ipa_stmt.execute(rusqlite::params![
                             self.file_id,
                             "IPA",
@@ -375,7 +375,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Npa(npa) => {
+                    allegro_cwr::cwr_record::CwrRecord::Npa(npa) => {
                         statements.npa_stmt.execute(rusqlite::params![
                             self.file_id,
                             "NPA",
@@ -388,7 +388,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Npn(npn) => {
+                    allegro_cwr::cwr_record::CwrRecord::Npn(npn) => {
                         statements.npn_stmt.execute(rusqlite::params![
                             self.file_id,
                             "NPN",
@@ -401,7 +401,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Npr(npr) => {
+                    allegro_cwr::cwr_record::CwrRecord::Npr(npr) => {
                         statements.npr_stmt.execute(rusqlite::params![
                             self.file_id,
                             "NPR",
@@ -417,7 +417,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Spt(spt) => {
+                    allegro_cwr::cwr_record::CwrRecord::Spt(spt) => {
                         statements.spt_stmt.execute(rusqlite::params![
                             self.file_id, spt.record_type, spt.transaction_sequence_num, spt.record_sequence_num,
                             spt.interested_party_num, spt.constant, spt.pr_collection_share, spt.mr_collection_share,
@@ -426,14 +426,14 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Nwn(nwn) => {
+                    allegro_cwr::cwr_record::CwrRecord::Nwn(nwn) => {
                         statements.nwn_stmt.execute(rusqlite::params![
                             self.file_id, "NWN", nwn.transaction_sequence_num, nwn.record_sequence_num,
                             nwn.interested_party_num, nwn.writer_last_name, nwn.writer_first_name, nwn.language_code
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Swt(swt) => {
+                    allegro_cwr::cwr_record::CwrRecord::Swt(swt) => {
                         statements.swt_stmt.execute(rusqlite::params![
                             self.file_id, swt.record_type, swt.transaction_sequence_num, swt.record_sequence_num,
                             swt.interested_party_num, swt.pr_collection_share, swt.mr_collection_share,
@@ -442,7 +442,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Pwr(pwr) => {
+                    allegro_cwr::cwr_record::CwrRecord::Pwr(pwr) => {
                         statements.pwr_stmt.execute(rusqlite::params![
                             self.file_id, "PWR", pwr.transaction_sequence_num, pwr.record_sequence_num,
                             pwr.publisher_ip_num, pwr.publisher_name, pwr.submitter_agreement_number,
@@ -450,14 +450,14 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Nat(nat) => {
+                    allegro_cwr::cwr_record::CwrRecord::Nat(nat) => {
                         statements.nat_stmt.execute(rusqlite::params![
                             self.file_id, "NAT", nat.transaction_sequence_num, nat.record_sequence_num,
                             nat.title, nat.title_type, nat.language_code
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Ewt(ewt) => {
+                    allegro_cwr::cwr_record::CwrRecord::Ewt(ewt) => {
                         statements.ewt_stmt.execute(rusqlite::params![
                             self.file_id, "EWT", ewt.transaction_sequence_num, ewt.record_sequence_num,
                             ewt.entire_work_title, ewt.iswc_of_entire_work, ewt.language_code, ewt.writer_1_last_name,
@@ -467,7 +467,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Ver(ver) => {
+                    allegro_cwr::cwr_record::CwrRecord::Ver(ver) => {
                         statements.ver_stmt.execute(rusqlite::params![
                             self.file_id, "VER", ver.transaction_sequence_num, ver.record_sequence_num,
                             ver.original_work_title, ver.iswc_of_original_work, ver.language_code, ver.writer_1_last_name,
@@ -477,7 +477,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Orn(orn) => {
+                    allegro_cwr::cwr_record::CwrRecord::Orn(orn) => {
                         statements.orn_stmt.execute(rusqlite::params![
                             self.file_id, "ORN", orn.transaction_sequence_num, orn.record_sequence_num,
                             orn.intended_purpose, orn.production_title, orn.cd_identifier, orn.cut_number, orn.library,
@@ -488,21 +488,21 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Ins(ins) => {
+                    allegro_cwr::cwr_record::CwrRecord::Ins(ins) => {
                         statements.ins_stmt.execute(rusqlite::params![
                             self.file_id, "INS", ins.transaction_sequence_num, ins.record_sequence_num,
                             ins.number_of_voices, ins.standard_instrumentation_type, ins.instrumentation_description
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Ind(ind) => {
+                    allegro_cwr::cwr_record::CwrRecord::Ind(ind) => {
                         statements.ind_stmt.execute(rusqlite::params![
                             self.file_id, "IND", ind.transaction_sequence_num, ind.record_sequence_num,
                             ind.instrument_code, ind.number_of_players
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Com(com) => {
+                    allegro_cwr::cwr_record::CwrRecord::Com(com) => {
                         statements.com_stmt.execute(rusqlite::params![
                             self.file_id, "COM", com.transaction_sequence_num, com.record_sequence_num, com.title,
                             com.iswc_of_component, com.submitter_work_num, com.duration, com.writer_1_last_name,
@@ -512,7 +512,7 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Msg(msg) => {
+                    allegro_cwr::cwr_record::CwrRecord::Msg(msg) => {
                         statements.msg_stmt.execute(rusqlite::params![
                             self.file_id, "MSG", msg.transaction_sequence_num, msg.record_sequence_num,
                             msg.message_type, msg.original_record_sequence_num, msg.record_type_field,
@@ -520,28 +520,28 @@ impl allegro_cwr::CwrHandler for SqliteHandler {
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Net(net) => {
+                    allegro_cwr::cwr_record::CwrRecord::Net(net) => {
                         statements.net_stmt.execute(rusqlite::params![
                             self.file_id, net.record_type, net.transaction_sequence_num, net.record_sequence_num,
                             net.title, net.language_code
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Now(now) => {
+                    allegro_cwr::cwr_record::CwrRecord::Now(now) => {
                         statements.now_stmt.execute(rusqlite::params![
                             self.file_id, "NOW", now.transaction_sequence_num, now.record_sequence_num,
                             now.writer_name, now.writer_first_name, now.language_code, now.writer_position
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Ari(ari) => {
+                    allegro_cwr::cwr_record::CwrRecord::Ari(ari) => {
                         statements.ari_stmt.execute(rusqlite::params![
                             self.file_id, "ARI", ari.transaction_sequence_num, ari.record_sequence_num,
                             ari.society_num, ari.work_num, ari.type_of_right, ari.subject_code, ari.note
                         ])?;
                         tx.last_insert_rowid()
                     }
-                    allegro_cwr::parser::CwrRecord::Xrf(xrf) => {
+                    allegro_cwr::cwr_record::CwrRecord::Xrf(xrf) => {
                         statements.xrf_stmt.execute(rusqlite::params![
                             self.file_id, "XRF", xrf.transaction_sequence_num, xrf.record_sequence_num,
                             xrf.organisation_code, xrf.identifier, xrf.identifier_type, xrf.validity

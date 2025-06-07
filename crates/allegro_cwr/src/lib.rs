@@ -8,7 +8,7 @@ pub mod error;
 pub mod parser;
 pub mod records;
 pub mod util;
-
+pub mod cwr_record;
 
 #[derive(Debug, Clone)]
 pub enum OutputFormat {
