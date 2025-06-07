@@ -4,6 +4,30 @@
 //! wire format structure. These serve as an intermediate layer between raw
 //! CWR lines and business domain objects.
 
+use crate::error::CwrParseError;
+use crate::cwr_registry::CwrRegistry;
+
+/// Result type returned by record parsing functions
+#[derive(Debug)]
+pub struct ParseResult<T> {
+    pub record: T,
+    pub warnings: Vec<String>,
+}
+
+/// Trait that all CWR record types must implement
+pub trait CwrRecord {
+    /// The 3-character record type codes this record handles
+    fn record_codes() -> &'static [&'static str];
+    
+    /// Parse a CWR line into this specific record type
+    fn from_cwr_line(line: &str) -> Result<ParseResult<Self>, CwrParseError>
+    where
+        Self: Sized;
+    
+    /// Convert this record into the registry enum variant
+    fn into_registry(self) -> CwrRegistry;
+}
+
 pub mod ack;
 pub mod agr;
 pub mod alt;
