@@ -7,3 +7,4 @@
 - No panicking code
 - Stream processing for huge files, avoid memory allocation growth
 - SOLID principles with liberal Rust modularization
+- After a working code change run cargo fmt & cargo clippy

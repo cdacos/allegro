@@ -3,13 +3,13 @@
 //! This library provides core functionality to parse CWR files. For database storage,
 //! see the `allegro_cwr_sqlite` crate. For JSON output, see the `allegro_cwr_json` crate.
 
+mod cwr_handler;
 pub mod cwr_record;
 pub mod domain_types;
 pub mod error;
 pub mod parser;
 pub mod records;
 pub mod util;
-mod cwr_handler;
 
 #[derive(Debug, Clone)]
 pub enum OutputFormat {
@@ -38,12 +38,12 @@ impl std::str::FromStr for OutputFormat {
 
 // Re-export commonly used items
 pub use crate::error::CwrParseError;
-pub use crate::parser::{process_cwr_stream, process_cwr_stream_with_version, ParsedRecord, ParsingContext};
+pub use crate::parser::{ParsedRecord, ParsingContext, process_cwr_stream, process_cwr_stream_with_version};
 pub use crate::records::*;
 pub use crate::util::{extract_version_from_filename, format_int_with_commas};
 
-use log::info;
 pub use cwr_handler::CwrHandler;
+use log::info;
 
 /// Generic function to process CWR file with any handler that implements CwrHandler trait
 pub fn process_cwr_with_handler<H: CwrHandler>(input_filename: &str, handler: H) -> Result<String, Box<dyn std::error::Error>>
