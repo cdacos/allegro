@@ -1,0 +1,10 @@
+Name,Code,Definition
+Adaptor,AD,The author or one of the authors of an adapted text of a musical work.
+Arranger,AR,A modifier of musical elements of a musical work.
+"Author, Writer, Author of Lyrics",A,The creator or one of the creators of a text of a musical work.
+"Composer, Writer",C,The creator or one of the creators of the musical elements of a musical work.
+Composer/Author,CA,The creator or one of the creators of text and musical elements within a musical work.
+Sub Arranger,SR,A creator of arrangements authorized by the Sub- Publisher
+Sub Author,SA,The author of text which substitutes or modifies an existing text of musical work.
+Translator,TR,A modifier of a text in a different language
+Income Participant,PA,A person that receives royalty payments for a work but is not a copyright owner.

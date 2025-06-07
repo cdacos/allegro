@@ -1,0 +1,52 @@
+﻿Name,Maximum duration in minutes,Maximum number of works,Maximum number of fragments,New Code
+45 rpm 17 cm Single,8,2,6,S
+45 rpm 17 cm EP,16,4,12,EP
+45 rpm (12 inches) Maxi Single,16,4,12,DS
+Disco Single Remix (12 inches),16,4,12,RDS
+Maxi Single Remix (7 inches),16,4,12,RMS
+LP 33 rpm 17cm EP,20,6,18,EPM
+LP 33 rpm 25 cm,30,10,24,MLP
+LP 33 rpm 30 cm,60,16,28,LP
+LP Compilation,60,20,33,LP2
+LP identical to a CD,80,20,40,LP3
+LP Compilation identical to a CD Compilation COMPACT DISC,80,24,48,LP4
+CD Single 2 tracks,12,2,6,SCD
+CD Singles 3&5 inches,23,5,12,CDS
+CD Maxi-single,23,5,12,CDM
+CD Maxi single remix,23,5,12,RCD
+CD-LP (5 inches),80,20,40,CD
+CD Compilation,80,24,48,CD2
+SACD,80,20,40,SA
+SACD Compilation,80,24,48,SA2
+CD Extra Single 2 tracks,12,2,6,CES
+CD Extra Single,23,5,12,CXS
+CD Extra Maxi Single,23,5,12,CXM
+CD Extra Maxi Remix,23,5,12,RCE
+CD Extra EP,30,10,24,CEP
+CD Extra LP,80,20,40,CE
+CD Extra Compilation,80,24,48,CE2
+MC single,8,2,6,SMC
+MC single identical to a CDS,23,5,12,SM2
+MC maxi,16,4,12,MMC
+MC EP,16,4,12,EMC
+MC Remix,16,4,12,RMC
+MC,30,10,24,MCP
+MC LP,60,16,28,MC
+MC Compilation,60,20,33,MC2
+MC identical to a CD,80,20,40,MC3
+MC Compilation identical to a CD compilation,80,24,48,MC4
+Double MC,120,32,56,DMC
+MD Single/ Maxi Single,23,5,12,MDS
+MD Maxi Remix,23,5,12,MDR
+MD EP,30,10,24,MDP
+MD,80,20,40,MD
+MD Compilation,80,24,48,MD2
+DCC,80,20,40,DC
+DCC Compilation,80,24,48,DC2
+DVD-Audio,,,,DV1
+DVD-Video,,,,DV2
+DVD-Rom,,,,DV3
+DVD-Single,,,,DV4
+Downloading of a title,,,,DW
+Downloading of a Single/Maxi Single,23,5,12,DM
+Downloading of LP,80,20,40,DL

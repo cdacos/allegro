@@ -1,0 +1,12 @@
+Name,Code,Definition
+Alternative Title,AT,An alternative to an original title.
+First Line of Text,TE,The beginning of a text.
+Formal Title,FT,A standardised title in which the elements are arranged in a pre-determined order. Normally created for classical works.
+Incorrect Title,IT,A spurious or unacceptable title sometimes mistakenly used for identification.
+Original Title,OT,A title given to the work by its creator(s) shown in its original language.
+Original Title Translated,TT,An original title translated into a different language.
+Part Title,PT,A section of a work which is not recognized as an excerpt in its own right and does not have its own ISWC.
+Restricted Title,RT,A title from which all initial articles and punctuation have been removed.
+Extra Search Title,ET,"An alternate title created to aid database searching (e.g. where special characters, puns, or slang have been replaced by standardized elements)."
+Original Title with National Characters,OL,"The Original title of the Work in it’s original language, using ‘accented’ National characters"
+Alternative Title with National Characters,AL,"An alternatice work title in it’s original language, using ‘accented ‘ National characters."

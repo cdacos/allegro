@@ -1,0 +1,7 @@
+Name,Code,Definition
+Reversionary Rights,R,
+Leading Publisher,L,
+Both Reversionary Rights and Leading Publisher,B,
+Reversionary Rights,Y,Formerly ‘Yes’ on ‘Reversionary rights field’
+No Reversionary Rights,N,Formerly ‘No’ on ‘Reversionary rights field’
+Unknown Reversionary Rights,U,Formerly ‘Unknown’ on ‘Reversionary rights field’

@@ -1,0 +1,6 @@
+Name,Code,Definition
+Composite of Samples,COS,A composite work containing new material and one or more samples of pre-existing recorded works.
+Medley,MED,A continuous and sequential combination of existing works or excerpts.
+Potpourri,POT,"A composite work with the addition of original material which have been combined to form a new work, that has been published and printed"
+Unspecified Composite,UCO,Works known to be a composite but where the type of composite is unknown.
+[Non-Composite],[blank],[Not a composite work]

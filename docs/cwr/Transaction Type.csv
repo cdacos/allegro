@@ -1,0 +1,8 @@
+Name,Code,Definition
+Acknowledgment,ACK,A transaction sent in response to a transaction received that includes information on the use of the transaction received.
+Agreement,AGR,A transaction sent from publishers to societies to provide details of agreements relating to works that the publishers are registering using the NWR or REV transactions.
+New Work Registration,NWR,A transaction sent from publishers to societies for the purpose of registering a musical work.
+Revised Registration,REV,A transaction sent from publishers to societies for the purpose of revising an existing registration of a musical work.
+Notification of ISWC,ISW,A transaction sent from the societies to the publishers to notify of an ISWC allocated to a musical work.
+Existing work which is in conflict with a work registration,EXC,A transaction sent from the societies to the publishers to provide details of an existing work that is in conflict with a work registration.
+Notification to Co-Publisher,COP,"A notice delivered to any publisher marked as an ""Other Publisher"" on an NWR transaction that has not previously registered the work referred to within the NWR. NB: The COP code is no longer valid within CWR, but this definition has been kept for historical reference."

@@ -1,0 +1,9 @@
+Name,Code,Definition
+Conflict,CO,"The status assigned to a transaction that has been received, has passed all validity checks, but does not agree with information previously submitted from another supplier."
+Duplicate,DU,"The status assigned to a transaction that has been received, has passed all validity checks, and exactly matches another transaction previously received from the same submitter."
+Transaction Accepted,RA,"The transaction has passed all of the mandatory edits. Any field and record rejects, and status re possible duplicate works will be noted in messages."
+Registration Accepted,AS,The registration was accepted as submitted by the publisher and is now ready for payment
+Registration Accepted with Changes,AC,"The registration was accepted but modifications were made e.g. CAE numbers supplied, OIP info corrected"
+Rejected,RJ,The status assigned to a transaction that does not meet the editing requirements documented for that transaction type. Publisher must resubmit.
+No Participation,NP,"The status assigned to indicate that the receiving society has no interest in the work, and therefore may not have edited the work fully e.g. if BMI received a work that contained only ASCAP interested parties (or vice versa)"
+Claim rejected,RC,The publisher's claim to this work is rejected.
