@@ -10,7 +10,7 @@ type ParserMap = HashMap<&'static str, ParseFunction>;
 /// Enum containing all possible parsed CWR record types.
 /// Note: This represents the record types we parse INTO, not the input codes.
 /// For example, REV/ISW/EXC codes all parse into CwrRegistry::Nwr variants.
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum CwrRegistry {
     Hdr(HdrRecord),
     Grh(GrhRecord),
@@ -84,6 +84,45 @@ impl CwrRegistry {
             CwrRegistry::Now(record) => record.record_type(),
             CwrRegistry::Ari(record) => record.record_type(),
             CwrRegistry::Xrf(record) => record.record_type(),
+        }
+    }
+
+    /// Convert this registry record back to a CWR line string
+    pub fn to_cwr_line(&self, cwr_version: &crate::domain_types::CwrVersion) -> String {
+        match self {
+            CwrRegistry::Hdr(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Grh(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Grt(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Trl(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Agr(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Nwr(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Ack(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Ter(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Ipa(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Npa(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Spu(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Npn(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Spt(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Swr(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Nwn(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Swt(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Pwr(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Alt(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Nat(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Ewt(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Ver(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Per(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Npr(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Rec(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Orn(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Ins(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Ind(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Com(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Msg(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Net(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Now(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Ari(record) => record.to_cwr_line(cwr_version),
+            CwrRegistry::Xrf(record) => record.to_cwr_line(cwr_version),
         }
     }
 }

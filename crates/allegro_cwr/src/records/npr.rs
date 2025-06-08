@@ -33,10 +33,10 @@ pub struct NprRecord {
     #[cwr(title = "Language code (optional)", start = 363, len = 2)]
     pub language_code: Option<String>,
 
-    #[cwr(title = "Performance language (conditional, v2.1+)", start = 365, len = 2)]
+    #[cwr(title = "Performance language (conditional, v2.1+)", start = 365, len = 2, min_version = 2.1)]
     pub performance_language: Option<String>,
 
-    #[cwr(title = "Performance dialect (conditional, v2.1+)", start = 367, len = 3)]
+    #[cwr(title = "Performance dialect (conditional, v2.1+)", start = 367, len = 3, min_version = 2.1)]
     pub performance_dialect: Option<String>,
 }
 

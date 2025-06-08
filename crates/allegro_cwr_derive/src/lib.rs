@@ -49,7 +49,7 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
     let field_parsers = fields.iter().map(|field| {
         let field_name = field.ident.as_ref().unwrap();
         let field_type = &field.ty;
-        let (title, start, len, skip_parse) = extract_field_attrs(&field.attrs);
+        let (title, start, len, skip_parse, _min_version) = extract_field_attrs(&field.attrs);
 
         let field_name_str = field_name.to_string();
 
@@ -97,6 +97,39 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
     });
 
     let field_names = fields.iter().map(|f| &f.ident);
+
+    // Generate field writers for to_cwr_line method
+    let field_writers = fields.iter().map(|field| {
+        let field_name = field.ident.as_ref().unwrap();
+        let (_title, start, len, _skip_parse, min_version) = extract_field_attrs(&field.attrs);
+
+        if let Some(min_ver) = min_version {
+            // Version-conditional field
+            quote! {
+                if version.supports_version(#min_ver) {
+                    // Ensure we're at the right position
+                    while line.len() < #start {
+                        line.push(' ');
+                    }
+                    let field_str = <_ as crate::domain_types::CwrFieldWrite>::to_cwr_str(&self.#field_name);
+                    let padded = format!("{:width$}", field_str, width = #len);
+                    line.push_str(&padded[..#len.min(padded.len())]);
+                }
+            }
+        } else {
+            // Always include this field
+            quote! {
+                // Ensure we're at the right position
+                while line.len() < #start {
+                    line.push(' ');
+                }
+                let field_str = <_ as crate::domain_types::CwrFieldWrite>::to_cwr_str(&self.#field_name);
+                let padded = format!("{:width$}", field_str, width = #len);
+                line.push_str(&padded[..#len.min(padded.len())]);
+            }
+        }
+    });
+
     let test_mod_name = quote::format_ident!("{}_generated_tests", name.to_string().to_lowercase());
 
     let validator_implementation = if let Some(validator_fn) = validator_fn {
@@ -180,6 +213,15 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
                     record,
                     warnings: string_warnings,
                 })
+            }
+
+            /// Generate CWR line from record with version-aware field writing
+            pub fn to_cwr_line(&self, version: &crate::domain_types::CwrVersion) -> String {
+                let mut line = String::new();
+
+                #(#field_writers)*
+
+                line
             }
 
         }
@@ -305,12 +347,13 @@ fn generate_registry_variant(name: &syn::Ident) -> quote::__private::TokenStream
     panic!("Could not determine registry variant for struct: {}", name_str);
 }
 
-fn extract_field_attrs(attrs: &[syn::Attribute]) -> (String, usize, usize, bool) {
+fn extract_field_attrs(attrs: &[syn::Attribute]) -> (String, usize, usize, bool, Option<String>) {
     for attr in attrs {
         if attr.path().is_ident("cwr") {
             let result: Result<CwrFieldAttribute, _> = attr.parse_args();
             if let Ok(field_attr) = result {
-                return (field_attr.title.value(), field_attr.start.base10_parse().unwrap(), field_attr.len.base10_parse().unwrap(), field_attr.skip_parse);
+                let min_version = field_attr.min_version.map(|v| v.base10_parse::<f32>().unwrap().to_string());
+                return (field_attr.title.value(), field_attr.start.base10_parse().unwrap(), field_attr.len.base10_parse().unwrap(), field_attr.skip_parse, min_version);
             }
         }
     }
@@ -367,6 +410,7 @@ struct CwrFieldAttribute {
     start: LitInt,
     len: LitInt,
     skip_parse: bool,
+    min_version: Option<syn::LitFloat>,
 }
 
 impl syn::parse::Parse for CwrFieldAttribute {
@@ -375,6 +419,7 @@ impl syn::parse::Parse for CwrFieldAttribute {
         let mut start = None;
         let mut len = None;
         let mut skip_parse = false;
+        let mut min_version = None;
 
         while !input.is_empty() {
             let ident: syn::Ident = input.parse()?;
@@ -395,6 +440,10 @@ impl syn::parse::Parse for CwrFieldAttribute {
                 "skip_parse" => {
                     skip_parse = true;
                 }
+                "min_version" => {
+                    input.parse::<syn::Token![=]>()?;
+                    min_version = Some(input.parse()?);
+                }
                 _ => return Err(syn::Error::new(ident.span(), "Unknown field attribute")),
             }
 
@@ -403,6 +452,6 @@ impl syn::parse::Parse for CwrFieldAttribute {
             }
         }
 
-        Ok(CwrFieldAttribute { title: title.ok_or_else(|| input.error("Missing 'title' attribute"))?, start: start.ok_or_else(|| input.error("Missing 'start' attribute"))?, len: len.ok_or_else(|| input.error("Missing 'len' attribute"))?, skip_parse })
+        Ok(CwrFieldAttribute { title: title.ok_or_else(|| input.error("Missing 'title' attribute"))?, start: start.ok_or_else(|| input.error("Missing 'start' attribute"))?, len: len.ok_or_else(|| input.error("Missing 'len' attribute"))?, skip_parse, min_version })
     }
 }
