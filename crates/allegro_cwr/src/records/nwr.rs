@@ -88,7 +88,7 @@ pub struct NwrRecord {
     #[cwr(title = "Catalogue number (optional)", start = 234, len = 25)]
     pub catalogue_number: Option<String>,
 
-    #[cwr(title = "Priority flag (1 char, optional, v2.1+)", start = 259, len = 1)]
+    #[cwr(title = "Priority flag (1 char, optional, v2.1+)", start = 259, len = 1, min_version = 2.1)]
     pub priority_flag: Option<FlagYNU>,
 }
 

@@ -39,7 +39,7 @@ pub struct SptRecord {
     #[cwr(title = "Shares change (1 char, optional)", start = 54, len = 1)]
     pub shares_change: Option<FlagYNU>,
 
-    #[cwr(title = "Sequence number (v2.1+)", start = 55, len = 3)]
+    #[cwr(title = "Sequence number (v2.1+)", start = 55, len = 3, min_version = 2.1)]
     pub sequence_num: Option<String>,
 }
 

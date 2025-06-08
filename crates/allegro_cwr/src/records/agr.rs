@@ -60,7 +60,7 @@ pub struct AgrRecord {
     #[cwr(title = "Advance given (1 char, optional)", start = 106, len = 1)]
     pub advance_given: Option<String>,
 
-    #[cwr(title = "Society assigned agreement number (optional, v2.1+)", start = 107, len = 14)]
+    #[cwr(title = "Society assigned agreement number (optional, v2.1+)", start = 107, len = 14, min_version = 2.1)]
     pub society_assigned_agreement_number: Option<String>,
 }
 

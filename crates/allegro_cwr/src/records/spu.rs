@@ -78,10 +78,10 @@ pub struct SpuRecord {
     #[cwr(title = "Society-assigned agreement number (optional)", start = 166, len = 14)]
     pub society_assigned_agreement_number: Option<String>,
 
-    #[cwr(title = "Agreement type (optional, v2.1+)", start = 180, len = 2)]
+    #[cwr(title = "Agreement type (optional, v2.1+)", start = 180, len = 2, min_version = 2.1)]
     pub agreement_type: Option<String>,
 
-    #[cwr(title = "USA license indicator (1 char, optional, v2.1+)", start = 182, len = 1)]
+    #[cwr(title = "USA license indicator (1 char, optional, v2.1+)", start = 182, len = 1, min_version = 2.1)]
     pub usa_license_ind: Option<String>,
 }
 

@@ -51,25 +51,25 @@ pub struct RecRecord {
     #[cwr(title = "Recording technique (1 char, optional)", start = 262, len = 1)]
     pub recording_technique: Option<RecordingTechnique>,
 
-    #[cwr(title = "Media type (optional, v2.1+)", start = 263, len = 3)]
+    #[cwr(title = "Media type (optional, v2.1+)", start = 263, len = 3, min_version = 2.1)]
     pub media_type: Option<String>,
 
-    #[cwr(title = "Recording title (optional, v2.2+)", start = 266, len = 60)]
+    #[cwr(title = "Recording title (optional, v2.2+)", start = 266, len = 60, min_version = 2.2)]
     pub recording_title: Option<String>,
 
-    #[cwr(title = "Version title (optional, v2.2+)", start = 326, len = 60)]
+    #[cwr(title = "Version title (optional, v2.2+)", start = 326, len = 60, min_version = 2.2)]
     pub version_title: Option<String>,
 
-    #[cwr(title = "Display artist (optional, v2.2+)", start = 386, len = 60)]
+    #[cwr(title = "Display artist (optional, v2.2+)", start = 386, len = 60, min_version = 2.2)]
     pub display_artist: Option<String>,
 
-    #[cwr(title = "Record label (optional, v2.2+)", start = 446, len = 60)]
+    #[cwr(title = "Record label (optional, v2.2+)", start = 446, len = 60, min_version = 2.2)]
     pub record_label: Option<String>,
 
-    #[cwr(title = "ISRC validity (conditional, v2.2+)", start = 506, len = 20)]
+    #[cwr(title = "ISRC validity (conditional, v2.2+)", start = 506, len = 20, min_version = 2.2)]
     pub isrc_validity: Option<String>,
 
-    #[cwr(title = "Submitter recording identifier (optional, v2.2+)", start = 526, len = 14)]
+    #[cwr(title = "Submitter recording identifier (optional, v2.2+)", start = 526, len = 14, min_version = 2.2)]
     pub submitter_recording_identifier: Option<String>,
 }
 
