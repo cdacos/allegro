@@ -1,36 +1,37 @@
 # Allegro-RS Development Guidelines
 
-## Core Principles
-- **Rust 2024 Edition** - Use latest stable features
+## Language & Style
+- **Rust 2024 Edition** - Released Feb. 20, 2025!
 - **Zero Panics** - No `unwrap()`, `expect()`, or `panic!()` in production code
 - **Explicit Error Handling** - Use `Result<T, E>` with descriptive error types, no silent failures
+- **Type Safety** - Leverage Rust's type system for domain modeling (e.g., newtype patterns for IDs)
+- **String Types** - Use `&str` by default, `String` when data must outlive input, `Cow<str>` for conditional normalization
+- **Must Use** - Annotate functions returning `Result` with `#[must_use]` to prevent ignored errors
+
+## Code Documentation
+- **Minimal Comments** - Only document non-obvious business rules that would surprise an experienced developer
+- **Public API Documentation** - Include examples and error descriptions for all public functions
+- **Trait Design** - Keep traits small and focused, prefer composition over large trait hierarchies
+
+## Architecture & Performance
+- **SOLID Principles** - Small, focused modules with clear responsibilities
 - **Memory Efficiency** - Stream processing for large CWR files, avoid unbounded allocations
 - **Safe Sync Code** - No unsafe or async code is anticipated for CWR file processing
-- **SOLID Principles** - Small, focused modules with clear responsibilities
+- **Performance** - Avoid decisions that significantly degrade performance; profile critical paths when optimizing
+- **CWR Domain** - CWR spec changes infrequently; optimize for correctness over flexibility, ensure strict CWR 2.2 compliance
 
-## Code Quality
-- **Minimal Comments** - Only document non-obvious business rules that would surprise an experienced developer
+## Dependencies & Tools
+- **"Dependency Restraint** - Prefer fewer, proven dependencies over many small ones; implement simple functionality yourself rather than adding dependencies
+- **Core Dependencies** - `log` for logging, `thiserror` for error types, `anyhow` for applications
+- **Parsing Approach** - CWR is fixed-width EDI format, string splitting is the obvious approach
 - **Automated Checks** - Run `cargo fmt` and `cargo clippy` after every working change
-- **Warning-Free Code** - Avoid compiler and clippy warnings as they create noise; if uncertain about best practices, ask for clarification
-- **Type Safety** - Leverage Rust's type system for domain modeling (e.g., newtype patterns for IDs)
-- **Must Use** - Annotate functions returning `Result` with `#[must_use]` to prevent ignored errors
-- **String Types** - Use `&str` by default, `String` when data must outlive input, `Cow<str>` for conditional normalization
-- **Trait Design** - Keep traits small and focused, prefer composition over large trait hierarchies
-- **Documentation** - Include examples and error descriptions for public API functions
-- **Performance** - Profile before optimizing, benchmark critical paths
+- **Warning-Free Code** - Avoid compiler and clippy warnings; ask for clarification if uncertain about best practices
 
-## Testing
+## Testing Strategy
 - **Test Data** - Use `.me/` folder for real CWR sample files (add to .gitignore)
 - **Test Integrity** - Never modify tests to match code; clarify expected behavior first
 - **Property Testing** - Consider proptest for parser edge cases
 - **Integration Tests** - Test full CWR file processing workflows
 
-## Dependencies
-- **Logging** - Use `log` crate with structured logging where appropriate
-- **Error Handling** - Consider `thiserror` for error types, `anyhow` for applications
-- **Parsing** - CWR is a fixed-width EDI format, making string splitting the obvious approach
-
-## Domain Context
-- **CWR Stability** - CWR spec changes infrequently; optimize for correctness over flexibility
-- **Compliance** - Ensure strict adherence to CWR 2.2 specification
-- **Validation** - Implement comprehensive validation for all record types
+## Review Process
+- **Constructive Review** - Challenge assumptions and provide direct technical feedback; avoid excessive affirmation that prevents growth

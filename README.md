@@ -1,27 +1,40 @@
-# Allegro - CWR File Parser and Database Tool
+# Allegro - CWR File Parser
 
-**⚠️ Work in Progress - Beta Software ⚠️**
+Looking for a project to revisit and improve my Rust skills, I thought a CWR parser would be fun!
 
-A Rust application for parsing and processing CWR (Common Works Registration) files. CWR is the standard file format used by the music industry to exchange musical work data between publishers, performance rights organizations, and other entities.
+CWR is the standard file format used by the music industry to exchange musical work data between publishers, performance rights organizations ("societies"), and other entities.
 
-This is currently a **beta/WIP project** that provides basic CWR file parsing for versions 2.0, 2.1, and 2.2. It handles all 33+ standard CWR record types and includes field parsing with a warning system, but **lacks comprehensive business rule validation and is not ready for production use**.
+The specification is [CISAC](https://www.cisac.org) standard and v2 continues to be very popular.
 
+- [Specification for CWR v2.1](https://members.cisac.org/CisacPortal/cisacDownloadFollow.do?docId=37079)
+- [Specification for CWR v2.2](https://members.cisac.org/CisacPortal/cisacDownloadFollow.do?docId=41804)
+
+There's also a [Common Works Registration User Manual](https://members.cisac.org/CisacPortal/cisacDownloadFollow.do?docId=22272).
+
+This is currently an evolving project that provides CWR file parsing for versions 2.0, 2.1, and 2.2.
+
+If you work in music publishing and this is useful, let me know!
 
 ## Current Features
 
 - **Basic CWR Parsing**: Parses all 33+ standard record types for CWR versions 2.0, 2.1, and 2.2
-- **Field Extraction**: Extracts individual fields according to CWR specification positions
-- **Multiple Output Formats**: SQLite database storage and structured JSON output
 - **Type Safety**: Domain types and procedural macros for consistent parsing
 - **Warning System**: Basic field-level warnings for malformed data
-- **Performance**: Processes ~500K records/second with full parsing and database insertion
+- **Performance**: Processes ~500K records/second with full parsing and database insertion (on my Macbook Pro M4!)
+ 
+### Architecture
 
-## Missing/TODO
+The main library (`allegro-cwr`) streams CWR lines into typed records, and vice versa. The parser is deliberately agnostic in terms of final usage.
+
+We have two handler projects that demonstrate usage of the library:
+
+- **`allegro-cwr-json`**: Convert the CWR format into a stream of JSON records (CLI wrapper: `cwr-json`)
+- **`allegro-cwr-sqlite`**: Load the CWR data into a SQLite database (with tables for each record, such as `cwr_hdr`) (CLI wrapper: `cwr-sqlite`)
+
+## TODO
 
 - **Business Rule Validation**: Comprehensive cross-field and inter-record validation
-- **Complete Field Validation**: Many field constraints and validations not yet implemented  
-- **Error Recovery**: Limited handling of severely malformed files
-- **Documentation**: API documentation and validation rule documentation incomplete
+- **Serialisation to CWR**: The current focus has been on reading CWRs; writing and handling ACKs to come
 
 ## Usage
 
