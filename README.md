@@ -29,23 +29,26 @@ This is currently a **beta/WIP project** that provides basic CWR file parsing fo
 # Build the project
 cargo build --release
 
-# Parse to SQLite database (default format)
-target/release/allegro input_file.cwr
+# Parse to SQLite database
+target/release/cwr-sqlite input_file.cwr
 
 # Output JSON to stdout
-target/release/allegro --format json input_file.cwr
+target/release/cwr-json input_file.cwr
 
 # Specify output database file (overwrites if exists)
-target/release/allegro -o output.db input_file.cwr
+target/release/cwr-sqlite -o output.db input_file.cwr
 
 # Force specific CWR version
-target/release/allegro --version 2.1 input_file.cwr
+target/release/cwr-sqlite --cwr 2.1 input_file.cwr
+target/release/cwr-json --cwr 2.1 input_file.cwr
 
 # View logging output
-RUST_LOG=info target/release/allegro input_file.cwr
+RUST_LOG=info target/release/cwr-sqlite input_file.cwr
+RUST_LOG=info target/release/cwr-json input_file.cwr
 
 # Show help
-target/release/allegro --help
+target/release/cwr-sqlite --help
+target/release/cwr-json --help
 ```
 
 ## Development
@@ -65,11 +68,10 @@ cargo test
 
 The project is organized into focused crates:
 
-- **`allegro`** - CLI binary for processing CWR files
 - **`allegro_cwr`** - Core CWR parsing library with domain types and validation
 - **`allegro_cwr_derive`** - Procedural macros for automatic record parsing generation
-- **`allegro_cwr_sqlite`** - SQLite database operations and schema management
-- **`allegro_cwr_json`** - JSON output formatting with structured context
+- **`allegro_cwr_sqlite`** - SQLite database operations, schema management, and `cwr-sqlite` CLI binary
+- **`allegro_cwr_json`** - JSON output formatting with structured context and `cwr-json` CLI binary
 
 ## Implementation
 

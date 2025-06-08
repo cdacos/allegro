@@ -12,18 +12,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "allegro"
-version = "0.1.0"
-dependencies = [
- "allegro_cwr",
- "allegro_cwr_json",
- "allegro_cwr_sqlite",
- "env_logger",
- "lexopt",
- "log",
-]
-
-[[package]]
 name = "allegro_cwr"
 version = "0.1.0"
 dependencies = [
@@ -47,6 +35,9 @@ name = "allegro_cwr_json"
 version = "0.1.0"
 dependencies = [
  "allegro_cwr",
+ "env_logger",
+ "lexopt",
+ "log",
  "serde_json",
 ]
 
@@ -56,6 +47,8 @@ version = "0.1.0"
 dependencies = [
  "allegro_cwr",
  "chrono",
+ "env_logger",
+ "lexopt",
  "log",
  "rusqlite",
  "tempfile",
