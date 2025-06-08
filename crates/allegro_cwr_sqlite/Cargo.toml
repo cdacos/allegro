@@ -2,6 +2,7 @@
 name = "allegro_cwr_sqlite"
 version = "0.1.0"
 edition = "2024"
+license.workspace = true
 description = "SQLite database operations for CWR (Common Works Registration) files"
 
 [dependencies]
