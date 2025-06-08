@@ -97,16 +97,16 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
     });
 
     let field_names = fields.iter().map(|f| &f.ident);
-    
+
     // Generate field writers for to_cwr_line method
     let field_writers = fields.iter().map(|field| {
         let field_name = field.ident.as_ref().unwrap();
         let (_title, start, len, _skip_parse, min_version) = extract_field_attrs(&field.attrs);
-        
+
         if let Some(min_ver) = min_version {
             // Version-conditional field
             quote! {
-                if version.supports_version(#min_ver.as_str()) {
+                if version.supports_version(#min_ver) {
                     // Ensure we're at the right position
                     while line.len() < #start {
                         line.push(' ');
@@ -129,7 +129,7 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
             }
         }
     });
-    
+
     let test_mod_name = quote::format_ident!("{}_generated_tests", name.to_string().to_lowercase());
 
     let validator_implementation = if let Some(validator_fn) = validator_fn {
@@ -218,9 +218,9 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
             /// Generate CWR line from record with version-aware field writing
             pub fn to_cwr_line(&self, version: &crate::domain_types::CwrVersion) -> String {
                 let mut line = String::new();
-                
+
                 #(#field_writers)*
-                
+
                 line
             }
 

@@ -78,7 +78,7 @@ mod tests {
 
         // Test with different versions
         let version_20 = CwrVersion(Some(2.0));
-        let version_21 = CwrVersion(Some(2.1)); 
+        let version_21 = CwrVersion(Some(2.1));
         let version_22 = CwrVersion(Some(2.2));
 
         let line_20 = pwr.to_cwr_line(&version_20);
@@ -91,18 +91,18 @@ mod tests {
 
         // Version 2.0 should be shortest (no version-specific fields)
         assert!(line_20.len() < line_21.len());
-        
+
         // Version 2.1 should include writer_ip_num but not publisher_sequence_num
         assert!(line_21.len() < line_22.len());
-        
+
         // Version 2.2 should be longest (includes all fields)
         assert!(line_22.len() > line_21.len());
 
         // Check that the version-specific fields are correctly included/excluded
         // This is a basic test - exact positioning would require more detailed verification
-        assert!(!line_20.contains("WOMA"));     // v2.0 shouldn't have writer_ip_num
-        assert!(line_21.contains("WOMA"));      // v2.1 should have writer_ip_num
-        assert!(line_22.contains("WOMA"));      // v2.2 should have writer_ip_num
-        assert!(line_22.contains("01"));        // v2.2 should have publisher_sequence_num
+        assert!(!line_20.contains("WOMA")); // v2.0 shouldn't have writer_ip_num
+        assert!(line_21.contains("WOMA")); // v2.1 should have writer_ip_num
+        assert!(line_22.contains("WOMA")); // v2.2 should have writer_ip_num
+        assert!(line_22.contains("01")); // v2.2 should have publisher_sequence_num
     }
 }

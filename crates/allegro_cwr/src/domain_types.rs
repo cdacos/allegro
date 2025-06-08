@@ -62,6 +62,12 @@ impl WorksCount {
     }
 }
 
+impl CwrFieldWrite for WorksCount {
+    fn to_cwr_str(&self) -> String {
+        self.as_str()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub enum YesNo {
     Yes,
@@ -75,6 +81,12 @@ impl YesNo {
             YesNo::Yes => "Y",
             YesNo::No => "N",
         }
+    }
+}
+
+impl CwrFieldWrite for YesNo {
+    fn to_cwr_str(&self) -> String {
+        self.as_str().to_string()
     }
 }
 
@@ -195,6 +207,12 @@ impl SenderType {
     }
 }
 
+impl CwrFieldWrite for SenderType {
+    fn to_cwr_str(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
 impl CwrFieldParse for SenderType {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
@@ -219,6 +237,12 @@ pub struct SenderId(pub String);
 impl SenderId {
     pub fn as_str(&self) -> &str {
         &self.0
+    }
+}
+
+impl CwrFieldWrite for SenderId {
+    fn to_cwr_str(&self) -> String {
+        self.as_str().to_string()
     }
 }
 
@@ -273,6 +297,11 @@ impl EdiStandardVersion {
     }
 }
 
+impl CwrFieldWrite for EdiStandardVersion {
+    fn to_cwr_str(&self) -> String {
+        self.as_str().to_string()
+    }
+}
 impl CwrFieldParse for EdiStandardVersion {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
@@ -331,6 +360,12 @@ impl CwrRevision {
     }
 }
 
+impl CwrFieldWrite for CwrRevision {
+    fn to_cwr_str(&self) -> String {
+        self.as_str()
+    }
+}
+
 impl CwrFieldParse for CwrRevision {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
@@ -362,6 +397,12 @@ impl Time {
             Some(time) => time.format("%H%M%S").to_string(),
             None => String::new(),
         }
+    }
+}
+
+impl CwrFieldWrite for Time {
+    fn to_cwr_str(&self) -> String {
+        self.as_str()
     }
 }
 
@@ -403,6 +444,12 @@ impl CharacterSet {
             CharacterSet::Utf8 => "UTF-8",
             CharacterSet::Unicode => "Unicode",
         }
+    }
+}
+
+impl CwrFieldWrite for CharacterSet {
+    fn to_cwr_str(&self) -> String {
+        self.as_str().to_string()
     }
 }
 
@@ -448,6 +495,12 @@ impl TransactionType {
             TransactionType::Isw => "ISW",
             TransactionType::Exc => "EXC",
         }
+    }
+}
+
+impl CwrFieldWrite for TransactionType {
+    fn to_cwr_str(&self) -> String {
+        self.as_str().to_string()
     }
 }
 
@@ -506,6 +559,11 @@ impl CwrVersionNumber {
     }
 }
 
+impl CwrFieldWrite for CwrVersionNumber {
+    fn to_cwr_str(&self) -> String {
+        self.as_str().to_string()
+    }
+}
 impl CwrFieldParse for CwrVersionNumber {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
@@ -665,6 +723,11 @@ impl CurrencyCode {
     }
 }
 
+impl CwrFieldWrite for CurrencyCode {
+    fn to_cwr_str(&self) -> String {
+        self.as_str()
+    }
+}
 impl CwrFieldParse for CurrencyCode {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::currency_codes::is_valid_currency_code;
@@ -733,6 +796,12 @@ impl PriorRoyaltyStatus {
     }
 }
 
+impl CwrFieldWrite for PriorRoyaltyStatus {
+    fn to_cwr_str(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
 impl CwrFieldParse for PriorRoyaltyStatus {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
@@ -767,6 +836,12 @@ impl PostTermCollectionStatus {
     }
 }
 
+impl CwrFieldWrite for PostTermCollectionStatus {
+    fn to_cwr_str(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
 impl CwrFieldParse for PostTermCollectionStatus {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
@@ -792,6 +867,12 @@ impl Duration {
             Some(time) => time.format("%H%M%S").to_string(),
             None => "000000".to_string(),
         }
+    }
+}
+
+impl CwrFieldWrite for Duration {
+    fn to_cwr_str(&self) -> String {
+        self.as_str()
     }
 }
 
@@ -831,6 +912,12 @@ impl FlagYNU {
             FlagYNU::No => "N",
             FlagYNU::Unknown => "U",
         }
+    }
+}
+
+impl CwrFieldWrite for FlagYNU {
+    fn to_cwr_str(&self) -> String {
+        self.as_str().to_string()
     }
 }
 
@@ -913,6 +1000,12 @@ impl InclusionExclusionIndicator {
     }
 }
 
+impl CwrFieldWrite for InclusionExclusionIndicator {
+    fn to_cwr_str(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
 impl CwrFieldParse for InclusionExclusionIndicator {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
@@ -979,6 +1072,12 @@ impl AgreementRoleCode {
     }
 }
 
+impl CwrFieldWrite for AgreementRoleCode {
+    fn to_cwr_str(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
 impl CwrFieldParse for AgreementRoleCode {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::agreement_role_codes::is_valid_agreement_role_code;
@@ -1023,6 +1122,12 @@ impl TitleType {
     }
 }
 
+impl CwrFieldWrite for TitleType {
+    fn to_cwr_str(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
 impl CwrFieldParse for TitleType {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
@@ -1062,6 +1167,12 @@ impl RecordingFormat {
     }
 }
 
+impl CwrFieldWrite for RecordingFormat {
+    fn to_cwr_str(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
 impl CwrFieldParse for Option<RecordingFormat> {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
@@ -1097,6 +1208,12 @@ impl RecordingTechnique {
             RecordingTechnique::Analog => "A",
             RecordingTechnique::Digital => "D",
         }
+    }
+}
+
+impl CwrFieldWrite for RecordingTechnique {
+    fn to_cwr_str(&self) -> String {
+        self.as_str().to_string()
     }
 }
 
@@ -1143,6 +1260,12 @@ impl PublisherType {
     }
 }
 
+impl CwrFieldWrite for PublisherType {
+    fn to_cwr_str(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
 impl CwrFieldParse for Option<PublisherType> {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::publisher_types::is_valid_publisher_type;
@@ -1178,6 +1301,11 @@ impl SenderName {
     }
 }
 
+impl CwrFieldWrite for SenderName {
+    fn to_cwr_str(&self) -> String {
+        self.as_str().to_string()
+    }
+}
 impl CwrFieldParse for SenderName {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
@@ -1225,3 +1353,51 @@ impl CwrFieldParse for SenderName {
 //    - Cross-validate SenderType + SenderId + SenderName combination
 //    - Handle IPNN > 9 digits case (SenderType numeric prefix + SenderId)
 //    - Validate against appropriate lookup tables based on sender type
+
+impl CwrFieldWrite for GroupId {
+    fn to_cwr_str(&self) -> String {
+        self.as_str()
+    }
+}
+
+impl CwrFieldWrite for TisNumericCode {
+    fn to_cwr_str(&self) -> String {
+        self.as_str()
+    }
+}
+
+impl CwrFieldWrite for GroupCount {
+    fn to_cwr_str(&self) -> String {
+        self.as_str()
+    }
+}
+
+impl CwrFieldWrite for TransactionCount {
+    fn to_cwr_str(&self) -> String {
+        self.as_str()
+    }
+}
+
+impl CwrFieldWrite for RecordCount {
+    fn to_cwr_str(&self) -> String {
+        self.as_str()
+    }
+}
+
+impl CwrFieldWrite for OwnershipShare {
+    fn to_cwr_str(&self) -> String {
+        self.as_str()
+    }
+}
+
+impl CwrFieldWrite for CompositeComponentCount {
+    fn to_cwr_str(&self) -> String {
+        self.as_str()
+    }
+}
+
+impl CwrFieldWrite for CwrVersion {
+    fn to_cwr_str(&self) -> String {
+        self.as_str()
+    }
+}
