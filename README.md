@@ -4,7 +4,7 @@ Looking for a project to revisit and improve my Rust skills, I thought a CWR par
 
 CWR is the standard file format used by the music industry to exchange musical work data between publishers, performance rights organizations ("societies"), and other entities.
 
-The specification is [CISAC](https://www.cisac.org) standard and v2 continues to be very popular.
+The specification is a [CISAC](https://www.cisac.org) standard and v2 continues to be very popular.
 
 - [Specification for CWR v2.1](https://members.cisac.org/CisacPortal/cisacDownloadFollow.do?docId=37079)
 - [Specification for CWR v2.2](https://members.cisac.org/CisacPortal/cisacDownloadFollow.do?docId=41804)
