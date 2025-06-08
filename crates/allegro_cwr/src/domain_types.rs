@@ -32,6 +32,27 @@ pub trait CwrFieldParse: Sized + Default {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>);
 }
 
+/// Trait for converting CWR fields to their string representation for writing
+pub trait CwrFieldWrite {
+    fn to_cwr_str(&self) -> String;
+}
+
+// Implementations for basic types
+impl CwrFieldWrite for String {
+    fn to_cwr_str(&self) -> String {
+        self.clone()
+    }
+}
+
+impl<T: CwrFieldWrite> CwrFieldWrite for Option<T> {
+    fn to_cwr_str(&self) -> String {
+        match self {
+            Some(val) => val.to_cwr_str(),
+            None => String::new(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Default, serde::Serialize, serde::Deserialize)]
 pub struct WorksCount(pub u32);
 
@@ -66,6 +87,12 @@ impl Date {
             Some(date) => date.format("%Y%m%d").to_string(),
             None => String::new(),
         }
+    }
+}
+
+impl CwrFieldWrite for Date {
+    fn to_cwr_str(&self) -> String {
+        self.as_str()
     }
 }
 
@@ -501,6 +528,12 @@ pub struct PublisherSequenceNumber(pub u8);
 impl PublisherSequenceNumber {
     pub fn as_str(&self) -> String {
         format!("{:02}", self.0)
+    }
+}
+
+impl CwrFieldWrite for PublisherSequenceNumber {
+    fn to_cwr_str(&self) -> String {
+        self.as_str()
     }
 }
 
