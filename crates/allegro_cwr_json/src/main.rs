@@ -134,8 +134,7 @@ fn main() {
         }
         InputFormat::Json => {
             // JSON -> CWR (new functionality)
-            // TODO: Implement this
-            Err("JSON to CWR conversion not yet implemented".into())
+            allegro_cwr_json::process_json_to_cwr_with_version_and_output(&input_filename, config.cwr_version, config.output_filename.as_deref())
         }
     };
 

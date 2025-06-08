@@ -38,6 +38,7 @@ dependencies = [
  "env_logger",
  "lexopt",
  "log",
+ "serde",
  "serde_json",
 ]
 
