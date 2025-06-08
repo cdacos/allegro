@@ -260,14 +260,20 @@ impl CwrFieldParse for EdiStandardVersion {
 
 /// CWR Version (2.2)
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
-pub struct CwrVersion(pub Option<String>);
+pub struct CwrVersion(pub Option<f32>);
 
 impl CwrVersion {
     pub fn as_str(&self) -> String {
         match &self.0 {
-            Some(v) => v.clone(),
+            Some(v) => format!("{:.1}", v),
             None => String::new(),
         }
+    }
+
+    pub fn supports_version(&self, min_version: &str) -> bool {
+        let current_version = self.0.unwrap_or(2.0);
+        let min_version_float = min_version.parse::<f32>().unwrap_or(2.0);
+        current_version >= min_version_float
     }
 }
 
@@ -277,10 +283,10 @@ impl CwrFieldParse for CwrVersion {
         if trimmed.is_empty() {
             (CwrVersion(None), vec![])
         } else if trimmed == "2.2" {
-            (CwrVersion(Some(trimmed.to_string())), vec![])
+            (CwrVersion(Some(2.2)), vec![])
         } else {
             let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("CWR Version must be '2.2' if specified, got '{}'", trimmed) }];
-            (CwrVersion(Some("2.2".to_string())), warnings)
+            (CwrVersion(Some(2.2)), warnings)
         }
     }
 }
