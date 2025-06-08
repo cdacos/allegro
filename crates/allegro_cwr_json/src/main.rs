@@ -7,6 +7,7 @@ use log::{error, info};
 #[derive(Default)]
 struct Config {
     input_filename: Option<String>,
+    output_filename: Option<String>,
     cwr_version: Option<f32>,
 }
 
@@ -25,6 +26,10 @@ fn parse_args() -> Result<Config, String> {
                 }
 
                 config.cwr_version = Some(version);
+            }
+            lexopt::Arg::Short('o') | lexopt::Arg::Long("output") => {
+                let output_filename = get_value(&mut parser, "output")?;
+                config.output_filename = Some(output_filename);
             }
             lexopt::Arg::Value(val) => {
                 if config.input_filename.is_some() {
@@ -71,7 +76,7 @@ fn main() {
 
     let start_time = Instant::now();
 
-    let result = allegro_cwr_json::process_cwr_to_json_with_version(&input_filename, config.cwr_version);
+    let result = allegro_cwr_json::process_cwr_to_json_with_version_and_output(&input_filename, config.cwr_version, config.output_filename.as_deref());
 
     let elapsed_time = start_time.elapsed();
 
@@ -96,7 +101,8 @@ fn print_help() {
     eprintln!();
     eprintln!("Options:");
     eprintln!("      --cwr <version>      CWR version (2.0, 2.1, 2.2). Auto-detected from filename (.Vxx) or file content if not specified");
+    eprintln!("  -o, --output <file>      Output JSON to file instead of stdout");
     eprintln!("  -h, --help               Show this help message");
     eprintln!();
-    eprintln!("Outputs JSON to stdout. Redirect to save: cwr-json file.cwr > output.json");
+    eprintln!("Outputs JSON to stdout by default. Use -o to write to file or redirect: cwr-json file.cwr > output.json");
 }
