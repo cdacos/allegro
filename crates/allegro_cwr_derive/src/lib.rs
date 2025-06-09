@@ -110,15 +110,23 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
                 while line.len() < #start {
                     line.push(' ');
                 }
-                if version.supports_version(#min_ver) {
+                let field_content = if version.supports_version(#min_ver) {
                     let field_str = <_ as crate::domain_types::CwrFieldWrite>::to_cwr_str(&self.#field_name);
                     let padded = format!("{:width$}", field_str, width = #len);
-                    line.push_str(&padded[..#len.min(padded.len())]);
+                    padded[..#len.min(padded.len())].to_string()
                 } else {
                     // Field not supported in this version - pad with spaces to maintain fixed-width format
-                    let padding = " ".repeat(#len);
-                    line.push_str(&padding);
-                }
+                    " ".repeat(#len)
+                };
+                
+                // Ensure field occupies exactly the allocated space
+                let final_field = if field_content.len() < #len {
+                    format!("{:width$}", field_content, width = #len)
+                } else {
+                    field_content[..#len].to_string()
+                };
+                
+                line.push_str(&final_field);
             }
         } else {
             // Always include this field
@@ -129,7 +137,16 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
                 }
                 let field_str = <_ as crate::domain_types::CwrFieldWrite>::to_cwr_str(&self.#field_name);
                 let padded = format!("{:width$}", field_str, width = #len);
-                line.push_str(&padded[..#len.min(padded.len())]);
+                let field_content = padded[..#len.min(padded.len())].to_string();
+                
+                // Ensure field occupies exactly the allocated space
+                let final_field = if field_content.len() < #len {
+                    format!("{:width$}", field_content, width = #len)
+                } else {
+                    field_content[..#len].to_string()
+                };
+                
+                line.push_str(&final_field);
             }
         }
     });

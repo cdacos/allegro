@@ -97,7 +97,7 @@ impl Date {
     pub fn as_str(&self) -> String {
         match &self.0 {
             Some(date) => date.format("%Y%m%d").to_string(),
-            None => String::new(),
+            None => "00000000".to_string(),
         }
     }
 }
@@ -110,14 +110,26 @@ impl CwrFieldWrite for Date {
 
 impl CwrFieldParse for String {
     fn parse_cwr_field(source: &str, _field_name: &'static str, _field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
-        (source.trim().to_string(), vec![])
+        // For fixed-width CWR fields, preserve exact spacing to maintain round-trip integrity
+        // Only trim if the field is completely empty or whitespace-only
+        let trimmed = source.trim();
+        if trimmed.is_empty() {
+            (String::new(), vec![])
+        } else {
+            (source.to_string(), vec![])
+        }
     }
 }
 
 impl CwrFieldParse for Option<String> {
     fn parse_cwr_field(source: &str, _field_name: &'static str, _field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
-        if trimmed.is_empty() { (None, vec![]) } else { (Some(trimmed.to_string()), vec![]) }
+        if trimmed.is_empty() { 
+            (None, vec![]) 
+        } else { 
+            // For fixed-width CWR fields, preserve exact spacing to maintain round-trip integrity
+            (Some(source.to_string()), vec![]) 
+        }
     }
 }
 
@@ -156,8 +168,10 @@ impl CwrFieldParse for Date {
 impl CwrFieldParse for Option<Date> {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
-        if trimmed.is_empty() || trimmed == "00000000" {
+        if trimmed.is_empty() {
             (None, vec![])
+        } else if trimmed == "00000000" {
+            (Some(Date(None)), vec![])
         } else {
             let (date, warnings) = Date::parse_cwr_field(source, field_name, field_title);
             (Some(date), warnings)
@@ -354,8 +368,8 @@ pub struct CwrRevision(pub Option<u32>);
 impl CwrRevision {
     pub fn as_str(&self) -> String {
         match &self.0 {
-            Some(r) => r.to_string(),
-            None => String::new(),
+            Some(r) => format!("{:03}", r), // Right-justified, zero-filled to 3 digits per CWR spec
+            None => "000".to_string(),      // Zero-fill empty numeric fields per CWR spec
         }
     }
 }
@@ -879,8 +893,10 @@ impl CwrFieldWrite for Duration {
 impl CwrFieldParse for Option<Duration> {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
-        if trimmed.is_empty() || trimmed == "000000" {
+        if trimmed.is_empty() {
             (None, vec![])
+        } else if trimmed == "000000" {
+            (Some(Duration(None)), vec![])
         } else if trimmed.len() != 6 {
             let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Duration should be 6 characters HHMMSS, got {}", trimmed.len()) }];
             (None, warnings)
@@ -965,8 +981,10 @@ impl CompositeComponentCount {
 impl CwrFieldParse for Option<CompositeComponentCount> {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
-        if trimmed.is_empty() || trimmed == "000" {
+        if trimmed.is_empty() {
             (None, vec![])
+        } else if trimmed == "000" {
+            (Some(CompositeComponentCount(None)), vec![])
         } else {
             match trimmed.parse::<u16>() {
                 Ok(count) if count > 0 && count <= 999 => (Some(CompositeComponentCount(Some(count))), vec![]),
@@ -1107,6 +1125,12 @@ pub enum TitleType {
     TransliterationTrans, // TL - Transliterated Translated Title
     FictionalTitle,       // FT - Fictional Title (v2.1+)
     OriginalTitle,        // OT - Original Title (v2.1+)
+    FirstLineOfText,      // TE - First Line of Text
+    IncorrectTitle,       // IT - Incorrect Title
+    PartTitle,            // PT - Part Title
+    RestrictedTitle,      // RT - Restricted Title
+    ExtraSearchTitle,     // ET - Extra Search Title
+    OriginalTitleWithNationalChars, // OL - Original Title with National Characters
 }
 
 impl TitleType {
@@ -1118,6 +1142,12 @@ impl TitleType {
             TitleType::TransliterationTrans => "TL",
             TitleType::FictionalTitle => "FT",
             TitleType::OriginalTitle => "OT",
+            TitleType::FirstLineOfText => "TE",
+            TitleType::IncorrectTitle => "IT",
+            TitleType::PartTitle => "PT",
+            TitleType::RestrictedTitle => "RT",
+            TitleType::ExtraSearchTitle => "ET",
+            TitleType::OriginalTitleWithNationalChars => "OL",
         }
     }
 }
@@ -1138,8 +1168,14 @@ impl CwrFieldParse for TitleType {
             "TL" => (TitleType::TransliterationTrans, vec![]),
             "FT" => (TitleType::FictionalTitle, vec![]),
             "OT" => (TitleType::OriginalTitle, vec![]),
+            "TE" => (TitleType::FirstLineOfText, vec![]),
+            "IT" => (TitleType::IncorrectTitle, vec![]),
+            "PT" => (TitleType::PartTitle, vec![]),
+            "RT" => (TitleType::RestrictedTitle, vec![]),
+            "ET" => (TitleType::ExtraSearchTitle, vec![]),
+            "OL" => (TitleType::OriginalTitleWithNationalChars, vec![]),
             _ => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid title type '{}', must be AT, AL, TT, TL, FT, or OT", trimmed) }];
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid title type '{}', must be AT, AL, TT, TL, FT, OT, TE, IT, PT, RT, ET, or OL", trimmed) }];
                 (TitleType::AlternateTitle, warnings)
             }
         }
@@ -1240,9 +1276,12 @@ impl CwrFieldParse for Option<RecordingTechnique> {
 pub enum PublisherType {
     #[default]
     Unknown,
+    Acquirer,               // AQ - Acquirer
+    Administrator,          // AM - Administrator
     AdministeringPublisher, // AS - Administering Publisher
     OriginalPublisher,      // PA - Original Publisher (Assignor)
     SubPublisher,           // SE - Sub-Publisher
+    SubstitutedPublisher,   // ES - Substituted Publisher
     IncomeParticipant,      // PA - Income Participant
     Unclassified,           // E  - Unclassified (catch-all)
 }
@@ -1251,9 +1290,12 @@ impl PublisherType {
     pub fn as_str(&self) -> &str {
         match self {
             PublisherType::Unknown => "",
+            PublisherType::Acquirer => "AQ",
+            PublisherType::Administrator => "AM",
             PublisherType::AdministeringPublisher => "AS",
             PublisherType::OriginalPublisher => "PA",
             PublisherType::SubPublisher => "SE",
+            PublisherType::SubstitutedPublisher => "ES",
             PublisherType::IncomeParticipant => "PA",
             PublisherType::Unclassified => "E",
         }
@@ -1275,14 +1317,17 @@ impl CwrFieldParse for Option<PublisherType> {
             (None, vec![])
         } else {
             match trimmed {
+                "AQ" => (Some(PublisherType::Acquirer), vec![]),
+                "AM" => (Some(PublisherType::Administrator), vec![]),
                 "AS" => (Some(PublisherType::AdministeringPublisher), vec![]),
                 "PA" => (Some(PublisherType::OriginalPublisher), vec![]),
                 "SE" => (Some(PublisherType::SubPublisher), vec![]),
+                "ES" => (Some(PublisherType::SubstitutedPublisher), vec![]),
                 "E" => (Some(PublisherType::Unclassified), vec![]),
                 _ => {
                     let mut warnings = vec![];
                     if !is_valid_publisher_type(trimmed) {
-                        warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid publisher type '{}', must be AS, PA, SE, or E", trimmed) });
+                        warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid publisher type '{}', must be AQ, AM, AS, PA, SE, ES, or E", trimmed) });
                     }
                     (Some(PublisherType::Unknown), warnings)
                 }

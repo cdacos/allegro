@@ -89,6 +89,11 @@ pub struct SpuRecord {
 fn spu_custom_validate(record: &mut SpuRecord) -> Vec<CwrWarning<'static>> {
     let mut warnings = Vec::new();
 
+    // TODO: Add record length validation
+    // For v2.0: should end at position 179 (society_assigned_agreement_number) = 180 chars
+    // For v2.1+: should end at position 182 (usa_license_ind) = 183 chars
+    // If input line is longer, warn about extra characters
+
     // SPU-specific validations (vs OPU)
     if record.record_type == "SPU" {
         // For SPU records: Interested Party #, Publisher Name, and Publisher Type are required

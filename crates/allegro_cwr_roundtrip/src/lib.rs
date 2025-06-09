@@ -15,6 +15,7 @@ pub enum RoundtripError {
 pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> Result<usize, RoundtripError> {
     let mut record_count = 0;
     let mut diff_map: HashMap<String, Vec<usize>> = HashMap::new(); // key: diff description, value: line numbers
+    let mut diff_examples: HashMap<String, (String, String, usize)> = HashMap::new(); // key: diff description, value: (original, serialized, line_number)
     let mut detected_version: Option<f32> = None;
 
     // Read original lines for comparison
@@ -45,7 +46,7 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
                     let serialized_line = parsed_record.record.to_cwr_line(&version);
 
                     // Check for character differences
-                    check_character_differences(original_line, &serialized_line, parsed_record.record.record_type(), parsed_record.line_number, &mut diff_map);
+                    check_character_differences(original_line, &serialized_line, parsed_record.record.record_type(), parsed_record.line_number, &mut diff_map, &mut diff_examples);
                 }
 
                 record_count += 1;
@@ -68,6 +69,34 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
                 format!("[{}, {}, {}, ...]", line_numbers[0], line_numbers[1], line_numbers[2])
             };
             println!("  {}: {} occurrences on lines {}", diff_key, line_numbers.len(), display_lines);
+            
+            // Show visual diff for the first example
+            if let Some((original, serialized, line_num)) = diff_examples.get(diff_key) {
+                eprintln!("    Example from line {}:", line_num);
+                eprintln!("    Original:   {}", original);
+                eprintln!("    Serialized: {}", serialized);
+                
+                // Create visual diff indicator
+                let mut diff_indicator = String::new();
+                let original_chars: Vec<char> = original.chars().collect();
+                let serialized_chars: Vec<char> = serialized.chars().collect();
+                let max_len = original_chars.len().max(serialized_chars.len());
+                
+                for i in 0..max_len {
+                    let orig_char = original_chars.get(i);
+                    let ser_char = serialized_chars.get(i);
+                    
+                    if orig_char != ser_char {
+                        diff_indicator.push('^');
+                        break;
+                    } else {
+                        diff_indicator.push('-');
+                    }
+                }
+                
+                eprintln!("    Diff:       {}", diff_indicator);
+                eprintln!();
+            }
         }
         return Err(RoundtripError::CwrParsing(format!("Round-trip integrity check failed with {} distinct error types", diff_map.len())));
     }
@@ -77,11 +106,18 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
 }
 
 /// Check for character differences between original and round-trip serialized lines
-fn check_character_differences(original: &str, serialized: &str, record_type: &str, line_number: usize, diff_map: &mut HashMap<String, Vec<usize>>) {
+fn check_character_differences(original: &str, serialized: &str, record_type: &str, line_number: usize, diff_map: &mut HashMap<String, Vec<usize>>, diff_examples: &mut HashMap<String, (String, String, usize)>) {
     // Check length difference first
     if original.len() != serialized.len() {
-        let diff_key = format!("record: {}, LENGTH_MISMATCH (original: {}, serialized: {})", record_type, original.len(), serialized.len());
+        let explanation = if original.len() > serialized.len() {
+            " - source file may have extra characters beyond CWR specification"
+        } else {
+            " - source file missing version-specific fields, serializer adds required padding"
+        };
+        let diff_key = format!("record: {}, LENGTH_MISMATCH (original: {}, serialized: {}){}", record_type, original.len(), serialized.len(), explanation);
         diff_map.entry(diff_key.clone()).or_insert_with(Vec::new).push(line_number);
+        // Store example if this is the first occurrence
+        diff_examples.entry(diff_key).or_insert_with(|| (original.to_string(), serialized.to_string(), line_number));
         return;
     }
 
@@ -92,6 +128,8 @@ fn check_character_differences(original: &str, serialized: &str, record_type: &s
         if orig_char != ser_char {
             let diff_key = format!("record: {}, index: {}", record_type, index);
             diff_map.entry(diff_key.clone()).or_insert_with(Vec::new).push(line_number);
+            // Store example if this is the first occurrence
+            diff_examples.entry(diff_key).or_insert_with(|| (original.to_string(), serialized.to_string(), line_number));
         }
     }
 }
