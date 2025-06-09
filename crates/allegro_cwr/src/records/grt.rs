@@ -18,9 +18,11 @@ pub struct GrtRecord {
     #[cwr(title = "Record count", start = 16, len = 8)]
     pub record_count: RecordCount,
 
+    // Version 1.10 fields – Not used for CWR
     #[cwr(title = "Currency indicator (conditional)", start = 24, len = 3)]
-    pub currency_indicator: CurrencyCode,
+    pub currency_indicator: Option<CurrencyCode>,
 
+    // Currency Indicator is mandatory if Total Monetary Value is provided (GR).
     #[cwr(title = "Total monetary value (optional)", start = 27, len = 10)]
     pub total_monetary_value: Option<String>,
 }
@@ -30,8 +32,17 @@ fn grt_custom_validate(record: &mut GrtRecord) -> Vec<CwrWarning<'static>> {
     let mut warnings = Vec::new();
 
     // Business rule: Currency Indicator is mandatory if Total Monetary Value is provided
-    if record.total_monetary_value.is_some() && record.total_monetary_value.as_ref().is_some_and(|v| !v.trim().is_empty()) && record.currency_indicator.0.is_none() {
-        warnings.push(CwrWarning { field_name: "currency_indicator", field_title: "Currency indicator (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Currency Indicator is mandatory when Total Monetary Value is provided".to_string() });
+    // Note: These fields are marked as "ignored for CWR" in spec but validate relationship if present
+    if let Some(monetary_value) = &record.total_monetary_value {
+        if !monetary_value.trim().is_empty() && record.currency_indicator.is_none() {
+            warnings.push(CwrWarning { 
+                field_name: "currency_indicator", 
+                field_title: "Currency indicator (conditional)", 
+                source_str: std::borrow::Cow::Borrowed(""), 
+                level: WarningLevel::Warning, 
+                description: "Currency Indicator should be provided when Total Monetary Value is present (though both fields are ignored for CWR processing)".to_string() 
+            });
+        }
     }
 
     // Business rule: Group ID must match the preceding GRH record

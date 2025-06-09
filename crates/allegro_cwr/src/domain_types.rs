@@ -741,6 +741,7 @@ impl CwrFieldWrite for CurrencyCode {
         self.as_str()
     }
 }
+
 impl CwrFieldParse for CurrencyCode {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::currency_codes::is_valid_currency_code;
@@ -759,6 +760,39 @@ impl CwrFieldParse for CurrencyCode {
         } else {
             let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid currency code '{}', should be 3-letter ISO 4217 code", trimmed) }];
             (CurrencyCode(Some(trimmed.to_uppercase())), warnings)
+        }
+    }
+}
+
+impl CwrFieldParse for Option<CurrencyCode> {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let (currency_code, warnings) = CurrencyCode::parse_cwr_field(source, field_name, field_title);
+        // If CurrencyCode parsed to None internally, return None for the Option
+        match currency_code.0 {
+            Some(_) => (Some(currency_code), warnings),
+            None => (None, warnings),
+        }
+    }
+}
+
+impl CwrFieldParse for Option<CwrVersion> {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let (cwr_version, warnings) = CwrVersion::parse_cwr_field(source, field_name, field_title);
+        // If CwrVersion parsed to None internally, return None for the Option
+        match cwr_version.0 {
+            Some(_) => (Some(cwr_version), warnings),
+            None => (None, warnings),
+        }
+    }
+}
+
+impl CwrFieldParse for Option<CwrRevision> {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let (cwr_revision, warnings) = CwrRevision::parse_cwr_field(source, field_name, field_title);
+        // If CwrRevision parsed to None internally, return None for the Option
+        match cwr_revision.0 {
+            Some(_) => (Some(cwr_revision), warnings),
+            None => (None, warnings),
         }
     }
 }

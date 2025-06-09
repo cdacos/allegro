@@ -66,8 +66,8 @@ pub fn parse_and_insert_hdr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.creation_time.as_str(),
             record.transmission_date.to_sql_string(),
             opt_domain_to_string(&record.character_set).as_deref().unwrap_or(""),
-            record.version.as_str(),
-            record.revision.as_str(),
+            record.version.as_ref().map(|v| v.as_str()).unwrap_or_default(),
+            record.revision.as_ref().map(|r| r.as_str()).unwrap_or_default(),
             record.software_package.as_deref().unwrap_or(""),
             record.software_package_version.as_deref().unwrap_or(""),
         ])?;

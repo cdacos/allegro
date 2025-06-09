@@ -34,10 +34,10 @@ pub struct HdrRecord {
     pub character_set: Option<CharacterSet>,
 
     #[cwr(title = "Version (v2.2+)", start = 101, len = 3, min_version = 2.2)]
-    pub version: CwrVersion,
+    pub version: Option<CwrVersion>,
 
     #[cwr(title = "Revision (v2.2+)", start = 104, len = 3, min_version = 2.2)]
-    pub revision: CwrRevision,
+    pub revision: Option<CwrRevision>,
 
     #[cwr(title = "Software package (v2.2+)", start = 107, len = 30, min_version = 2.2)]
     pub software_package: Option<String>,

@@ -96,8 +96,8 @@ impl SqliteInsertable for allegro_cwr::CwrRegistry {
                     hdr.creation_time.as_str(),
                     hdr.transmission_date.as_str(),
                     opt_domain_to_string(&hdr.character_set),
-                    hdr.version.as_str(),
-                    hdr.revision.as_str(),
+                    hdr.version.as_ref().map(|v| v.as_str()),
+                    hdr.revision.as_ref().map(|r| r.as_str()),
                     hdr.software_package,
                     hdr.software_package_version
                 ])?;
@@ -108,7 +108,7 @@ impl SqliteInsertable for allegro_cwr::CwrRegistry {
                 Ok(tx.last_insert_rowid())
             }
             allegro_cwr::CwrRegistry::Grt(grt) => {
-                statements.grt_stmt.execute(params![file_id, "GRT", grt.group_id.to_sql_int(), grt.transaction_count.to_sql_int(), grt.record_count.to_sql_int(), grt.currency_indicator.to_sql_string(), grt.total_monetary_value.as_deref()])?;
+                statements.grt_stmt.execute(params![file_id, "GRT", grt.group_id.to_sql_int(), grt.transaction_count.to_sql_int(), grt.record_count.to_sql_int(), grt.currency_indicator.as_ref().map(|c| c.to_sql_string()), grt.total_monetary_value.as_deref()])?;
                 Ok(tx.last_insert_rowid())
             }
             allegro_cwr::CwrRegistry::Trl(trl) => {
@@ -816,11 +816,17 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     },
                     version: {
                         use allegro_cwr::domain_types::CwrVersion;
-                        CwrVersion::from_sql_string(&row.get::<_, String>("version")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        match row.get::<_, Option<String>>("version")? {
+                            Some(version_str) => Some(CwrVersion::from_sql_string(&version_str).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?),
+                            None => None,
+                        }
                     },
                     revision: {
                         use allegro_cwr::domain_types::CwrRevision;
-                        CwrRevision::from_sql_string(&row.get::<_, String>("revision")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        match row.get::<_, Option<String>>("revision")? {
+                            Some(revision_str) => Some(CwrRevision::from_sql_string(&revision_str).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?),
+                            None => None,
+                        }
                     },
                     software_package: row.get::<_, Option<String>>("software_package")?,
                     software_package_version: row.get::<_, Option<String>>("software_package_version")?,
@@ -878,7 +884,10 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     },
                     currency_indicator: {
                         use allegro_cwr::domain_types::CurrencyCode;
-                        CurrencyCode::from_sql_string(&row.get::<_, String>("currency_indicator")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        match row.get::<_, Option<String>>("currency_indicator")? {
+                            Some(currency_str) => Some(CurrencyCode::from_sql_string(&currency_str).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?),
+                            None => None,
+                        }
                     },
                     total_monetary_value: row.get::<_, Option<String>>("total_monetary_value")?,
                 };

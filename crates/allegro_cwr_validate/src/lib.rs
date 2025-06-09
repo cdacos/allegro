@@ -18,6 +18,7 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
     let mut diff_examples: HashMap<String, (String, String, usize)> = HashMap::new(); // key: diff description, value: (original, serialized, line_number)
     let mut extra_chars_map: HashMap<String, Vec<usize>> = HashMap::new(); // key: "record_type:extra_char", value: line numbers
     let mut detected_version: Option<f32> = None;
+    let mut warning_counts: HashMap<String, Vec<usize>> = HashMap::new(); // key: warning description, value: line numbers
 
     // Read original lines for comparison
     let original_lines: Vec<String> = std::fs::read_to_string(input_path)?.lines().map(|s| s.to_string()).collect();
@@ -46,6 +47,14 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
                     check_character_differences(original_line, &serialized_line, parsed_record.record.record_type(), parsed_record.line_number, &mut diff_map, &mut diff_examples, &mut extra_chars_map);
                 }
 
+                // Collect warnings from this record
+                for warning in &parsed_record.warnings {
+                    // Prefix warning with record type for consistent formatting
+                    let record_type = parsed_record.record.record_type();
+                    let formatted_warning = format!("{}: {}", record_type, warning);
+                    warning_counts.entry(formatted_warning).or_default().push(parsed_record.line_number);
+                }
+
                 record_count += 1;
             }
             Err(e) => {
@@ -53,28 +62,55 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
             }
         }
     }
+    println!();
 
-    // Report extra characters summary
-    if !extra_chars_map.is_empty() {
-        println!("INFO: Found {} distinct types of CWR format differences:", extra_chars_map.len());
-        let mut sorted_extra: Vec<_> = extra_chars_map.iter().collect();
-        sorted_extra.sort_by_key(|(key, lines)| (key.as_str(), lines.len()));
+    // Report all warnings in a consolidated section
+    if !warning_counts.is_empty() || !extra_chars_map.is_empty() {
+        let total_issues = warning_counts.len() + extra_chars_map.len();
+        println!("WARNINGS: Found {} distinct types of validation issues:", total_issues);
         
-        for (extra_key, line_numbers) in sorted_extra {
-            let parts: Vec<&str> = extra_key.split(':').collect();
-            let record_type = parts[0];
-            let extra_info = parts.get(1).unwrap_or(&"?");
-            let display_lines = if line_numbers.len() <= 5 { 
-                format!("lines {:?}", line_numbers) 
-            } else { 
-                format!("{} occurrences (first few: {})", line_numbers.len(), 
-                    line_numbers.iter().take(3).map(|n| n.to_string()).collect::<Vec<_>>().join(", "))
-            };
+        // First show parsing warnings with consistent formatting
+        if !warning_counts.is_empty() {
+            // Sort warnings by count (descending) and then by description
+            let mut sorted_warnings: Vec<_> = warning_counts.iter().collect();
+            sorted_warnings.sort_by(|a, b| b.1.len().cmp(&a.1.len()).then(a.0.cmp(b.0)));
             
-            if *extra_info == "missing_optional_fields" {
-                println!("  {} records missing optional fields (serializer adds proper padding): {}", record_type, display_lines);
-            } else {
-                println!("  {} records with extra '{}': {}", record_type, extra_info, display_lines);
+            for (warning, line_numbers) in sorted_warnings {
+                let display_lines = if line_numbers.len() <= 5 { 
+                    format!("lines {:?}", line_numbers) 
+                } else { 
+                    format!("{} occurrences (first few: {})", line_numbers.len(), 
+                        line_numbers.iter().take(3).map(|n| n.to_string()).collect::<Vec<_>>().join(", "))
+                };
+                println!("{}: {}", warning, display_lines);
+            }
+        }
+        
+        // Then show format differences (missing optional fields, extra chars, etc.)
+        if !extra_chars_map.is_empty() {
+            let mut sorted_extra: Vec<_> = extra_chars_map.iter().collect();
+            sorted_extra.sort_by_key(|(key, lines)| (key.as_str(), lines.len()));
+            
+            if sorted_extra.len() > 0 {
+                println!("\nAMBIGUOUS:");
+            }
+
+            for (extra_key, line_numbers) in sorted_extra {
+                let parts: Vec<&str> = extra_key.split(':').collect();
+                let record_type = parts[0];
+                let extra_info = parts.get(1).unwrap_or(&"?");
+                let display_lines = if line_numbers.len() <= 5 { 
+                    format!("lines {:?}", line_numbers) 
+                } else { 
+                    format!("{} occurrences (first few: {})", line_numbers.len(), 
+                        line_numbers.iter().take(3).map(|n| n.to_string()).collect::<Vec<_>>().join(", "))
+                };
+                
+                if *extra_info == "missing_optional_fields" {
+                    println!("{}: missing optional fields (serializer adds proper padding): {}", record_type, display_lines);
+                } else {
+                    println!("{}: records with extra '{}': {}", record_type, extra_info, display_lines);
+                }
             }
         }
         println!();
