@@ -137,10 +137,527 @@ impl SqliteInsertable for allegro_cwr::CwrRegistry {
                 ])?;
                 Ok(tx.last_insert_rowid())
             }
-            // TODO: Add remaining 30 record types...
-            // For now, let's implement just a few to demonstrate the pattern
-            _ => {
-                return Err(CwrDbError::Setup("Record type not yet implemented in trait".to_string()));
+            allegro_cwr::CwrRegistry::Agr(agr) => {
+                statements.agr_stmt.execute(params![
+                    file_id,
+                    "AGR",
+                    agr.transaction_sequence_num.as_str(),
+                    agr.record_sequence_num.as_str(),
+                    agr.submitter_agreement_number.as_str(),
+                    agr.international_standard_agreement_code.as_deref(),
+                    agr.agreement_type.to_sql_string(),
+                    agr.agreement_start_date.as_str(),
+                    agr.agreement_end_date.as_ref().map(|d| d.as_str()),
+                    agr.retention_end_date.as_ref().map(|d| d.as_str()),
+                    agr.prior_royalty_status.to_sql_string(),
+                    agr.prior_royalty_start_date.as_ref().map(|d| d.as_str()),
+                    agr.post_term_collection_status.to_sql_string(),
+                    agr.post_term_collection_end_date.as_ref().map(|d| d.as_str()),
+                    agr.date_of_signature_of_agreement.as_ref().map(|d| d.as_str()),
+                    agr.number_of_works.to_sql_int(),
+                    agr.sales_manufacture_clause.as_deref(),
+                    opt_domain_to_string(&agr.shares_change).as_deref(),
+                    agr.advance_given.as_deref(),
+                    agr.society_assigned_agreement_number.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Nwr(nwr) => {
+                statements.nwr_stmt.execute(params![
+                    file_id,
+                    "NWR",
+                    nwr.transaction_sequence_num.as_str(),
+                    nwr.record_sequence_num.as_str(),
+                    nwr.work_title.as_str(),
+                    nwr.language_code.as_deref(),
+                    nwr.submitter_work_num.as_str(),
+                    nwr.iswc.as_deref(),
+                    opt_domain_to_string(&nwr.copyright_date).as_deref(),
+                    nwr.copyright_number.as_deref(),
+                    nwr.musical_work_distribution_category.to_sql_string(),
+                    opt_domain_to_string(&nwr.duration).as_deref(),
+                    nwr.recorded_indicator.to_sql_string(),
+                    nwr.text_music_relationship.as_deref(),
+                    nwr.composite_type.as_deref(),
+                    nwr.version_type.to_sql_string(),
+                    nwr.excerpt_type.as_deref(),
+                    nwr.music_arrangement.as_deref(),
+                    nwr.lyric_adaptation.as_deref(),
+                    nwr.contact_name.as_deref(),
+                    nwr.contact_id.as_deref(),
+                    nwr.cwr_work_type.as_deref(),
+                    opt_domain_to_string(&nwr.grand_rights_ind).as_deref(),
+                    nwr.composite_component_count.as_ref().map(|c| c.to_sql_int()),
+                    opt_domain_to_string(&nwr.date_of_publication_of_printed_edition).as_deref(),
+                    opt_domain_to_string(&nwr.exceptional_clause).as_deref(),
+                    nwr.opus_number.as_deref(),
+                    nwr.catalogue_number.as_deref(),
+                    opt_domain_to_string(&nwr.priority_flag).as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Ack(ack) => {
+                statements.ack_stmt.execute(params![
+                    file_id,
+                    "ACK",
+                    ack.transaction_sequence_num.as_str(),
+                    ack.record_sequence_num.as_str(),
+                    ack.creation_date.as_str(),
+                    ack.creation_time.as_str(),
+                    ack.original_group_id.to_sql_int(),
+                    ack.original_transaction_sequence_num.as_str(),
+                    ack.original_transaction_type.to_sql_string(),
+                    ack.creation_title.as_deref(),
+                    ack.submitter_creation_num.as_deref(),
+                    ack.recipient_creation_num.as_deref(),
+                    ack.processing_date.as_str(),
+                    ack.transaction_status.to_sql_string()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Ter(ter) => {
+                statements.ter_stmt.execute(params![
+                    file_id,
+                    "TER",
+                    ter.transaction_sequence_num.as_str(),
+                    ter.record_sequence_num.as_str(),
+                    ter.inclusion_exclusion_indicator.to_sql_string(),
+                    ter.tis_numeric_code.to_sql_int()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Ipa(ipa) => {
+                statements.ipa_stmt.execute(params![
+                    file_id,
+                    "IPA",
+                    ipa.transaction_sequence_num.as_str(),
+                    ipa.record_sequence_num.as_str(),
+                    ipa.agreement_role_code.to_sql_string(),
+                    ipa.interested_party_ipi_name_num.as_deref(),
+                    ipa.ipi_base_number.as_deref(),
+                    ipa.interested_party_num.as_str(),
+                    ipa.interested_party_last_name.as_str(),
+                    ipa.interested_party_writer_first_name.as_deref(),
+                    ipa.pr_affiliation_society.as_deref(),
+                    ipa.pr_share.as_ref().map(|s| s.to_sql_int()),
+                    ipa.mr_affiliation_society.as_deref(),
+                    ipa.mr_share.as_ref().map(|s| s.to_sql_int()),
+                    ipa.sr_affiliation_society.as_deref(),
+                    ipa.sr_share.as_ref().map(|s| s.to_sql_int())
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Npa(npa) => {
+                statements.npa_stmt.execute(params![
+                    file_id,
+                    "NPA",
+                    npa.transaction_sequence_num.as_str(),
+                    npa.record_sequence_num.as_str(),
+                    npa.interested_party_num.as_deref(),
+                    npa.interested_party_name.as_str(),
+                    npa.interested_party_writer_first_name.as_str(),
+                    npa.language_code.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Spu(spu) => {
+                statements.spu_stmt.execute(params![
+                    file_id,
+                    "SPU",
+                    spu.transaction_sequence_num.as_str(),
+                    spu.record_sequence_num.as_str(),
+                    spu.publisher_sequence_num.to_sql_int(),
+                    spu.interested_party_num.as_deref(),
+                    spu.publisher_name.as_deref(),
+                    opt_domain_to_string(&spu.publisher_unknown_indicator).as_deref(),
+                    spu.publisher_type.as_ref().map(|p| p.to_sql_string()).as_deref(),
+                    spu.tax_id_num.as_deref(),
+                    spu.publisher_ipi_name_num.as_deref(),
+                    spu.submitter_agreement_number.as_deref(),
+                    spu.pr_affiliation_society_num.as_deref(),
+                    spu.pr_ownership_share.as_ref().map(|s| s.to_sql_int()),
+                    spu.mr_society.as_deref(),
+                    spu.mr_ownership_share.as_ref().map(|s| s.to_sql_int()),
+                    spu.sr_society.as_deref(),
+                    spu.sr_ownership_share.as_ref().map(|s| s.to_sql_int()),
+                    opt_domain_to_string(&spu.special_agreements_indicator).as_deref(),
+                    opt_domain_to_string(&spu.first_recording_refusal_ind).as_deref(),
+                    spu.filler.as_deref(),
+                    spu.publisher_ipi_base_number.as_deref(),
+                    spu.international_standard_agreement_code.as_deref(),
+                    spu.society_assigned_agreement_number.as_deref(),
+                    spu.agreement_type.as_deref(),
+                    opt_domain_to_string(&spu.usa_license_ind).as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Npn(npn) => {
+                statements.npn_stmt.execute(params![
+                    file_id,
+                    "NPN",
+                    npn.transaction_sequence_num.as_str(),
+                    npn.record_sequence_num.as_str(),
+                    npn.publisher_sequence_num.to_sql_int(),
+                    npn.interested_party_num.as_str(),
+                    npn.publisher_name.as_str(),
+                    npn.language_code.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Spt(spt) => {
+                statements.spt_stmt.execute(params![
+                    file_id,
+                    "SPT",
+                    spt.transaction_sequence_num.as_str(),
+                    spt.record_sequence_num.as_str(),
+                    spt.interested_party_num.as_str(),
+                    "", // constant_spaces
+                    spt.pr_collection_share.as_ref().map(|s| s.to_sql_int()),
+                    spt.mr_collection_share.as_ref().map(|s| s.to_sql_int()),
+                    spt.sr_collection_share.as_ref().map(|s| s.to_sql_int()),
+                    spt.inclusion_exclusion_indicator.to_sql_string(),
+                    spt.tis_numeric_code.to_sql_int(),
+                    opt_domain_to_string(&spt.shares_change).as_deref(),
+                    spt.sequence_num.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Swr(swr) => {
+                statements.swr_stmt.execute(params![
+                    file_id,
+                    "SWR",
+                    swr.transaction_sequence_num.as_str(),
+                    swr.record_sequence_num.as_str(),
+                    swr.interested_party_num.as_deref(),
+                    swr.writer_last_name.as_deref(),
+                    swr.writer_first_name.as_deref(),
+                    opt_domain_to_string(&swr.writer_unknown_indicator).as_deref(),
+                    swr.writer_designation_code.as_deref(),
+                    swr.tax_id_num.as_deref(),
+                    swr.writer_ipi_name_num.as_deref(),
+                    swr.pr_affiliation_society_num.as_deref(),
+                    swr.pr_ownership_share.as_ref().map(|s| s.to_sql_int()),
+                    swr.mr_society.as_deref(),
+                    swr.mr_ownership_share.as_ref().map(|s| s.to_sql_int()),
+                    swr.sr_society.as_deref(),
+                    swr.sr_ownership_share.as_ref().map(|s| s.to_sql_int()),
+                    opt_domain_to_string(&swr.reversionary_indicator).as_deref(),
+                    opt_domain_to_string(&swr.first_recording_refusal_ind).as_deref(),
+                    opt_domain_to_string(&swr.work_for_hire_indicator).as_deref(),
+                    swr.filler.as_deref(),
+                    swr.writer_ipi_base_number.as_deref(),
+                    swr.personal_number.as_deref(),
+                    opt_domain_to_string(&swr.usa_license_ind).as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Nwn(nwn) => {
+                statements.nwn_stmt.execute(params![
+                    file_id,
+                    "NWN",
+                    nwn.transaction_sequence_num.as_str(),
+                    nwn.record_sequence_num.as_str(),
+                    nwn.interested_party_num.as_deref(),
+                    nwn.writer_last_name.as_str(),
+                    nwn.writer_first_name.as_deref(),
+                    nwn.language_code.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Swt(swt) => {
+                statements.swt_stmt.execute(params![
+                    file_id,
+                    "SWT",
+                    swt.transaction_sequence_num.as_str(),
+                    swt.record_sequence_num.as_str(),
+                    swt.interested_party_num.as_deref(),
+                    swt.pr_collection_share.as_ref().map(|s| s.to_sql_int()),
+                    swt.mr_collection_share.as_ref().map(|s| s.to_sql_int()),
+                    swt.sr_collection_share.as_ref().map(|s| s.to_sql_int()),
+                    swt.inclusion_exclusion_indicator.to_sql_string(),
+                    swt.tis_numeric_code.to_sql_int(),
+                    opt_domain_to_string(&swt.shares_change).as_deref(),
+                    swt.sequence_num.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Pwr(pwr) => {
+                statements.pwr_stmt.execute(params![
+                    file_id,
+                    "PWR",
+                    pwr.transaction_sequence_num.as_str(),
+                    pwr.record_sequence_num.as_str(),
+                    pwr.publisher_ip_num.as_deref(),
+                    pwr.publisher_name.as_deref(),
+                    pwr.submitter_agreement_number.as_deref(),
+                    pwr.society_assigned_agreement_number.as_deref(),
+                    pwr.writer_ip_num.as_deref(),
+                    pwr.publisher_sequence_num.as_ref().map(|s| s.to_sql_int())
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Alt(alt) => {
+                statements.alt_stmt.execute(params![
+                    file_id,
+                    "ALT",
+                    alt.transaction_sequence_num.as_str(),
+                    alt.record_sequence_num.as_str(),
+                    alt.alternate_title.as_str(),
+                    alt.title_type.to_sql_string(),
+                    alt.language_code.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Nat(nat) => {
+                statements.nat_stmt.execute(params![
+                    file_id,
+                    "NAT",
+                    nat.transaction_sequence_num.as_str(),
+                    nat.record_sequence_num.as_str(),
+                    nat.title.as_str(),
+                    nat.title_type.to_sql_string(),
+                    nat.language_code.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Ewt(ewt) => {
+                statements.ewt_stmt.execute(params![
+                    file_id,
+                    "EWT",
+                    ewt.transaction_sequence_num.as_str(),
+                    ewt.record_sequence_num.as_str(),
+                    ewt.entire_work_title.as_str(),
+                    ewt.iswc_of_entire_work.as_deref(),
+                    ewt.language_code.as_deref(),
+                    ewt.writer_1_last_name.as_deref(),
+                    ewt.writer_1_first_name.as_deref(),
+                    ewt.source.as_deref(),
+                    ewt.writer_1_ipi_name_num.as_deref(),
+                    ewt.writer_1_ipi_base_number.as_deref(),
+                    ewt.writer_2_last_name.as_deref(),
+                    ewt.writer_2_first_name.as_deref(),
+                    ewt.writer_2_ipi_name_num.as_deref(),
+                    ewt.writer_2_ipi_base_number.as_deref(),
+                    ewt.submitter_work_num.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Ver(ver) => {
+                statements.ver_stmt.execute(params![
+                    file_id,
+                    "VER",
+                    ver.transaction_sequence_num.as_str(),
+                    ver.record_sequence_num.as_str(),
+                    ver.original_work_title.as_str(),
+                    ver.iswc_of_original_work.as_deref(),
+                    ver.language_code.as_deref(),
+                    ver.writer_1_last_name.as_deref(),
+                    ver.writer_1_first_name.as_deref(),
+                    ver.source.as_deref(),
+                    ver.writer_1_ipi_name_num.as_deref(),
+                    ver.writer_1_ipi_base_number.as_deref(),
+                    ver.writer_2_last_name.as_deref(),
+                    ver.writer_2_first_name.as_deref(),
+                    ver.writer_2_ipi_name_num.as_deref(),
+                    ver.writer_2_ipi_base_number.as_deref(),
+                    ver.submitter_work_num.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Per(per) => {
+                statements.per_stmt.execute(params![
+                    file_id,
+                    "PER",
+                    per.transaction_sequence_num.as_str(),
+                    per.record_sequence_num.as_str(),
+                    per.performing_artist_last_name.as_str(),
+                    per.performing_artist_first_name.as_deref(),
+                    per.performing_artist_ipi_name_num.as_deref(),
+                    per.performing_artist_ipi_base_number.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Npr(npr) => {
+                statements.npr_stmt.execute(params![
+                    file_id,
+                    "NPR",
+                    npr.transaction_sequence_num.as_str(),
+                    npr.record_sequence_num.as_str(),
+                    npr.performing_artist_name.as_deref(),
+                    npr.performing_artist_first_name.as_deref(),
+                    npr.performing_artist_ipi_name_num.as_deref(),
+                    npr.performing_artist_ipi_base_number.as_deref(),
+                    npr.language_code.as_deref(),
+                    npr.performance_language.as_deref(),
+                    npr.performance_dialect.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Rec(rec) => {
+                statements.rec_stmt.execute(params![
+                    file_id,
+                    "REC",
+                    rec.transaction_sequence_num.as_str(),
+                    rec.record_sequence_num.as_str(),
+                    rec.release_date.as_ref().map(|d| d.as_str()),
+                    "", // constant_blanks_1
+                    opt_domain_to_string(&rec.release_duration).as_deref(),
+                    "", // constant_blanks_2
+                    rec.album_title.as_deref(),
+                    rec.album_label.as_deref(),
+                    rec.release_catalog_num.as_deref(),
+                    rec.ean.as_deref(),
+                    rec.isrc.as_deref(),
+                    opt_domain_to_string(&rec.recording_format).as_deref(),
+                    opt_domain_to_string(&rec.recording_technique).as_deref(),
+                    rec.media_type.as_deref(),
+                    rec.recording_title.as_deref(),
+                    rec.version_title.as_deref(),
+                    rec.display_artist.as_deref(),
+                    rec.record_label.as_deref(),
+                    rec.isrc_validity.as_deref(),
+                    rec.submitter_recording_identifier.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Orn(orn) => {
+                statements.orn_stmt.execute(params![
+                    file_id,
+                    "ORN",
+                    orn.transaction_sequence_num.as_str(),
+                    orn.record_sequence_num.as_str(),
+                    orn.intended_purpose.to_sql_string(),
+                    orn.production_title.as_deref(),
+                    orn.cd_identifier.as_deref(),
+                    orn.cut_number.as_deref(),
+                    orn.library.as_deref(),
+                    opt_domain_to_string(&orn.bltvr).as_deref(),
+                    orn.filler.as_deref(),
+                    orn.production_num.as_deref(),
+                    orn.episode_title.as_deref(),
+                    orn.episode_num.as_deref(),
+                    orn.year_of_production.as_deref(),
+                    orn.avi_society_code.as_deref(),
+                    orn.audio_visual_number.as_deref(),
+                    orn.v_isan_isan.as_deref(),
+                    orn.v_isan_episode.as_deref(),
+                    orn.v_isan_check_digit_1.as_deref(),
+                    orn.v_isan_version.as_deref(),
+                    orn.v_isan_check_digit_2.as_deref(),
+                    orn.eidr.as_deref(),
+                    orn.eidr_check_digit.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Ins(ins) => {
+                statements.ins_stmt.execute(params![
+                    file_id,
+                    "INS",
+                    ins.transaction_sequence_num.as_str(),
+                    ins.record_sequence_num.as_str(),
+                    ins.number_of_voices.as_deref(),
+                    ins.standard_instrumentation_type.as_deref(),
+                    ins.instrumentation_description.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Ind(ind) => {
+                statements.ind_stmt.execute(params![
+                    file_id,
+                    "IND",
+                    ind.transaction_sequence_num.as_str(),
+                    ind.record_sequence_num.as_str(),
+                    ind.instrument_code.to_sql_string(),
+                    ind.number_of_players.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Com(com) => {
+                statements.com_stmt.execute(params![
+                    file_id,
+                    "COM",
+                    com.transaction_sequence_num.as_str(),
+                    com.record_sequence_num.as_str(),
+                    com.title.as_str(),
+                    com.iswc_of_component.as_deref(),
+                    com.submitter_work_num.as_deref(),
+                    opt_domain_to_string(&com.duration).as_deref(),
+                    com.writer_1_last_name.as_str(),
+                    com.writer_1_first_name.as_deref(),
+                    com.writer_1_ipi_name_num.as_deref(),
+                    com.writer_2_last_name.as_deref(),
+                    com.writer_2_first_name.as_deref(),
+                    com.writer_2_ipi_name_num.as_deref(),
+                    com.writer_1_ipi_base_number.as_deref(),
+                    com.writer_2_ipi_base_number.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Msg(msg) => {
+                statements.msg_stmt.execute(params![
+                    file_id,
+                    "MSG",
+                    msg.transaction_sequence_num.as_str(),
+                    msg.record_sequence_num.as_str(),
+                    msg.message_type.to_sql_string(),
+                    msg.original_record_sequence_num.as_str(),
+                    msg.record_type_field.as_str(),
+                    msg.message_level.to_sql_string(),
+                    msg.validation_number.as_str(),
+                    msg.message_text.as_str()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Net(net) => {
+                statements.net_stmt.execute(params![
+                    file_id,
+                    "NET",
+                    net.transaction_sequence_num.as_str(),
+                    net.record_sequence_num.as_str(),
+                    net.title.as_str(),
+                    net.language_code.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Now(now) => {
+                statements.now_stmt.execute(params![
+                    file_id,
+                    "NOW",
+                    now.transaction_sequence_num.as_str(),
+                    now.record_sequence_num.as_str(),
+                    now.writer_name.as_str(),
+                    now.writer_first_name.as_str(),
+                    now.language_code.as_deref(),
+                    now.writer_position.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Ari(ari) => {
+                statements.ari_stmt.execute(params![
+                    file_id,
+                    "ARI",
+                    ari.transaction_sequence_num.as_str(),
+                    ari.record_sequence_num.as_str(),
+                    ari.society_num.to_sql_string(),
+                    ari.work_num.as_deref(),
+                    ari.type_of_right.to_sql_string(),
+                    ari.subject_code.as_deref(),
+                    ari.note.as_deref()
+                ])?;
+                Ok(tx.last_insert_rowid())
+            }
+            allegro_cwr::CwrRegistry::Xrf(xrf) => {
+                statements.xrf_stmt.execute(params![
+                    file_id,
+                    "XRF",
+                    xrf.transaction_sequence_num.as_str(),
+                    xrf.record_sequence_num.as_str(),
+                    xrf.organisation_code.to_sql_string(),
+                    xrf.identifier.as_str(),
+                    xrf.identifier_type.to_sql_string(),
+                    xrf.validity.to_sql_string()
+                ])?;
+                Ok(tx.last_insert_rowid())
             }
         }
     }
