@@ -75,7 +75,6 @@ fn main() {
     let elapsed_time = start_time.elapsed();
 
     info!("Processing completed");
-    println!("Timing: completed in {:.2?}", elapsed_time);
 
     let count = match result {
         Ok(c) => c,
