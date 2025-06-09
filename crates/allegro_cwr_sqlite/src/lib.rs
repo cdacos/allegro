@@ -962,10 +962,174 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                 Err(e) => Err(error::CwrDbError::Sqlite(e)),
             }
         }
-        // For now, only implement HDR to demonstrate the pattern
-        // Full implementation would need all 33 record types
+        "GRH" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_grh WHERE cwr_grh_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let grh = allegro_cwr::records::GrhRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_type: {
+                        use allegro_cwr::domain_types::TransactionType;
+                        TransactionType::from_sql_string(&row.get::<_, String>("transaction_type")?)
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    group_id: {
+                        use allegro_cwr::domain_types::GroupId;
+                        GroupId::from_sql_string(&row.get::<_, String>("group_id")?)
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    version_number: {
+                        use allegro_cwr::domain_types::CwrVersionNumber;
+                        CwrVersionNumber::from_sql_string(&row.get::<_, String>("version_number_for_this_transaction_type")?)
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    batch_request: row.get::<_, Option<String>>("batch_request")?,
+                    submission_distribution_type: row.get::<_, Option<String>>("submission_distribution_type")?,
+                };
+                Ok(grh)
+            }) {
+                Ok(grh) => Ok(Some(allegro_cwr::CwrRegistry::Grh(grh))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        "GRT" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_grt WHERE cwr_grt_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let grt = allegro_cwr::records::GrtRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    group_id: {
+                        use allegro_cwr::domain_types::GroupId;
+                        GroupId::from_sql_string(&row.get::<_, String>("group_id")?)
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    transaction_count: {
+                        use allegro_cwr::domain_types::TransactionCount;
+                        TransactionCount::from_sql_string(&row.get::<_, String>("transaction_count")?)
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_count: {
+                        use allegro_cwr::domain_types::RecordCount;
+                        RecordCount::from_sql_string(&row.get::<_, String>("record_count")?)
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    currency_indicator: {
+                        use allegro_cwr::domain_types::CurrencyCode;
+                        CurrencyCode::from_sql_string(&row.get::<_, String>("currency_indicator")?)
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    total_monetary_value: row.get::<_, Option<String>>("total_monetary_value")?,
+                };
+                Ok(grt)
+            }) {
+                Ok(grt) => Ok(Some(allegro_cwr::CwrRegistry::Grt(grt))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        "TRL" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_trl WHERE cwr_trl_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let trl = allegro_cwr::records::TrlRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    group_count: {
+                        use allegro_cwr::domain_types::GroupCount;
+                        GroupCount::from_sql_string(&row.get::<_, String>("group_count")?)
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    transaction_count: {
+                        use allegro_cwr::domain_types::TransactionCount;
+                        TransactionCount::from_sql_string(&row.get::<_, String>("transaction_count")?)
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_count: {
+                        use allegro_cwr::domain_types::RecordCount;
+                        RecordCount::from_sql_string(&row.get::<_, String>("record_count")?)
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                };
+                Ok(trl)
+            }) {
+                Ok(trl) => Ok(Some(allegro_cwr::CwrRegistry::Trl(trl))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        "NWR" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_nwr WHERE cwr_nwr_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let nwr = allegro_cwr::records::NwrRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    work_title: row.get::<_, String>("work_title")?,
+                    language_code: row.get::<_, Option<String>>("language_code")?,
+                    submitter_work_num: row.get::<_, String>("submitter_work_num")?,
+                    iswc: row.get::<_, Option<String>>("iswc")?,
+                    copyright_date: {
+                        use allegro_cwr::domain_types::Date;
+                        opt_string_to_domain::<Date>(row.get::<_, Option<String>>("copyright_date")?.as_deref())
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    copyright_number: row.get::<_, Option<String>>("copyright_number")?,
+                    musical_work_distribution_category: row.get::<_, String>("musical_work_distribution_category")?,
+                    duration: {
+                        use allegro_cwr::domain_types::Duration;
+                        opt_string_to_domain::<Duration>(row.get::<_, Option<String>>("duration")?.as_deref())
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    recorded_indicator: {
+                        use allegro_cwr::domain_types::FlagYNU;
+                        FlagYNU::from_sql_string(&row.get::<_, String>("recorded_indicator")?)
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    text_music_relationship: row.get::<_, Option<String>>("text_music_relationship")?,
+                    composite_type: row.get::<_, Option<String>>("composite_type")?,
+                    version_type: row.get::<_, String>("version_type")?,
+                    excerpt_type: row.get::<_, Option<String>>("excerpt_type")?,
+                    music_arrangement: row.get::<_, Option<String>>("music_arrangement")?,
+                    lyric_adaptation: row.get::<_, Option<String>>("lyric_adaptation")?,
+                    contact_name: row.get::<_, Option<String>>("contact_name")?,
+                    contact_id: row.get::<_, Option<String>>("contact_id")?,
+                    cwr_work_type: row.get::<_, Option<String>>("cwr_work_type")?,
+                    grand_rights_ind: {
+                        use allegro_cwr::domain_types::FlagYNU;
+                        opt_string_to_domain::<FlagYNU>(row.get::<_, Option<String>>("grand_rights_ind")?.as_deref())
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    composite_component_count: {
+                        let opt_int: Option<i64> = row.get::<_, Option<i64>>("composite_component_count")?;
+                        opt_int.map(|i| {
+                            use allegro_cwr::domain_types::CompositeComponentCount;
+                            CompositeComponentCount::from_sql_string(&i.to_string())
+                        }).transpose().map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    date_of_publication_of_printed_edition: {
+                        use allegro_cwr::domain_types::Date;
+                        opt_string_to_domain::<Date>(row.get::<_, Option<String>>("date_of_publication_of_printed_edition")?.as_deref())
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    exceptional_clause: {
+                        use allegro_cwr::domain_types::FlagYNU;
+                        opt_string_to_domain::<FlagYNU>(row.get::<_, Option<String>>("exceptional_clause")?.as_deref())
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    opus_number: row.get::<_, Option<String>>("opus_number")?,
+                    catalogue_number: row.get::<_, Option<String>>("catalogue_number")?,
+                    priority_flag: {
+                        use allegro_cwr::domain_types::FlagYNU;
+                        opt_string_to_domain::<FlagYNU>(row.get::<_, Option<String>>("priority_flag")?.as_deref())
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                };
+                Ok(nwr)
+            }) {
+                Ok(nwr) => Ok(Some(allegro_cwr::CwrRegistry::Nwr(nwr))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        // Skip unimplemented record types for now
         _ => {
-            // Skip unimplemented record types for now
             Ok(None)
         }
     }
@@ -1165,17 +1329,21 @@ mod tests {
             Some(output_file_path.to_str().unwrap())
         ).unwrap();
         
-        // Currently we only implemented HDR reconstruction, so only 1 line is expected
-        assert_eq!(output_count, 1, "Should have output 1 CWR line (HDR only implemented)");
+        // We implemented HDR, GRH, GRT, TRL, and NWR reconstruction
+        assert_eq!(output_count, 5, "Should have output 5 CWR lines");
 
         // Verify the output file was created and contains CWR-like data
         let output_content = std::fs::read_to_string(&output_file_path).unwrap();
         let lines: Vec<&str> = output_content.trim().split('\n').collect();
         
-        assert_eq!(lines.len(), 1, "Output should have 1 line (HDR only)");
+        assert_eq!(lines.len(), 5, "Output should have 5 lines");
         
-        // Verify the line starts with HDR
-        assert!(lines[0].starts_with("HDR"), "Line should be HDR record");
+        // Verify each line starts with the expected record type
+        assert!(lines[0].starts_with("HDR"), "First line should be HDR record");
+        assert!(lines[1].starts_with("GRH"), "Second line should be GRH record");
+        assert!(lines[2].starts_with("NWR"), "Third line should be NWR record");
+        assert!(lines[3].starts_with("GRT"), "Fourth line should be GRT record");
+        assert!(lines[4].starts_with("TRL"), "Fifth line should be TRL record");
         
         // Show what was actually reconstructed
         println!("📄 Reconstructed CWR content:");
@@ -1183,11 +1351,11 @@ mod tests {
             println!("  {}: {}", i + 1, line);
         }
         
-        // TODO: Add implementations for other record types:
-        // - GRH (Group Header)
-        // - NWR (New Work Registration) 
-        // - GRT (Group Trailer)
-        // - TRL (Transmission Trailer)
+        // ✅ Implemented: HDR, GRH, NWR, GRT, TRL
+        // TODO: Add implementations for remaining 28 record types:
+        // - AGR, ACK, TER, IPA, NPA, SPU, NPN, SPT, SWR, NWN, SWT, PWR
+        // - ALT, NAT, EWT, VER, PER, NPR, REC, ORN, INS, IND, COM, MSG
+        // - NET, NOW, ARI, XRF
 
         println!("✅ Successfully demonstrated bidirectional SQLite ↔ CWR conversion pattern!");
         println!("📝 Original CWR → SQLite → CWR conversion completed");

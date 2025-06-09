@@ -577,6 +577,51 @@ impl CwrFromSqlInt for GroupCount {
     }
 }
 
+// String parsing implementations for numeric types (since they're stored as VARCHAR in database)
+impl CwrFromSqlString for GroupId {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = GroupId::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) {
+            Err(format!("Critical error parsing GroupId: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description))
+        } else {
+            Ok(parsed)
+        }
+    }
+}
+
+impl CwrFromSqlString for TransactionCount {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = TransactionCount::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) {
+            Err(format!("Critical error parsing TransactionCount: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description))
+        } else {
+            Ok(parsed)
+        }
+    }
+}
+
+impl CwrFromSqlString for RecordCount {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = RecordCount::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) {
+            Err(format!("Critical error parsing RecordCount: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description))
+        } else {
+            Ok(parsed)
+        }
+    }
+}
+
+impl CwrFromSqlString for GroupCount {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = GroupCount::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) {
+            Err(format!("Critical error parsing GroupCount: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description))
+        } else {
+            Ok(parsed)
+        }
+    }
+}
+
 // Helper functions for optional parsing
 pub fn opt_string_to_domain<T: CwrFromSqlString>(opt: Option<&str>) -> Result<Option<T>, String> {
     match opt {
