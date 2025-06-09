@@ -149,7 +149,7 @@ pub fn parse_and_insert_agr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             &record.number_of_works.as_str(),
             record.sales_manufacture_clause.as_deref().unwrap_or(""),
             &opt_domain_to_string(&record.shares_change).unwrap_or_default(),
-            record.advance_given.as_deref().unwrap_or(""),
+            &opt_domain_to_string(&record.advance_given).unwrap_or_default(),
             record.society_assigned_agreement_number.as_deref().unwrap_or(""),
         ])?;
         Ok(())

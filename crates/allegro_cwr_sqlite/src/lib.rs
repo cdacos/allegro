@@ -11,7 +11,7 @@ pub mod record_handlers;
 pub mod report;
 pub mod statements;
 
-use allegro_cwr::domain_types::Number;
+use allegro_cwr::domain_types::{Number, YesNo};
 use domain_conversions::{CwrFromSqlString, CwrToSqlInt, CwrToSqlString, opt_domain_to_string, opt_string_to_domain, opt_string_to_numeric};
 
 /// Trait for inserting CWR records into SQLite
@@ -136,7 +136,7 @@ impl SqliteInsertable for allegro_cwr::CwrRegistry {
                     agr.number_of_works.to_sql_int(),
                     agr.sales_manufacture_clause.as_deref(),
                     opt_domain_to_string(&agr.shares_change).as_deref(),
-                    agr.advance_given.as_deref(),
+                    opt_domain_to_string(&agr.advance_given).as_deref(),
                     agr.society_assigned_agreement_number.as_deref()
                 ])?;
                 Ok(tx.last_insert_rowid())
@@ -1053,8 +1053,8 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                         WorksCount::from_sql_string(&row.get::<_, String>("number_of_works")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     sales_manufacture_clause: row.get::<_, Option<String>>("sales_manufacture_clause")?,
-                    shares_change: row.get::<_, Option<String>>("shares_change")?,
-                    advance_given: row.get::<_, Option<String>>("advance_given")?,
+                    shares_change: opt_string_to_domain::<YesNo>(row.get::<_, Option<String>>("shares_change")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
+                    advance_given: opt_string_to_domain::<YesNo>(row.get::<_, Option<String>>("advance_given")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
                     society_assigned_agreement_number: row.get::<_, Option<String>>("society_assigned_agreement_number")?,
                 };
                 Ok(agr)

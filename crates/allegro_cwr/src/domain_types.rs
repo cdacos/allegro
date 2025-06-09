@@ -143,6 +143,18 @@ impl CwrFieldParse for YesNo {
     }
 }
 
+impl CwrFieldParse for Option<YesNo> {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        if trimmed.is_empty() {
+            (None, vec![])
+        } else {
+            let (yes_no, warnings) = YesNo::parse_cwr_field(source, field_name, field_title);
+            (Some(yes_no), warnings)
+        }
+    }
+}
+
 impl CwrFieldParse for Date {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();

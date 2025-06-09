@@ -55,10 +55,10 @@ pub struct AgrRecord {
     pub sales_manufacture_clause: Option<String>,
 
     #[cwr(title = "Shares change (1 char, optional)", start = 105, len = 1)]
-    pub shares_change: Option<String>,
+    pub shares_change: Option<YesNo>,
 
     #[cwr(title = "Advance given (1 char, optional)", start = 106, len = 1)]
-    pub advance_given: Option<String>,
+    pub advance_given: Option<YesNo>,
 
     #[cwr(title = "Society assigned agreement number (optional, v2.1+)", start = 107, len = 14, min_version = 2.1)]
     pub society_assigned_agreement_number: Option<String>,
