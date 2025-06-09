@@ -152,33 +152,33 @@ mod roundtrip_test {
 
     #[test]
     fn test_roundtrip_character_shift_issue() {
-        // Use a complete NWR line - pad the fragment to proper NWR length  
+        // Use a complete NWR line - pad the fragment to proper NWR length
         let fragment = "T700080427519610301 EU 660110  POP";
-        let original = format!("{:260}", fragment);  // Pad to 260 characters
-        
+        let original = format!("{:260}", fragment); // Pad to 260 characters
+
         // Parse the original line
         let (record, warnings) = NwrRecord::parse(&original);
-        
+
         println!("Original:    '{}'", original);
         println!("Parsed warnings: {:?}", warnings);
-        
-        // Generate the line back  
+
+        // Generate the line back
         let version = CwrVersion(Some(2.2));
         let serialized = record.to_cwr_line(&version);
-        
+
         println!("Serialized:  '{}'", serialized);
-        
+
         // Check character by character differences
         let orig_chars: Vec<char> = original.chars().collect();
         let ser_chars: Vec<char> = serialized.chars().collect();
-        
+
         println!("\nCharacter-by-character comparison:");
         for (i, (o, s)) in orig_chars.iter().zip(ser_chars.iter()).enumerate() {
             if o != s {
                 println!("Pos {}: '{}' → '{}' (original → serialized)", i, o, s);
             }
         }
-        
+
         // Show positions 110-125 specifically
         println!("\nPositions 110-125:");
         if original.len() > 110 {
@@ -189,7 +189,7 @@ mod roundtrip_test {
             let ser_slice = &serialized[110..serialized.len().min(125)];
             println!("Serialized:  '{}'", ser_slice);
         }
-        
+
         // Show field boundaries for debugging
         println!("\nField analysis:");
         println!("copyright_date (106-113): '{}'", &original[106..114]);

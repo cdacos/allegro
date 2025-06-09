@@ -500,11 +500,7 @@ impl CwrFromSqlString for OwnershipShare {
 
 impl CwrFromSqlString for PublisherSequenceNumber {
     fn from_sql_string(value: &str) -> Result<Self, String> {
-        if let Ok(parsed_value) = value.parse::<u8>() {
-            if (1..=99).contains(&parsed_value) { Ok(PublisherSequenceNumber(parsed_value)) } else { Err(format!("PublisherSequenceNumber value {} is out of range 1-99", parsed_value)) }
-        } else {
-            Err(format!("Failed to parse PublisherSequenceNumber from '{}'", value))
-        }
+        if let Ok(parsed_value) = value.parse::<u8>() { if (1..=99).contains(&parsed_value) { Ok(PublisherSequenceNumber(parsed_value)) } else { Err(format!("PublisherSequenceNumber value {} is out of range 1-99", parsed_value)) } } else { Err(format!("Failed to parse PublisherSequenceNumber from '{}'", value)) }
     }
 }
 

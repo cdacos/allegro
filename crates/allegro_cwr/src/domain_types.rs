@@ -113,22 +113,18 @@ impl CwrFieldParse for String {
         // For fixed-width CWR fields, preserve exact spacing to maintain round-trip integrity
         // Only trim if the field is completely empty or whitespace-only
         let trimmed = source.trim();
-        if trimmed.is_empty() {
-            (String::new(), vec![])
-        } else {
-            (source.to_string(), vec![])
-        }
+        if trimmed.is_empty() { (String::new(), vec![]) } else { (source.to_string(), vec![]) }
     }
 }
 
 impl CwrFieldParse for Option<String> {
     fn parse_cwr_field(source: &str, _field_name: &'static str, _field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
-        if trimmed.is_empty() { 
-            (None, vec![]) 
-        } else { 
+        if trimmed.is_empty() {
+            (None, vec![])
+        } else {
             // For fixed-width CWR fields, preserve exact spacing to maintain round-trip integrity
-            (Some(source.to_string()), vec![]) 
+            (Some(source.to_string()), vec![])
         }
     }
 }
@@ -447,6 +443,8 @@ pub enum CharacterSet {
     SimplifiedGb,
     Utf8,
     Unicode,
+    /// Unknown/invalid character set value (for round-trip integrity)
+    Unknown(String),
 }
 
 impl CharacterSet {
@@ -457,6 +455,7 @@ impl CharacterSet {
             CharacterSet::SimplifiedGb => "Simplified [GB]",
             CharacterSet::Utf8 => "UTF-8",
             CharacterSet::Unicode => "Unicode",
+            CharacterSet::Unknown(s) => s,
         }
     }
 }
@@ -480,7 +479,7 @@ impl CwrFieldParse for Option<CharacterSet> {
                 "Unicode" => (Some(CharacterSet::Unicode), vec![]),
                 _ => {
                     let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid character set '{}', must be 'Traditional [Big5]', 'Simplified [GB]', 'UTF-8', or 'Unicode'", trimmed) }];
-                    (Some(CharacterSet::Ascii), warnings)
+                    (Some(CharacterSet::Unknown(trimmed.to_string())), warnings)
                 }
             }
         }
@@ -1120,16 +1119,16 @@ impl CwrFieldParse for AgreementRoleCode {
 pub enum TitleType {
     #[default]
     AlternateTitle, // AT - Alternate Title
-    TransliterationAlt,   // AL - Transliterated Alternate Title
-    TranslatedTitle,      // TT - Translated Title
-    TransliterationTrans, // TL - Transliterated Translated Title
-    FictionalTitle,       // FT - Fictional Title (v2.1+)
-    OriginalTitle,        // OT - Original Title (v2.1+)
-    FirstLineOfText,      // TE - First Line of Text
-    IncorrectTitle,       // IT - Incorrect Title
-    PartTitle,            // PT - Part Title
-    RestrictedTitle,      // RT - Restricted Title
-    ExtraSearchTitle,     // ET - Extra Search Title
+    TransliterationAlt,             // AL - Transliterated Alternate Title
+    TranslatedTitle,                // TT - Translated Title
+    TransliterationTrans,           // TL - Transliterated Translated Title
+    FictionalTitle,                 // FT - Fictional Title (v2.1+)
+    OriginalTitle,                  // OT - Original Title (v2.1+)
+    FirstLineOfText,                // TE - First Line of Text
+    IncorrectTitle,                 // IT - Incorrect Title
+    PartTitle,                      // PT - Part Title
+    RestrictedTitle,                // RT - Restricted Title
+    ExtraSearchTitle,               // ET - Extra Search Title
     OriginalTitleWithNationalChars, // OL - Original Title with National Characters
 }
 
