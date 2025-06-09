@@ -19,7 +19,7 @@ pub struct IndRecord {
     pub instrument_code: String,
 
     #[cwr(title = "Number of players (optional)", start = 22, len = 3)]
-    pub number_of_players: Option<String>,
+    pub number_of_players: Option<Number>,
 }
 
 // Custom validation function for IND record
@@ -43,14 +43,8 @@ fn ind_custom_validate(record: &mut IndRecord) -> Vec<CwrWarning<'static>> {
 
     // Validate number of players if present
     if let Some(ref players) = record.number_of_players {
-        if !players.trim().is_empty() {
-            if !players.chars().all(|c| c.is_ascii_digit()) {
-                warnings.push(CwrWarning { field_name: "number_of_players", field_title: "Number of players (optional)", source_str: std::borrow::Cow::Owned(players.clone()), level: WarningLevel::Warning, description: "Number of players must be numeric if specified".to_string() });
-            } else if let Ok(num) = players.parse::<u16>() {
-                if num == 0 {
-                    warnings.push(CwrWarning { field_name: "number_of_players", field_title: "Number of players (optional)", source_str: std::borrow::Cow::Owned(players.clone()), level: WarningLevel::Warning, description: "Number of players should be greater than 0 if specified".to_string() });
-                }
-            }
+        if players.0 == 0 {
+            warnings.push(CwrWarning { field_name: "number_of_players", field_title: "Number of players (optional)", source_str: std::borrow::Cow::Owned(players.to_string()), level: WarningLevel::Warning, description: "Number of players should be greater than 0 if specified".to_string() });
         }
     }
 

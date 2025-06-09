@@ -40,7 +40,7 @@ pub struct SptRecord {
     pub shares_change: Option<FlagYNU>,
 
     #[cwr(title = "Sequence number (v2.1+)", start = 55, len = 3, min_version = 2.1)]
-    pub sequence_num: Option<String>,
+    pub sequence_num: Option<Number>,
 }
 
 // Custom validation function for SPT record

@@ -86,7 +86,7 @@ pub fn parse_and_insert_grh<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.group_id.to_sql_int(),
             record.transaction_type.to_sql_string(),
             record.version_number.to_sql_string(),
-            record.batch_request.as_deref().unwrap_or(""),
+            &opt_domain_to_int(&record.batch_request).unwrap_or(0).to_string(),
         ])?;
         Ok(())
     })
@@ -318,7 +318,7 @@ pub fn parse_and_insert_spt<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.inclusion_exclusion_indicator.as_str(),
             record.tis_numeric_code.as_str(),
             &opt_domain_to_string(&record.shares_change).unwrap_or_default(),
-            record.sequence_num.as_deref().unwrap_or(""),
+            &opt_domain_to_int(&record.sequence_num).unwrap_or(0).to_string(),
         ])?;
         Ok(())
     })
@@ -386,7 +386,7 @@ pub fn parse_and_insert_swt<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.inclusion_exclusion_indicator.as_str(),
             record.tis_numeric_code.as_str(),
             &opt_domain_to_string(&record.shares_change).unwrap_or_default(),
-            record.sequence_num.as_deref().unwrap_or(""),
+            &opt_domain_to_int(&record.sequence_num).unwrap_or(0).to_string(),
         ])?;
         Ok(())
     })
@@ -542,15 +542,15 @@ pub fn parse_and_insert_orn<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.intended_purpose.as_str(),
             record.production_title.as_deref().unwrap_or(""),
             record.cd_identifier.as_deref().unwrap_or(""),
-            record.cut_number.as_deref().unwrap_or(""),
+            &opt_domain_to_int(&record.cut_number).unwrap_or(0).to_string(),
             record.library.as_deref().unwrap_or(""),
             record.bltvr.as_deref().unwrap_or(""),
             record.filler.as_deref().unwrap_or(""),
             record.production_num.as_deref().unwrap_or(""),
             record.episode_title.as_deref().unwrap_or(""),
             record.episode_num.as_deref().unwrap_or(""),
-            record.year_of_production.as_deref().unwrap_or(""),
-            record.avi_society_code.as_deref().unwrap_or(""),
+            &opt_domain_to_int(&record.year_of_production).unwrap_or(0).to_string(),
+            &opt_domain_to_int(&record.avi_society_code).unwrap_or(0).to_string(),
             record.audio_visual_number.as_deref().unwrap_or(""),
             record.v_isan_isan.as_deref().unwrap_or(""),
             record.v_isan_episode.as_deref().unwrap_or(""),
@@ -571,7 +571,7 @@ pub fn parse_and_insert_ins<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.record_type.to_sql_string(),
             record.transaction_sequence_num.to_sql_int(),
             record.record_sequence_num.to_sql_int(),
-            record.number_of_voices.as_deref().unwrap_or(""),
+            &opt_domain_to_int(&record.number_of_voices).unwrap_or(0).to_string(),
             record.standard_instrumentation_type.as_deref().unwrap_or(""),
             record.instrumentation_description.as_deref().unwrap_or(""),
         ])?;
@@ -581,7 +581,7 @@ pub fn parse_and_insert_ins<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 
 pub fn parse_and_insert_ind<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
     handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, IndRecord::from_cwr_line, |record, stmts, file_id| {
-        stmts.ind_stmt.execute(params![file_id, record.record_type.to_sql_string(), record.transaction_sequence_num.to_sql_int(), record.record_sequence_num.to_sql_int(), record.instrument_code, record.number_of_players.as_deref().unwrap_or(""),])?;
+        stmts.ind_stmt.execute(params![file_id, record.record_type.to_sql_string(), record.transaction_sequence_num.to_sql_int(), record.record_sequence_num.to_sql_int(), record.instrument_code, &opt_domain_to_int(&record.number_of_players).unwrap_or(0).to_string(),])?;
         Ok(())
     })
 }
@@ -618,7 +618,7 @@ pub fn parse_and_insert_msg<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.transaction_sequence_num.to_sql_int(),
             record.record_sequence_num.to_sql_int(),
             record.message_type,
-            &record.original_record_sequence_num,
+            record.original_record_sequence_num.to_sql_int(),
             &record.record_type_field,
             record.message_level,
             &record.validation_number,

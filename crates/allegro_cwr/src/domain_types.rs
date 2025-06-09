@@ -1490,6 +1490,12 @@ impl Number {
     }
 }
 
+impl std::fmt::Display for Number {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 impl CwrFieldWrite for Number {
     fn to_cwr_str(&self) -> String {
         self.as_str()
@@ -1516,6 +1522,18 @@ impl CwrFieldParse for Number {
                 let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid number format: {}", trimmed) }];
                 (Number(0), warnings)
             }
+        }
+    }
+}
+
+impl CwrFieldParse for Option<Number> {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+        if trimmed.is_empty() || trimmed.chars().all(|c| c == '0') {
+            (None, vec![])
+        } else {
+            let (number, warnings) = Number::parse_cwr_field(source, field_name, field_title);
+            (Some(number), warnings)
         }
     }
 }

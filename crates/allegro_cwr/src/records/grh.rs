@@ -19,7 +19,7 @@ pub struct GrhRecord {
     pub version_number: CwrVersionNumber,
 
     #[cwr(title = "Optional batch request identifier", start = 16, len = 10)]
-    pub batch_request: Option<String>,
+    pub batch_request: Option<Number>,
 
     #[cwr(title = "Optional submission/distribution type (blank for CWR)", start = 26, len = 2)]
     pub submission_distribution_type: Option<String>,

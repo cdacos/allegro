@@ -19,7 +19,7 @@ pub struct MsgRecord {
     pub message_type: String,
 
     #[cwr(title = "Original record sequence number", start = 20, len = 8)]
-    pub original_record_sequence_num: String,
+    pub original_record_sequence_num: Number,
 
     #[cwr(title = "Record type", start = 28, len = 3)]
     pub record_type_field: String,
