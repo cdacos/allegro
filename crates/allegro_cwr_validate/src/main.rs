@@ -70,7 +70,7 @@ fn main() {
 
     let start_time = Instant::now();
 
-    let result = allegro_cwr_roundtrip::check_roundtrip_integrity(&input_filename, config.cwr_version);
+    let result = allegro_cwr_validate::check_roundtrip_integrity(&input_filename, config.cwr_version);
 
     let elapsed_time = start_time.elapsed();
 
@@ -88,19 +88,16 @@ fn main() {
 }
 
 fn print_help() {
-    eprintln!("Usage: cwr-roundtrip [OPTIONS] <input_filename>");
+    eprintln!("Usage: cwr-validate [OPTIONS] <input_filename>");
     eprintln!();
     eprintln!("Arguments:");
-    eprintln!("  <input_filename>    CWR file to check for round-trip integrity");
+    eprintln!("  <input_filename>    CWR file to check for validity");
     eprintln!();
     eprintln!("Options:");
     eprintln!("      --cwr <version>      CWR version (2.0, 2.1, 2.2). Auto-detected from filename (.Vxx) or file content if not specified");
     eprintln!("  -h, --help               Show this help message");
     eprintln!();
-    eprintln!("Validates round-trip integrity by parsing CWR records and serializing them back to ensure");
-    eprintln!("no information is lost during the parse → serialize cycle.");
-    eprintln!();
     eprintln!("Examples:");
-    eprintln!("  cwr-roundtrip input.cwr              # Check round-trip integrity");
-    eprintln!("  cwr-roundtrip --cwr 2.2 input.cwr   # Force CWR version 2.2");
+    eprintln!("  cwr-validate input.cwr             # Check CWR validity");
+    eprintln!("  cwr-validate --cwr 2.2 input.cwr   # Force CWR version 2.2");
 }

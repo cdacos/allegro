@@ -2,6 +2,16 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{Data, DeriveInput, Fields, LitInt, LitStr, parse_macro_input};
 
+/// Check if a type is Option<T>
+fn is_option_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            return segment.ident == "Option";
+        }
+    }
+    false
+}
+
 /// Derive macro for CWR record parsing with optional custom validation.
 ///
 /// # Attributes
@@ -63,35 +73,56 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
                 let #field_name = <#field_type as Default>::default();
             }
         } else {
-            quote! {
-                let (#field_name, field_warnings) = {
-                    let end = #start + #len;
-                    if line.len() < end {
-                        let mut warnings = vec![
-                            CwrWarning {
-                                field_name: stringify!(#field_name),
-                                field_title: #title,
-                                source_str: std::borrow::Cow::Borrowed(""),
-                                level: WarningLevel::Critical,
-                                description: format!(
-                                    "Line too short: expected at least {} characters, got {}",
-                                    end,
-                                    line.len()
-                                ),
-                            }
-                        ];
-                        let default_value = <#field_type as Default>::default();
-                        (default_value, warnings)
-                    } else {
-                        let field_slice = &line[#start..end];
-                        <#field_type as CwrFieldParse>::parse_cwr_field(
-                            field_slice,
-                            stringify!(#field_name),
-                            #title
-                        )
-                    }
-                };
-                warnings.extend(field_warnings);
+            let is_optional = is_option_type(field_type);
+            if is_optional {
+                quote! {
+                    let (#field_name, field_warnings) = {
+                        let end = #start + #len;
+                        if line.len() < end {
+                            // For Option<T> fields: silently set to None when line is too short
+                            (None, Vec::new())
+                        } else {
+                            let field_slice = &line[#start..end];
+                            <#field_type as CwrFieldParse>::parse_cwr_field(
+                                field_slice,
+                                stringify!(#field_name),
+                                #title
+                            )
+                        }
+                    };
+                    warnings.extend(field_warnings);
+                }
+            } else {
+                quote! {
+                    let (#field_name, field_warnings) = {
+                        let end = #start + #len;
+                        if line.len() < end {
+                            let mut warnings = vec![
+                                CwrWarning {
+                                    field_name: stringify!(#field_name),
+                                    field_title: #title,
+                                    source_str: std::borrow::Cow::Borrowed(""),
+                                    level: WarningLevel::Critical,
+                                    description: format!(
+                                        "Line too short: expected at least {} characters, got {}",
+                                        end,
+                                        line.len()
+                                    ),
+                                }
+                            ];
+                            let default_value = <#field_type as Default>::default();
+                            (default_value, warnings)
+                        } else {
+                            let field_slice = &line[#start..end];
+                            <#field_type as CwrFieldParse>::parse_cwr_field(
+                                field_slice,
+                                stringify!(#field_name),
+                                #title
+                            )
+                        }
+                    };
+                    warnings.extend(field_warnings);
+                }
             }
         }
     });

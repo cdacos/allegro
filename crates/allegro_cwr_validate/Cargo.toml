@@ -1,5 +1,5 @@
 [package]
-name = "allegro_cwr_roundtrip"
+name = "allegro_cwr_validate"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,5 +11,5 @@ env_logger = "0.11"
 lexopt = "0.3"
 
 [[bin]]
-name = "cwr-roundtrip"
+name = "cwr-validate"
 path = "src/main.rs"
