@@ -57,6 +57,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "allegro_cwr_roundtrip"
+version = "0.1.0"
+dependencies = [
+ "allegro_cwr",
+ "env_logger",
+ "lexopt",
+ "log",
+ "thiserror",
+]
+
+[[package]]
 name = "allegro_cwr_sqlite"
 version = "0.1.0"
 dependencies = [
