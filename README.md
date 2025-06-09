@@ -17,24 +17,25 @@ If you work in music publishing and this is useful, let me know!
 
 ## Current Features
 
-- **Basic CWR Parsing**: Parses all 33+ standard record types for CWR versions 2.0, 2.1, and 2.2
-- **Type Safety**: Domain types and procedural macros for consistent parsing
+- **Bidirectional CWR Conversion**: Full parsing and writing of all 33+ standard record types for CWR versions 2.0, 2.1, and 2.2
+- **Type Safety**: Domain types and procedural macros for consistent parsing and serialization
 - **Warning System**: Basic field-level warnings for malformed data
 - **Performance**: Processes ~500K records/second with full parsing and database insertion (on my Macbook Pro M4!)
+- **Round-trip Fidelity**: Edit CWR data in JSON or SQLite format and export back to valid CWR files
  
 ### Architecture
 
 The main library (`allegro-cwr`) streams CWR lines into typed records, and vice versa. The parser is deliberately agnostic in terms of final usage.
 
-We have two handler projects that demonstrate usage of the library:
+We have two handler projects that demonstrate bidirectional usage of the library:
 
-- **`allegro-cwr-json`**: Convert the CWR format into a stream of JSON records (CLI wrapper: `cwr-json`)
-- **`allegro-cwr-sqlite`**: Load the CWR data into a SQLite database (with tables for each record, such as `cwr_hdr`) (CLI wrapper: `cwr-sqlite`)
+- **`allegro-cwr-json`**: Bidirectional conversion between CWR ↔ JSON formats (CLI wrapper: `cwr-json`)
+- **`allegro-cwr-sqlite`**: Bidirectional conversion between CWR ↔ SQLite database (with tables for each record, such as `cwr_hdr`) (CLI wrapper: `cwr-sqlite`)
 
 ## TODO
 
 - **Business Rule Validation**: Comprehensive cross-field and inter-record validation
-- **Serialisation to CWR**: The current focus has been on reading CWRs; writing and handling ACKs to come
+- **ACK File Handling**: Support for acknowledgment file processing and generation
 
 ## Usage
 
@@ -42,14 +43,22 @@ We have two handler projects that demonstrate usage of the library:
 # Build the project
 cargo build --release
 
-# Parse to SQLite database
-target/release/cwr-sqlite input_file.cwr
+# CWR ↔ SQLite conversion (auto-detects format)
+target/release/cwr-sqlite input_file.cwr         # CWR → SQLite
+target/release/cwr-sqlite database.db            # SQLite → CWR
 
-# Output JSON to stdout
-target/release/cwr-json input_file.cwr
+# CWR ↔ JSON conversion (auto-detects format)  
+target/release/cwr-json input_file.cwr           # CWR → JSON
+target/release/cwr-json data.json                # JSON → CWR
 
-# Specify output database file (overwrites if exists)
-target/release/cwr-sqlite -o output.db input_file.cwr
+# Specify output files
+target/release/cwr-sqlite -o output.db input_file.cwr    # CWR → SQLite
+target/release/cwr-sqlite -o output.cwr database.db      # SQLite → CWR
+target/release/cwr-json -o output.json input_file.cwr    # CWR → JSON
+target/release/cwr-json -o output.cwr data.json          # JSON → CWR
+
+# SQLite: specify file ID for multi-file databases
+target/release/cwr-sqlite --file-id 2 -o output.cwr database.db
 
 # Force specific CWR version
 target/release/cwr-sqlite --cwr 2.1 input_file.cwr
@@ -62,6 +71,20 @@ RUST_LOG=info target/release/cwr-json input_file.cwr
 # Show help
 target/release/cwr-sqlite --help
 target/release/cwr-json --help
+```
+
+### Editing Workflow Examples
+
+```bash
+# Edit CWR data via SQLite
+target/release/cwr-sqlite input.cwr              # Import to SQLite
+sqlite3 input.cwr.db "UPDATE cwr_hdr SET sender_name = 'NEW PUBLISHER';"
+target/release/cwr-sqlite -o edited.cwr input.cwr.db  # Export modified CWR
+
+# Edit CWR data via JSON
+target/release/cwr-json input.cwr                # Import to JSON  
+# Edit the JSON file with your preferred editor
+target/release/cwr-json -o edited.cwr input.json # Export modified CWR
 ```
 
 ## Development
