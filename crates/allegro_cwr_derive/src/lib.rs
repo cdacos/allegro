@@ -106,14 +106,18 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
         if let Some(min_ver) = min_version {
             // Version-conditional field
             quote! {
+                // Ensure we're at the right position
+                while line.len() < #start {
+                    line.push(' ');
+                }
                 if version.supports_version(#min_ver) {
-                    // Ensure we're at the right position
-                    while line.len() < #start {
-                        line.push(' ');
-                    }
                     let field_str = <_ as crate::domain_types::CwrFieldWrite>::to_cwr_str(&self.#field_name);
                     let padded = format!("{:width$}", field_str, width = #len);
                     line.push_str(&padded[..#len.min(padded.len())]);
+                } else {
+                    // Field not supported in this version - pad with spaces to maintain fixed-width format
+                    let padding = " ".repeat(#len);
+                    line.push_str(&padding);
                 }
             }
         } else {

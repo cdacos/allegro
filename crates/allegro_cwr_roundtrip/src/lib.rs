@@ -15,6 +15,7 @@ pub enum RoundtripError {
 pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> Result<usize, RoundtripError> {
     let mut record_count = 0;
     let mut diff_map: HashMap<String, Vec<usize>> = HashMap::new(); // key: diff description, value: line numbers
+    let mut detected_version: Option<f32> = None;
 
     // Read original lines for comparison
     let original_lines: Vec<String> = std::fs::read_to_string(input_path)?
@@ -29,6 +30,12 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
     for parsed_result in record_stream {
         match parsed_result {
             Ok(parsed_record) => {
+                // Capture the detected version from the first record
+                if detected_version.is_none() {
+                    detected_version = Some(parsed_record.context.cwr_version);
+                    println!("Detected CWR version: {}", parsed_record.context.cwr_version);
+                }
+                
                 let line_index = parsed_record.line_number - 1; // Convert to 0-based index
                 if line_index < original_lines.len() {
                     let original_line = &original_lines[line_index];

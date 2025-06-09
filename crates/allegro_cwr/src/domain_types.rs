@@ -641,7 +641,7 @@ impl OwnershipShare {
 impl CwrFieldParse for Option<OwnershipShare> {
     fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
-        if trimmed.is_empty() || trimmed == "00000" {
+        if trimmed.is_empty() {
             (None, vec![])
         } else {
             match trimmed.parse::<u16>() {
