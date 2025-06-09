@@ -1831,7 +1831,6 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
 
 /// Helper function to parse domain types from database strings using our CwrFromSqlString trait
 /// This leverages the existing CWR parsing logic to reconstruct domain types from stored values
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1950,7 +1949,7 @@ mod tests {
 
         // Get all cwr_ table names dynamically
         let mut stmt = conn.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'cwr_%' ORDER BY name").unwrap();
-        let table_names: Vec<String> = stmt.query_map([], |row| Ok(row.get::<_, String>(0)?)).unwrap().collect::<std::result::Result<Vec<_>, _>>().unwrap();
+        let table_names: Vec<String> = stmt.query_map([], |row| row.get::<_, String>(0)).unwrap().collect::<std::result::Result<Vec<_>, _>>().unwrap();
 
         println!("Found {} cwr_ tables: {:?}", table_names.len(), table_names);
 

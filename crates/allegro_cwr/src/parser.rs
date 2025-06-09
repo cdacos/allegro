@@ -185,7 +185,7 @@ mod tests {
             Err(CwrParseError::BadFormat(msg)) => {
                 assert!(msg.contains("Invalid CWR version in header: 9.9"));
             }
-            _ => assert!(false, "Expected BadFormat error"),
+            _ => panic!("Expected BadFormat error"),
         }
     }
 
@@ -198,7 +198,7 @@ mod tests {
             Err(CwrParseError::BadFormat(msg)) => {
                 assert_eq!(msg, "Line 1 is too short (less than 3 chars)");
             }
-            _ => assert!(false, "Expected BadFormat error"),
+            _ => panic!("Expected BadFormat error"),
         }
     }
 
@@ -211,7 +211,7 @@ mod tests {
             Err(CwrParseError::BadFormat(msg)) => {
                 assert_eq!(msg, "Unrecognized record type 'XYZ'");
             }
-            _ => assert!(false, "Expected BadFormat error"),
+            _ => panic!("Expected BadFormat error"),
         }
     }
 
@@ -254,7 +254,7 @@ mod tests {
 
     fn create_temp_cwr_file(content: &str) -> Result<String, std::io::Error> {
         let temp_dir = std::env::temp_dir();
-        let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "System time error"))?.as_nanos();
+        let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|_| std::io::Error::other("System time error"))?.as_nanos();
         let thread_id = std::thread::current().id();
         let file_path = temp_dir.join(format!("test_{}_{:?}.cwr", timestamp, thread_id));
         let mut file = File::create(&file_path)?;
@@ -273,7 +273,7 @@ mod tests {
             Err(CwrParseError::BadFormat(msg)) => {
                 assert_eq!(msg, "File is empty");
             }
-            _ => assert!(false, "Expected BadFormat error"),
+            _ => panic!("Expected BadFormat error"),
         }
         fs::remove_file(&temp_file).ok();
     }
@@ -288,7 +288,7 @@ mod tests {
             Err(CwrParseError::BadFormat(msg)) => {
                 assert!(msg.starts_with("File does not start with HDR record"));
             }
-            _ => assert!(false, "Expected BadFormat error"),
+            _ => panic!("Expected BadFormat error"),
         }
         fs::remove_file(&temp_file).ok();
     }
@@ -337,7 +337,7 @@ mod tests {
             Err(CwrParseError::BadFormat(msg)) => {
                 assert_eq!(msg, "Line 2 is empty");
             }
-            _ => assert!(false, "Expected BadFormat error for empty line"),
+            _ => panic!("Expected BadFormat error for empty line"),
         }
 
         fs::remove_file(&temp_file).ok();

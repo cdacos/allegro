@@ -403,49 +403,49 @@ impl CwrFromSqlString for CompositeComponentCount {
 // Integer parsing implementations
 impl CwrFromSqlInt for OwnershipShare {
     fn from_sql_int(value: i64) -> Result<Self, String> {
-        if value < 0 || value > 10000 { Err(format!("OwnershipShare value {} is out of range 0-10000", value)) } else { Ok(OwnershipShare(value as u16)) }
+        if !(0..=10000).contains(&value) { Err(format!("OwnershipShare value {} is out of range 0-10000", value)) } else { Ok(OwnershipShare(value as u16)) }
     }
 }
 
 impl CwrFromSqlInt for TisNumericCode {
     fn from_sql_int(value: i64) -> Result<Self, String> {
-        if value < 0 || value > u16::MAX as i64 { Err(format!("TisNumericCode value {} is out of range", value)) } else { Ok(TisNumericCode(value as u16)) }
+        if !(0..=u16::MAX as i64).contains(&value) { Err(format!("TisNumericCode value {} is out of range", value)) } else { Ok(TisNumericCode(value as u16)) }
     }
 }
 
 impl CwrFromSqlInt for PublisherSequenceNumber {
     fn from_sql_int(value: i64) -> Result<Self, String> {
-        if value < 1 || value > 99 { Err(format!("PublisherSequenceNumber value {} is out of range 1-99", value)) } else { Ok(PublisherSequenceNumber(value as u8)) }
+        if !(1..=99).contains(&value) { Err(format!("PublisherSequenceNumber value {} is out of range 1-99", value)) } else { Ok(PublisherSequenceNumber(value as u8)) }
     }
 }
 
 impl CwrFromSqlInt for GroupId {
     fn from_sql_int(value: i64) -> Result<Self, String> {
-        if value < 1 || value > 99999 { Err(format!("GroupId value {} is out of range 1-99999", value)) } else { Ok(GroupId(value as u32)) }
+        if !(1..=99999).contains(&value) { Err(format!("GroupId value {} is out of range 1-99999", value)) } else { Ok(GroupId(value as u32)) }
     }
 }
 
 impl CwrFromSqlInt for WorksCount {
     fn from_sql_int(value: i64) -> Result<Self, String> {
-        if value < 0 || value > u32::MAX as i64 { Err(format!("WorksCount value {} is out of range", value)) } else { Ok(WorksCount(value as u32)) }
+        if !(0..=u32::MAX as i64).contains(&value) { Err(format!("WorksCount value {} is out of range", value)) } else { Ok(WorksCount(value as u32)) }
     }
 }
 
 impl CwrFromSqlInt for TransactionCount {
     fn from_sql_int(value: i64) -> Result<Self, String> {
-        if value < 0 || value > 99999999 { Err(format!("TransactionCount value {} is out of range 0-99999999", value)) } else { Ok(TransactionCount(value as u32)) }
+        if !(0..=99999999).contains(&value) { Err(format!("TransactionCount value {} is out of range 0-99999999", value)) } else { Ok(TransactionCount(value as u32)) }
     }
 }
 
 impl CwrFromSqlInt for RecordCount {
     fn from_sql_int(value: i64) -> Result<Self, String> {
-        if value < 0 || value > 99999999 { Err(format!("RecordCount value {} is out of range 0-99999999", value)) } else { Ok(RecordCount(value as u32)) }
+        if !(0..=99999999).contains(&value) { Err(format!("RecordCount value {} is out of range 0-99999999", value)) } else { Ok(RecordCount(value as u32)) }
     }
 }
 
 impl CwrFromSqlInt for GroupCount {
     fn from_sql_int(value: i64) -> Result<Self, String> {
-        if value < 0 || value > 99999 { Err(format!("GroupCount value {} is out of range 0-99999", value)) } else { Ok(GroupCount(value as u32)) }
+        if !(0..=99999).contains(&value) { Err(format!("GroupCount value {} is out of range 0-99999", value)) } else { Ok(GroupCount(value as u32)) }
     }
 }
 
@@ -487,7 +487,7 @@ impl CwrFromSqlString for WorksCount {
 
 impl CwrFromSqlString for TisNumericCode {
     fn from_sql_string(value: &str) -> Result<Self, String> {
-        if let Ok(parsed_value) = value.parse::<u16>() { if parsed_value <= u16::MAX { Ok(TisNumericCode(parsed_value)) } else { Err(format!("TisNumericCode value {} is out of range", parsed_value)) } } else { Err(format!("Failed to parse TisNumericCode from '{}'", value)) }
+        if let Ok(parsed_value) = value.parse::<u16>() { Ok(TisNumericCode(parsed_value)) } else { Err(format!("Failed to parse TisNumericCode from '{}'", value)) }
     }
 }
 
@@ -501,7 +501,7 @@ impl CwrFromSqlString for OwnershipShare {
 impl CwrFromSqlString for PublisherSequenceNumber {
     fn from_sql_string(value: &str) -> Result<Self, String> {
         if let Ok(parsed_value) = value.parse::<u8>() {
-            if parsed_value >= 1 && parsed_value <= 99 { Ok(PublisherSequenceNumber(parsed_value)) } else { Err(format!("PublisherSequenceNumber value {} is out of range 1-99", parsed_value)) }
+            if (1..=99).contains(&parsed_value) { Ok(PublisherSequenceNumber(parsed_value)) } else { Err(format!("PublisherSequenceNumber value {} is out of range 1-99", parsed_value)) }
         } else {
             Err(format!("Failed to parse PublisherSequenceNumber from '{}'", value))
         }
@@ -511,7 +511,7 @@ impl CwrFromSqlString for PublisherSequenceNumber {
 // Helper functions for optional parsing
 pub fn opt_string_to_domain<T: CwrFromSqlString>(opt: Option<&str>) -> Result<Option<T>, String> {
     match opt {
-        Some(s) if s.is_empty() => Ok(None),
+        Some("") => Ok(None),
         Some(s) => T::from_sql_string(s).map(Some),
         None => Ok(None),
     }
@@ -527,7 +527,7 @@ pub fn opt_int_to_domain<T: CwrFromSqlInt>(opt: Option<i64>) -> Result<Option<T>
 // Helper for parsing optional numeric types from database strings
 pub fn opt_string_to_numeric<T: CwrFromSqlString>(opt: Option<&str>) -> Result<Option<T>, String> {
     match opt {
-        Some(s) if s.is_empty() => Ok(None),
+        Some("") => Ok(None),
         Some(s) => T::from_sql_string(s).map(Some),
         None => Ok(None),
     }
