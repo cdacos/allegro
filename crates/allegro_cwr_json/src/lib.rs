@@ -166,14 +166,17 @@ struct JsonCwrFile {
 #[derive(Deserialize)]
 struct JsonContext {
     cwr_version: f32,
-    file_id: u32,
+    #[allow(dead_code)] // Included for JSON format compatibility
+    file_id: Option<u32>,
 }
 
 #[derive(Deserialize)]
 struct JsonRecord {
-    line_number: usize,
+    #[allow(dead_code)] // Included for JSON format compatibility
+    line_number: Option<usize>,
     record: CwrRegistry,
-    warnings: Vec<String>,
+    #[allow(dead_code)] // Included for JSON format compatibility
+    warnings: Option<Vec<String>>,
 }
 
 /// Convenience function to process JSON file and output CWR with optional version hint and output file
