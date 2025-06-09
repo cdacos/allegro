@@ -64,28 +64,28 @@ enum InputFormat {
 
 fn detect_input_format(filename: &str) -> Result<InputFormat, String> {
     let mut file = File::open(filename).map_err(|e| format!("Cannot open file '{}': {}", filename, e))?;
-    
+
     let mut buffer = [0u8; 16];
     let bytes_read = file.read(&mut buffer).map_err(|e| format!("Cannot read file '{}': {}", filename, e))?;
-    
+
     if bytes_read == 0 {
         return Err("File is empty".to_string());
     }
-    
+
     // Convert to string for easier analysis, handling non-UTF8 gracefully
     let content = String::from_utf8_lossy(&buffer[..bytes_read]);
-    
+
     // Check for CWR format: starts with "HDR"
     if content.starts_with("HDR") {
         return Ok(InputFormat::Cwr);
     }
-    
+
     // Check for JSON format: starts with '{' (possibly after whitespace)
     let trimmed = content.trim_start();
     if trimmed.starts_with('{') {
         return Ok(InputFormat::Json);
     }
-    
+
     // Fallback: try file extension
     if filename.to_lowercase().ends_with(".json") {
         Ok(InputFormat::Json)

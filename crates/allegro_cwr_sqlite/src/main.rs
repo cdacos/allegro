@@ -42,11 +42,11 @@ fn parse_args() -> Result<Config, String> {
             lexopt::Arg::Long("file-id") => {
                 let file_id_str = get_value(&mut parser, "file-id")?;
                 let file_id: i64 = file_id_str.parse().map_err(|_| format!("Invalid file ID '{}'. Must be a positive integer", file_id_str))?;
-                
+
                 if file_id <= 0 {
                     return Err(format!("Invalid file ID '{}'. Must be a positive integer", file_id));
                 }
-                
+
                 config.file_id = Some(file_id);
             }
             lexopt::Arg::Value(val) => {
@@ -74,38 +74,34 @@ fn parse_args() -> Result<Config, String> {
 
 fn detect_input_format(filename: &str) -> Result<InputFormat, String> {
     let mut file = File::open(filename).map_err(|e| format!("Cannot open file '{}': {}", filename, e))?;
-    
+
     let mut buffer = [0u8; 16];
     let bytes_read = file.read(&mut buffer).map_err(|e| format!("Cannot read file '{}': {}", filename, e))?;
-    
+
     if bytes_read == 0 {
         return Err("File is empty".to_string());
     }
-    
+
     // Convert to string for easier analysis, handling non-UTF8 gracefully
     let content = String::from_utf8_lossy(&buffer[..bytes_read]);
-    
+
     // Check for CWR format: starts with "HDR"
     if content.starts_with("HDR") {
         return Ok(InputFormat::Cwr);
     }
-    
+
     // Everything else is treated as SQLite database
     Ok(InputFormat::Sqlite)
 }
 
 fn get_most_recent_file_id(db_filename: &str) -> Result<i64, Box<dyn std::error::Error>> {
     let conn = rusqlite::Connection::open(db_filename)?;
-    
-    let file_id: i64 = conn.query_row(
-        "SELECT file_id FROM file ORDER BY imported_on DESC LIMIT 1",
-        [],
-        |row| row.get(0)
-    ).map_err(|e| match e {
+
+    let file_id: i64 = conn.query_row("SELECT file_id FROM file ORDER BY imported_on DESC LIMIT 1", [], |row| row.get(0)).map_err(|e| match e {
         rusqlite::Error::QueryReturnedNoRows => "No files found in database".to_string(),
         _ => format!("Database error: {}", e),
     })?;
-    
+
     Ok(file_id)
 }
 
@@ -170,11 +166,9 @@ fn main() {
                     get_most_recent_file_id(&input_filename)
                 }
             };
-            
+
             match file_id {
-                Ok(id) => {
-                    allegro_cwr_sqlite::process_sqlite_to_cwr_with_version_and_output(&input_filename, id, config.cwr_version, config.output_path.as_deref())
-                }
+                Ok(id) => allegro_cwr_sqlite::process_sqlite_to_cwr_with_version_and_output(&input_filename, id, config.cwr_version, config.output_path.as_deref()),
                 Err(e) => Err(e),
             }
         }

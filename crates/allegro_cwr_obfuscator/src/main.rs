@@ -75,11 +75,7 @@ fn main() {
 
     let start_time = Instant::now();
 
-    let result = allegro_cwr_obfuscator::process_cwr_obfuscation(
-        &input_filename,
-        config.output_filename.as_deref(),
-        config.cwr_version,
-    );
+    let result = allegro_cwr_obfuscator::process_cwr_obfuscation(&input_filename, config.output_filename.as_deref(), config.cwr_version);
 
     let elapsed_time = start_time.elapsed();
 

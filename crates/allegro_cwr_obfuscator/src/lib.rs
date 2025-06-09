@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 
-use allegro_cwr::{CwrRegistry, process_cwr_stream_with_version};
+use allegro_cwr::{process_cwr_stream_with_version, CwrRegistry};
 use rand::{Rng, SeedableRng};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
@@ -20,7 +20,7 @@ pub enum ObfuscationError {
 pub struct ObfuscationMappings {
     /// Map original names to obfuscated names (publishers, writers, etc.)
     names: HashMap<String, String>,
-    /// Map original titles to obfuscated titles 
+    /// Map original titles to obfuscated titles
     titles: HashMap<String, String>,
     /// Map original IPI numbers to obfuscated IPI numbers
     ipis: HashMap<String, String>,
@@ -41,9 +41,7 @@ impl ObfuscationMappings {
             return original.to_string();
         }
 
-        self.names.entry(original.to_string()).or_insert_with(|| {
-            generate_fake_name(original)
-        }).clone()
+        self.names.entry(original.to_string()).or_insert_with(|| generate_fake_name(original)).clone()
     }
 
     /// Get or create an obfuscated title, ensuring consistency
@@ -52,9 +50,7 @@ impl ObfuscationMappings {
             return original.to_string();
         }
 
-        self.titles.entry(original.to_string()).or_insert_with(|| {
-            generate_fake_title(original)
-        }).clone()
+        self.titles.entry(original.to_string()).or_insert_with(|| generate_fake_title(original)).clone()
     }
 
     /// Get or create an obfuscated IPI number, ensuring consistency
@@ -63,9 +59,7 @@ impl ObfuscationMappings {
             return original.to_string();
         }
 
-        self.ipis.entry(original.to_string()).or_insert_with(|| {
-            generate_fake_ipi(original)
-        }).clone()
+        self.ipis.entry(original.to_string()).or_insert_with(|| generate_fake_ipi(original)).clone()
     }
 
     /// Get or create an obfuscated work number, ensuring consistency
@@ -74,9 +68,7 @@ impl ObfuscationMappings {
             return original.to_string();
         }
 
-        self.work_numbers.entry(original.to_string()).or_insert_with(|| {
-            generate_fake_work_number(original)
-        }).clone()
+        self.work_numbers.entry(original.to_string()).or_insert_with(|| generate_fake_work_number(original)).clone()
     }
 
     /// Get or create an obfuscated ISWC, ensuring consistency
@@ -85,9 +77,7 @@ impl ObfuscationMappings {
             return original.to_string();
         }
 
-        self.iswcs.entry(original.to_string()).or_insert_with(|| {
-            generate_fake_iswc(original)
-        }).clone()
+        self.iswcs.entry(original.to_string()).or_insert_with(|| generate_fake_iswc(original)).clone()
     }
 }
 
@@ -100,11 +90,11 @@ fn generate_fake_name(original: &str) -> String {
     // Common fake publisher/writer names
     let prefixes = ["FAKE", "TEST", "DEMO", "SAMPLE", "MOCK"];
     let suffixes = ["MUSIC", "PUBLISHING", "RECORDS", "ENTERTAINMENT", "MEDIA", "WORKS"];
-    
+
     let prefix = prefixes[rng.gen_range(0..prefixes.len())];
     let suffix = suffixes[rng.gen_range(0..suffixes.len())];
     let number = rng.gen_range(100..999);
-    
+
     format!("{} {} {}", prefix, suffix, number)
 }
 
@@ -117,11 +107,11 @@ fn generate_fake_title(original: &str) -> String {
     // Common fake song title patterns
     let adjectives = ["DEMO", "TEST", "SAMPLE", "FAKE", "MOCK"];
     let nouns = ["SONG", "TRACK", "MELODY", "TUNE", "COMPOSITION"];
-    
+
     let adjective = adjectives[rng.gen_range(0..adjectives.len())];
     let noun = nouns[rng.gen_range(0..nouns.len())];
     let number = rng.gen_range(1..999);
-    
+
     format!("{} {} {}", adjective, noun, number)
 }
 
@@ -180,29 +170,24 @@ fn generate_fake_iswc(original: &str) -> String {
 }
 
 /// Process a CWR file and obfuscate sensitive information
-pub fn process_cwr_obfuscation(
-    input_path: &str,
-    output_path: Option<&str>,
-    cwr_version: Option<f32>,
-) -> Result<usize, ObfuscationError> {
+pub fn process_cwr_obfuscation(input_path: &str, output_path: Option<&str>, cwr_version: Option<f32>) -> Result<usize, ObfuscationError> {
     let default_output = format!("{}.obfuscated", input_path);
     let output_path = output_path.unwrap_or(&default_output);
     let output_file = File::create(output_path)?;
     let mut writer = BufWriter::new(output_file);
-    
+
     let mut mappings = ObfuscationMappings::new();
     let mut record_count = 0;
-    
+
     // Use the allegro_cwr streaming parser
-    let record_stream = process_cwr_stream_with_version(input_path, cwr_version)
-        .map_err(|e| ObfuscationError::CwrParsing(format!("Failed to open CWR file: {}", e)))?;
-    
+    let record_stream = process_cwr_stream_with_version(input_path, cwr_version).map_err(|e| ObfuscationError::CwrParsing(format!("Failed to open CWR file: {}", e)))?;
+
     for parsed_result in record_stream {
         match parsed_result {
             Ok(parsed_record) => {
                 // Obfuscate the record
                 let obfuscated_record = obfuscate_record(parsed_record.record, &mut mappings);
-                
+
                 // Convert back to CWR line and write
                 let version = allegro_cwr::domain_types::CwrVersion(Some(parsed_record.context.cwr_version));
                 let obfuscated_line = obfuscated_record.to_cwr_line(&version);
@@ -214,10 +199,10 @@ pub fn process_cwr_obfuscation(
             }
         }
     }
-    
+
     writer.flush()?;
     println!("Successfully obfuscated {} records to '{}'", record_count, output_path);
-    
+
     Ok(record_count)
 }
 
@@ -350,12 +335,12 @@ mod tests {
     #[test]
     fn test_consistent_name_obfuscation() {
         let mut mappings = ObfuscationMappings::new();
-        
+
         // Same name should always map to the same obfuscated value
         let original_name = "ACME PUBLISHING";
         let obfuscated1 = mappings.obfuscate_name(original_name);
         let obfuscated2 = mappings.obfuscate_name(original_name);
-        
+
         assert_eq!(obfuscated1, obfuscated2);
         assert_ne!(obfuscated1, original_name);
     }
@@ -363,12 +348,12 @@ mod tests {
     #[test]
     fn test_consistent_title_obfuscation() {
         let mut mappings = ObfuscationMappings::new();
-        
+
         // Same title should always map to the same obfuscated value
         let original_title = "MY AMAZING SONG";
         let obfuscated1 = mappings.obfuscate_title(original_title);
         let obfuscated2 = mappings.obfuscate_title(original_title);
-        
+
         assert_eq!(obfuscated1, obfuscated2);
         assert_ne!(obfuscated1, original_title);
     }
@@ -376,12 +361,12 @@ mod tests {
     #[test]
     fn test_consistent_ipi_obfuscation() {
         let mut mappings = ObfuscationMappings::new();
-        
+
         // Same IPI should always map to the same obfuscated value
         let original_ipi = "12345678901";
         let obfuscated1 = mappings.obfuscate_ipi(original_ipi);
         let obfuscated2 = mappings.obfuscate_ipi(original_ipi);
-        
+
         assert_eq!(obfuscated1, obfuscated2);
         assert_ne!(obfuscated1, original_ipi);
         assert_eq!(obfuscated1.len(), original_ipi.len()); // Same length
@@ -390,20 +375,20 @@ mod tests {
     #[test]
     fn test_different_names_get_different_obfuscations() {
         let mut mappings = ObfuscationMappings::new();
-        
+
         let name1 = "ACME PUBLISHING";
         let name2 = "XYZ RECORDS";
-        
+
         let obfuscated1 = mappings.obfuscate_name(name1);
         let obfuscated2 = mappings.obfuscate_name(name2);
-        
+
         assert_ne!(obfuscated1, obfuscated2);
     }
 
     #[test]
     fn test_empty_strings_remain_empty() {
         let mut mappings = ObfuscationMappings::new();
-        
+
         assert_eq!(mappings.obfuscate_name(""), "");
         assert_eq!(mappings.obfuscate_title("   "), "   ");
         assert_eq!(mappings.obfuscate_ipi(""), "");
@@ -412,13 +397,13 @@ mod tests {
     #[test]
     fn test_ipi_format_preservation() {
         let mut mappings = ObfuscationMappings::new();
-        
+
         // Test IPI Name Number (11 digits)
         let ipi_name = "12345678901";
         let obfuscated_name = mappings.obfuscate_ipi(ipi_name);
         assert_eq!(obfuscated_name.len(), 11);
         assert!(obfuscated_name.chars().all(|c| c.is_ascii_digit()));
-        
+
         // Test IPI Base Number (13 alphanumeric)
         let ipi_base = "ABCD123456789";
         let obfuscated_base = mappings.obfuscate_ipi(ipi_base);
@@ -432,11 +417,11 @@ mod tests {
         // even across different ObfuscationMappings instances
         let mut mappings1 = ObfuscationMappings::new();
         let mut mappings2 = ObfuscationMappings::new();
-        
+
         let original = "TEST PUBLISHER";
         let obfuscated1 = mappings1.obfuscate_name(original);
         let obfuscated2 = mappings2.obfuscate_name(original);
-        
+
         assert_eq!(obfuscated1, obfuscated2);
     }
 }
