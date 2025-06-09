@@ -27,10 +27,11 @@ If you work in music publishing and this is useful, let me know!
 
 The main library (`allegro-cwr`) streams CWR lines into typed records, and vice versa. The parser is deliberately agnostic in terms of final usage.
 
-We have two handler projects that demonstrate bidirectional usage of the library:
+We have three handler projects that demonstrate different uses of the library:
 
 - **`allegro-cwr-json`**: Bidirectional conversion between CWR ↔ JSON formats (CLI wrapper: `cwr-json`)
 - **`allegro-cwr-sqlite`**: Bidirectional conversion between CWR ↔ SQLite database (with tables for each record, such as `cwr_hdr`) (CLI wrapper: `cwr-sqlite`)
+- **`allegro-cwr-obfuscator`**: Privacy-preserving obfuscation of sensitive CWR data while maintaining referential integrity (CLI wrapper: `cwr-obfuscator`)
 
 ## TODO
 
@@ -51,11 +52,15 @@ target/release/cwr-sqlite database.db            # SQLite → CWR
 target/release/cwr-json input_file.cwr           # CWR → JSON
 target/release/cwr-json data.json                # JSON → CWR
 
+# CWR obfuscation (privacy-preserving test data)
+target/release/cwr-obfuscator input_file.cwr     # CWR → Obfuscated CWR
+
 # Specify output files
-target/release/cwr-sqlite -o output.db input_file.cwr    # CWR → SQLite
-target/release/cwr-sqlite -o output.cwr database.db      # SQLite → CWR
-target/release/cwr-json -o output.json input_file.cwr    # CWR → JSON
-target/release/cwr-json -o output.cwr data.json          # JSON → CWR
+target/release/cwr-sqlite -o output.db input_file.cwr       # CWR → SQLite
+target/release/cwr-sqlite -o output.cwr database.db         # SQLite → CWR
+target/release/cwr-json -o output.json input_file.cwr       # CWR → JSON
+target/release/cwr-json -o output.cwr data.json             # JSON → CWR
+target/release/cwr-obfuscator -o safe.cwr input_file.cwr    # CWR → Obfuscated CWR
 
 # SQLite: specify file ID for multi-file databases
 target/release/cwr-sqlite --file-id 2 -o output.cwr database.db
@@ -63,17 +68,20 @@ target/release/cwr-sqlite --file-id 2 -o output.cwr database.db
 # Force specific CWR version
 target/release/cwr-sqlite --cwr 2.1 input_file.cwr
 target/release/cwr-json --cwr 2.1 input_file.cwr
+target/release/cwr-obfuscator --cwr 2.1 input_file.cwr
 
 # View logging output
 RUST_LOG=info target/release/cwr-sqlite input_file.cwr
 RUST_LOG=info target/release/cwr-json input_file.cwr
+RUST_LOG=info target/release/cwr-obfuscator input_file.cwr
 
 # Show help
 target/release/cwr-sqlite --help
 target/release/cwr-json --help
+target/release/cwr-obfuscator --help
 ```
 
-### Editing Workflow Examples
+### Workflow Examples
 
 ```bash
 # Edit CWR data via SQLite
@@ -85,6 +93,11 @@ target/release/cwr-sqlite -o edited.cwr input.cwr.db  # Export modified CWR
 target/release/cwr-json input.cwr                # Import to JSON  
 # Edit the JSON file with your preferred editor
 target/release/cwr-json -o edited.cwr input.json # Export modified CWR
+
+# Create privacy-safe test data
+target/release/cwr-obfuscator production.cwr     # Creates production.cwr.obfuscated
+# Share obfuscated file safely - all names, titles, IPIs are fake but consistent
+target/release/cwr-sqlite production.cwr.obfuscated  # Can still analyze structure
 ```
 
 ## Development
@@ -108,6 +121,7 @@ The project is organized into focused crates:
 - **`allegro_cwr_derive`** - Procedural macros for automatic record parsing generation
 - **`allegro_cwr_sqlite`** - SQLite database operations, schema management, and `cwr-sqlite` CLI binary
 - **`allegro_cwr_json`** - JSON output formatting with structured context and `cwr-json` CLI binary
+- **`allegro_cwr_obfuscator`** - Privacy-preserving obfuscation with consistent mapping and `cwr-obfuscator` CLI binary
 
 ## Implementation
 
