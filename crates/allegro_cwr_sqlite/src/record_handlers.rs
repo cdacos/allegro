@@ -334,7 +334,7 @@ pub fn parse_and_insert_swr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.interested_party_num,
             record.writer_last_name.as_deref().unwrap_or(""),
             record.writer_first_name.as_deref().unwrap_or(""),
-            record.writer_unknown_indicator.as_deref().unwrap_or(""),
+            &opt_domain_to_string(&record.writer_unknown_indicator).unwrap_or_default(),
             record.writer_designation_code.as_deref().unwrap_or(""),
             record.tax_id_num.as_deref().unwrap_or(""),
             record.writer_ipi_name_num.as_deref().unwrap_or(""),

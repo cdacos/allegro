@@ -11,7 +11,7 @@ pub mod record_handlers;
 pub mod report;
 pub mod statements;
 
-use allegro_cwr::domain_types::{Number, YesNo};
+use allegro_cwr::domain_types::{Number, YesNo, FlagYNU};
 use domain_conversions::{CwrFromSqlString, CwrToSqlInt, CwrToSqlString, opt_domain_to_string, opt_string_to_domain, opt_string_to_numeric};
 
 /// Trait for inserting CWR records into SQLite
@@ -1371,7 +1371,7 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     interested_party_num: row.get::<_, Option<String>>("interested_party_num")?,
                     writer_last_name: row.get::<_, Option<String>>("writer_last_name")?,
                     writer_first_name: row.get::<_, Option<String>>("writer_first_name")?,
-                    writer_unknown_indicator: row.get::<_, Option<String>>("writer_unknown_indicator")?,
+                    writer_unknown_indicator: opt_string_to_domain::<FlagYNU>(row.get::<_, Option<String>>("writer_unknown_indicator")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
                     writer_designation_code: row.get::<_, Option<String>>("writer_designation_code")?,
                     tax_id_num: row.get::<_, Option<String>>("tax_id_num")?,
                     writer_ipi_name_num: row.get::<_, Option<String>>("writer_ipi_name_num")?,

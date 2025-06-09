@@ -25,7 +25,7 @@ pub struct SwrRecord {
     pub writer_first_name: Option<String>,
 
     #[cwr(title = "Writer unknown indicator (1 char, conditional)", start = 103, len = 1)]
-    pub writer_unknown_indicator: Option<String>,
+    pub writer_unknown_indicator: Option<FlagYNU>,
 
     #[cwr(title = "Writer designation code (conditional)", start = 104, len = 2)]
     pub writer_designation_code: Option<String>,
