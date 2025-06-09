@@ -1549,6 +1549,484 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                 Err(e) => Err(error::CwrDbError::Sqlite(e)),
             }
         }
+        "SWT" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_swt WHERE cwr_swt_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let swt = allegro_cwr::records::SwtRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    interested_party_num: row.get::<_, Option<String>>("interested_party_num")?,
+                    pr_collection_share: {
+                        use allegro_cwr::domain_types::OwnershipShare;
+                        opt_string_to_numeric::<OwnershipShare>(row.get::<_, Option<String>>("pr_collection_share")?.as_deref())
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    mr_collection_share: {
+                        use allegro_cwr::domain_types::OwnershipShare;
+                        opt_string_to_numeric::<OwnershipShare>(row.get::<_, Option<String>>("mr_collection_share")?.as_deref())
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    sr_collection_share: {
+                        use allegro_cwr::domain_types::OwnershipShare;
+                        opt_string_to_numeric::<OwnershipShare>(row.get::<_, Option<String>>("sr_collection_share")?.as_deref())
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    inclusion_exclusion_indicator: {
+                        use allegro_cwr::domain_types::InclusionExclusionIndicator;
+                        InclusionExclusionIndicator::from_sql_string(&row.get::<_, String>("inclusion_exclusion_indicator")?)
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    tis_numeric_code: {
+                        use allegro_cwr::domain_types::TisNumericCode;
+                        TisNumericCode::from_sql_string(&row.get::<_, String>("tis_numeric_code")?)
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    shares_change: {
+                        use allegro_cwr::domain_types::FlagYNU;
+                        opt_string_to_domain::<FlagYNU>(row.get::<_, Option<String>>("shares_change")?.as_deref())
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    sequence_num: row.get::<_, Option<String>>("sequence_num")?,
+                };
+                Ok(swt)
+            }) {
+                Ok(swt) => Ok(Some(allegro_cwr::CwrRegistry::Swt(swt))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        "PWR" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_pwr WHERE cwr_pwr_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let pwr = allegro_cwr::records::PwrRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    publisher_ip_num: row.get::<_, Option<String>>("publisher_ip_num")?,
+                    publisher_name: row.get::<_, Option<String>>("publisher_name")?,
+                    submitter_agreement_number: row.get::<_, Option<String>>("submitter_agreement_number")?,
+                    society_assigned_agreement_number: row.get::<_, Option<String>>("society_assigned_agreement_number")?,
+                    writer_ip_num: row.get::<_, Option<String>>("writer_ip_num")?,
+                    publisher_sequence_num: {
+                        use allegro_cwr::domain_types::PublisherSequenceNumber;
+                        opt_string_to_numeric::<PublisherSequenceNumber>(row.get::<_, Option<String>>("publisher_sequence_num")?.as_deref())
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                };
+                Ok(pwr)
+            }) {
+                Ok(pwr) => Ok(Some(allegro_cwr::CwrRegistry::Pwr(pwr))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        "ALT" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_alt WHERE cwr_alt_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let alt = allegro_cwr::records::AltRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    alternate_title: row.get::<_, String>("alternate_title")?,
+                    title_type: {
+                        use allegro_cwr::domain_types::TitleType;
+                        TitleType::from_sql_string(&row.get::<_, String>("title_type")?)
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    language_code: row.get::<_, Option<String>>("language_code")?,
+                };
+                Ok(alt)
+            }) {
+                Ok(alt) => Ok(Some(allegro_cwr::CwrRegistry::Alt(alt))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        "NAT" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_nat WHERE cwr_nat_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let nat = allegro_cwr::records::NatRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    title: row.get::<_, String>("title")?,
+                    title_type: {
+                        use allegro_cwr::domain_types::TitleType;
+                        TitleType::from_sql_string(&row.get::<_, String>("title_type")?)
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    language_code: row.get::<_, Option<String>>("language_code")?,
+                };
+                Ok(nat)
+            }) {
+                Ok(nat) => Ok(Some(allegro_cwr::CwrRegistry::Nat(nat))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        "EWT" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_ewt WHERE cwr_ewt_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let ewt = allegro_cwr::records::EwtRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    entire_work_title: row.get::<_, String>("entire_work_title")?,
+                    iswc_of_entire_work: row.get::<_, Option<String>>("iswc_of_entire_work")?,
+                    language_code: row.get::<_, Option<String>>("language_code")?,
+                    writer_1_last_name: row.get::<_, Option<String>>("writer_1_last_name")?,
+                    writer_1_first_name: row.get::<_, Option<String>>("writer_1_first_name")?,
+                    source: row.get::<_, Option<String>>("source")?,
+                    writer_1_ipi_name_num: row.get::<_, Option<String>>("writer_1_ipi_name_num")?,
+                    writer_1_ipi_base_number: row.get::<_, Option<String>>("writer_1_ipi_base_number")?,
+                    writer_2_last_name: row.get::<_, Option<String>>("writer_2_last_name")?,
+                    writer_2_first_name: row.get::<_, Option<String>>("writer_2_first_name")?,
+                    writer_2_ipi_name_num: row.get::<_, Option<String>>("writer_2_ipi_name_num")?,
+                    writer_2_ipi_base_number: row.get::<_, Option<String>>("writer_2_ipi_base_number")?,
+                    submitter_work_num: row.get::<_, Option<String>>("submitter_work_num")?,
+                };
+                Ok(ewt)
+            }) {
+                Ok(ewt) => Ok(Some(allegro_cwr::CwrRegistry::Ewt(ewt))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        "VER" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_ver WHERE cwr_ver_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let ver = allegro_cwr::records::VerRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    original_work_title: row.get::<_, String>("original_work_title")?,
+                    iswc_of_original_work: row.get::<_, Option<String>>("iswc_of_original_work")?,
+                    language_code: row.get::<_, Option<String>>("language_code")?,
+                    writer_1_last_name: row.get::<_, Option<String>>("writer_1_last_name")?,
+                    writer_1_first_name: row.get::<_, Option<String>>("writer_1_first_name")?,
+                    source: row.get::<_, Option<String>>("source")?,
+                    writer_1_ipi_name_num: row.get::<_, Option<String>>("writer_1_ipi_name_num")?,
+                    writer_1_ipi_base_number: row.get::<_, Option<String>>("writer_1_ipi_base_number")?,
+                    writer_2_last_name: row.get::<_, Option<String>>("writer_2_last_name")?,
+                    writer_2_first_name: row.get::<_, Option<String>>("writer_2_first_name")?,
+                    writer_2_ipi_name_num: row.get::<_, Option<String>>("writer_2_ipi_name_num")?,
+                    writer_2_ipi_base_number: row.get::<_, Option<String>>("writer_2_ipi_base_number")?,
+                    submitter_work_num: row.get::<_, Option<String>>("submitter_work_num")?,
+                };
+                Ok(ver)
+            }) {
+                Ok(ver) => Ok(Some(allegro_cwr::CwrRegistry::Ver(ver))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        "PER" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_per WHERE cwr_per_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let per = allegro_cwr::records::PerRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    performing_artist_last_name: row.get::<_, String>("performing_artist_last_name")?,
+                    performing_artist_first_name: row.get::<_, Option<String>>("performing_artist_first_name")?,
+                    performing_artist_ipi_name_num: row.get::<_, Option<String>>("performing_artist_ipi_name_num")?,
+                    performing_artist_ipi_base_number: row.get::<_, Option<String>>("performing_artist_ipi_base_number")?,
+                };
+                Ok(per)
+            }) {
+                Ok(per) => Ok(Some(allegro_cwr::CwrRegistry::Per(per))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        "NPR" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_npr WHERE cwr_npr_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let npr = allegro_cwr::records::NprRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    performing_artist_name: row.get::<_, Option<String>>("performing_artist_name")?,
+                    performing_artist_first_name: row.get::<_, Option<String>>("performing_artist_first_name")?,
+                    performing_artist_ipi_name_num: row.get::<_, Option<String>>("performing_artist_ipi_name_num")?,
+                    performing_artist_ipi_base_number: row.get::<_, Option<String>>("performing_artist_ipi_base_number")?,
+                    language_code: row.get::<_, Option<String>>("language_code")?,
+                    performance_language: row.get::<_, Option<String>>("performance_language")?,
+                    performance_dialect: row.get::<_, Option<String>>("performance_dialect")?,
+                };
+                Ok(npr)
+            }) {
+                Ok(npr) => Ok(Some(allegro_cwr::CwrRegistry::Npr(npr))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        "REC" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_rec WHERE cwr_rec_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let rec = allegro_cwr::records::RecRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    release_date: {
+                        use allegro_cwr::domain_types::Date;
+                        opt_string_to_domain::<Date>(row.get::<_, Option<String>>("release_date")?.as_deref())
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    constant: row.get::<_, String>("constant_blanks_1")?,
+                    release_duration: {
+                        use allegro_cwr::domain_types::Duration;
+                        opt_string_to_domain::<Duration>(row.get::<_, Option<String>>("release_duration")?.as_deref())
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    constant2: row.get::<_, String>("constant_blanks_2")?,
+                    album_title: row.get::<_, Option<String>>("album_title")?,
+                    album_label: row.get::<_, Option<String>>("album_label")?,
+                    release_catalog_num: row.get::<_, Option<String>>("release_catalog_num")?,
+                    ean: row.get::<_, Option<String>>("ean")?,
+                    isrc: row.get::<_, Option<String>>("isrc")?,
+                    recording_format: {
+                        use allegro_cwr::domain_types::RecordingFormat;
+                        opt_string_to_domain::<RecordingFormat>(row.get::<_, Option<String>>("recording_format")?.as_deref())
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    recording_technique: {
+                        use allegro_cwr::domain_types::RecordingTechnique;
+                        opt_string_to_domain::<RecordingTechnique>(row.get::<_, Option<String>>("recording_technique")?.as_deref())
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    media_type: row.get::<_, Option<String>>("media_type")?,
+                    recording_title: row.get::<_, Option<String>>("recording_title")?,
+                    version_title: row.get::<_, Option<String>>("version_title")?,
+                    display_artist: row.get::<_, Option<String>>("display_artist")?,
+                    record_label: row.get::<_, Option<String>>("record_label")?,
+                    isrc_validity: row.get::<_, Option<String>>("isrc_validity")?,
+                    submitter_recording_identifier: row.get::<_, Option<String>>("submitter_recording_identifier")?,
+                };
+                Ok(rec)
+            }) {
+                Ok(rec) => Ok(Some(allegro_cwr::CwrRegistry::Rec(rec))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        "ORN" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_orn WHERE cwr_orn_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let orn = allegro_cwr::records::OrnRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    intended_purpose: row.get::<_, String>("intended_purpose")?,
+                    production_title: row.get::<_, Option<String>>("production_title")?,
+                    cd_identifier: row.get::<_, Option<String>>("cd_identifier")?,
+                    cut_number: row.get::<_, Option<String>>("cut_number")?,
+                    library: row.get::<_, Option<String>>("library")?,
+                    bltvr: row.get::<_, Option<String>>("bltvr")?,
+                    filler: row.get::<_, Option<String>>("filler")?,
+                    production_num: row.get::<_, Option<String>>("production_num")?,
+                    episode_title: row.get::<_, Option<String>>("episode_title")?,
+                    episode_num: row.get::<_, Option<String>>("episode_num")?,
+                    year_of_production: row.get::<_, Option<String>>("year_of_production")?,
+                    avi_society_code: row.get::<_, Option<String>>("avi_society_code")?,
+                    audio_visual_number: row.get::<_, Option<String>>("audio_visual_number")?,
+                    v_isan_isan: row.get::<_, Option<String>>("v_isan_isan")?,
+                    v_isan_episode: row.get::<_, Option<String>>("v_isan_episode")?,
+                    v_isan_check_digit_1: row.get::<_, Option<String>>("v_isan_check_digit_1")?,
+                    v_isan_version: row.get::<_, Option<String>>("v_isan_version")?,
+                    v_isan_check_digit_2: row.get::<_, Option<String>>("v_isan_check_digit_2")?,
+                    eidr: row.get::<_, Option<String>>("eidr")?,
+                    eidr_check_digit: row.get::<_, Option<String>>("eidr_check_digit")?,
+                };
+                Ok(orn)
+            }) {
+                Ok(orn) => Ok(Some(allegro_cwr::CwrRegistry::Orn(orn))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        "INS" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_ins WHERE cwr_ins_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let ins = allegro_cwr::records::InsRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    number_of_voices: row.get::<_, Option<String>>("number_of_voices")?,
+                    standard_instrumentation_type: row.get::<_, Option<String>>("standard_instrumentation_type")?,
+                    instrumentation_description: row.get::<_, Option<String>>("instrumentation_description")?,
+                };
+                Ok(ins)
+            }) {
+                Ok(ins) => Ok(Some(allegro_cwr::CwrRegistry::Ins(ins))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        
+        "IND" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_ind WHERE cwr_ind_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let ind = allegro_cwr::records::IndRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    instrument_code: row.get::<_, String>("instrument_code")?,
+                    number_of_players: row.get::<_, Option<String>>("number_of_players")?,
+                };
+                Ok(ind)
+            }) {
+                Ok(ind) => Ok(Some(allegro_cwr::CwrRegistry::Ind(ind))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        
+        "COM" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_com WHERE cwr_com_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let com = allegro_cwr::records::ComRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    title: row.get::<_, String>("title")?,
+                    iswc_of_component: row.get::<_, Option<String>>("iswc_of_component")?,
+                    submitter_work_num: row.get::<_, Option<String>>("submitter_work_num")?,
+                    duration: {
+                        use allegro_cwr::domain_types::Duration;
+                        use crate::domain_conversions::CwrFromSqlString;
+                        match row.get::<_, Option<String>>("duration")? {
+                            Some(duration_str) if !duration_str.trim().is_empty() => {
+                                Some(Duration::from_sql_string(&duration_str)
+                                    .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?)
+                            }
+                            _ => None,
+                        }
+                    },
+                    writer_1_last_name: row.get::<_, String>("writer_1_last_name")?,
+                    writer_1_first_name: row.get::<_, Option<String>>("writer_1_first_name")?,
+                    writer_1_ipi_name_num: row.get::<_, Option<String>>("writer_1_ipi_name_num")?,
+                    writer_2_last_name: row.get::<_, Option<String>>("writer_2_last_name")?,
+                    writer_2_first_name: row.get::<_, Option<String>>("writer_2_first_name")?,
+                    writer_2_ipi_name_num: row.get::<_, Option<String>>("writer_2_ipi_name_num")?,
+                    writer_1_ipi_base_number: row.get::<_, Option<String>>("writer_1_ipi_base_number")?,
+                    writer_2_ipi_base_number: row.get::<_, Option<String>>("writer_2_ipi_base_number")?,
+                };
+                Ok(com)
+            }) {
+                Ok(com) => Ok(Some(allegro_cwr::CwrRegistry::Com(com))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        
+        "MSG" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_msg WHERE cwr_msg_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let msg = allegro_cwr::records::MsgRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    message_type: row.get::<_, String>("message_type")?,
+                    original_record_sequence_num: row.get::<_, String>("original_record_sequence_num")?,
+                    record_type_field: row.get::<_, String>("record_type_field")?,
+                    message_level: row.get::<_, String>("message_level")?,
+                    validation_number: row.get::<_, String>("validation_number")?,
+                    message_text: row.get::<_, String>("message_text")?,
+                };
+                Ok(msg)
+            }) {
+                Ok(msg) => Ok(Some(allegro_cwr::CwrRegistry::Msg(msg))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        
+        "NET" | "NCT" | "NVT" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_net WHERE cwr_net_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let net = allegro_cwr::records::NetRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    title: row.get::<_, String>("title")?,
+                    language_code: row.get::<_, Option<String>>("language_code")?,
+                };
+                Ok(net)
+            }) {
+                Ok(net) => Ok(Some(allegro_cwr::CwrRegistry::Net(net))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        
+        "NOW" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_now WHERE cwr_now_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let now = allegro_cwr::records::NowRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    writer_name: row.get::<_, String>("writer_name")?,
+                    writer_first_name: row.get::<_, String>("writer_first_name")?,
+                    language_code: row.get::<_, Option<String>>("language_code")?,
+                    writer_position: row.get::<_, Option<String>>("writer_position")?,
+                };
+                Ok(now)
+            }) {
+                Ok(now) => Ok(Some(allegro_cwr::CwrRegistry::Now(now))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        
+        "ARI" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_ari WHERE cwr_ari_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let ari = allegro_cwr::records::AriRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    society_num: row.get::<_, String>("society_num")?,
+                    work_num: row.get::<_, Option<String>>("work_num")?,
+                    type_of_right: row.get::<_, String>("type_of_right")?,
+                    subject_code: row.get::<_, Option<String>>("subject_code")?,
+                    note: row.get::<_, Option<String>>("note")?,
+                };
+                Ok(ari)
+            }) {
+                Ok(ari) => Ok(Some(allegro_cwr::CwrRegistry::Ari(ari))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        
+        "XRF" => {
+            let mut stmt = conn.prepare("SELECT * FROM cwr_xrf WHERE cwr_xrf_id = ?1")?;
+            match stmt.query_row(params![record_id], |row| {
+                let xrf = allegro_cwr::records::XrfRecord {
+                    record_type: row.get::<_, String>("record_type")?,
+                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
+                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    organisation_code: row.get::<_, String>("organisation_code")?,
+                    identifier: row.get::<_, String>("identifier")?,
+                    identifier_type: row.get::<_, String>("identifier_type")?,
+                    validity: {
+                        use allegro_cwr::domain_types::FlagYNU;
+                        use crate::domain_conversions::CwrFromSqlString;
+                        FlagYNU::from_sql_string(&row.get::<_, String>("validity")?)
+                            .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                };
+                Ok(xrf)
+            }) {
+                Ok(xrf) => Ok(Some(allegro_cwr::CwrRegistry::Xrf(xrf))),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(error::CwrDbError::Sqlite(e)),
+            }
+        }
+        
         // Skip unimplemented record types for now
         _ => {
             Ok(None)
