@@ -77,12 +77,14 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
             if is_optional {
                 quote! {
                     let (#field_name, field_warnings) = {
-                        let end = #start + #len;
-                        if line.len() < end {
-                            // For Option<T> fields: silently set to None when line is too short
+                        let start_pos = #start;
+                        if line.len() <= start_pos {
+                            // For Option<T> fields: silently set to None when line doesn't reach field start
                             (None, Vec::new())
                         } else {
-                            let field_slice = &line[#start..end];
+                            // Parse whatever content is available from start position to end of line
+                            let end_pos = (start_pos + #len).min(line.len());
+                            let field_slice = &line[start_pos..end_pos];
                             <#field_type as CwrFieldParse>::parse_cwr_field(
                                 field_slice,
                                 stringify!(#field_name),
