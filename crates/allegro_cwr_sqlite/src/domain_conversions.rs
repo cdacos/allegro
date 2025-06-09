@@ -622,6 +622,60 @@ impl CwrFromSqlString for GroupCount {
     }
 }
 
+impl CwrFromSqlString for WorksCount {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = WorksCount::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) {
+            Err(format!("Critical error parsing WorksCount: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description))
+        } else {
+            Ok(parsed)
+        }
+    }
+}
+
+impl CwrFromSqlString for TisNumericCode {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        if let Ok(parsed_value) = value.parse::<u16>() {
+            if parsed_value <= u16::MAX {
+                Ok(TisNumericCode(parsed_value))
+            } else {
+                Err(format!("TisNumericCode value {} is out of range", parsed_value))
+            }
+        } else {
+            Err(format!("Failed to parse TisNumericCode from '{}'", value))
+        }
+    }
+}
+
+impl CwrFromSqlString for OwnershipShare {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        // OwnershipShare is stored as a 5-digit padded integer string
+        if let Ok(parsed_value) = value.parse::<u16>() {
+            if parsed_value <= 10000 {
+                Ok(OwnershipShare(parsed_value))
+            } else {
+                Err(format!("OwnershipShare value {} is out of range 0-10000", parsed_value))
+            }
+        } else {
+            Err(format!("Failed to parse OwnershipShare from '{}'", value))
+        }
+    }
+}
+
+impl CwrFromSqlString for PublisherSequenceNumber {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        if let Ok(parsed_value) = value.parse::<u8>() {
+            if parsed_value >= 1 && parsed_value <= 99 {
+                Ok(PublisherSequenceNumber(parsed_value))
+            } else {
+                Err(format!("PublisherSequenceNumber value {} is out of range 1-99", parsed_value))
+            }
+        } else {
+            Err(format!("Failed to parse PublisherSequenceNumber from '{}'", value))
+        }
+    }
+}
+
 // Helper functions for optional parsing
 pub fn opt_string_to_domain<T: CwrFromSqlString>(opt: Option<&str>) -> Result<Option<T>, String> {
     match opt {
@@ -634,6 +688,15 @@ pub fn opt_string_to_domain<T: CwrFromSqlString>(opt: Option<&str>) -> Result<Op
 pub fn opt_int_to_domain<T: CwrFromSqlInt>(opt: Option<i64>) -> Result<Option<T>, String> {
     match opt {
         Some(i) => T::from_sql_int(i).map(Some),
+        None => Ok(None),
+    }
+}
+
+// Helper for parsing optional numeric types from database strings
+pub fn opt_string_to_numeric<T: CwrFromSqlString>(opt: Option<&str>) -> Result<Option<T>, String> {
+    match opt {
+        Some(s) if s.is_empty() => Ok(None),
+        Some(s) => T::from_sql_string(s).map(Some),
         None => Ok(None),
     }
 }
