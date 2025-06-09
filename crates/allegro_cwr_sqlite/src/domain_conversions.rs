@@ -157,6 +157,12 @@ impl CwrToSqlString for CompositeComponentCount {
     }
 }
 
+impl CwrToSqlString for Number {
+    fn to_sql_string(&self) -> String {
+        self.as_str()
+    }
+}
+
 // Integer conversions for numeric domain types
 impl CwrToSqlInt for OwnershipShare {
     fn to_sql_int(&self) -> i64 {
@@ -207,6 +213,12 @@ impl CwrToSqlInt for RecordCount {
 }
 
 impl CwrToSqlInt for GroupCount {
+    fn to_sql_int(&self) -> i64 {
+        self.0 as i64
+    }
+}
+
+impl CwrToSqlInt for Number {
     fn to_sql_int(&self) -> i64 {
         self.0 as i64
     }
@@ -449,6 +461,12 @@ impl CwrFromSqlInt for GroupCount {
     }
 }
 
+impl CwrFromSqlInt for Number {
+    fn from_sql_int(value: i64) -> Result<Self, String> {
+        if !(0..=99999999).contains(&value) { Err(format!("Number value {} is out of range 0-99999999", value)) } else { Ok(Number(value as u32)) }
+    }
+}
+
 // String parsing implementations for numeric types (since they're stored as VARCHAR in database)
 impl CwrFromSqlString for GroupId {
     fn from_sql_string(value: &str) -> Result<Self, String> {
@@ -501,6 +519,13 @@ impl CwrFromSqlString for OwnershipShare {
 impl CwrFromSqlString for PublisherSequenceNumber {
     fn from_sql_string(value: &str) -> Result<Self, String> {
         if let Ok(parsed_value) = value.parse::<u8>() { if (1..=99).contains(&parsed_value) { Ok(PublisherSequenceNumber(parsed_value)) } else { Err(format!("PublisherSequenceNumber value {} is out of range 1-99", parsed_value)) } } else { Err(format!("Failed to parse PublisherSequenceNumber from '{}'", value)) }
+    }
+}
+
+impl CwrFromSqlString for Number {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = Number::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing Number: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
     }
 }
 

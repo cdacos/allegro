@@ -68,29 +68,24 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
     if !warning_counts.is_empty() || !extra_chars_map.is_empty() {
         let total_issues = warning_counts.len() + extra_chars_map.len();
         println!("WARNINGS: Found {} distinct types of validation issues:", total_issues);
-        
+
         // First show parsing warnings with consistent formatting
         if !warning_counts.is_empty() {
             // Sort warnings by count (descending) and then by description
             let mut sorted_warnings: Vec<_> = warning_counts.iter().collect();
             sorted_warnings.sort_by(|a, b| b.1.len().cmp(&a.1.len()).then(a.0.cmp(b.0)));
-            
+
             for (warning, line_numbers) in sorted_warnings {
-                let display_lines = if line_numbers.len() <= 5 { 
-                    format!("lines {:?}", line_numbers) 
-                } else { 
-                    format!("{} occurrences (first few: {})", line_numbers.len(), 
-                        line_numbers.iter().take(3).map(|n| n.to_string()).collect::<Vec<_>>().join(", "))
-                };
+                let display_lines = if line_numbers.len() <= 5 { format!("lines {:?}", line_numbers) } else { format!("{} occurrences (first few: {})", line_numbers.len(), line_numbers.iter().take(3).map(|n| n.to_string()).collect::<Vec<_>>().join(", ")) };
                 println!("{}: {}", warning, display_lines);
             }
         }
-        
+
         // Then show format differences (missing optional fields, extra chars, etc.)
         if !extra_chars_map.is_empty() {
             let mut sorted_extra: Vec<_> = extra_chars_map.iter().collect();
             sorted_extra.sort_by_key(|(key, lines)| (key.as_str(), lines.len()));
-            
+
             if sorted_extra.len() > 0 {
                 println!("\nAMBIGUOUS:");
             }
@@ -99,13 +94,8 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
                 let parts: Vec<&str> = extra_key.split(':').collect();
                 let record_type = parts[0];
                 let extra_info = parts.get(1).unwrap_or(&"?");
-                let display_lines = if line_numbers.len() <= 5 { 
-                    format!("lines {:?}", line_numbers) 
-                } else { 
-                    format!("{} occurrences (first few: {})", line_numbers.len(), 
-                        line_numbers.iter().take(3).map(|n| n.to_string()).collect::<Vec<_>>().join(", "))
-                };
-                
+                let display_lines = if line_numbers.len() <= 5 { format!("lines {:?}", line_numbers) } else { format!("{} occurrences (first few: {})", line_numbers.len(), line_numbers.iter().take(3).map(|n| n.to_string()).collect::<Vec<_>>().join(", ")) };
+
                 if *extra_info == "missing_optional_fields" {
                     println!("{}: missing optional fields (serializer adds proper padding): {}", record_type, display_lines);
                 } else {

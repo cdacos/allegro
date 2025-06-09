@@ -928,8 +928,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let nwr = allegro_cwr::records::NwrRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     work_title: row.get::<_, String>("work_title")?,
                     language_code: row.get::<_, Option<String>>("language_code")?,
                     submitter_work_num: row.get::<_, String>("submitter_work_num")?,
@@ -998,8 +1004,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let agr = allegro_cwr::records::AgrRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     submitter_agreement_number: row.get::<_, String>("submitter_agreement_number")?,
                     international_standard_agreement_code: row.get::<_, Option<String>>("international_standard_agreement_code")?,
                     agreement_type: row.get::<_, String>("agreement_type")?,
@@ -1056,8 +1068,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let ack = allegro_cwr::records::AckRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     creation_date: {
                         use allegro_cwr::domain_types::Date;
                         Date::from_sql_string(&row.get::<_, String>("creation_date")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
@@ -1099,8 +1117,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let ter = allegro_cwr::records::TerRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     inclusion_exclusion_indicator: {
                         use allegro_cwr::domain_types::InclusionExclusionIndicator;
                         InclusionExclusionIndicator::from_sql_string(&row.get::<_, String>("inclusion_exclusion_indicator")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
@@ -1122,8 +1146,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let ipa = allegro_cwr::records::IpaRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     agreement_role_code: {
                         use allegro_cwr::domain_types::AgreementRoleCode;
                         AgreementRoleCode::from_sql_string(&row.get::<_, String>("agreement_role_code")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
@@ -1161,8 +1191,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let npa = allegro_cwr::records::NpaRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     interested_party_num: row.get::<_, Option<String>>("interested_party_num")?,
                     interested_party_name: row.get::<_, String>("interested_party_name")?,
                     interested_party_writer_first_name: row.get::<_, String>("interested_party_writer_first_name")?,
@@ -1180,8 +1216,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let spu = allegro_cwr::records::SpuRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     publisher_sequence_num: {
                         use allegro_cwr::domain_types::PublisherSequenceNumber;
                         PublisherSequenceNumber::from_sql_string(&row.get::<_, String>("publisher_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
@@ -1241,8 +1283,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let npn = allegro_cwr::records::NpnRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     publisher_sequence_num: {
                         use allegro_cwr::domain_types::PublisherSequenceNumber;
                         PublisherSequenceNumber::from_sql_string(&row.get::<_, String>("publisher_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
@@ -1263,8 +1311,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let spt = allegro_cwr::records::SptRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     interested_party_num: row.get::<_, String>("interested_party_num")?,
                     constant: row.get::<_, String>("constant_spaces")?,
                     pr_collection_share: {
@@ -1305,8 +1359,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let swr = allegro_cwr::records::SwrRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     interested_party_num: row.get::<_, Option<String>>("interested_party_num")?,
                     writer_last_name: row.get::<_, Option<String>>("writer_last_name")?,
                     writer_first_name: row.get::<_, Option<String>>("writer_first_name")?,
@@ -1358,8 +1418,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let nwn = allegro_cwr::records::NwnRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     interested_party_num: row.get::<_, Option<String>>("interested_party_num")?,
                     writer_last_name: row.get::<_, String>("writer_last_name")?,
                     writer_first_name: row.get::<_, Option<String>>("writer_first_name")?,
@@ -1377,8 +1443,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let swt = allegro_cwr::records::SwtRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     interested_party_num: row.get::<_, Option<String>>("interested_party_num")?,
                     pr_collection_share: {
                         use allegro_cwr::domain_types::OwnershipShare;
@@ -1418,8 +1490,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let pwr = allegro_cwr::records::PwrRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     publisher_ip_num: row.get::<_, Option<String>>("publisher_ip_num")?,
                     publisher_name: row.get::<_, Option<String>>("publisher_name")?,
                     submitter_agreement_number: row.get::<_, Option<String>>("submitter_agreement_number")?,
@@ -1442,8 +1520,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let alt = allegro_cwr::records::AltRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     alternate_title: row.get::<_, String>("alternate_title")?,
                     title_type: {
                         use allegro_cwr::domain_types::TitleType;
@@ -1463,8 +1547,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let nat = allegro_cwr::records::NatRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     title: row.get::<_, String>("title")?,
                     title_type: {
                         use allegro_cwr::domain_types::TitleType;
@@ -1484,8 +1574,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let ewt = allegro_cwr::records::EwtRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     entire_work_title: row.get::<_, String>("entire_work_title")?,
                     iswc_of_entire_work: row.get::<_, Option<String>>("iswc_of_entire_work")?,
                     language_code: row.get::<_, Option<String>>("language_code")?,
@@ -1512,8 +1608,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let ver = allegro_cwr::records::VerRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     original_work_title: row.get::<_, String>("original_work_title")?,
                     iswc_of_original_work: row.get::<_, Option<String>>("iswc_of_original_work")?,
                     language_code: row.get::<_, Option<String>>("language_code")?,
@@ -1540,8 +1642,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let per = allegro_cwr::records::PerRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     performing_artist_last_name: row.get::<_, String>("performing_artist_last_name")?,
                     performing_artist_first_name: row.get::<_, Option<String>>("performing_artist_first_name")?,
                     performing_artist_ipi_name_num: row.get::<_, Option<String>>("performing_artist_ipi_name_num")?,
@@ -1559,8 +1667,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let npr = allegro_cwr::records::NprRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     performing_artist_name: row.get::<_, Option<String>>("performing_artist_name")?,
                     performing_artist_first_name: row.get::<_, Option<String>>("performing_artist_first_name")?,
                     performing_artist_ipi_name_num: row.get::<_, Option<String>>("performing_artist_ipi_name_num")?,
@@ -1581,8 +1695,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let rec = allegro_cwr::records::RecRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     release_date: {
                         use allegro_cwr::domain_types::Date;
                         opt_string_to_domain::<Date>(row.get::<_, Option<String>>("release_date")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
@@ -1626,8 +1746,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let orn = allegro_cwr::records::OrnRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     intended_purpose: row.get::<_, String>("intended_purpose")?,
                     production_title: row.get::<_, Option<String>>("production_title")?,
                     cd_identifier: row.get::<_, Option<String>>("cd_identifier")?,
@@ -1661,8 +1787,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let ins = allegro_cwr::records::InsRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     number_of_voices: row.get::<_, Option<String>>("number_of_voices")?,
                     standard_instrumentation_type: row.get::<_, Option<String>>("standard_instrumentation_type")?,
                     instrumentation_description: row.get::<_, Option<String>>("instrumentation_description")?,
@@ -1680,8 +1812,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let ind = allegro_cwr::records::IndRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     instrument_code: row.get::<_, String>("instrument_code")?,
                     number_of_players: row.get::<_, Option<String>>("number_of_players")?,
                 };
@@ -1698,8 +1836,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let com = allegro_cwr::records::ComRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     title: row.get::<_, String>("title")?,
                     iswc_of_component: row.get::<_, Option<String>>("iswc_of_component")?,
                     submitter_work_num: row.get::<_, Option<String>>("submitter_work_num")?,
@@ -1733,8 +1877,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let msg = allegro_cwr::records::MsgRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     message_type: row.get::<_, String>("message_type")?,
                     original_record_sequence_num: row.get::<_, String>("original_record_sequence_num")?,
                     record_type_field: row.get::<_, String>("record_type_field")?,
@@ -1755,8 +1905,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let net = allegro_cwr::records::NetRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     title: row.get::<_, String>("title")?,
                     language_code: row.get::<_, Option<String>>("language_code")?,
                 };
@@ -1773,8 +1929,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let now = allegro_cwr::records::NowRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     writer_name: row.get::<_, String>("writer_name")?,
                     writer_first_name: row.get::<_, String>("writer_first_name")?,
                     language_code: row.get::<_, Option<String>>("language_code")?,
@@ -1793,8 +1955,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let ari = allegro_cwr::records::AriRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     society_num: row.get::<_, String>("society_num")?,
                     work_num: row.get::<_, Option<String>>("work_num")?,
                     type_of_right: row.get::<_, String>("type_of_right")?,
@@ -1814,8 +1982,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
             match stmt.query_row(params![record_id], |row| {
                 let xrf = allegro_cwr::records::XrfRecord {
                     record_type: row.get::<_, String>("record_type")?,
-                    transaction_sequence_num: row.get::<_, String>("transaction_sequence_num")?,
-                    record_sequence_num: row.get::<_, String>("record_sequence_num")?,
+                    transaction_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("transaction_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
+                    record_sequence_num: {
+                        use allegro_cwr::domain_types::Number;
+                        Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     organisation_code: row.get::<_, String>("organisation_code")?,
                     identifier: row.get::<_, String>("identifier")?,
                     identifier_type: row.get::<_, String>("identifier_type")?,

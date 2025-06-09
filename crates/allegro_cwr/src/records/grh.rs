@@ -32,7 +32,7 @@ fn grh_custom_validate(record: &mut GrhRecord) -> Vec<CwrWarning<'static>> {
     // Cross-field validation: Version Number should match expected values
     let version_str = record.version_number.as_str();
     let is_valid_version = matches!(version_str, "02.00" | "02.10" | "02.20");
-    
+
     if !is_valid_version {
         warnings.push(CwrWarning {
             field_name: "version_number",

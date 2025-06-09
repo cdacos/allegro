@@ -13,10 +13,10 @@ pub struct NowRecord {
     pub record_type: String,
 
     #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
-    pub transaction_sequence_num: String,
+    pub transaction_sequence_num: Number,
 
     #[cwr(title = "Record sequence number", start = 11, len = 8)]
-    pub record_sequence_num: String,
+    pub record_sequence_num: Number,
 
     #[cwr(title = "Writer name", start = 19, len = 160)]
     pub writer_name: String,
@@ -41,15 +41,7 @@ fn now_custom_validate(record: &mut NowRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Validate transaction sequence number is numeric
-    if !record.transaction_sequence_num.chars().all(|c| c.is_ascii_digit()) {
-        warnings.push(CwrWarning { field_name: "transaction_sequence_num", field_title: "Transaction sequence number", source_str: std::borrow::Cow::Owned(record.transaction_sequence_num.clone()), level: WarningLevel::Critical, description: "Transaction sequence number must be numeric".to_string() });
-    }
-
     // Validate record sequence number is numeric
-    if !record.record_sequence_num.chars().all(|c| c.is_ascii_digit()) {
-        warnings.push(CwrWarning { field_name: "record_sequence_num", field_title: "Record sequence number", source_str: std::borrow::Cow::Owned(record.record_sequence_num.clone()), level: WarningLevel::Critical, description: "Record sequence number must be numeric".to_string() });
-    }
-
     // Validate writer name is not empty
     if record.writer_name.trim().is_empty() {
         warnings.push(CwrWarning { field_name: "writer_name", field_title: "Writer name", source_str: std::borrow::Cow::Owned(record.writer_name.clone()), level: WarningLevel::Critical, description: "Writer name cannot be empty".to_string() });

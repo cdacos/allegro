@@ -35,12 +35,12 @@ fn grt_custom_validate(record: &mut GrtRecord) -> Vec<CwrWarning<'static>> {
     // Note: These fields are marked as "ignored for CWR" in spec but validate relationship if present
     if let Some(monetary_value) = &record.total_monetary_value {
         if !monetary_value.trim().is_empty() && record.currency_indicator.is_none() {
-            warnings.push(CwrWarning { 
-                field_name: "currency_indicator", 
-                field_title: "Currency indicator (conditional)", 
-                source_str: std::borrow::Cow::Borrowed(""), 
-                level: WarningLevel::Warning, 
-                description: "Currency Indicator should be provided when Total Monetary Value is present (though both fields are ignored for CWR processing)".to_string() 
+            warnings.push(CwrWarning {
+                field_name: "currency_indicator",
+                field_title: "Currency indicator (conditional)",
+                source_str: std::borrow::Cow::Borrowed(""),
+                level: WarningLevel::Warning,
+                description: "Currency Indicator should be provided when Total Monetary Value is present (though both fields are ignored for CWR processing)".to_string(),
             });
         }
     }

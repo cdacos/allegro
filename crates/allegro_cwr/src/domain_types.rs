@@ -1479,3 +1479,43 @@ impl CwrFieldWrite for CwrVersion {
         self.as_str()
     }
 }
+
+/// General numeric field for sequence numbers and other numeric values
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct Number(pub u32);
+
+impl Number {
+    pub fn as_str(&self) -> String {
+        format!("{:08}", self.0)
+    }
+}
+
+impl CwrFieldWrite for Number {
+    fn to_cwr_str(&self) -> String {
+        self.as_str()
+    }
+}
+
+impl CwrFieldParse for Number {
+    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+        let trimmed = source.trim();
+
+        // Check for non-numeric characters (like "X")
+        if !trimmed.chars().all(|c| c.is_ascii_digit()) {
+            let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid numeric format: '{}' contains non-numeric characters", trimmed) }];
+            return (Number(0), warnings);
+        }
+
+        match trimmed.parse::<u32>() {
+            Ok(num) if num <= 99999999 => (Number(num), vec![]),
+            Ok(num) => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Number {} exceeds maximum 99999999", num) }];
+                (Number(num.min(99999999)), warnings)
+            }
+            Err(_) => {
+                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid number format: {}", trimmed) }];
+                (Number(0), warnings)
+            }
+        }
+    }
+}

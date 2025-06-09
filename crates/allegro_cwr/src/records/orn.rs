@@ -13,10 +13,10 @@ pub struct OrnRecord {
     pub record_type: String,
 
     #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
-    pub transaction_sequence_num: String,
+    pub transaction_sequence_num: Number,
 
     #[cwr(title = "Record sequence number", start = 11, len = 8)]
-    pub record_sequence_num: String,
+    pub record_sequence_num: Number,
 
     #[cwr(title = "Intended purpose", start = 19, len = 3)]
     pub intended_purpose: String,
@@ -89,15 +89,7 @@ fn orn_custom_validate(record: &mut OrnRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Validate transaction sequence number is numeric
-    if !record.transaction_sequence_num.chars().all(|c| c.is_ascii_digit()) {
-        warnings.push(CwrWarning { field_name: "transaction_sequence_num", field_title: "Transaction sequence number", source_str: std::borrow::Cow::Owned(record.transaction_sequence_num.clone()), level: WarningLevel::Critical, description: "Transaction sequence number must be numeric".to_string() });
-    }
-
     // Validate record sequence number is numeric
-    if !record.record_sequence_num.chars().all(|c| c.is_ascii_digit()) {
-        warnings.push(CwrWarning { field_name: "record_sequence_num", field_title: "Record sequence number", source_str: std::borrow::Cow::Owned(record.record_sequence_num.clone()), level: WarningLevel::Critical, description: "Record sequence number must be numeric".to_string() });
-    }
-
     // Validate intended purpose is 3 characters
     if record.intended_purpose.len() != 3 {
         warnings.push(CwrWarning { field_name: "intended_purpose", field_title: "Intended purpose", source_str: std::borrow::Cow::Owned(record.intended_purpose.clone()), level: WarningLevel::Critical, description: "Intended purpose must be exactly 3 characters".to_string() });

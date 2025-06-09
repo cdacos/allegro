@@ -10,10 +10,10 @@ pub struct SpuRecord {
     pub record_type: String,
 
     #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
-    pub transaction_sequence_num: String,
+    pub transaction_sequence_num: Number,
 
     #[cwr(title = "Record sequence number", start = 11, len = 8)]
-    pub record_sequence_num: String,
+    pub record_sequence_num: Number,
 
     // This enables a rights organization to link sub-publishers and administrators to the
     // proper original publisher. Each original publisher will start a new chain. An income participant may start a chain,
