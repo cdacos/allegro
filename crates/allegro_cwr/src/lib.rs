@@ -38,7 +38,7 @@ impl std::str::FromStr for OutputFormat {
 }
 
 // Re-export commonly used items
-pub use crate::cwr_registry::{get_all_record_type_codes, CwrRegistry};
+pub use crate::cwr_registry::{CwrRegistry, get_all_record_type_codes};
 pub use crate::error::CwrParseError;
 pub use crate::parser::{ParsedRecord, ParsingContext, process_cwr_stream, process_cwr_stream_with_version};
 pub use crate::records::*;

@@ -2,10 +2,10 @@
 //!
 //! This crate provides JSON output functionality for CWR records.
 
-use std::io::{self, Write, BufReader};
-use std::fs::File;
-use serde::Deserialize;
 use allegro_cwr::CwrRegistry;
+use serde::Deserialize;
+use std::fs::File;
+use std::io::{self, BufReader, Write};
 
 /// JSON implementation of CwrHandler trait
 pub struct JsonHandler<W: Write> {
@@ -166,33 +166,36 @@ struct JsonCwrFile {
 #[derive(Deserialize)]
 struct JsonContext {
     cwr_version: f32,
-    file_id: u32,
+    #[allow(dead_code)] // Included for JSON format compatibility
+    file_id: Option<u32>,
 }
 
 #[derive(Deserialize)]
 struct JsonRecord {
-    line_number: usize,
+    #[allow(dead_code)] // Included for JSON format compatibility
+    line_number: Option<usize>,
     record: CwrRegistry,
-    warnings: Vec<String>,
+    #[allow(dead_code)] // Included for JSON format compatibility
+    warnings: Option<Vec<String>>,
 }
 
 /// Convenience function to process JSON file and output CWR with optional version hint and output file
 pub fn process_json_to_cwr_with_version_and_output(input_filename: &str, _version_hint: Option<f32>, output_filename: Option<&str>) -> Result<usize, Box<dyn std::error::Error>> {
     let file = File::open(input_filename)?;
     let reader = BufReader::new(file);
-    
+
     // Parse the entire JSON file
     let json_data: JsonCwrFile = serde_json::from_reader(reader)?;
-    
+
     // Use the CWR version from context or fallback to hint
     let cwr_version = allegro_cwr::domain_types::CwrVersion(Some(json_data.context.cwr_version));
-    
+
     // Create output writer
     let mut output: Box<dyn Write> = match output_filename {
         Some(filename) => Box::new(File::create(filename)?),
         None => Box::new(io::stdout()),
     };
-    
+
     // Write each record as a CWR line
     let mut count = 0;
     for json_record in json_data.records {
@@ -200,7 +203,7 @@ pub fn process_json_to_cwr_with_version_and_output(input_filename: &str, _versio
         writeln!(output, "{}", cwr_line)?;
         count += 1;
     }
-    
+
     output.flush()?;
     Ok(count)
 }

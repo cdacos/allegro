@@ -3,6 +3,7 @@ members = [
     "crates/allegro_cwr_derive",
     "crates/allegro_cwr_sqlite",
     "crates/allegro_cwr_json",
+    "crates/allegro_cwr_obfuscator",
     "crates/allegro_cwr",
 ]
 resolver = "2"

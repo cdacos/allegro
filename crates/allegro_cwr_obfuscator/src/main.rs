@@ -1,9 +1,6 @@
-use std::fs::File;
-use std::io::Read;
 use std::process;
 use std::time::Instant;
 
-use allegro_cwr::format_int_with_commas;
 use log::{error, info};
 
 #[derive(Default)]
@@ -56,46 +53,6 @@ fn parse_args() -> Result<Config, String> {
     Ok(config)
 }
 
-#[derive(Debug, PartialEq)]
-enum InputFormat {
-    Cwr,
-    Json,
-}
-
-fn detect_input_format(filename: &str) -> Result<InputFormat, String> {
-    let mut file = File::open(filename).map_err(|e| format!("Cannot open file '{}': {}", filename, e))?;
-
-    let mut buffer = [0u8; 16];
-    let bytes_read = file.read(&mut buffer).map_err(|e| format!("Cannot read file '{}': {}", filename, e))?;
-
-    if bytes_read == 0 {
-        return Err("File is empty".to_string());
-    }
-
-    // Convert to string for easier analysis, handling non-UTF8 gracefully
-    let content = String::from_utf8_lossy(&buffer[..bytes_read]);
-
-    // Check for CWR format: starts with "HDR"
-    if content.starts_with("HDR") {
-        return Ok(InputFormat::Cwr);
-    }
-
-    // Check for JSON format: starts with '{' (possibly after whitespace)
-    let trimmed = content.trim_start();
-    if trimmed.starts_with('{') {
-        return Ok(InputFormat::Json);
-    }
-
-    // Fallback: try file extension
-    if filename.to_lowercase().ends_with(".json") {
-        Ok(InputFormat::Json)
-    } else if filename.to_lowercase().ends_with(".cwr") {
-        Ok(InputFormat::Cwr)
-    } else {
-        Err(format!("Cannot determine input format for '{}'. Expected CWR file (starting with 'HDR') or JSON file (starting with '{{')", filename))
-    }
-}
-
 fn get_value(parser: &mut lexopt::Parser, arg_name: &str) -> Result<String, String> {
     parser.value().map(|val| val.to_string_lossy().to_string()).map_err(|e| format!("Missing value for --{}: {}", arg_name, e))
 }
@@ -114,29 +71,11 @@ fn main() {
 
     let input_filename = config.input_filename.expect("input_filename already validated during parsing");
 
-    // Detect input format
-    let input_format = match detect_input_format(&input_filename) {
-        Ok(format) => format,
-        Err(e) => {
-            error!("Format detection error: {}", e);
-            process::exit(1);
-        }
-    };
-
-    println!("Processing input file: {} (detected format: {:?})", input_filename, input_format);
+    info!("Obfuscating CWR file: {}", input_filename);
 
     let start_time = Instant::now();
 
-    let result = match input_format {
-        InputFormat::Cwr => {
-            // CWR -> JSON (existing functionality)
-            allegro_cwr_json::process_cwr_to_json_with_version_and_output(&input_filename, config.cwr_version, config.output_filename.as_deref())
-        }
-        InputFormat::Json => {
-            // JSON -> CWR (new functionality)
-            allegro_cwr_json::process_json_to_cwr_with_version_and_output(&input_filename, config.cwr_version, config.output_filename.as_deref())
-        }
-    };
+    let result = allegro_cwr_obfuscator::process_cwr_obfuscation(&input_filename, config.output_filename.as_deref(), config.cwr_version);
 
     let elapsed_time = start_time.elapsed();
 
@@ -150,23 +89,24 @@ fn main() {
         }
     };
 
-    println!("Successfully processed {} CWR records from '{}' in {:.2?}", format_int_with_commas(count as i64), &input_filename, elapsed_time);
+    println!("Successfully obfuscated {} CWR records from '{}' in {:.2?}", allegro_cwr::format_int_with_commas(count as i64), &input_filename, elapsed_time);
 }
 
 fn print_help() {
-    eprintln!("Usage: cwr-json [OPTIONS] <input_filename>");
+    eprintln!("Usage: cwr-obfuscator [OPTIONS] <input_filename>");
     eprintln!();
     eprintln!("Arguments:");
-    eprintln!("  <input_filename>    CWR or JSON file to process");
+    eprintln!("  <input_filename>    CWR file to obfuscate");
     eprintln!();
     eprintln!("Options:");
+    eprintln!("  -o, --output <file>      Output file path (defaults to <input>.obfuscated)");
     eprintln!("      --cwr <version>      CWR version (2.0, 2.1, 2.2). Auto-detected from filename (.Vxx) or file content if not specified");
-    eprintln!("  -o, --output <file>      Output file (format determined by input: CWR→JSON or JSON→CWR)");
     eprintln!("  -h, --help               Show this help message");
     eprintln!();
-    eprintln!("Bidirectional converter:");
-    eprintln!("  CWR → JSON: cwr-json file.cwr [-o output.json]");
-    eprintln!("  JSON → CWR: cwr-json file.json [-o output.cwr]");
+    eprintln!("Obfuscates sensitive information in CWR files while maintaining referential integrity.");
+    eprintln!("Names, titles, IPIs, and work numbers are consistently mapped throughout the file.");
     eprintln!();
-    eprintln!("Input format auto-detected by content (CWR starts with 'HDR', JSON starts with '{{')");
+    eprintln!("Example:");
+    eprintln!("  cwr-obfuscator input.cwr");
+    eprintln!("  cwr-obfuscator -o obfuscated.cwr input.cwr");
 }
