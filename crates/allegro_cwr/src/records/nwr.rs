@@ -19,7 +19,7 @@ pub struct NwrRecord {
     pub work_title: String,
 
     #[cwr(title = "Language code (optional)", start = 79, len = 2)]
-    pub language_code: Option<String>,
+    pub language_code: Option<LookupPlaceholder>,
 
     #[cwr(title = "Submitter work number", start = 81, len = 14)]
     pub submitter_work_num: String,
@@ -34,7 +34,7 @@ pub struct NwrRecord {
     pub copyright_number: Option<String>,
 
     #[cwr(title = "Musical work distribution category", start = 126, len = 3)]
-    pub musical_work_distribution_category: String,
+    pub musical_work_distribution_category: LookupPlaceholder,
 
     #[cwr(title = "Duration HHMMSS (conditional)", start = 129, len = 6)]
     pub duration: Option<Time>,
@@ -46,10 +46,10 @@ pub struct NwrRecord {
     pub text_music_relationship: Option<TextMusicRelationship>,
 
     #[cwr(title = "Composite type (optional)", start = 139, len = 3)]
-    pub composite_type: Option<String>,
+    pub composite_type: Option<LookupPlaceholder>,
 
     #[cwr(title = "Version type", start = 142, len = 3)]
-    pub version_type: String,
+    pub version_type: LookupPlaceholder,
 
     #[cwr(title = "Excerpt type (optional)", start = 145, len = 3)]
     pub excerpt_type: Option<ExcerptType>,
@@ -67,7 +67,7 @@ pub struct NwrRecord {
     pub contact_id: Option<String>,
 
     #[cwr(title = "CWR work type (optional)", start = 194, len = 2)]
-    pub cwr_work_type: Option<String>,
+    pub cwr_work_type: Option<LookupPlaceholder>,
 
     #[cwr(title = "Grand rights indicator (1 char, conditional)", start = 196, len = 1)]
     pub grand_rights_ind: Option<Flag>,
@@ -96,7 +96,7 @@ fn nwr_custom_validate(record: &mut NwrRecord) -> Vec<CwrWarning<'static>> {
     let mut warnings = Vec::new();
 
     // Business rule: Duration required if Musical Work Distribution Category = "SER"
-    if record.musical_work_distribution_category == "SER" && (record.duration.is_none() || record.duration.as_ref().is_none_or(|d| d.0.is_none())) {
+    if record.musical_work_distribution_category.as_str() == "SER" && (record.duration.is_none() || record.duration.as_ref().is_none_or(|d| d.0.is_none())) {
         warnings.push(CwrWarning { field_name: "duration", field_title: "Duration HHMMSS (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Duration is required when Musical Work Distribution Category is 'SER'".to_string() });
     }
 
@@ -110,7 +110,7 @@ fn nwr_custom_validate(record: &mut NwrRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Business rule: Music Arrangement required if Version Type = "MOD"
-    if record.version_type == "MOD" {
+    if record.version_type.as_str() == "MOD" {
         if record.music_arrangement.is_none() || record.music_arrangement.as_ref().is_none_or(|s| s.as_str().trim().is_empty()) {
             warnings.push(CwrWarning { field_name: "music_arrangement", field_title: "Music arrangement (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Music Arrangement is required when Version Type is 'MOD'".to_string() });
         }
@@ -121,7 +121,7 @@ fn nwr_custom_validate(record: &mut NwrRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Business rule: Composite Component Count required for ASCAP when Composite Type is present
-    if record.composite_type.is_some() && record.composite_type.as_ref().is_some_and(|s| !s.trim().is_empty()) && (record.composite_component_count.is_none() || record.composite_component_count.as_ref().is_some_and(|c| c.0 == 0)) {
+    if record.composite_type.is_some() && record.composite_type.as_ref().is_some_and(|s| !s.as_str().trim().is_empty()) && (record.composite_component_count.is_none() || record.composite_component_count.as_ref().is_some_and(|c| c.0 == 0)) {
         warnings.push(CwrWarning {
             field_name: "composite_component_count",
             field_title: "Composite component count (conditional)",

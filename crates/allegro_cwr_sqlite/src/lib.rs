@@ -11,7 +11,7 @@ pub mod record_handlers;
 pub mod report;
 pub mod statements;
 
-use allegro_cwr::domain_types::{Boolean, Flag, Number};
+use allegro_cwr::domain_types::{Boolean, Flag, LookupPlaceholder, Number};
 use domain_conversions::{CwrFromSqlString, CwrToSqlInt, CwrToSqlString, opt_domain_to_string, opt_string_to_domain, opt_string_to_numeric};
 
 /// Trait for inserting CWR records into SQLite
@@ -148,7 +148,7 @@ impl SqliteInsertable for allegro_cwr::CwrRegistry {
                     nwr.transaction_sequence_num.as_str(),
                     nwr.record_sequence_num.as_str(),
                     nwr.work_title.as_str(),
-                    nwr.language_code.as_deref(),
+                    &opt_domain_to_string(&nwr.language_code),
                     nwr.submitter_work_num.as_str(),
                     nwr.iswc.as_deref(),
                     opt_domain_to_string(&nwr.copyright_date).as_deref(),
@@ -157,14 +157,14 @@ impl SqliteInsertable for allegro_cwr::CwrRegistry {
                     opt_domain_to_string(&nwr.duration).as_deref(),
                     nwr.recorded_indicator.to_sql_string(),
                     &opt_domain_to_string(&nwr.text_music_relationship),
-                    nwr.composite_type.as_deref(),
+                    &opt_domain_to_string(&nwr.composite_type),
                     nwr.version_type.to_sql_string(),
                     &opt_domain_to_string(&nwr.excerpt_type),
                     &opt_domain_to_string(&nwr.music_arrangement),
                     &opt_domain_to_string(&nwr.lyric_adaptation),
                     nwr.contact_name.as_deref(),
                     nwr.contact_id.as_deref(),
-                    nwr.cwr_work_type.as_deref(),
+                    &opt_domain_to_string(&nwr.cwr_work_type),
                     opt_domain_to_string(&nwr.grand_rights_ind).as_deref(),
                     nwr.composite_component_count.as_ref().map(|c| c.to_sql_int()),
                     opt_domain_to_string(&nwr.date_of_publication_of_printed_edition).as_deref(),
@@ -943,7 +943,7 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                         Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     work_title: row.get::<_, String>("work_title")?,
-                    language_code: row.get::<_, Option<String>>("language_code")?,
+                    language_code: opt_string_to_domain(row.get::<_, Option<String>>("language_code")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
                     submitter_work_num: row.get::<_, String>("submitter_work_num")?,
                     iswc: row.get::<_, Option<String>>("iswc")?,
                     copyright_date: {
@@ -951,7 +951,7 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                         opt_string_to_domain::<Date>(row.get::<_, Option<String>>("copyright_date")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     copyright_number: row.get::<_, Option<String>>("copyright_number")?,
-                    musical_work_distribution_category: row.get::<_, String>("musical_work_distribution_category")?,
+                    musical_work_distribution_category: LookupPlaceholder::from_sql_string(&row.get::<_, String>("musical_work_distribution_category")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
                     duration: {
                         use allegro_cwr::domain_types::Time;
                         opt_string_to_domain::<Time>(row.get::<_, Option<String>>("duration")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
@@ -961,14 +961,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                         Flag::from_sql_string(&row.get::<_, String>("recorded_indicator")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     text_music_relationship: opt_string_to_domain(row.get::<_, Option<String>>("text_music_relationship")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
-                    composite_type: row.get::<_, Option<String>>("composite_type")?,
-                    version_type: row.get::<_, String>("version_type")?,
+                    composite_type: opt_string_to_domain(row.get::<_, Option<String>>("composite_type")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
+                    version_type: LookupPlaceholder::from_sql_string(&row.get::<_, String>("version_type")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
                     excerpt_type: opt_string_to_domain(row.get::<_, Option<String>>("excerpt_type")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
                     music_arrangement: opt_string_to_domain(row.get::<_, Option<String>>("music_arrangement")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
                     lyric_adaptation: opt_string_to_domain(row.get::<_, Option<String>>("lyric_adaptation")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
                     contact_name: row.get::<_, Option<String>>("contact_name")?,
                     contact_id: row.get::<_, Option<String>>("contact_id")?,
-                    cwr_work_type: row.get::<_, Option<String>>("cwr_work_type")?,
+                    cwr_work_type: opt_string_to_domain(row.get::<_, Option<String>>("cwr_work_type")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
                     grand_rights_ind: {
                         use allegro_cwr::domain_types::Flag;
                         opt_string_to_domain::<Flag>(row.get::<_, Option<String>>("grand_rights_ind")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
