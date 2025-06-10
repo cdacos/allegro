@@ -4,8 +4,7 @@ use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Identifier Type (1 character)
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub enum IdentifierType {
     /// Title identifier
     #[default]
@@ -49,13 +48,7 @@ impl CwrFieldParse for IdentifierType {
         match IdentifierType::from_str(trimmed) {
             Some(identifier_type) => (identifier_type, warnings),
             None => {
-                warnings.push(CwrWarning { 
-                    field_name, 
-                    field_title, 
-                    source_str: Cow::Owned(source.to_string()), 
-                    level: WarningLevel::Critical, 
-                    description: format!("Identifier Type '{}' not valid. Expected: T (Title), W (Work), V (Version)", trimmed) 
-                });
+                warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Identifier Type '{}' not valid. Expected: T (Title), W (Work), V (Version)", trimmed) });
                 (IdentifierType::default(), warnings)
             }
         }

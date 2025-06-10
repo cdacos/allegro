@@ -19,10 +19,10 @@ pub struct IpaRecord {
     pub agreement_role_code: AgreementRoleCode,
 
     #[cwr(title = "Interested party IPI name number (optional)", start = 21, len = 11)]
-    pub interested_party_ipi_name_num: Option<LookupPlaceholder>,
+    pub interested_party_ipi_name_num: Option<IpiNameNumber>,
 
     #[cwr(title = "IPI base number (optional)", start = 32, len = 13)]
-    pub ipi_base_number: Option<LookupPlaceholder>,
+    pub ipi_base_number: Option<IpiBaseNumber>,
 
     #[cwr(title = "Interested party number", start = 45, len = 9)]
     pub interested_party_num: String,

@@ -52,7 +52,7 @@ pub struct RecRecord {
     pub recording_technique: Option<RecordingTechnique>,
 
     #[cwr(title = "Media type (optional, v2.1+)", start = 263, len = 3, min_version = 2.1)]
-    pub media_type: Option<LookupPlaceholder>,
+    pub media_type: Option<MediaType>,
 
     #[cwr(title = "Recording title (optional, v2.2+)", start = 266, len = 60, min_version = 2.2)]
     pub recording_title: Option<String>,

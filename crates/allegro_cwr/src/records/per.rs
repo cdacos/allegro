@@ -22,10 +22,10 @@ pub struct PerRecord {
     pub performing_artist_first_name: Option<String>,
 
     #[cwr(title = "Performing artist IPI name number (optional)", start = 94, len = 11)]
-    pub performing_artist_ipi_name_num: Option<LookupPlaceholder>,
+    pub performing_artist_ipi_name_num: Option<IpiNameNumber>,
 
     #[cwr(title = "Performing artist IPI base number (optional)", start = 105, len = 13)]
-    pub performing_artist_ipi_base_number: Option<LookupPlaceholder>,
+    pub performing_artist_ipi_base_number: Option<IpiBaseNumber>,
 }
 
 // Custom validation function for PER record

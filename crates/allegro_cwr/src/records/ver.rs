@@ -37,10 +37,10 @@ pub struct VerRecord {
     pub source: Option<String>,
 
     #[cwr(title = "Writer 1 IPI name number (optional)", start = 227, len = 11)]
-    pub writer_1_ipi_name_num: Option<LookupPlaceholder>,
+    pub writer_1_ipi_name_num: Option<IpiNameNumber>,
 
     #[cwr(title = "Writer 1 IPI base number (optional)", start = 238, len = 13)]
-    pub writer_1_ipi_base_number: Option<LookupPlaceholder>,
+    pub writer_1_ipi_base_number: Option<IpiBaseNumber>,
 
     #[cwr(title = "Writer 2 last name (optional)", start = 251, len = 45)]
     pub writer_2_last_name: Option<String>,
@@ -49,10 +49,10 @@ pub struct VerRecord {
     pub writer_2_first_name: Option<String>,
 
     #[cwr(title = "Writer 2 IPI name number (optional)", start = 326, len = 11)]
-    pub writer_2_ipi_name_num: Option<LookupPlaceholder>,
+    pub writer_2_ipi_name_num: Option<IpiNameNumber>,
 
     #[cwr(title = "Writer 2 IPI base number (optional)", start = 337, len = 13)]
-    pub writer_2_ipi_base_number: Option<LookupPlaceholder>,
+    pub writer_2_ipi_base_number: Option<IpiBaseNumber>,
 
     #[cwr(title = "Submitter work number (optional)", start = 350, len = 14)]
     pub submitter_work_num: Option<String>,

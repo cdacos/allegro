@@ -37,7 +37,7 @@ pub struct ComRecord {
     pub writer_1_first_name: Option<String>,
 
     #[cwr(title = "Writer 1 IPI name number (optional)", start = 185, len = 11)]
-    pub writer_1_ipi_name_num: Option<LookupPlaceholder>,
+    pub writer_1_ipi_name_num: Option<IpiNameNumber>,
 
     #[cwr(title = "Writer 2 last name (optional)", start = 196, len = 45)]
     pub writer_2_last_name: Option<String>,
@@ -46,13 +46,13 @@ pub struct ComRecord {
     pub writer_2_first_name: Option<String>,
 
     #[cwr(title = "Writer 2 IPI name number (optional)", start = 271, len = 11)]
-    pub writer_2_ipi_name_num: Option<LookupPlaceholder>,
+    pub writer_2_ipi_name_num: Option<IpiNameNumber>,
 
     #[cwr(title = "Writer 1 IPI base number (optional)", start = 282, len = 13)]
-    pub writer_1_ipi_base_number: Option<LookupPlaceholder>,
+    pub writer_1_ipi_base_number: Option<IpiBaseNumber>,
 
     #[cwr(title = "Writer 2 IPI base number (optional)", start = 295, len = 13)]
-    pub writer_2_ipi_base_number: Option<LookupPlaceholder>,
+    pub writer_2_ipi_base_number: Option<IpiBaseNumber>,
 }
 
 // Custom validation function for COM record

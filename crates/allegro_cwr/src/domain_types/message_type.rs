@@ -4,8 +4,7 @@ use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Message Type (1 character)
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub enum MessageType {
     /// Error message
     #[default]
@@ -49,13 +48,7 @@ impl CwrFieldParse for MessageType {
         match MessageType::from_str(trimmed) {
             Some(message_type) => (message_type, warnings),
             None => {
-                warnings.push(CwrWarning { 
-                    field_name, 
-                    field_title, 
-                    source_str: Cow::Owned(source.to_string()), 
-                    level: WarningLevel::Critical, 
-                    description: format!("Message Type '{}' not valid. Expected: E (Error), W (Warning), F (Fatal)", trimmed) 
-                });
+                warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Message Type '{}' not valid. Expected: E (Error), W (Warning), F (Fatal)", trimmed) });
                 (MessageType::default(), warnings)
             }
         }

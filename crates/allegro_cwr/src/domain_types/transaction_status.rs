@@ -27,13 +27,7 @@ impl CwrFieldParse for TransactionStatus {
         let mut warnings = vec![];
 
         if !is_valid_transaction_status(&trimmed) {
-            warnings.push(CwrWarning { 
-                field_name, 
-                field_title, 
-                source_str: Cow::Owned(source.to_string()), 
-                level: WarningLevel::Warning, 
-                description: format!("Transaction Status '{}' not found in lookup table", trimmed) 
-            });
+            warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Transaction Status '{}' not found in lookup table", trimmed) });
         }
 
         (TransactionStatus(trimmed), warnings)

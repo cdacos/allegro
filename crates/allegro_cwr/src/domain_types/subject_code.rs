@@ -4,8 +4,7 @@ use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Subject Code (2 characters)
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub enum SubjectCode {
     /// Direct Licensing - Instructions for Direct Licensing
     #[default]
@@ -51,7 +50,6 @@ impl SubjectCode {
     }
 }
 
-
 impl CwrFieldWrite for SubjectCode {
     fn to_cwr_str(&self) -> String {
         self.as_str().to_string()
@@ -66,13 +64,7 @@ impl CwrFieldParse for SubjectCode {
         match SubjectCode::from_str(trimmed) {
             Some(subject_code) => (subject_code, warnings),
             None => {
-                warnings.push(CwrWarning { 
-                    field_name, 
-                    field_title, 
-                    source_str: Cow::Owned(source.to_string()), 
-                    level: WarningLevel::Warning, 
-                    description: format!("Subject Code '{}' not found in lookup table. Expected: DL, SC, DW, IQ, RQ, GW, EW", trimmed) 
-                });
+                warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Subject Code '{}' not found in lookup table. Expected: DL, SC, DW, IQ, RQ, GW, EW", trimmed) });
                 (SubjectCode::default(), warnings)
             }
         }

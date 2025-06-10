@@ -4,8 +4,7 @@ use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// ISRC Validity Indicator (1 character)
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub enum IsrcValidityIndicator {
     /// The link is valid
     #[default]
@@ -35,7 +34,6 @@ impl IsrcValidityIndicator {
     }
 }
 
-
 impl CwrFieldWrite for IsrcValidityIndicator {
     fn to_cwr_str(&self) -> String {
         self.as_str().to_string()
@@ -50,13 +48,7 @@ impl CwrFieldParse for IsrcValidityIndicator {
         match IsrcValidityIndicator::from_str(trimmed) {
             Some(indicator) => (indicator, warnings),
             None => {
-                warnings.push(CwrWarning { 
-                    field_name, 
-                    field_title, 
-                    source_str: Cow::Owned(source.to_string()), 
-                    level: WarningLevel::Warning, 
-                    description: format!("ISRC Validity Indicator '{}' not found in lookup table. Expected: Y, U, N", trimmed) 
-                });
+                warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("ISRC Validity Indicator '{}' not found in lookup table. Expected: Y, U, N", trimmed) });
                 (IsrcValidityIndicator::default(), warnings)
             }
         }

@@ -4,14 +4,13 @@ use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Type of Right (3 characters)
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub enum TypeOfRight {
     /// Mechanical Right - The right to record, reproduce and distribute a work on a carrier
     #[default]
     Mechanical,
     /// Performing Right - The entitlement to perform musical, literary or dramatic works live or by mechanical means
-    Performing, 
+    Performing,
     /// Synchronisation Right - The right to include and combine a work in timed relation with other works
     Synchronisation,
 }
@@ -20,7 +19,7 @@ impl TypeOfRight {
     pub fn as_str(&self) -> &'static str {
         match self {
             TypeOfRight::Mechanical => "MEC",
-            TypeOfRight::Performing => "PER", 
+            TypeOfRight::Performing => "PER",
             TypeOfRight::Synchronisation => "SYN",
         }
     }
@@ -34,7 +33,6 @@ impl TypeOfRight {
         }
     }
 }
-
 
 impl CwrFieldWrite for TypeOfRight {
     fn to_cwr_str(&self) -> String {
@@ -50,13 +48,7 @@ impl CwrFieldParse for TypeOfRight {
         match TypeOfRight::from_str(trimmed) {
             Some(type_of_right) => (type_of_right, warnings),
             None => {
-                warnings.push(CwrWarning { 
-                    field_name, 
-                    field_title, 
-                    source_str: Cow::Owned(source.to_string()), 
-                    level: WarningLevel::Warning, 
-                    description: format!("Type of Right '{}' not found in lookup table. Expected: MEC, PER, SYN", trimmed) 
-                });
+                warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Type of Right '{}' not found in lookup table. Expected: MEC, PER, SYN", trimmed) });
                 (TypeOfRight::default(), warnings)
             }
         }

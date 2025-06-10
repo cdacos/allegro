@@ -4,8 +4,7 @@ use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Message Level (1 character)
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub enum MessageLevel {
     /// Record level message
     #[default]
@@ -49,13 +48,7 @@ impl CwrFieldParse for MessageLevel {
         match MessageLevel::from_str(trimmed) {
             Some(message_level) => (message_level, warnings),
             None => {
-                warnings.push(CwrWarning { 
-                    field_name, 
-                    field_title, 
-                    source_str: Cow::Owned(source.to_string()), 
-                    level: WarningLevel::Critical, 
-                    description: format!("Message Level '{}' not valid. Expected: R (Record), G (Group), T (Transaction)", trimmed) 
-                });
+                warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Message Level '{}' not valid. Expected: R (Record), G (Group), T (Transaction)", trimmed) });
                 (MessageLevel::default(), warnings)
             }
         }

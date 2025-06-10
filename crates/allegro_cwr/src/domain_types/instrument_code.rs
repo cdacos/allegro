@@ -27,13 +27,7 @@ impl CwrFieldParse for InstrumentCode {
         let mut warnings = vec![];
 
         if !is_valid_instrument_code(trimmed) {
-            warnings.push(CwrWarning { 
-                field_name, 
-                field_title, 
-                source_str: Cow::Owned(source.to_string()), 
-                level: WarningLevel::Warning, 
-                description: format!("Instrument Code '{}' not found in lookup table", trimmed) 
-            });
+            warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Instrument Code '{}' not found in lookup table", trimmed) });
         }
 
         (InstrumentCode(trimmed.to_string()), warnings)

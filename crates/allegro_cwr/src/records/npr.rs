@@ -25,16 +25,16 @@ pub struct NprRecord {
     pub performing_artist_first_name: Option<String>,
 
     #[cwr(title = "Performing artist IPI name number (optional)", start = 339, len = 11)]
-    pub performing_artist_ipi_name_num: Option<LookupPlaceholder>,
+    pub performing_artist_ipi_name_num: Option<IpiNameNumber>,
 
     #[cwr(title = "Performing artist IPI base number (optional)", start = 350, len = 13)]
-    pub performing_artist_ipi_base_number: Option<LookupPlaceholder>,
+    pub performing_artist_ipi_base_number: Option<IpiBaseNumber>,
 
     #[cwr(title = "Language code (optional)", start = 363, len = 2)]
     pub language_code: Option<LanguageCode>,
 
     #[cwr(title = "Performance language (conditional, v2.1+)", start = 365, len = 2, min_version = 2.1)]
-    pub performance_language: Option<LookupPlaceholder>,
+    pub performance_language: Option<LanguageCode>,
 
     #[cwr(title = "Performance dialect (conditional, v2.1+)", start = 367, len = 3, min_version = 2.1)]
     pub performance_dialect: Option<LookupPlaceholder>,
@@ -95,24 +95,12 @@ fn npr_custom_validate(record: &mut NprRecord) -> Vec<CwrWarning<'static>> {
         }
     }
 
-    // Validate language code format if present (ISO 639-1)
-    if let Some(ref lang_code) = record.language_code {
-        if !lang_code.as_str().trim().is_empty() && lang_code.as_str().len() != 2 {
-            warnings.push(CwrWarning { field_name: "language_code", field_title: "Language code (optional)", source_str: std::borrow::Cow::Owned(lang_code.as_str().to_string()), level: WarningLevel::Warning, description: "Language code should be 2 characters (ISO 639-1)".to_string() });
-        }
-    }
-
-    // Validate performance language format if present (ISO 639-1)
-    if let Some(ref perf_lang) = record.performance_language {
-        if !perf_lang.as_str().trim().is_empty() && perf_lang.as_str().len() != 2 {
-            warnings.push(CwrWarning { field_name: "performance_language", field_title: "Performance language (conditional, v2.1+)", source_str: std::borrow::Cow::Owned(perf_lang.as_str().to_string()), level: WarningLevel::Warning, description: "Performance language should be 2 characters (ISO 639-1)".to_string() });
-        }
-    }
+    // Language code and performance language validation is now handled by the LanguageCode domain type
 
     // Validate performance dialect format if present
     if let Some(ref dialect) = record.performance_dialect {
-        if !dialect.as_str().trim().is_empty() && dialect.as_str().len() != 3 {
-            warnings.push(CwrWarning { field_name: "performance_dialect", field_title: "Performance dialect (conditional, v2.1+)", source_str: std::borrow::Cow::Owned(dialect.as_str().to_string()), level: WarningLevel::Warning, description: "Performance dialect should be 3 characters if specified".to_string() });
+        if !dialect.trim().is_empty() && dialect.len() != 3 {
+            warnings.push(CwrWarning { field_name: "performance_dialect", field_title: "Performance dialect (conditional, v2.1+)", source_str: std::borrow::Cow::Owned(dialect.to_string()), level: WarningLevel::Warning, description: "Performance dialect should be 3 characters if specified".to_string() });
         }
     }
 

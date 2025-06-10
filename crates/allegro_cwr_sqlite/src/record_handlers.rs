@@ -495,7 +495,7 @@ pub fn parse_and_insert_npr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.performing_artist_ipi_name_num.as_deref().unwrap_or(""),
             record.performing_artist_ipi_base_number.as_deref().unwrap_or(""),
             record.language_code.as_deref().unwrap_or(""),
-            record.performance_language.as_deref().unwrap_or(""),
+            record.performance_language.as_ref().map(|x| x.as_str()).unwrap_or(""),
             record.performance_dialect.as_deref().unwrap_or(""),
         ])?;
         Ok(())
@@ -520,7 +520,7 @@ pub fn parse_and_insert_rec<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.isrc.as_deref().unwrap_or(""),
             &opt_domain_to_string(&record.recording_format).unwrap_or_default(),
             &opt_domain_to_string(&record.recording_technique).unwrap_or_default(),
-            record.media_type.as_deref().unwrap_or(""),
+            record.media_type.as_ref().map(|x| x.as_str()).unwrap_or(""),
             record.recording_title.as_deref().unwrap_or(""),
             record.version_title.as_deref().unwrap_or(""),
             record.display_artist.as_deref().unwrap_or(""),
@@ -572,7 +572,7 @@ pub fn parse_and_insert_ins<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.transaction_sequence_num.to_sql_int(),
             record.record_sequence_num.to_sql_int(),
             &opt_domain_to_int(&record.number_of_voices).unwrap_or(0).to_string(),
-            record.standard_instrumentation_type.as_deref().unwrap_or(""),
+            record.standard_instrumentation_type.as_ref().map(|x| x.as_str()).unwrap_or(""),
             record.instrumentation_description.as_deref().unwrap_or(""),
         ])?;
         Ok(())

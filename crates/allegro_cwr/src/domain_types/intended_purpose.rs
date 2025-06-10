@@ -4,8 +4,7 @@ use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Intended Purpose (3 characters)
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub enum IntendedPurpose {
     /// Commercial / Jingle / Trailer
     Commercial,
@@ -73,13 +72,7 @@ impl CwrFieldParse for IntendedPurpose {
         match IntendedPurpose::from_str(trimmed) {
             Some(intended_purpose) => (intended_purpose, warnings),
             None => {
-                warnings.push(CwrWarning { 
-                    field_name, 
-                    field_title, 
-                    source_str: Cow::Owned(source.to_string()), 
-                    level: WarningLevel::Warning, 
-                    description: format!("Intended Purpose '{}' not found in lookup table. Expected: COM, FIL, GEN, LIB, MUL, RAD, TEL, THR, VID", trimmed) 
-                });
+                warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Intended Purpose '{}' not found in lookup table. Expected: COM, FIL, GEN, LIB, MUL, RAD, TEL, THR, VID", trimmed) });
                 (IntendedPurpose::default(), warnings)
             }
         }

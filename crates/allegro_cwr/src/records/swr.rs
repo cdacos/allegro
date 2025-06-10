@@ -34,7 +34,7 @@ pub struct SwrRecord {
     pub tax_id_num: Option<String>,
 
     #[cwr(title = "Writer IPI name number (optional)", start = 115, len = 11)]
-    pub writer_ipi_name_num: Option<LookupPlaceholder>,
+    pub writer_ipi_name_num: Option<IpiNameNumber>,
 
     #[cwr(title = "PR affiliation society number (optional)", start = 126, len = 3)]
     pub pr_affiliation_society_num: Option<SocietyCode>,
@@ -67,7 +67,7 @@ pub struct SwrRecord {
     pub filler: Option<String>,
 
     #[cwr(title = "Writer IPI base number (optional)", start = 154, len = 13)]
-    pub writer_ipi_base_number: Option<LookupPlaceholder>,
+    pub writer_ipi_base_number: Option<IpiBaseNumber>,
 
     #[cwr(title = "Personal number (optional)", start = 167, len = 12)]
     pub personal_number: Option<Number>,

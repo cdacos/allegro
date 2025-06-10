@@ -301,6 +301,30 @@ impl CwrToSqlString for IntendedPurpose {
     }
 }
 
+impl CwrToSqlString for MediaType {
+    fn to_sql_string(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
+impl CwrToSqlString for StandardInstrumentationType {
+    fn to_sql_string(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
+impl CwrToSqlString for IpiNameNumber {
+    fn to_sql_string(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
+impl CwrToSqlString for IpiBaseNumber {
+    fn to_sql_string(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
 // Integer conversions for numeric domain types
 impl CwrToSqlInt for OwnershipShare {
     fn to_sql_int(&self) -> i64 {
@@ -806,6 +830,34 @@ impl CwrFromSqlString for IntendedPurpose {
     fn from_sql_string(value: &str) -> Result<Self, String> {
         let (parsed, warnings) = IntendedPurpose::parse_cwr_field(value, "sql_field", "SQL Field");
         if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing IntendedPurpose: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
+    }
+}
+
+impl CwrFromSqlString for MediaType {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = MediaType::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing MediaType: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
+    }
+}
+
+impl CwrFromSqlString for StandardInstrumentationType {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = StandardInstrumentationType::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing StandardInstrumentationType: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
+    }
+}
+
+impl CwrFromSqlString for IpiNameNumber {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = IpiNameNumber::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing IpiNameNumber: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
+    }
+}
+
+impl CwrFromSqlString for IpiBaseNumber {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = IpiBaseNumber::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing IpiBaseNumber: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
     }
 }
 

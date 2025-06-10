@@ -37,7 +37,7 @@ pub struct SpuRecord {
     pub tax_id_num: Option<String>,
 
     #[cwr(title = "Publisher IPI name number (conditional)", start = 87, len = 11)]
-    pub publisher_ipi_name_num: Option<LookupPlaceholder>,
+    pub publisher_ipi_name_num: Option<IpiNameNumber>,
 
     #[cwr(title = "Submitter agreement number (optional)", start = 98, len = 14)]
     pub submitter_agreement_number: Option<String>,
@@ -70,7 +70,7 @@ pub struct SpuRecord {
     pub filler: Option<String>,
 
     #[cwr(title = "Publisher IPI base number (optional)", start = 139, len = 13)]
-    pub publisher_ipi_base_number: Option<LookupPlaceholder>,
+    pub publisher_ipi_base_number: Option<IpiBaseNumber>,
 
     #[cwr(title = "International standard agreement code (optional)", start = 152, len = 14)]
     pub international_standard_agreement_code: Option<String>,
