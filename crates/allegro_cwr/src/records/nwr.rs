@@ -19,7 +19,7 @@ pub struct NwrRecord {
     pub work_title: String,
 
     #[cwr(title = "Language code (optional)", start = 79, len = 2)]
-    pub language_code: Option<LookupPlaceholder>,
+    pub language_code: Option<LanguageCode>,
 
     #[cwr(title = "Submitter work number", start = 81, len = 14)]
     pub submitter_work_num: String,
@@ -34,7 +34,7 @@ pub struct NwrRecord {
     pub copyright_number: Option<String>,
 
     #[cwr(title = "Musical work distribution category", start = 126, len = 3)]
-    pub musical_work_distribution_category: LookupPlaceholder,
+    pub musical_work_distribution_category: MusicalWorkDistributionCategory,
 
     #[cwr(title = "Duration HHMMSS (conditional)", start = 129, len = 6)]
     pub duration: Option<Time>,
@@ -49,7 +49,7 @@ pub struct NwrRecord {
     pub composite_type: Option<LookupPlaceholder>,
 
     #[cwr(title = "Version type", start = 142, len = 3)]
-    pub version_type: LookupPlaceholder,
+    pub version_type: VersionType,
 
     #[cwr(title = "Excerpt type (optional)", start = 145, len = 3)]
     pub excerpt_type: Option<ExcerptType>,
@@ -135,9 +135,6 @@ fn nwr_custom_validate(record: &mut NwrRecord) -> Vec<CwrWarning<'static>> {
     // - Some societies (BMI) may require duration for "JAZ" category
     // - Submitter Work # must be unique per publisher (requires context)
     // - ISWC format validation
-    // - Language code validation against Language Code Table
-    // - Various lookup table validations for categorical fields
-    // - Version-specific validations for v2.1+ fields (Priority Flag)
 
     warnings
 }
