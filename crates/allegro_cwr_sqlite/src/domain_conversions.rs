@@ -1345,6 +1345,20 @@ impl CwrFromSqlString for Ean {
     }
 }
 
+impl CwrFromSqlString for WriterPosition {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = WriterPosition::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) {
+            Err(format!(
+                "Critical error parsing WriterPosition: {}",
+                warnings.iter().find(|w| w.is_critical()).unwrap().description
+            ))
+        } else {
+            Ok(parsed)
+        }
+    }
+}
+
 // Helper functions for optional parsing
 pub fn opt_string_to_domain<T: CwrFromSqlString>(opt: Option<&str>) -> Result<Option<T>, String> {
     match opt {

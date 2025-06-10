@@ -55,7 +55,7 @@ pub struct EwtRecord {
     pub writer_2_ipi_base_number: Option<IpiBaseNumber>,
 
     #[cwr(title = "Submitter work number (optional)", start = 350, len = 14)]
-    pub submitter_work_num: Option<LookupPlaceholder>,
+    pub submitter_work_num: Option<String>,
 }
 
 // Custom validation function for EWT record

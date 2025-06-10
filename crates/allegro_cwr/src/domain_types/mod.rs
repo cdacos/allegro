@@ -65,6 +65,7 @@ mod version_type;
 mod work_type;
 mod works_count;
 mod writer_designation;
+mod writer_position;
 
 // Re-export all types to maintain compatibility with existing imports
 pub use agreement_role_code::*;
@@ -132,3 +133,4 @@ pub use version_type::*;
 pub use work_type::*;
 pub use works_count::*;
 pub use writer_designation::*;
+pub use writer_position::*;

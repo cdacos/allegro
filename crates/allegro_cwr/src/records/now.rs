@@ -28,7 +28,7 @@ pub struct NowRecord {
     pub language_code: Option<LanguageCode>,
 
     #[cwr(title = "Writer position (1 char, optional)", start = 341, len = 1)]
-    pub writer_position: Option<LookupPlaceholder>,
+    pub writer_position: Option<WriterPosition>,
 }
 
 // Custom validation function for NOW record
@@ -72,18 +72,7 @@ fn now_custom_validate(record: &mut NowRecord) -> Vec<CwrWarning<'static>> {
         }
     }
 
-    // Validate writer position if present
-    if let Some(ref position) = record.writer_position {
-        if !position.as_str().trim().is_empty() && position.as_str().len() != 1 {
-            warnings.push(CwrWarning {
-                field_name: "writer_position",
-                field_title: "Writer position (1 char, optional)",
-                source_str: std::borrow::Cow::Owned(position.as_str().to_string()),
-                level: WarningLevel::Warning,
-                description: "Writer position must be exactly 1 character if specified".to_string(),
-            });
-        }
-    }
+    // Writer position validation is now handled by the WriterPosition domain type
 
     warnings
 }

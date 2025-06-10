@@ -1041,7 +1041,7 @@ pub fn parse_and_insert_now<'a>(
                 record.writer_name,
                 &record.writer_first_name,
                 record.language_code.as_deref().unwrap_or(""),
-                record.writer_position.as_deref().unwrap_or(""),
+                record.writer_position.as_ref().map(|p| p.as_str()).unwrap_or(""),
             ])?;
             Ok(())
         },

@@ -637,7 +637,7 @@ impl SqliteInsertable for allegro_cwr::CwrRegistry {
                     now.writer_name.as_str(),
                     now.writer_first_name.as_str(),
                     now.language_code.as_deref(),
-                    now.writer_position.as_deref()
+                    now.writer_position.as_ref().map(|p| p.as_str())
                 ])?;
                 Ok(tx.last_insert_rowid())
             }
@@ -2241,14 +2241,7 @@ fn query_record_by_type(
                         )
                         .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
-                    submitter_work_num: {
-                        use crate::domain_conversions::opt_string_to_domain;
-                        use allegro_cwr::domain_types::LookupPlaceholder;
-                        opt_string_to_domain::<LookupPlaceholder>(
-                            row.get::<_, Option<String>>("submitter_work_num")?.as_deref(),
-                        )
-                        .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
-                    },
+                    submitter_work_num: row.get::<_, Option<String>>("submitter_work_num")?,
                 };
                 Ok(ewt)
             }) {
@@ -2875,8 +2868,8 @@ fn query_record_by_type(
                     },
                     writer_position: {
                         use crate::domain_conversions::opt_string_to_domain;
-                        use allegro_cwr::domain_types::LookupPlaceholder;
-                        opt_string_to_domain::<LookupPlaceholder>(
+                        use allegro_cwr::domain_types::WriterPosition;
+                        opt_string_to_domain::<WriterPosition>(
                             row.get::<_, Option<String>>("writer_position")?.as_deref(),
                         )
                         .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
