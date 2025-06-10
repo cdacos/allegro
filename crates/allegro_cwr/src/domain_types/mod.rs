@@ -29,7 +29,6 @@ mod recording_technique;
 mod sender_id;
 mod sender_name;
 mod sender_type;
-mod text;
 mod time;
 mod tis_numeric_code;
 mod title_type;
