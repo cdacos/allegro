@@ -1,6 +1,6 @@
 //! Musical Work Distribution Category
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_number, format_text};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_text};
 use std::borrow::Cow;
 
 /// Musical Work Distribution Category (3 characters)

@@ -1,6 +1,6 @@
 //! Sender ID type for CWR parsing
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_number, format_text};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_text};
 use std::borrow::Cow;
 
 /// Sender ID with validation based on sender type

@@ -2,7 +2,7 @@
 //!
 //! Indicates the prior royalty status for an agreement.
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_number, format_text};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_text};
 use std::borrow::Cow;
 
 /// Prior royalty status for AGR record

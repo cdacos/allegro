@@ -1,6 +1,6 @@
 //! Date types for CWR parsing
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_number, format_text};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use chrono::NaiveDate;
 use std::borrow::Cow;
 

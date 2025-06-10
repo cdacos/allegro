@@ -1,7 +1,7 @@
 //! General numeric field for sequence numbers and counts
 
 use crate::parsing::{
-    CwrFieldParse, CwrFieldWrite, CwrNumericField, CwrWarning, WarningLevel, format_number, format_text,
+    CwrFieldParse, CwrFieldWrite, CwrNumericField, CwrWarning, WarningLevel, format_number,
 };
 use std::borrow::Cow;
 

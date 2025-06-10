@@ -1,6 +1,6 @@
 //! Type of Right
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_number, format_text};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_text};
 use std::borrow::Cow;
 
 /// Type of Right (3 characters)

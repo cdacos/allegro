@@ -3,7 +3,7 @@
 //! This type behaves exactly like a String but serves as a marker
 //! for fields that should use proper lookup domain types.
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, format_number, format_text};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, format_text};
 use std::ops::Deref;
 
 /// Placeholder for fields that need proper lookup validation

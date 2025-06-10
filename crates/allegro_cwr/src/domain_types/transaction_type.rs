@@ -2,7 +2,7 @@
 //!
 //! Represents the type of transaction contained within a CWR transmission.
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_number, format_text};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_text};
 use std::borrow::Cow;
 
 /// Transaction type for GRH record

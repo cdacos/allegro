@@ -2,7 +2,7 @@
 //!
 //! Represents monetary values in GRT records that should be space-padded when None
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_text};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Monetary value for GRT trailer records (space-padded when None)

@@ -1,7 +1,7 @@
 //! Ownership share type
 
 use crate::parsing::{
-    CwrFieldParse, CwrFieldWrite, CwrNumericField, CwrWarning, WarningLevel, format_number, format_text,
+    CwrFieldParse, CwrFieldWrite, CwrNumericField, CwrWarning, WarningLevel, format_number,
 };
 use std::borrow::Cow;
 
