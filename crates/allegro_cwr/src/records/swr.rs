@@ -70,7 +70,7 @@ pub struct SwrRecord {
     pub writer_ipi_base_number: Option<String>,
 
     #[cwr(title = "Personal number (optional)", start = 167, len = 12)]
-    pub personal_number: Option<String>,
+    pub personal_number: Option<Number>,
 
     #[cwr(title = "USA license indicator (1 char, optional, v2.1+)", start = 179, len = 1, min_version = 2.1)]
     pub usa_license_ind: Option<String>,

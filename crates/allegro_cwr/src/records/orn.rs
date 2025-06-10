@@ -37,7 +37,7 @@ pub struct OrnRecord {
     pub bltvr: Option<String>,
 
     #[cwr(title = "Filler (optional, v2.1+)", start = 162, len = 25, min_version = 2.1)]
-    pub filler: Option<String>,
+    pub filler: Option<Number>,
 
     #[cwr(title = "Production number (optional, v2.1+)", start = 187, len = 12, min_version = 2.1)]
     pub production_num: Option<String>,
