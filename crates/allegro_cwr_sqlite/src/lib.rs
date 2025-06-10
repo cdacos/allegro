@@ -1049,16 +1049,7 @@ fn query_record_by_type(
                         row.get::<_, Option<String>>("batch_request")?.as_deref(),
                     )
                     .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
-                    submission_distribution_type: {
-                        use crate::domain_conversions::opt_string_to_domain;
-
-                        use allegro_cwr::domain_types::LookupPlaceholder;
-
-                        opt_string_to_domain::<LookupPlaceholder>(
-                            row.get::<_, Option<String>>("submission_distribution_type")?.as_deref(),
-                        )
-                        .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
-                    },
+                    submission_distribution_type: row.get::<_, Option<String>>("submission_distribution_type")?,
                 };
                 Ok(grh)
             }) {
