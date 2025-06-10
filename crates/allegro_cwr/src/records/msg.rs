@@ -16,7 +16,7 @@ pub struct MsgRecord {
     pub record_sequence_num: Number,
 
     #[cwr(title = "Message type (1 char)", start = 19, len = 1)]
-    pub message_type: LookupPlaceholder,
+    pub message_type: MessageType,
 
     #[cwr(title = "Original record sequence number", start = 20, len = 8)]
     pub original_record_sequence_num: Number,
@@ -25,7 +25,7 @@ pub struct MsgRecord {
     pub record_type_field: String,
 
     #[cwr(title = "Message level (1 char)", start = 31, len = 1)]
-    pub message_level: LookupPlaceholder,
+    pub message_level: MessageLevel,
 
     #[cwr(title = "Validation number", start = 32, len = 3)]
     pub validation_number: String,
@@ -45,13 +45,7 @@ fn msg_custom_validate(record: &mut MsgRecord) -> Vec<CwrWarning<'static>> {
 
     // Validate transaction sequence number is numeric
     // Validate record sequence number is numeric
-    // Validate message type
-    match record.message_type.as_str() {
-        "E" | "W" | "F" => {} // E=Error, W=Warning, F=Fatal
-        _ => {
-            warnings.push(CwrWarning { field_name: "message_type", field_title: "Message type (1 char)", source_str: std::borrow::Cow::Owned(record.message_type.as_str().to_string()), level: WarningLevel::Critical, description: "Message type must be E (Error), W (Warning), or F (Fatal)".to_string() });
-        }
-    }
+    // Message type validation is now handled by the MessageType domain type
 
     // Validate original record sequence number is numeric
     // Validate record type field (3 characters, uppercase)
@@ -60,13 +54,7 @@ fn msg_custom_validate(record: &mut MsgRecord) -> Vec<CwrWarning<'static>> {
     }
     // TODO: Validate against known CWR record types
 
-    // Validate message level
-    match record.message_level.as_str() {
-        "R" | "G" | "T" => {} // R=Record, G=Group, T=Transaction
-        _ => {
-            warnings.push(CwrWarning { field_name: "message_level", field_title: "Message level (1 char)", source_str: std::borrow::Cow::Owned(record.message_level.as_str().to_string()), level: WarningLevel::Critical, description: "Message level must be R (Record), G (Group), or T (Transaction)".to_string() });
-        }
-    }
+    // Message level validation is now handled by the MessageLevel domain type
 
     // Validate validation number is 3 characters
     if record.validation_number.len() != 3 {

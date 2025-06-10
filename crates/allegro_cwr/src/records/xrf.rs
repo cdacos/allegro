@@ -16,13 +16,13 @@ pub struct XrfRecord {
     pub record_sequence_num: Number,
 
     #[cwr(title = "Organisation code", start = 19, len = 3)]
-    pub organisation_code: LookupPlaceholder,
+    pub organisation_code: SocietyCode,
 
     #[cwr(title = "Identifier", start = 22, len = 14)]
     pub identifier: String,
 
     #[cwr(title = "Identifier type (1 char)", start = 36, len = 1)]
-    pub identifier_type: LookupPlaceholder,
+    pub identifier_type: IdentifierType,
 
     #[cwr(title = "Validity (1 char)", start = 37, len = 1)]
     pub validity: Flag,
@@ -32,20 +32,14 @@ pub struct XrfRecord {
 fn xrf_custom_validate(record: &mut XrfRecord) -> Vec<CwrWarning<'static>> {
     let mut warnings = Vec::new();
 
-    // Business rule: Organisation code cannot be empty
-    if record.organisation_code.as_str().trim().is_empty() {
-        warnings.push(CwrWarning { field_name: "organisation_code", field_title: "Organisation code", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Organisation code cannot be empty".to_string() });
-    }
+    // Organisation code validation is now handled by the SocietyCode domain type
 
     // Business rule: Identifier cannot be empty
     if record.identifier.trim().is_empty() {
         warnings.push(CwrWarning { field_name: "identifier", field_title: "Identifier", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Identifier cannot be empty".to_string() });
     }
 
-    // Business rule: Identifier type validation
-    if !["T", "W", "V"].contains(&record.identifier_type.as_str().trim()) {
-        warnings.push(CwrWarning { field_name: "identifier_type", field_title: "Identifier type (1 char)", source_str: std::borrow::Cow::Owned(record.identifier_type.as_str().to_string()), level: WarningLevel::Critical, description: "Identifier type must be T (Title), W (Work), or V (Version)".to_string() });
-    }
+    // Identifier type validation is now handled by the IdentifierType domain type
 
     // TODO: Additional business rules requiring broader context:
     // - Must follow a NWR/REV record (requires parsing context)

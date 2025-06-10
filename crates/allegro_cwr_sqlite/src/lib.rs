@@ -2068,9 +2068,9 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     intended_purpose: {
                         use crate::domain_conversions::CwrFromSqlString;
 
-                        use allegro_cwr::domain_types::LookupPlaceholder;
+                        use allegro_cwr::domain_types::IntendedPurpose;
 
-                        LookupPlaceholder::from_sql_string(&row.get::<_, String>("intended_purpose")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        IntendedPurpose::from_sql_string(&row.get::<_, String>("intended_purpose")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     production_title: row.get::<_, Option<String>>("production_title")?,
                     cd_identifier: row.get::<_, Option<String>>("cd_identifier")?,
@@ -2244,9 +2244,9 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     message_type: {
                         use crate::domain_conversions::CwrFromSqlString;
 
-                        use allegro_cwr::domain_types::LookupPlaceholder;
+                        use allegro_cwr::domain_types::MessageType;
 
-                        LookupPlaceholder::from_sql_string(&row.get::<_, String>("message_type")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        MessageType::from_sql_string(&row.get::<_, String>("message_type")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     original_record_sequence_num: {
                         use allegro_cwr::domain_types::Number;
@@ -2256,9 +2256,9 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     message_level: {
                         use crate::domain_conversions::CwrFromSqlString;
 
-                        use allegro_cwr::domain_types::LookupPlaceholder;
+                        use allegro_cwr::domain_types::MessageLevel;
 
-                        LookupPlaceholder::from_sql_string(&row.get::<_, String>("message_level")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        MessageLevel::from_sql_string(&row.get::<_, String>("message_level")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     validation_number: row.get::<_, String>("validation_number")?,
                     message_text: row.get::<_, String>("message_text")?,
@@ -2391,9 +2391,17 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                         use allegro_cwr::domain_types::Number;
                         Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
-                    organisation_code: allegro_cwr::domain_types::LookupPlaceholder(row.get::<_, String>("organisation_code")?),
+                    organisation_code: {
+                        use crate::domain_conversions::CwrFromSqlString;
+                        use allegro_cwr::domain_types::SocietyCode;
+                        SocietyCode::from_sql_string(&row.get::<_, String>("organisation_code")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     identifier: row.get::<_, String>("identifier")?,
-                    identifier_type: allegro_cwr::domain_types::LookupPlaceholder(row.get::<_, String>("identifier_type")?),
+                    identifier_type: {
+                        use crate::domain_conversions::CwrFromSqlString;
+                        use allegro_cwr::domain_types::IdentifierType;
+                        IdentifierType::from_sql_string(&row.get::<_, String>("identifier_type")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                    },
                     validity: {
                         use crate::domain_conversions::CwrFromSqlString;
                         use allegro_cwr::domain_types::Flag;

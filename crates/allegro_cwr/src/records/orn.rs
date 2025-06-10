@@ -19,7 +19,7 @@ pub struct OrnRecord {
     pub record_sequence_num: Number,
 
     #[cwr(title = "Intended purpose", start = 19, len = 3)]
-    pub intended_purpose: LookupPlaceholder,
+    pub intended_purpose: IntendedPurpose,
 
     #[cwr(title = "Production title (conditional)", start = 22, len = 60)]
     pub production_title: Option<String>,

@@ -617,10 +617,10 @@ pub fn parse_and_insert_msg<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.record_type.to_sql_string(),
             record.transaction_sequence_num.to_sql_int(),
             record.record_sequence_num.to_sql_int(),
-            record.message_type,
+            record.message_type.to_sql_string(),
             record.original_record_sequence_num.to_sql_int(),
             &record.record_type_field,
-            record.message_level,
+            record.message_level.to_sql_string(),
             &record.validation_number,
             record.message_text,
         ])?;
@@ -661,7 +661,7 @@ pub fn parse_and_insert_ari<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 
 pub fn parse_and_insert_xrf<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
     handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, XrfRecord::from_cwr_line, |record, stmts, file_id| {
-        stmts.xrf_stmt.execute(params![file_id, record.record_type.to_sql_string(), record.transaction_sequence_num.to_sql_int(), record.record_sequence_num.to_sql_int(), record.organisation_code, record.identifier, record.identifier_type.as_str(), record.validity.as_str(),])?;
+        stmts.xrf_stmt.execute(params![file_id, record.record_type.to_sql_string(), record.transaction_sequence_num.to_sql_int(), record.record_sequence_num.to_sql_int(), record.organisation_code.to_sql_string(), record.identifier, record.identifier_type.to_sql_string(), record.validity.as_str(),])?;
         Ok(())
     })
 }

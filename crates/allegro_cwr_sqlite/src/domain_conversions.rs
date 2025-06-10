@@ -277,6 +277,30 @@ impl CwrToSqlString for InstrumentCode {
     }
 }
 
+impl CwrToSqlString for MessageType {
+    fn to_sql_string(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
+impl CwrToSqlString for MessageLevel {
+    fn to_sql_string(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
+impl CwrToSqlString for IdentifierType {
+    fn to_sql_string(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
+impl CwrToSqlString for IntendedPurpose {
+    fn to_sql_string(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
 // Integer conversions for numeric domain types
 impl CwrToSqlInt for OwnershipShare {
     fn to_sql_int(&self) -> i64 {
@@ -754,6 +778,34 @@ impl CwrFromSqlString for InstrumentCode {
     fn from_sql_string(value: &str) -> Result<Self, String> {
         let (parsed, warnings) = InstrumentCode::parse_cwr_field(value, "sql_field", "SQL Field");
         if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing InstrumentCode: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
+    }
+}
+
+impl CwrFromSqlString for MessageType {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = MessageType::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing MessageType: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
+    }
+}
+
+impl CwrFromSqlString for MessageLevel {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = MessageLevel::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing MessageLevel: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
+    }
+}
+
+impl CwrFromSqlString for IdentifierType {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = IdentifierType::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing IdentifierType: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
+    }
+}
+
+impl CwrFromSqlString for IntendedPurpose {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = IntendedPurpose::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing IntendedPurpose: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
     }
 }
 
