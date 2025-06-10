@@ -49,7 +49,7 @@ pub struct AgrRecord {
     pub date_of_signature_of_agreement: Option<Date>,
 
     #[cwr(title = "Number of works", start = 99, len = 5)]
-    pub number_of_works: WorksCount,
+    pub number_of_works: Number,
 
     #[cwr(title = "Sales/manufacture clause (1 char, conditional)", start = 104, len = 1)]
     pub sales_manufacture_clause: Option<String>,

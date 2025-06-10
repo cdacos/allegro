@@ -194,12 +194,6 @@ impl CwrToSqlInt for GroupId {
     }
 }
 
-impl CwrToSqlInt for WorksCount {
-    fn to_sql_int(&self) -> i64 {
-        self.0 as i64
-    }
-}
-
 impl CwrToSqlInt for TransactionCount {
     fn to_sql_int(&self) -> i64 {
         self.0 as i64
@@ -437,12 +431,6 @@ impl CwrFromSqlInt for GroupId {
     }
 }
 
-impl CwrFromSqlInt for WorksCount {
-    fn from_sql_int(value: i64) -> Result<Self, String> {
-        if !(0..=u32::MAX as i64).contains(&value) { Err(format!("WorksCount value {} is out of range", value)) } else { Ok(WorksCount(value as u32)) }
-    }
-}
-
 impl CwrFromSqlInt for TransactionCount {
     fn from_sql_int(value: i64) -> Result<Self, String> {
         if !(0..=99999999).contains(&value) { Err(format!("TransactionCount value {} is out of range 0-99999999", value)) } else { Ok(TransactionCount(value as u32)) }
@@ -493,13 +481,6 @@ impl CwrFromSqlString for GroupCount {
     fn from_sql_string(value: &str) -> Result<Self, String> {
         let (parsed, warnings) = GroupCount::parse_cwr_field(value, "sql_field", "SQL Field");
         if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing GroupCount: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
-    }
-}
-
-impl CwrFromSqlString for WorksCount {
-    fn from_sql_string(value: &str) -> Result<Self, String> {
-        let (parsed, warnings) = WorksCount::parse_cwr_field(value, "sql_field", "SQL Field");
-        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing WorksCount: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
     }
 }
 

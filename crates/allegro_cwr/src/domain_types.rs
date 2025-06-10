@@ -53,21 +53,6 @@ impl<T: CwrFieldWrite> CwrFieldWrite for Option<T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Default, serde::Serialize, serde::Deserialize)]
-pub struct WorksCount(pub u32);
-
-impl WorksCount {
-    pub fn as_str(&self) -> String {
-        self.0.to_string()
-    }
-}
-
-impl CwrFieldWrite for WorksCount {
-    fn to_cwr_str(&self) -> String {
-        self.as_str()
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub enum YesNo {
     Yes,
@@ -183,24 +168,6 @@ impl CwrFieldParse for Option<Date> {
         } else {
             let (date, warnings) = Date::parse_cwr_field(source, field_name, field_title);
             (Some(date), warnings)
-        }
-    }
-}
-
-// Implement CwrFieldParse for WorksCount
-impl CwrFieldParse for WorksCount {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
-        let trimmed = source.trim();
-        match trimmed.parse::<u32>() {
-            Ok(count) if (1..=99999).contains(&count) => (WorksCount(count), vec![]),
-            Ok(count) => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Works count {} outside valid range 1-99999", count) }];
-                (WorksCount(count.clamp(1, 99999)), warnings)
-            }
-            Err(_) => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid number format: {}", trimmed) }];
-                (WorksCount(0), warnings)
-            }
         }
     }
 }
