@@ -25,7 +25,7 @@ pub struct NatRecord {
     pub title_type: TitleType,
 
     #[cwr(title = "Language code (optional)", start = 661, len = 2)]
-    pub language_code: Option<LookupPlaceholder>,
+    pub language_code: Option<LanguageCode>,
 }
 
 // Custom validation function for NAT record

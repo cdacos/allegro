@@ -23,7 +23,7 @@ pub struct NetRecord {
     pub title: String,
 
     #[cwr(title = "Language code (optional)", start = 659, len = 2)]
-    pub language_code: Option<LookupPlaceholder>,
+    pub language_code: Option<LanguageCode>,
 }
 
 // Custom validation function for NET/NCT/NVT records

@@ -43,19 +43,19 @@ pub struct SpuRecord {
     pub submitter_agreement_number: Option<String>,
 
     #[cwr(title = "PR affiliation society number (conditional)", start = 112, len = 3)]
-    pub pr_affiliation_society_num: Option<LookupPlaceholder>,
+    pub pr_affiliation_society_num: Option<SocietyCode>,
 
     #[cwr(title = "PR ownership share (conditional)", start = 115, len = 5)]
     pub pr_ownership_share: Option<OwnershipShare>,
 
     #[cwr(title = "MR society (conditional)", start = 120, len = 3)]
-    pub mr_society: Option<LookupPlaceholder>,
+    pub mr_society: Option<SocietyCode>,
 
     #[cwr(title = "MR ownership share (conditional)", start = 123, len = 5)]
     pub mr_ownership_share: Option<OwnershipShare>,
 
     #[cwr(title = "SR society (conditional)", start = 128, len = 3)]
-    pub sr_society: Option<LookupPlaceholder>,
+    pub sr_society: Option<SocietyCode>,
 
     #[cwr(title = "SR ownership share (conditional)", start = 131, len = 5)]
     pub sr_ownership_share: Option<OwnershipShare>,

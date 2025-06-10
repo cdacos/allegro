@@ -16,16 +16,16 @@ pub struct AriRecord {
     pub record_sequence_num: Number,
 
     #[cwr(title = "Society number", start = 19, len = 3)]
-    pub society_num: LookupPlaceholder,
+    pub society_num: SocietyCode,
 
     #[cwr(title = "Work number (conditional)", start = 22, len = 14)]
     pub work_num: Option<String>,
 
     #[cwr(title = "Type of right", start = 36, len = 3)]
-    pub type_of_right: LookupPlaceholder,
+    pub type_of_right: TypeOfRight,
 
     #[cwr(title = "Subject code (conditional)", start = 39, len = 2)]
-    pub subject_code: Option<LookupPlaceholder>,
+    pub subject_code: Option<SubjectCode>,
 
     #[cwr(title = "Note (conditional)", start = 41, len = 160)]
     pub note: Option<String>,
@@ -49,12 +49,7 @@ fn ari_custom_validate(record: &mut AriRecord) -> Vec<CwrWarning<'static>> {
 
     // TODO: Validate society_num against society lookup table
 
-    // Validate type of right is 3 characters
-    if record.type_of_right.as_str().len() != 3 {
-        warnings.push(CwrWarning { field_name: "type_of_right", field_title: "Type of right", source_str: std::borrow::Cow::Owned(record.type_of_right.as_str().to_string()), level: WarningLevel::Critical, description: "Type of right must be exactly 3 characters".to_string() });
-    }
-
-    // TODO: Validate type_of_right against lookup table (e.g., "ALL", "PER", "MEC", "SYN", etc.)
+    // Type of right validation is now handled by the TypeOfRight domain type
 
     // Conditional validation: at least one of work_num, subject_code, or note must be present
     if record.work_num.is_none() && record.subject_code.is_none() && record.note.is_none() {

@@ -25,7 +25,7 @@ pub struct NowRecord {
     pub writer_first_name: NonRomanAlphabet,
 
     #[cwr(title = "Language code (optional)", start = 339, len = 2)]
-    pub language_code: Option<LookupPlaceholder>,
+    pub language_code: Option<LanguageCode>,
 
     #[cwr(title = "Writer position (1 char, optional)", start = 341, len = 1)]
     pub writer_position: Option<LookupPlaceholder>,

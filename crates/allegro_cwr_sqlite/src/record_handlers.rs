@@ -525,7 +525,7 @@ pub fn parse_and_insert_rec<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.version_title.as_deref().unwrap_or(""),
             record.display_artist.as_deref().unwrap_or(""),
             record.record_label.as_deref().unwrap_or(""),
-            record.isrc_validity.as_deref().unwrap_or(""),
+            record.isrc_validity.as_ref().map(|x| x.as_str()).unwrap_or(""),
             record.submitter_recording_identifier.as_deref().unwrap_or(""),
         ])?;
         Ok(())
@@ -581,7 +581,7 @@ pub fn parse_and_insert_ins<'a>(line_number: usize, tx: &'a Transaction, stmts: 
 
 pub fn parse_and_insert_ind<'a>(line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext, safe_slice: &impl Fn(usize, usize) -> Result<Option<String>, CwrParseError>) -> Result<(), crate::CwrDbError> {
     handle_record_with_warnings(line_number, tx, stmts, context, safe_slice, IndRecord::from_cwr_line, |record, stmts, file_id| {
-        stmts.ind_stmt.execute(params![file_id, record.record_type.to_sql_string(), record.transaction_sequence_num.to_sql_int(), record.record_sequence_num.to_sql_int(), record.instrument_code, &opt_domain_to_int(&record.number_of_players).unwrap_or(0).to_string(),])?;
+        stmts.ind_stmt.execute(params![file_id, record.record_type.to_sql_string(), record.transaction_sequence_num.to_sql_int(), record.record_sequence_num.to_sql_int(), record.instrument_code.to_sql_string(), &opt_domain_to_int(&record.number_of_players).unwrap_or(0).to_string(),])?;
         Ok(())
     })
 }
@@ -649,10 +649,10 @@ pub fn parse_and_insert_ari<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.record_type.to_sql_string(),
             record.transaction_sequence_num.to_sql_int(),
             record.record_sequence_num.to_sql_int(),
-            record.society_num,
+            record.society_num.as_str(),
             record.work_num,
             record.type_of_right.as_str(),
-            record.subject_code.as_deref().unwrap_or(""),
+            record.subject_code.as_ref().map(|x| x.as_str()).unwrap_or(""),
             record.note.as_deref().unwrap_or(""),
         ])?;
         Ok(())

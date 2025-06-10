@@ -25,7 +25,7 @@ pub struct EwtRecord {
     pub iswc_of_entire_work: Option<String>,
 
     #[cwr(title = "Language code (optional)", start = 90, len = 2)]
-    pub language_code: Option<LookupPlaceholder>,
+    pub language_code: Option<LanguageCode>,
 
     #[cwr(title = "Writer 1 last name (optional)", start = 92, len = 45)]
     pub writer_1_last_name: Option<String>,

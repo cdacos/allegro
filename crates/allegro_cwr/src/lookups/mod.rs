@@ -5,6 +5,7 @@ pub mod agreement_types;
 pub mod composite_types;
 pub mod currency_codes;
 pub mod excerpt_types;
+pub mod instrument_codes;
 pub mod intended_purposes;
 pub mod language_codes;
 pub mod lyric_adaptations;

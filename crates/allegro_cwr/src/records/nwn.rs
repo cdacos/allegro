@@ -28,7 +28,7 @@ pub struct NwnRecord {
     pub writer_first_name: Option<NonRomanAlphabet>,
 
     #[cwr(title = "Language code (optional)", start = 348, len = 2)]
-    pub language_code: Option<LookupPlaceholder>,
+    pub language_code: Option<LanguageCode>,
 }
 
 // Custom validation function for NWN record

@@ -13,6 +13,14 @@ impl SocietyCode {
     }
 }
 
+impl std::ops::Deref for SocietyCode {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 impl CwrFieldWrite for SocietyCode {
     fn to_cwr_str(&self) -> String {
         self.as_str().to_string()

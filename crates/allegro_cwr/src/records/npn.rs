@@ -28,7 +28,7 @@ pub struct NpnRecord {
     pub publisher_name: String,
 
     #[cwr(title = "Language code (optional)", start = 510, len = 2)]
-    pub language_code: Option<LookupPlaceholder>,
+    pub language_code: Option<LanguageCode>,
 }
 
 // Custom validation function for NPN record

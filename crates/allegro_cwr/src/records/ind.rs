@@ -16,7 +16,7 @@ pub struct IndRecord {
     pub record_sequence_num: Number,
 
     #[cwr(title = "Instrument code", start = 19, len = 3)]
-    pub instrument_code: LookupPlaceholder,
+    pub instrument_code: InstrumentCode,
 
     #[cwr(title = "Number of players (optional)", start = 22, len = 3)]
     pub number_of_players: Option<Number>,
@@ -33,13 +33,7 @@ fn ind_custom_validate(record: &mut IndRecord) -> Vec<CwrWarning<'static>> {
 
     // Validate transaction sequence number is numeric
     // Validate record sequence number is numeric
-    // Validate instrument code is 3 characters
-    if record.instrument_code.as_str().len() != 3 {
-        warnings.push(CwrWarning { field_name: "instrument_code", field_title: "Instrument code", source_str: std::borrow::Cow::Owned(record.instrument_code.as_str().to_string()), level: WarningLevel::Critical, description: "Instrument code must be exactly 3 characters".to_string() });
-    }
-
-    // TODO: Validate instrument_code against standard instrument codes table
-    // Common codes include: PNO (Piano), GUT (Guitar), VLN (Violin), etc.
+    // Instrument code validation is now handled by the InstrumentCode domain type
 
     // Validate number of players if present
     if let Some(ref players) = record.number_of_players {

@@ -67,7 +67,7 @@ pub struct RecRecord {
     pub record_label: Option<String>,
 
     #[cwr(title = "ISRC validity (conditional, v2.2+)", start = 506, len = 20, min_version = 2.2)]
-    pub isrc_validity: Option<LookupPlaceholder>,
+    pub isrc_validity: Option<IsrcValidityIndicator>,
 
     #[cwr(title = "Submitter recording identifier (optional, v2.2+)", start = 526, len = 14, min_version = 2.2)]
     pub submitter_recording_identifier: Option<String>,

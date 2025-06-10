@@ -28,7 +28,7 @@ pub struct NpaRecord {
     pub interested_party_writer_first_name: String,
 
     #[cwr(title = "Language code (optional)", start = 348, len = 2)]
-    pub language_code: Option<LookupPlaceholder>,
+    pub language_code: Option<LanguageCode>,
 }
 
 // Custom validation function for NPA record

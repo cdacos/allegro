@@ -34,19 +34,19 @@ pub struct IpaRecord {
     pub interested_party_writer_first_name: Option<String>,
 
     #[cwr(title = "PR affiliation society (conditional)", start = 129, len = 3)]
-    pub pr_affiliation_society: Option<LookupPlaceholder>,
+    pub pr_affiliation_society: Option<SocietyCode>,
 
     #[cwr(title = "PR share (conditional)", start = 132, len = 5)]
     pub pr_share: Option<OwnershipShare>,
 
     #[cwr(title = "MR affiliation society (conditional)", start = 137, len = 3)]
-    pub mr_affiliation_society: Option<LookupPlaceholder>,
+    pub mr_affiliation_society: Option<SocietyCode>,
 
     #[cwr(title = "MR share (conditional)", start = 140, len = 5)]
     pub mr_share: Option<OwnershipShare>,
 
     #[cwr(title = "SR affiliation society (conditional)", start = 145, len = 3)]
-    pub sr_affiliation_society: Option<LookupPlaceholder>,
+    pub sr_affiliation_society: Option<SocietyCode>,
 
     #[cwr(title = "SR share (conditional)", start = 148, len = 5)]
     pub sr_share: Option<OwnershipShare>,
@@ -66,15 +66,15 @@ fn ipa_custom_validate(record: &mut IpaRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Business rule: If share > 0, corresponding society must be provided
-    if pr_share > 0 && (record.pr_affiliation_society.is_none() || record.pr_affiliation_society.as_ref().is_none_or(|s| s.trim().is_empty())) {
+    if pr_share > 0 && (record.pr_affiliation_society.is_none() || record.pr_affiliation_society.as_ref().is_none_or(|s| s.as_str().trim().is_empty())) {
         warnings.push(CwrWarning { field_name: "pr_affiliation_society", field_title: "PR affiliation society (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "PR affiliation society is required when PR share > 0".to_string() });
     }
 
-    if mr_share > 0 && (record.mr_affiliation_society.is_none() || record.mr_affiliation_society.as_ref().is_none_or(|s| s.trim().is_empty())) {
+    if mr_share > 0 && (record.mr_affiliation_society.is_none() || record.mr_affiliation_society.as_ref().is_none_or(|s| s.as_str().trim().is_empty())) {
         warnings.push(CwrWarning { field_name: "mr_affiliation_society", field_title: "MR affiliation society (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "MR affiliation society is required when MR share > 0".to_string() });
     }
 
-    if sr_share > 0 && (record.sr_affiliation_society.is_none() || record.sr_affiliation_society.as_ref().is_none_or(|s| s.trim().is_empty())) {
+    if sr_share > 0 && (record.sr_affiliation_society.is_none() || record.sr_affiliation_society.as_ref().is_none_or(|s| s.as_str().trim().is_empty())) {
         warnings.push(CwrWarning { field_name: "sr_affiliation_society", field_title: "SR affiliation society (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "SR affiliation society is required when SR share > 0".to_string() });
     }
 

@@ -31,7 +31,7 @@ pub struct NprRecord {
     pub performing_artist_ipi_base_number: Option<LookupPlaceholder>,
 
     #[cwr(title = "Language code (optional)", start = 363, len = 2)]
-    pub language_code: Option<LookupPlaceholder>,
+    pub language_code: Option<LanguageCode>,
 
     #[cwr(title = "Performance language (conditional, v2.1+)", start = 365, len = 2, min_version = 2.1)]
     pub performance_language: Option<LookupPlaceholder>,
