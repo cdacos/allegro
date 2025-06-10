@@ -20,12 +20,20 @@ impl CwrFieldWrite for GroupCount {
 }
 
 impl CwrFieldParse for GroupCount {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         match trimmed.parse::<u32>() {
             Ok(num) => (GroupCount(num), vec![]),
             Err(_) => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid group count format: {}", trimmed) }];
+                let warnings = vec![CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Warning,
+                    description: format!("Invalid group count format: {}", trimmed),
+                }];
                 (GroupCount(0), warnings)
             }
         }

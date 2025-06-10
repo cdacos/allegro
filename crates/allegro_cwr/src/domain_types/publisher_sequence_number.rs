@@ -20,16 +20,30 @@ impl CwrFieldWrite for PublisherSequenceNumber {
 }
 
 impl CwrFieldParse for PublisherSequenceNumber {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         match trimmed.parse::<u8>() {
             Ok(num) if num > 0 && num <= 99 => (PublisherSequenceNumber(num), vec![]),
             Ok(num) => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Publisher sequence number {} out of valid range 1-99", num) }];
+                let warnings = vec![CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Warning,
+                    description: format!("Publisher sequence number {} out of valid range 1-99", num),
+                }];
                 (PublisherSequenceNumber(1), warnings)
             }
             Err(_) => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid publisher sequence number format: {}", trimmed) }];
+                let warnings = vec![CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Warning,
+                    description: format!("Invalid publisher sequence number format: {}", trimmed),
+                }];
                 (PublisherSequenceNumber(1), warnings)
             }
         }
@@ -37,7 +51,9 @@ impl CwrFieldParse for PublisherSequenceNumber {
 }
 
 impl CwrFieldParse for Option<PublisherSequenceNumber> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() || trimmed == "00" {
             (None, vec![])

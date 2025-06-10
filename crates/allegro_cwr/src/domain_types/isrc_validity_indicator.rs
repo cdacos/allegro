@@ -41,14 +41,25 @@ impl CwrFieldWrite for IsrcValidityIndicator {
 }
 
 impl CwrFieldParse for IsrcValidityIndicator {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         let mut warnings = vec![];
 
         match IsrcValidityIndicator::from_str(trimmed) {
             Some(indicator) => (indicator, warnings),
             None => {
-                warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("ISRC Validity Indicator '{}' not found in lookup table. Expected: Y, U, N", trimmed) });
+                warnings.push(CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Warning,
+                    description: format!(
+                        "ISRC Validity Indicator '{}' not found in lookup table. Expected: Y, U, N",
+                        trimmed
+                    ),
+                });
                 (IsrcValidityIndicator::default(), warnings)
             }
         }
@@ -56,7 +67,9 @@ impl CwrFieldParse for IsrcValidityIndicator {
 }
 
 impl CwrFieldParse for Option<IsrcValidityIndicator> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

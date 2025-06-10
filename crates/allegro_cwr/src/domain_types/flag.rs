@@ -27,14 +27,22 @@ impl CwrFieldWrite for Flag {
 }
 
 impl CwrFieldParse for Flag {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         match trimmed {
             "Y" => (Flag::Yes, vec![]),
             "N" => (Flag::No, vec![]),
             "U" => (Flag::Unknown, vec![]),
             _ => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid Y/N/U flag value '{}', defaulting to No", trimmed) }];
+                let warnings = vec![CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Warning,
+                    description: format!("Invalid Y/N/U flag value '{}', defaulting to No", trimmed),
+                }];
                 (Flag::No, warnings)
             }
         }
@@ -42,7 +50,9 @@ impl CwrFieldParse for Flag {
 }
 
 impl CwrFieldParse for Option<Flag> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

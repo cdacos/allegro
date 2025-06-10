@@ -29,14 +29,22 @@ impl CwrFieldWrite for MediaType {
 }
 
 impl CwrFieldParse for MediaType {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::media_types::is_valid_media_type;
 
         let trimmed = source.trim();
         let mut warnings = vec![];
 
         if !trimmed.is_empty() && !is_valid_media_type(trimmed) {
-            warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Media Type '{}' not found in lookup table", trimmed) });
+            warnings.push(CwrWarning {
+                field_name,
+                field_title,
+                source_str: Cow::Owned(source.to_string()),
+                level: WarningLevel::Warning,
+                description: format!("Media Type '{}' not found in lookup table", trimmed),
+            });
         }
 
         (MediaType(trimmed.to_string()), warnings)
@@ -44,7 +52,9 @@ impl CwrFieldParse for MediaType {
 }
 
 impl CwrFieldParse for Option<MediaType> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

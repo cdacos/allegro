@@ -61,19 +61,37 @@ fn com_custom_validate(record: &mut ComRecord) -> Vec<CwrWarning<'static>> {
 
     // Business rule: Title cannot be empty
     if record.title.trim().is_empty() {
-        warnings.push(CwrWarning { field_name: "title", field_title: "Title", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Component title cannot be empty".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "title",
+            field_title: "Title",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Critical,
+            description: "Component title cannot be empty".to_string(),
+        });
     }
 
     // Business rule: Writer 1 last name cannot be empty (required field)
     if record.writer_1_last_name.trim().is_empty() {
-        warnings.push(CwrWarning { field_name: "writer_1_last_name", field_title: "Writer 1 last name", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Writer 1 last name cannot be empty".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "writer_1_last_name",
+            field_title: "Writer 1 last name",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Critical,
+            description: "Writer 1 last name cannot be empty".to_string(),
+        });
     }
 
     // Business rule: ISWC format validation (if provided)
     if let Some(ref iswc) = record.iswc_of_component {
         let iswc_trimmed = iswc.trim();
         if !iswc_trimmed.is_empty() && iswc_trimmed.len() != 11 {
-            warnings.push(CwrWarning { field_name: "iswc_of_component", field_title: "ISWC of component (optional)", source_str: std::borrow::Cow::Owned(iswc.clone()), level: WarningLevel::Warning, description: "ISWC should be exactly 11 characters (T-NNNNNNNN-C format)".to_string() });
+            warnings.push(CwrWarning {
+                field_name: "iswc_of_component",
+                field_title: "ISWC of component (optional)",
+                source_str: std::borrow::Cow::Owned(iswc.clone()),
+                level: WarningLevel::Warning,
+                description: "ISWC should be exactly 11 characters (T-NNNNNNNN-C format)".to_string(),
+            });
         }
     }
 

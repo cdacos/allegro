@@ -20,12 +20,20 @@ impl CwrFieldWrite for EdiStandardVersion {
 }
 
 impl CwrFieldParse for EdiStandardVersion {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed == "01.10" {
             (EdiStandardVersion(trimmed.to_string()), vec![])
         } else {
-            let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid EDI standard version '{}', must be '01.10'", trimmed) }];
+            let warnings = vec![CwrWarning {
+                field_name,
+                field_title,
+                source_str: Cow::Owned(source.to_string()),
+                level: WarningLevel::Critical,
+                description: format!("Invalid EDI standard version '{}', must be '01.10'", trimmed),
+            }];
             (EdiStandardVersion("01.10".to_string()), warnings)
         }
     }

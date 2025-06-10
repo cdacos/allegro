@@ -20,14 +20,22 @@ impl CwrFieldWrite for WorkType {
 }
 
 impl CwrFieldParse for WorkType {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::work_types::is_valid_work_type;
 
         let trimmed = source.trim().to_uppercase();
         let mut warnings = vec![];
 
         if !is_valid_work_type(&trimmed) {
-            warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Work Type '{}' not found in lookup table", trimmed) });
+            warnings.push(CwrWarning {
+                field_name,
+                field_title,
+                source_str: Cow::Owned(source.to_string()),
+                level: WarningLevel::Warning,
+                description: format!("Work Type '{}' not found in lookup table", trimmed),
+            });
         }
 
         (WorkType(trimmed), warnings)
@@ -35,7 +43,9 @@ impl CwrFieldParse for WorkType {
 }
 
 impl CwrFieldParse for Option<WorkType> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

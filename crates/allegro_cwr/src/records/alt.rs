@@ -31,12 +31,28 @@ fn alt_custom_validate(record: &mut AltRecord) -> Vec<CwrWarning<'static>> {
 
     // Business rule: Alternate title cannot be empty
     if record.alternate_title.trim().is_empty() {
-        warnings.push(CwrWarning { field_name: "alternate_title", field_title: "Alternate title", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Alternate title cannot be empty".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "alternate_title",
+            field_title: "Alternate title",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Critical,
+            description: "Alternate title cannot be empty".to_string(),
+        });
     }
 
     // Business rule: Language code required for translated and transliterated titles
-    if matches!(record.title_type, TitleType::TranslatedTitle | TitleType::TransliterationTrans | TitleType::TransliterationAlt) && (record.language_code.is_none() || record.language_code.as_ref().is_none_or(|s| s.trim().is_empty())) {
-        warnings.push(CwrWarning { field_name: "language_code", field_title: "Language code (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Language code is required for translated and transliterated titles".to_string() });
+    if matches!(
+        record.title_type,
+        TitleType::TranslatedTitle | TitleType::TransliterationTrans | TitleType::TransliterationAlt
+    ) && (record.language_code.is_none() || record.language_code.as_ref().is_none_or(|s| s.trim().is_empty()))
+    {
+        warnings.push(CwrWarning {
+            field_name: "language_code",
+            field_title: "Language code (conditional)",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Critical,
+            description: "Language code is required for translated and transliterated titles".to_string(),
+        });
     }
 
     // TODO: Additional business rules requiring broader context:

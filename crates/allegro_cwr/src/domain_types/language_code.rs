@@ -28,14 +28,22 @@ impl CwrFieldWrite for LanguageCode {
 }
 
 impl CwrFieldParse for LanguageCode {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::language_codes::is_valid_language_code;
 
         let trimmed = source.trim().to_uppercase();
         let mut warnings = vec![];
 
         if !is_valid_language_code(&trimmed) {
-            warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Language code '{}' not found in CIS Language Code table", trimmed) });
+            warnings.push(CwrWarning {
+                field_name,
+                field_title,
+                source_str: Cow::Owned(source.to_string()),
+                level: WarningLevel::Warning,
+                description: format!("Language code '{}' not found in CIS Language Code table", trimmed),
+            });
         }
 
         (LanguageCode(trimmed), warnings)
@@ -43,7 +51,9 @@ impl CwrFieldParse for LanguageCode {
 }
 
 impl CwrFieldParse for Option<LanguageCode> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

@@ -20,14 +20,22 @@ impl CwrFieldWrite for MusicalWorkDistributionCategory {
 }
 
 impl CwrFieldParse for MusicalWorkDistributionCategory {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::musical_work_distribution_categories::is_valid_musical_work_distribution_category;
 
         let trimmed = source.trim().to_uppercase();
         let mut warnings = vec![];
 
         if !is_valid_musical_work_distribution_category(&trimmed) {
-            warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Musical Work Distribution Category '{}' not found in lookup table", trimmed) });
+            warnings.push(CwrWarning {
+                field_name,
+                field_title,
+                source_str: Cow::Owned(source.to_string()),
+                level: WarningLevel::Warning,
+                description: format!("Musical Work Distribution Category '{}' not found in lookup table", trimmed),
+            });
         }
 
         (MusicalWorkDistributionCategory(trimmed), warnings)
@@ -35,12 +43,15 @@ impl CwrFieldParse for MusicalWorkDistributionCategory {
 }
 
 impl CwrFieldParse for Option<MusicalWorkDistributionCategory> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])
         } else {
-            let (category, warnings) = MusicalWorkDistributionCategory::parse_cwr_field(source, field_name, field_title);
+            let (category, warnings) =
+                MusicalWorkDistributionCategory::parse_cwr_field(source, field_name, field_title);
             (Some(category), warnings)
         }
     }

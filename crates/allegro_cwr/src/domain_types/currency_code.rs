@@ -20,14 +20,22 @@ impl CwrFieldWrite for CurrencyCode {
 }
 
 impl CwrFieldParse for CurrencyCode {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::currency_codes::is_valid_currency_code;
 
         let trimmed = source.trim().to_uppercase();
         let mut warnings = vec![];
 
         if !is_valid_currency_code(&trimmed) {
-            warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Currency code '{}' not found in ISO 4217 table", trimmed) });
+            warnings.push(CwrWarning {
+                field_name,
+                field_title,
+                source_str: Cow::Owned(source.to_string()),
+                level: WarningLevel::Warning,
+                description: format!("Currency code '{}' not found in ISO 4217 table", trimmed),
+            });
         }
 
         (CurrencyCode(trimmed), warnings)
@@ -35,7 +43,9 @@ impl CwrFieldParse for CurrencyCode {
 }
 
 impl CwrFieldParse for Option<CurrencyCode> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

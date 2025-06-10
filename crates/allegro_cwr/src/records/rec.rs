@@ -79,9 +79,16 @@ fn rec_custom_validate(record: &mut RecRecord) -> Vec<CwrWarning<'static>> {
 
     // Business rule: Release date should not be in the future
     if let Some(ref release_date) = record.release_date {
-        let current_timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as i64;
+        let current_timestamp =
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as i64;
         if release_date.to_timestamp() > current_timestamp {
-            warnings.push(CwrWarning { field_name: "release_date", field_title: "Release date YYYYMMDD (optional)", source_str: std::borrow::Cow::Owned(release_date.as_str()), level: WarningLevel::Warning, description: format!("Release date {} is in the future", release_date.as_str()) });
+            warnings.push(CwrWarning {
+                field_name: "release_date",
+                field_title: "Release date YYYYMMDD (optional)",
+                source_str: std::borrow::Cow::Owned(release_date.as_str()),
+                level: WarningLevel::Warning,
+                description: format!("Release date {} is in the future", release_date.as_str()),
+            });
         }
     }
 

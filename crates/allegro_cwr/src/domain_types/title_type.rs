@@ -44,7 +44,9 @@ impl CwrFieldWrite for TitleType {
 }
 
 impl CwrFieldParse for TitleType {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         match trimmed {
             "AT" => (TitleType::AlternateTitle, vec![]),
@@ -57,7 +59,13 @@ impl CwrFieldParse for TitleType {
             "ST" => (TitleType::SearchTitle, vec![]),
             "TT" => (TitleType::TranslatedTitle, vec![]),
             _ => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Unknown title type '{}', defaulting to AT", trimmed) }];
+                let warnings = vec![CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Warning,
+                    description: format!("Unknown title type '{}', defaulting to AT", trimmed),
+                }];
                 (TitleType::AlternateTitle, warnings)
             }
         }

@@ -49,7 +49,9 @@ pub use cwr_handler::CwrHandler;
 use log::info;
 
 /// Generic function to process CWR file with any handler that implements CwrHandler trait
-pub fn process_cwr_with_handler<H: CwrHandler>(input_filename: &str, handler: H) -> Result<String, Box<dyn std::error::Error>>
+pub fn process_cwr_with_handler<H: CwrHandler>(
+    input_filename: &str, handler: H,
+) -> Result<String, Box<dyn std::error::Error>>
 where
     H::Error: 'static,
 {
@@ -57,7 +59,9 @@ where
 }
 
 /// Generic function to process CWR file with any handler that implements CwrHandler trait and optional version hint
-pub fn process_cwr_with_handler_and_version<H: CwrHandler>(input_filename: &str, mut handler: H, version_hint: Option<f32>) -> Result<String, Box<dyn std::error::Error>>
+pub fn process_cwr_with_handler_and_version<H: CwrHandler>(
+    input_filename: &str, mut handler: H, version_hint: Option<f32>,
+) -> Result<String, Box<dyn std::error::Error>>
 where
     H::Error: 'static,
 {
@@ -69,7 +73,11 @@ where
             Ok(parsed_record) => {
                 // Handle warnings if any
                 if !parsed_record.warnings.is_empty() {
-                    handler.handle_warnings(parsed_record.line_number, parsed_record.record.record_type(), &parsed_record.warnings)?;
+                    handler.handle_warnings(
+                        parsed_record.line_number,
+                        parsed_record.record.record_type(),
+                        &parsed_record.warnings,
+                    )?;
                 }
                 handler.process_record(parsed_record)?;
                 processed_count += 1;

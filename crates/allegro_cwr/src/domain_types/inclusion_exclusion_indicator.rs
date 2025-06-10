@@ -29,13 +29,21 @@ impl CwrFieldWrite for InclusionExclusionIndicator {
 }
 
 impl CwrFieldParse for InclusionExclusionIndicator {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         match trimmed {
             "I" => (InclusionExclusionIndicator::Included, vec![]),
             "E" => (InclusionExclusionIndicator::Excluded, vec![]),
             _ => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid inclusion/exclusion indicator '{}', must be I or E", trimmed) }];
+                let warnings = vec![CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Critical,
+                    description: format!("Invalid inclusion/exclusion indicator '{}', must be I or E", trimmed),
+                }];
                 (InclusionExclusionIndicator::Included, warnings)
             }
         }

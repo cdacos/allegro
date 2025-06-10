@@ -20,14 +20,22 @@ impl CwrFieldWrite for UsaLicenseIndicator {
 }
 
 impl CwrFieldParse for UsaLicenseIndicator {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::usa_license_indicators::is_valid_usa_license_indicator;
 
         let trimmed = source.trim().to_uppercase();
         let mut warnings = vec![];
 
         if !is_valid_usa_license_indicator(&trimmed) {
-            warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("USA License Indicator '{}' not found in lookup table", trimmed) });
+            warnings.push(CwrWarning {
+                field_name,
+                field_title,
+                source_str: Cow::Owned(source.to_string()),
+                level: WarningLevel::Warning,
+                description: format!("USA License Indicator '{}' not found in lookup table", trimmed),
+            });
         }
 
         (UsaLicenseIndicator(trimmed), warnings)
@@ -35,12 +43,15 @@ impl CwrFieldParse for UsaLicenseIndicator {
 }
 
 impl CwrFieldParse for Option<UsaLicenseIndicator> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])
         } else {
-            let (usa_license_indicator, warnings) = UsaLicenseIndicator::parse_cwr_field(source, field_name, field_title);
+            let (usa_license_indicator, warnings) =
+                UsaLicenseIndicator::parse_cwr_field(source, field_name, field_title);
             (Some(usa_license_indicator), warnings)
         }
     }

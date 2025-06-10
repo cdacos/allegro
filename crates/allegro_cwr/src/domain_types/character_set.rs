@@ -35,7 +35,9 @@ impl CwrFieldWrite for CharacterSet {
 }
 
 impl CwrFieldParse for CharacterSet {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         match trimmed {
             "ASCII" => (CharacterSet::ASCII, vec![]),
@@ -44,7 +46,13 @@ impl CwrFieldParse for CharacterSet {
             "UTF-8" => (CharacterSet::UTF8, vec![]),
             "Unicode" => (CharacterSet::Unicode, vec![]),
             _ => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Info, description: format!("Unknown character set '{}', treating as custom", trimmed) }];
+                let warnings = vec![CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Info,
+                    description: format!("Unknown character set '{}', treating as custom", trimmed),
+                }];
                 (CharacterSet::Unknown(trimmed.to_string()), warnings)
             }
         }
@@ -52,7 +60,9 @@ impl CwrFieldParse for CharacterSet {
 }
 
 impl CwrFieldParse for Option<CharacterSet> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

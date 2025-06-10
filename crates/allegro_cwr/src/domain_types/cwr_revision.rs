@@ -20,12 +20,20 @@ impl CwrFieldWrite for CwrRevision {
 }
 
 impl CwrFieldParse for CwrRevision {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         match trimmed.parse::<u32>() {
             Ok(num) => (CwrRevision(num), vec![]),
             Err(_) => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid revision number format: {}", trimmed) }];
+                let warnings = vec![CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Warning,
+                    description: format!("Invalid revision number format: {}", trimmed),
+                }];
                 (CwrRevision(0), warnings)
             }
         }
@@ -33,7 +41,9 @@ impl CwrFieldParse for CwrRevision {
 }
 
 impl CwrFieldParse for Option<CwrRevision> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

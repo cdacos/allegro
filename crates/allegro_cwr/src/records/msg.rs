@@ -40,7 +40,13 @@ fn msg_custom_validate(record: &mut MsgRecord) -> Vec<CwrWarning<'static>> {
 
     // Validate record type
     if record.record_type != "MSG" {
-        warnings.push(CwrWarning { field_name: "record_type", field_title: "Always 'MSG'", source_str: std::borrow::Cow::Owned(record.record_type.clone()), level: WarningLevel::Critical, description: "Record type must be 'MSG'".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "record_type",
+            field_title: "Always 'MSG'",
+            source_str: std::borrow::Cow::Owned(record.record_type.clone()),
+            level: WarningLevel::Critical,
+            description: "Record type must be 'MSG'".to_string(),
+        });
     }
 
     // Validate transaction sequence number is numeric
@@ -50,7 +56,13 @@ fn msg_custom_validate(record: &mut MsgRecord) -> Vec<CwrWarning<'static>> {
     // Validate original record sequence number is numeric
     // Validate record type field (3 characters, uppercase)
     if record.record_type_field.len() != 3 {
-        warnings.push(CwrWarning { field_name: "record_type_field", field_title: "Record type", source_str: std::borrow::Cow::Owned(record.record_type_field.clone()), level: WarningLevel::Critical, description: "Record type field must be exactly 3 characters".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "record_type_field",
+            field_title: "Record type",
+            source_str: std::borrow::Cow::Owned(record.record_type_field.clone()),
+            level: WarningLevel::Critical,
+            description: "Record type field must be exactly 3 characters".to_string(),
+        });
     }
     // TODO: Validate against known CWR record types
 
@@ -58,12 +70,24 @@ fn msg_custom_validate(record: &mut MsgRecord) -> Vec<CwrWarning<'static>> {
 
     // Validate validation number is 3 characters
     if record.validation_number.len() != 3 {
-        warnings.push(CwrWarning { field_name: "validation_number", field_title: "Validation number", source_str: std::borrow::Cow::Owned(record.validation_number.clone()), level: WarningLevel::Critical, description: "Validation number must be exactly 3 characters".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "validation_number",
+            field_title: "Validation number",
+            source_str: std::borrow::Cow::Owned(record.validation_number.clone()),
+            level: WarningLevel::Critical,
+            description: "Validation number must be exactly 3 characters".to_string(),
+        });
     }
 
     // Validate message text is not empty
     if record.message_text.trim().is_empty() {
-        warnings.push(CwrWarning { field_name: "message_text", field_title: "Message text", source_str: std::borrow::Cow::Owned(record.message_text.clone()), level: WarningLevel::Critical, description: "Message text cannot be empty".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "message_text",
+            field_title: "Message text",
+            source_str: std::borrow::Cow::Owned(record.message_text.clone()),
+            level: WarningLevel::Critical,
+            description: "Message text cannot be empty".to_string(),
+        });
     }
 
     warnings

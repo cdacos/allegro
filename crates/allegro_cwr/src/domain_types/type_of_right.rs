@@ -41,14 +41,25 @@ impl CwrFieldWrite for TypeOfRight {
 }
 
 impl CwrFieldParse for TypeOfRight {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         let mut warnings = vec![];
 
         match TypeOfRight::from_str(trimmed) {
             Some(type_of_right) => (type_of_right, warnings),
             None => {
-                warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Type of Right '{}' not found in lookup table. Expected: MEC, PER, SYN", trimmed) });
+                warnings.push(CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Warning,
+                    description: format!(
+                        "Type of Right '{}' not found in lookup table. Expected: MEC, PER, SYN",
+                        trimmed
+                    ),
+                });
                 (TypeOfRight::default(), warnings)
             }
         }
@@ -56,7 +67,9 @@ impl CwrFieldParse for TypeOfRight {
 }
 
 impl CwrFieldParse for Option<TypeOfRight> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

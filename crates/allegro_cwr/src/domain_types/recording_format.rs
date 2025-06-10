@@ -33,7 +33,9 @@ impl CwrFieldWrite for RecordingFormat {
 }
 
 impl CwrFieldParse for RecordingFormat {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         match trimmed {
             "U" => (RecordingFormat::Unknown, vec![]),
@@ -41,7 +43,13 @@ impl CwrFieldParse for RecordingFormat {
             "M" => (RecordingFormat::Mono, vec![]),
             "Q" => (RecordingFormat::Quadrophonic, vec![]),
             _ => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid recording format '{}', defaulting to Unknown", trimmed) }];
+                let warnings = vec![CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Warning,
+                    description: format!("Invalid recording format '{}', defaulting to Unknown", trimmed),
+                }];
                 (RecordingFormat::Unknown, warnings)
             }
         }
@@ -49,7 +57,9 @@ impl CwrFieldParse for RecordingFormat {
 }
 
 impl CwrFieldParse for Option<RecordingFormat> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

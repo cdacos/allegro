@@ -404,7 +404,13 @@ fn extract_field_attrs(attrs: &[syn::Attribute]) -> (String, usize, usize, bool,
             let result: Result<CwrFieldAttribute, _> = attr.parse_args();
             if let Ok(field_attr) = result {
                 let min_version = field_attr.min_version.map(|v| v.base10_parse::<f32>().unwrap());
-                return (field_attr.title.value(), field_attr.start.base10_parse().unwrap(), field_attr.len.base10_parse().unwrap(), field_attr.skip_parse, min_version);
+                return (
+                    field_attr.title.value(),
+                    field_attr.start.base10_parse().unwrap(),
+                    field_attr.len.base10_parse().unwrap(),
+                    field_attr.skip_parse,
+                    min_version,
+                );
             }
         }
     }
@@ -503,6 +509,12 @@ impl syn::parse::Parse for CwrFieldAttribute {
             }
         }
 
-        Ok(CwrFieldAttribute { title: title.ok_or_else(|| input.error("Missing 'title' attribute"))?, start: start.ok_or_else(|| input.error("Missing 'start' attribute"))?, len: len.ok_or_else(|| input.error("Missing 'len' attribute"))?, skip_parse, min_version })
+        Ok(CwrFieldAttribute {
+            title: title.ok_or_else(|| input.error("Missing 'title' attribute"))?,
+            start: start.ok_or_else(|| input.error("Missing 'start' attribute"))?,
+            len: len.ok_or_else(|| input.error("Missing 'len' attribute"))?,
+            skip_parse,
+            min_version,
+        })
     }
 }

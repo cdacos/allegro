@@ -20,14 +20,22 @@ impl CwrFieldWrite for InstrumentCode {
 }
 
 impl CwrFieldParse for InstrumentCode {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::instrument_codes::is_valid_instrument_code;
 
         let trimmed = source.trim();
         let mut warnings = vec![];
 
         if !is_valid_instrument_code(trimmed) {
-            warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Instrument Code '{}' not found in lookup table", trimmed) });
+            warnings.push(CwrWarning {
+                field_name,
+                field_title,
+                source_str: Cow::Owned(source.to_string()),
+                level: WarningLevel::Warning,
+                description: format!("Instrument Code '{}' not found in lookup table", trimmed),
+            });
         }
 
         (InstrumentCode(trimmed.to_string()), warnings)
@@ -35,7 +43,9 @@ impl CwrFieldParse for InstrumentCode {
 }
 
 impl CwrFieldParse for Option<InstrumentCode> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

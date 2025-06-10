@@ -31,17 +31,31 @@ impl CwrFieldWrite for Date {
 }
 
 impl CwrFieldParse for Date {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.len() != 8 {
-            let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Date should be 8 characters YYYYMMDD, got {}", trimmed.len()) }];
+            let warnings = vec![CwrWarning {
+                field_name,
+                field_title,
+                source_str: Cow::Owned(source.to_string()),
+                level: WarningLevel::Warning,
+                description: format!("Date should be 8 characters YYYYMMDD, got {}", trimmed.len()),
+            }];
             return (Date(NaiveDate::from_ymd_opt(1900, 1, 1).unwrap()), warnings);
         }
 
         match NaiveDate::parse_from_str(trimmed, "%Y%m%d") {
             Ok(date) => (Date(date), vec![]),
             Err(_) => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid date format: {}", trimmed) }];
+                let warnings = vec![CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Warning,
+                    description: format!("Invalid date format: {}", trimmed),
+                }];
                 (Date(NaiveDate::from_ymd_opt(1900, 1, 1).unwrap()), warnings)
             }
         }
@@ -49,7 +63,9 @@ impl CwrFieldParse for Date {
 }
 
 impl CwrFieldParse for Option<Date> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() || trimmed == "00000000" {
             (None, vec![])

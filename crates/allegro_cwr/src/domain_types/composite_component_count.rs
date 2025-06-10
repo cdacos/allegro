@@ -20,12 +20,20 @@ impl CwrFieldWrite for CompositeComponentCount {
 }
 
 impl CwrFieldParse for CompositeComponentCount {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         match trimmed.parse::<u16>() {
             Ok(num) => (CompositeComponentCount(num), vec![]),
             Err(_) => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid composite component count format: {}", trimmed) }];
+                let warnings = vec![CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Warning,
+                    description: format!("Invalid composite component count format: {}", trimmed),
+                }];
                 (CompositeComponentCount(0), warnings)
             }
         }
@@ -33,7 +41,9 @@ impl CwrFieldParse for CompositeComponentCount {
 }
 
 impl CwrFieldParse for Option<CompositeComponentCount> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() || trimmed == "000" {
             (None, vec![])

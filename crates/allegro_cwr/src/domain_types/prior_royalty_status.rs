@@ -31,14 +31,22 @@ impl CwrFieldWrite for PriorRoyaltyStatus {
 }
 
 impl CwrFieldParse for PriorRoyaltyStatus {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         match trimmed {
             "N" => (PriorRoyaltyStatus::None, vec![]),
             "A" => (PriorRoyaltyStatus::Acquired, vec![]),
             "D" => (PriorRoyaltyStatus::Designated, vec![]),
             _ => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid prior royalty status '{}', must be N, A, or D", trimmed) }];
+                let warnings = vec![CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Critical,
+                    description: format!("Invalid prior royalty status '{}', must be N, A, or D", trimmed),
+                }];
                 (PriorRoyaltyStatus::None, warnings)
             }
         }

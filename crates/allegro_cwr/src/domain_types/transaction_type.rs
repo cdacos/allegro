@@ -37,7 +37,9 @@ impl CwrFieldWrite for TransactionType {
 }
 
 impl CwrFieldParse for TransactionType {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         match trimmed {
             "NWR" => (TransactionType::NWR, vec![]),
@@ -47,7 +49,16 @@ impl CwrFieldParse for TransactionType {
             "ISW" => (TransactionType::ISW, vec![]),
             "EXC" => (TransactionType::EXC, vec![]),
             _ => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid transaction type '{}', must be NWR, REV, AGR, ACK, ISW, or EXC", trimmed) }];
+                let warnings = vec![CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Critical,
+                    description: format!(
+                        "Invalid transaction type '{}', must be NWR, REV, AGR, ACK, ISW, or EXC",
+                        trimmed
+                    ),
+                }];
                 (TransactionType::NWR, warnings)
             }
         }

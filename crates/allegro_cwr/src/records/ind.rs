@@ -28,7 +28,13 @@ fn ind_custom_validate(record: &mut IndRecord) -> Vec<CwrWarning<'static>> {
 
     // Validate record type
     if record.record_type != "IND" {
-        warnings.push(CwrWarning { field_name: "record_type", field_title: "Always 'IND'", source_str: std::borrow::Cow::Owned(record.record_type.clone()), level: WarningLevel::Critical, description: "Record type must be 'IND'".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "record_type",
+            field_title: "Always 'IND'",
+            source_str: std::borrow::Cow::Owned(record.record_type.clone()),
+            level: WarningLevel::Critical,
+            description: "Record type must be 'IND'".to_string(),
+        });
     }
 
     // Validate transaction sequence number is numeric
@@ -38,7 +44,13 @@ fn ind_custom_validate(record: &mut IndRecord) -> Vec<CwrWarning<'static>> {
     // Validate number of players if present
     if let Some(ref players) = record.number_of_players {
         if players.0 == 0 {
-            warnings.push(CwrWarning { field_name: "number_of_players", field_title: "Number of players (optional)", source_str: std::borrow::Cow::Owned(players.to_string()), level: WarningLevel::Warning, description: "Number of players should be greater than 0 if specified".to_string() });
+            warnings.push(CwrWarning {
+                field_name: "number_of_players",
+                field_title: "Number of players (optional)",
+                source_str: std::borrow::Cow::Owned(players.to_string()),
+                level: WarningLevel::Warning,
+                description: "Number of players should be greater than 0 if specified".to_string(),
+            });
         }
     }
 

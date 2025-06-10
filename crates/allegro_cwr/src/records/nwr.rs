@@ -97,36 +97,70 @@ fn nwr_custom_validate(record: &mut NwrRecord) -> Vec<CwrWarning<'static>> {
 
     // Business rule: Duration required if Musical Work Distribution Category = "SER"
     if record.musical_work_distribution_category.as_str() == "SER" && record.duration.is_none() {
-        warnings.push(CwrWarning { field_name: "duration", field_title: "Duration HHMMSS (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Duration is required when Musical Work Distribution Category is 'SER'".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "duration",
+            field_title: "Duration HHMMSS (conditional)",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Critical,
+            description: "Duration is required when Musical Work Distribution Category is 'SER'".to_string(),
+        });
     }
 
     // Business rule: Duration must be > 0 if present
     if let Some(ref duration) = record.duration {
         let seconds = duration.duration_since_midnight();
         if seconds == 0.0 {
-            warnings.push(CwrWarning { field_name: "duration", field_title: "Duration HHMMSS (conditional)", source_str: std::borrow::Cow::Owned(duration.as_str()), level: WarningLevel::Warning, description: "Duration should be greater than 00:00:00 if specified".to_string() });
+            warnings.push(CwrWarning {
+                field_name: "duration",
+                field_title: "Duration HHMMSS (conditional)",
+                source_str: std::borrow::Cow::Owned(duration.as_str()),
+                level: WarningLevel::Warning,
+                description: "Duration should be greater than 00:00:00 if specified".to_string(),
+            });
         }
     }
 
     // Business rule: Music Arrangement required if Version Type = "MOD"
     if record.version_type.as_str() == "MOD" {
-        if record.music_arrangement.is_none() || record.music_arrangement.as_ref().is_none_or(|s| s.as_str().trim().is_empty()) {
-            warnings.push(CwrWarning { field_name: "music_arrangement", field_title: "Music arrangement (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Music Arrangement is required when Version Type is 'MOD'".to_string() });
+        if record.music_arrangement.is_none()
+            || record.music_arrangement.as_ref().is_none_or(|s| s.as_str().trim().is_empty())
+        {
+            warnings.push(CwrWarning {
+                field_name: "music_arrangement",
+                field_title: "Music arrangement (conditional)",
+                source_str: std::borrow::Cow::Borrowed(""),
+                level: WarningLevel::Critical,
+                description: "Music Arrangement is required when Version Type is 'MOD'".to_string(),
+            });
         }
 
-        if record.lyric_adaptation.is_none() || record.lyric_adaptation.as_ref().is_none_or(|s| s.as_str().trim().is_empty()) {
-            warnings.push(CwrWarning { field_name: "lyric_adaptation", field_title: "Lyric adaptation (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Lyric Adaptation is required when Version Type is 'MOD'".to_string() });
+        if record.lyric_adaptation.is_none()
+            || record.lyric_adaptation.as_ref().is_none_or(|s| s.as_str().trim().is_empty())
+        {
+            warnings.push(CwrWarning {
+                field_name: "lyric_adaptation",
+                field_title: "Lyric adaptation (conditional)",
+                source_str: std::borrow::Cow::Borrowed(""),
+                level: WarningLevel::Critical,
+                description: "Lyric Adaptation is required when Version Type is 'MOD'".to_string(),
+            });
         }
     }
 
     // Business rule: Composite Component Count required for ASCAP when Composite Type is present
-    if record.composite_type.is_some() && record.composite_type.as_ref().is_some_and(|s| !s.as_str().trim().is_empty()) && (record.composite_component_count.is_none() || record.composite_component_count.as_ref().is_some_and(|c| c.0 == 0)) {
+    if record.composite_type.is_some()
+        && record.composite_type.as_ref().is_some_and(|s| !s.as_str().trim().is_empty())
+        && (record.composite_component_count.is_none()
+            || record.composite_component_count.as_ref().is_some_and(|c| c.0 == 0))
+    {
         warnings.push(CwrWarning {
             field_name: "composite_component_count",
             field_title: "Composite component count (conditional)",
             source_str: std::borrow::Cow::Borrowed(""),
             level: WarningLevel::Warning,
-            description: "Composite Component Count should be specified when Composite Type is present (required for ASCAP)".to_string(),
+            description:
+                "Composite Component Count should be specified when Composite Type is present (required for ASCAP)"
+                    .to_string(),
         });
     }
 

@@ -65,7 +65,9 @@ impl CwrFieldWrite for IntendedPurpose {
 }
 
 impl CwrFieldParse for IntendedPurpose {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         let mut warnings = vec![];
 
@@ -80,7 +82,9 @@ impl CwrFieldParse for IntendedPurpose {
 }
 
 impl CwrFieldParse for Option<IntendedPurpose> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

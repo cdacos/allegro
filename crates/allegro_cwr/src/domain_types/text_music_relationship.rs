@@ -29,14 +29,22 @@ impl CwrFieldWrite for TextMusicRelationship {
 }
 
 impl CwrFieldParse for TextMusicRelationship {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::text_music_relationships::is_valid_text_music_relationship;
 
         let trimmed = source.trim().to_uppercase();
         let mut warnings = vec![];
 
         if !is_valid_text_music_relationship(&trimmed) {
-            warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Text Music Relationship code '{}' not found in lookup table", trimmed) });
+            warnings.push(CwrWarning {
+                field_name,
+                field_title,
+                source_str: Cow::Owned(source.to_string()),
+                level: WarningLevel::Warning,
+                description: format!("Text Music Relationship code '{}' not found in lookup table", trimmed),
+            });
         }
 
         (TextMusicRelationship(trimmed), warnings)
@@ -44,7 +52,9 @@ impl CwrFieldParse for TextMusicRelationship {
 }
 
 impl CwrFieldParse for Option<TextMusicRelationship> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

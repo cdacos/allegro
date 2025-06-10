@@ -28,14 +28,22 @@ impl CwrFieldWrite for SocietyCode {
 }
 
 impl CwrFieldParse for SocietyCode {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::society_codes::is_valid_society_code;
 
         let trimmed = source.trim();
         let mut warnings = vec![];
 
         if !is_valid_society_code(trimmed) {
-            warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Society Code '{}' not found in lookup table", trimmed) });
+            warnings.push(CwrWarning {
+                field_name,
+                field_title,
+                source_str: Cow::Owned(source.to_string()),
+                level: WarningLevel::Warning,
+                description: format!("Society Code '{}' not found in lookup table", trimmed),
+            });
         }
 
         (SocietyCode(trimmed.to_string()), warnings)
@@ -43,7 +51,9 @@ impl CwrFieldParse for SocietyCode {
 }
 
 impl CwrFieldParse for Option<SocietyCode> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

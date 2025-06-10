@@ -29,14 +29,22 @@ impl CwrFieldWrite for StandardInstrumentationType {
 }
 
 impl CwrFieldParse for StandardInstrumentationType {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::standard_instrumentations::is_valid_standard_instrumentation;
 
         let trimmed = source.trim();
         let mut warnings = vec![];
 
         if !trimmed.is_empty() && !is_valid_standard_instrumentation(trimmed) {
-            warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Standard Instrumentation Type '{}' not found in lookup table", trimmed) });
+            warnings.push(CwrWarning {
+                field_name,
+                field_title,
+                source_str: Cow::Owned(source.to_string()),
+                level: WarningLevel::Warning,
+                description: format!("Standard Instrumentation Type '{}' not found in lookup table", trimmed),
+            });
         }
 
         (StandardInstrumentationType(trimmed.to_string()), warnings)
@@ -44,12 +52,15 @@ impl CwrFieldParse for StandardInstrumentationType {
 }
 
 impl CwrFieldParse for Option<StandardInstrumentationType> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])
         } else {
-            let (instrumentation_type, warnings) = StandardInstrumentationType::parse_cwr_field(source, field_name, field_title);
+            let (instrumentation_type, warnings) =
+                StandardInstrumentationType::parse_cwr_field(source, field_name, field_title);
             (Some(instrumentation_type), warnings)
         }
     }

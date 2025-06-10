@@ -49,7 +49,13 @@ fn spt_custom_validate(record: &mut SptRecord) -> Vec<CwrWarning<'static>> {
 
     // Business rule: Interested party number cannot be empty
     if record.interested_party_num.trim().is_empty() {
-        warnings.push(CwrWarning { field_name: "interested_party_num", field_title: "Interested party number", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Interested party number cannot be empty".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "interested_party_num",
+            field_title: "Interested party number",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Critical,
+            description: "Interested party number cannot be empty".to_string(),
+        });
     }
 
     // Business rule: At least one collection share must be provided
@@ -58,7 +64,13 @@ fn spt_custom_validate(record: &mut SptRecord) -> Vec<CwrWarning<'static>> {
     let sr_share = record.sr_collection_share.as_ref().map_or(0, |s| s.0);
 
     if pr_share == 0 && mr_share == 0 && sr_share == 0 {
-        warnings.push(CwrWarning { field_name: "pr_collection_share", field_title: "PR collection share (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Warning, description: "At least one collection share (PR, MR, or SR) should be provided".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "pr_collection_share",
+            field_title: "PR collection share (conditional)",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Warning,
+            description: "At least one collection share (PR, MR, or SR) should be provided".to_string(),
+        });
     }
 
     // TODO: Additional business rules requiring broader context:

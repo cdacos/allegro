@@ -57,14 +57,25 @@ impl CwrFieldWrite for SubjectCode {
 }
 
 impl CwrFieldParse for SubjectCode {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         let mut warnings = vec![];
 
         match SubjectCode::from_str(trimmed) {
             Some(subject_code) => (subject_code, warnings),
             None => {
-                warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Subject Code '{}' not found in lookup table. Expected: DL, SC, DW, IQ, RQ, GW, EW", trimmed) });
+                warnings.push(CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Warning,
+                    description: format!(
+                        "Subject Code '{}' not found in lookup table. Expected: DL, SC, DW, IQ, RQ, GW, EW",
+                        trimmed
+                    ),
+                });
                 (SubjectCode::default(), warnings)
             }
         }
@@ -72,7 +83,9 @@ impl CwrFieldParse for SubjectCode {
 }
 
 impl CwrFieldParse for Option<SubjectCode> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

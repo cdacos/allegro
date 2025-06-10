@@ -39,8 +39,16 @@ fn pwr_custom_validate(record: &mut PwrRecord) -> Vec<CwrWarning<'static>> {
     let mut warnings = Vec::new();
 
     // Business rule: Publisher identification - either Publisher IP Number or Publisher Name required
-    if (record.publisher_ip_num.is_none() || record.publisher_ip_num.as_ref().is_none_or(|s| s.trim().is_empty())) && (record.publisher_name.is_none() || record.publisher_name.as_ref().is_none_or(|s| s.trim().is_empty())) {
-        warnings.push(CwrWarning { field_name: "publisher_ip_num", field_title: "Publisher IP number (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Either Publisher IP Number or Publisher Name must be provided".to_string() });
+    if (record.publisher_ip_num.is_none() || record.publisher_ip_num.as_ref().is_none_or(|s| s.trim().is_empty()))
+        && (record.publisher_name.is_none() || record.publisher_name.as_ref().is_none_or(|s| s.trim().is_empty()))
+    {
+        warnings.push(CwrWarning {
+            field_name: "publisher_ip_num",
+            field_title: "Publisher IP number (conditional)",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Critical,
+            description: "Either Publisher IP Number or Publisher Name must be provided".to_string(),
+        });
     }
 
     // Business rule: Publisher sequence numbers must be sequential within a work

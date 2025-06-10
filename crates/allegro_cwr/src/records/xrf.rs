@@ -36,7 +36,13 @@ fn xrf_custom_validate(record: &mut XrfRecord) -> Vec<CwrWarning<'static>> {
 
     // Business rule: Identifier cannot be empty
     if record.identifier.trim().is_empty() {
-        warnings.push(CwrWarning { field_name: "identifier", field_title: "Identifier", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Identifier cannot be empty".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "identifier",
+            field_title: "Identifier",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Critical,
+            description: "Identifier cannot be empty".to_string(),
+        });
     }
 
     // Identifier type validation is now handled by the IdentifierType domain type

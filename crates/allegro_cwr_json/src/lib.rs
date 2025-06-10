@@ -78,7 +78,9 @@ impl<W: Write> allegro_cwr::CwrHandler for JsonHandler<W> {
         Ok(())
     }
 
-    fn handle_parse_error(&mut self, line_number: usize, error: &allegro_cwr::CwrParseError) -> Result<(), Self::Error> {
+    fn handle_parse_error(
+        &mut self, line_number: usize, error: &allegro_cwr::CwrParseError,
+    ) -> Result<(), Self::Error> {
         // Initialize context if this is the first thing we encounter
         if !self.context_written {
             writeln!(self.writer, "  \"context\": {{")?;
@@ -104,7 +106,9 @@ impl<W: Write> allegro_cwr::CwrHandler for JsonHandler<W> {
         Ok(())
     }
 
-    fn handle_warnings(&mut self, _line_number: usize, _record_type: &str, warnings: &[String]) -> Result<(), Self::Error> {
+    fn handle_warnings(
+        &mut self, _line_number: usize, _record_type: &str, warnings: &[String],
+    ) -> Result<(), Self::Error> {
         // Warnings are now included in each record's warnings array, so we don't need separate warning objects
         self.error_count += warnings.len();
         Ok(())
@@ -132,12 +136,16 @@ pub fn process_cwr_to_json(input_filename: &str) -> Result<usize, Box<dyn std::e
 }
 
 /// Convenience function to process CWR file and output JSON with optional version hint
-pub fn process_cwr_to_json_with_version(input_filename: &str, version_hint: Option<f32>) -> Result<usize, Box<dyn std::error::Error>> {
+pub fn process_cwr_to_json_with_version(
+    input_filename: &str, version_hint: Option<f32>,
+) -> Result<usize, Box<dyn std::error::Error>> {
     process_cwr_to_json_with_version_and_output(input_filename, version_hint, None)
 }
 
 /// Convenience function to process CWR file and output JSON with optional version hint and output file
-pub fn process_cwr_to_json_with_version_and_output(input_filename: &str, version_hint: Option<f32>, output_filename: Option<&str>) -> Result<usize, Box<dyn std::error::Error>> {
+pub fn process_cwr_to_json_with_version_and_output(
+    input_filename: &str, version_hint: Option<f32>, output_filename: Option<&str>,
+) -> Result<usize, Box<dyn std::error::Error>> {
     let report = match output_filename {
         Some(filename) => {
             let file = std::fs::File::create(filename)?;
@@ -151,7 +159,12 @@ pub fn process_cwr_to_json_with_version_and_output(input_filename: &str, version
     };
 
     // Extract count from report
-    let output_count = report.lines().find(|line| line.contains("Records output:")).and_then(|line| line.split(':').nth(1)).and_then(|s| s.trim().parse::<usize>().ok()).unwrap_or(0);
+    let output_count = report
+        .lines()
+        .find(|line| line.contains("Records output:"))
+        .and_then(|line| line.split(':').nth(1))
+        .and_then(|s| s.trim().parse::<usize>().ok())
+        .unwrap_or(0);
 
     Ok(output_count)
 }
@@ -180,7 +193,9 @@ struct JsonRecord {
 }
 
 /// Convenience function to process JSON file and output CWR with optional version hint and output file
-pub fn process_json_to_cwr_with_version_and_output(input_filename: &str, _version_hint: Option<f32>, output_filename: Option<&str>) -> Result<usize, Box<dyn std::error::Error>> {
+pub fn process_json_to_cwr_with_version_and_output(
+    input_filename: &str, _version_hint: Option<f32>, output_filename: Option<&str>,
+) -> Result<usize, Box<dyn std::error::Error>> {
     let file = File::open(input_filename)?;
     let reader = BufReader::new(file);
 

@@ -51,7 +51,10 @@ pub fn setup_database(db_filename: &str) -> Result<(), CwrDbError> {
     let conn = Connection::open(db_filename)?;
 
     // Check if tables already exist to avoid erroring on re-runs
-    let table_count: i64 = conn.query_row("SELECT count(*) FROM sqlite_master WHERE type='table' AND name LIKE 'cwr_%'", [], |row| row.get(0))?;
+    let table_count: i64 =
+        conn.query_row("SELECT count(*) FROM sqlite_master WHERE type='table' AND name LIKE 'cwr_%'", [], |row| {
+            row.get(0)
+        })?;
 
     if table_count == 0 {
         info!("Applying embedded schema");

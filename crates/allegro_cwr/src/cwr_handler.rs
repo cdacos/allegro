@@ -11,7 +11,9 @@ pub trait CwrHandler {
     fn handle_parse_error(&mut self, line_number: usize, error: &CwrParseError) -> Result<(), Self::Error>;
 
     /// Handle warnings from a successfully parsed record (optional override)
-    fn handle_warnings(&mut self, line_number: usize, record_type: &str, warnings: &[String]) -> Result<(), Self::Error> {
+    fn handle_warnings(
+        &mut self, line_number: usize, record_type: &str, warnings: &[String],
+    ) -> Result<(), Self::Error> {
         // Default implementation does nothing - handlers can override to store warnings
         let _ = (line_number, record_type, warnings);
         Ok(())

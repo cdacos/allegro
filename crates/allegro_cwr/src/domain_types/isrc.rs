@@ -40,12 +40,23 @@ impl CwrFieldWrite for Isrc {
 }
 
 impl CwrFieldParse for Isrc {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         let mut warnings = vec![];
 
         if !trimmed.is_empty() && !Isrc::is_valid_format(trimmed) {
-            warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("ISRC '{}' should be exactly 12 alphanumeric characters (CCXXXYYNNNNN format)", trimmed) });
+            warnings.push(CwrWarning {
+                field_name,
+                field_title,
+                source_str: Cow::Owned(source.to_string()),
+                level: WarningLevel::Warning,
+                description: format!(
+                    "ISRC '{}' should be exactly 12 alphanumeric characters (CCXXXYYNNNNN format)",
+                    trimmed
+                ),
+            });
         }
 
         (Isrc(trimmed.to_string()), warnings)
@@ -53,7 +64,9 @@ impl CwrFieldParse for Isrc {
 }
 
 impl CwrFieldParse for Option<Isrc> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

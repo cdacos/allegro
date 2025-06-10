@@ -38,12 +38,20 @@ impl CwrFieldWrite for IpiBaseNumber {
 }
 
 impl CwrFieldParse for IpiBaseNumber {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         let mut warnings = vec![];
 
         if !trimmed.is_empty() && !IpiBaseNumber::is_valid_format(trimmed) {
-            warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("IPI Base Number '{}' should be exactly 13 alphanumeric characters", trimmed) });
+            warnings.push(CwrWarning {
+                field_name,
+                field_title,
+                source_str: Cow::Owned(source.to_string()),
+                level: WarningLevel::Warning,
+                description: format!("IPI Base Number '{}' should be exactly 13 alphanumeric characters", trimmed),
+            });
         }
 
         (IpiBaseNumber(trimmed.to_string()), warnings)
@@ -51,7 +59,9 @@ impl CwrFieldParse for IpiBaseNumber {
 }
 
 impl CwrFieldParse for Option<IpiBaseNumber> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

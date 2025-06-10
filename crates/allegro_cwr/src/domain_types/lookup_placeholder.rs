@@ -35,14 +35,18 @@ impl CwrFieldWrite for LookupPlaceholder {
 }
 
 impl CwrFieldParse for LookupPlaceholder {
-    fn parse_cwr_field(source: &str, _field_name: &'static str, _field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, _field_name: &'static str, _field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         // No validation - accepts any string
         (LookupPlaceholder(source.trim().to_string()), vec![])
     }
 }
 
 impl CwrFieldParse for Option<LookupPlaceholder> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

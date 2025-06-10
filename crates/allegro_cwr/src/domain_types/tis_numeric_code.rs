@@ -20,7 +20,9 @@ impl CwrFieldWrite for TisNumericCode {
 }
 
 impl CwrFieldParse for TisNumericCode {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::tis_codes::is_valid_tis_code;
 
         let trimmed = source.trim();
@@ -30,13 +32,25 @@ impl CwrFieldParse for TisNumericCode {
                 let mut warnings = vec![];
 
                 if !is_valid_tis_code(num) {
-                    warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("TIS code '{}' not found in territory table", code_str) });
+                    warnings.push(CwrWarning {
+                        field_name,
+                        field_title,
+                        source_str: Cow::Owned(source.to_string()),
+                        level: WarningLevel::Warning,
+                        description: format!("TIS code '{}' not found in territory table", code_str),
+                    });
                 }
 
                 (TisNumericCode(num), warnings)
             }
             Err(_) => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid TIS numeric code format: {}", trimmed) }];
+                let warnings = vec![CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Warning,
+                    description: format!("Invalid TIS numeric code format: {}", trimmed),
+                }];
                 (TisNumericCode(0), warnings)
             }
         }

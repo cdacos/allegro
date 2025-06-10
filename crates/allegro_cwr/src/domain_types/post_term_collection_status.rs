@@ -31,14 +31,22 @@ impl CwrFieldWrite for PostTermCollectionStatus {
 }
 
 impl CwrFieldParse for PostTermCollectionStatus {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         match trimmed {
             "N" => (PostTermCollectionStatus::None, vec![]),
             "O" => (PostTermCollectionStatus::Original, vec![]),
             "D" => (PostTermCollectionStatus::Designated, vec![]),
             _ => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid post-term collection status '{}', must be N, O, or D", trimmed) }];
+                let warnings = vec![CwrWarning {
+                    field_name,
+                    field_title,
+                    source_str: Cow::Owned(source.to_string()),
+                    level: WarningLevel::Critical,
+                    description: format!("Invalid post-term collection status '{}', must be N, O, or D", trimmed),
+                }];
                 (PostTermCollectionStatus::None, warnings)
             }
         }

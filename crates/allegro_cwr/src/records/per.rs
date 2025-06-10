@@ -34,7 +34,13 @@ fn per_custom_validate(record: &mut PerRecord) -> Vec<CwrWarning<'static>> {
 
     // Business rule: Performing artist last name cannot be empty
     if record.performing_artist_last_name.trim().is_empty() {
-        warnings.push(CwrWarning { field_name: "performing_artist_last_name", field_title: "Performing artist last name", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Performing artist last name cannot be empty".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "performing_artist_last_name",
+            field_title: "Performing artist last name",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Critical,
+            description: "Performing artist last name cannot be empty".to_string(),
+        });
     }
 
     // TODO: Additional business rules requiring broader context:

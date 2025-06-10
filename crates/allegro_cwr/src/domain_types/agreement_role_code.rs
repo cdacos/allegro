@@ -29,7 +29,9 @@ impl CwrFieldWrite for AgreementRoleCode {
 }
 
 impl CwrFieldParse for AgreementRoleCode {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::agreement_role_codes::is_valid_agreement_role_code;
 
         let trimmed = source.trim();
@@ -39,7 +41,13 @@ impl CwrFieldParse for AgreementRoleCode {
             _ => {
                 let mut warnings = vec![];
                 if !is_valid_agreement_role_code(trimmed) {
-                    warnings.push(CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid agreement role code '{}', must be AS or AC", trimmed) });
+                    warnings.push(CwrWarning {
+                        field_name,
+                        field_title,
+                        source_str: Cow::Owned(source.to_string()),
+                        level: WarningLevel::Critical,
+                        description: format!("Invalid agreement role code '{}', must be AS or AC", trimmed),
+                    });
                 }
                 (AgreementRoleCode::Assignor, warnings)
             }

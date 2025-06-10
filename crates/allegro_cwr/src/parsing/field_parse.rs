@@ -4,11 +4,15 @@ use crate::parsing::warning::CwrWarning;
 
 /// Trait for parsing CWR fields with warnings
 pub trait CwrFieldParse: Sized + Default {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>);
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>);
 }
 
 impl CwrFieldParse for String {
-    fn parse_cwr_field(source: &str, _field_name: &'static str, _field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, _field_name: &'static str, _field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         // For fixed-width CWR fields, preserve exact spacing to maintain round-trip integrity
         // Only trim if the field is completely empty or whitespace-only
         let trimmed = source.trim();
@@ -17,7 +21,9 @@ impl CwrFieldParse for String {
 }
 
 impl CwrFieldParse for Option<String> {
-    fn parse_cwr_field(source: &str, _field_name: &'static str, _field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, _field_name: &'static str, _field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])

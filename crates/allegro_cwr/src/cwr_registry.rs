@@ -182,7 +182,9 @@ static RECORD_PARSERS: LazyLock<ParserMap> = LazyLock::new(|| {
 });
 
 pub fn parse_by_record_type(record_type: &str, line: &str) -> ParseResult {
-    let parser_fn = RECORD_PARSERS.get(record_type).ok_or_else(|| CwrParseError::BadFormat(format!("Unrecognized record type '{}'", record_type)))?;
+    let parser_fn = RECORD_PARSERS
+        .get(record_type)
+        .ok_or_else(|| CwrParseError::BadFormat(format!("Unrecognized record type '{}'", record_type)))?;
 
     parser_fn(line)
 }

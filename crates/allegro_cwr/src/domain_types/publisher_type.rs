@@ -38,14 +38,22 @@ impl CwrFieldWrite for PublisherType {
 }
 
 impl CwrFieldParse for PublisherType {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         use crate::lookups::publisher_types::is_valid_publisher_type;
 
         let trimmed = source.trim();
         let default_type = PublisherType::Acquirer;
 
         if !is_valid_publisher_type(trimmed) {
-            let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid publisher type '{}', defaulting to AQ", trimmed) }];
+            let warnings = vec![CwrWarning {
+                field_name,
+                field_title,
+                source_str: Cow::Owned(source.to_string()),
+                level: WarningLevel::Warning,
+                description: format!("Invalid publisher type '{}', defaulting to AQ", trimmed),
+            }];
             return (default_type, warnings);
         }
 
@@ -62,7 +70,9 @@ impl CwrFieldParse for PublisherType {
 }
 
 impl CwrFieldParse for Option<PublisherType> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
+    fn parse_cwr_field(
+        source: &str, field_name: &'static str, field_title: &'static str,
+    ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         if trimmed.is_empty() {
             (None, vec![])
