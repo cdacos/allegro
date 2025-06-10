@@ -19,10 +19,10 @@ pub struct IpaRecord {
     pub agreement_role_code: AgreementRoleCode,
 
     #[cwr(title = "Interested party IPI name number (optional)", start = 21, len = 11)]
-    pub interested_party_ipi_name_num: Option<String>,
+    pub interested_party_ipi_name_num: Option<LookupPlaceholder>,
 
     #[cwr(title = "IPI base number (optional)", start = 32, len = 13)]
-    pub ipi_base_number: Option<String>,
+    pub ipi_base_number: Option<LookupPlaceholder>,
 
     #[cwr(title = "Interested party number", start = 45, len = 9)]
     pub interested_party_num: String,
@@ -34,19 +34,19 @@ pub struct IpaRecord {
     pub interested_party_writer_first_name: Option<String>,
 
     #[cwr(title = "PR affiliation society (conditional)", start = 129, len = 3)]
-    pub pr_affiliation_society: Option<String>,
+    pub pr_affiliation_society: Option<LookupPlaceholder>,
 
     #[cwr(title = "PR share (conditional)", start = 132, len = 5)]
     pub pr_share: Option<OwnershipShare>,
 
     #[cwr(title = "MR affiliation society (conditional)", start = 137, len = 3)]
-    pub mr_affiliation_society: Option<String>,
+    pub mr_affiliation_society: Option<LookupPlaceholder>,
 
     #[cwr(title = "MR share (conditional)", start = 140, len = 5)]
     pub mr_share: Option<OwnershipShare>,
 
     #[cwr(title = "SR affiliation society (conditional)", start = 145, len = 3)]
-    pub sr_affiliation_society: Option<String>,
+    pub sr_affiliation_society: Option<LookupPlaceholder>,
 
     #[cwr(title = "SR share (conditional)", start = 148, len = 5)]
     pub sr_share: Option<OwnershipShare>,

@@ -22,13 +22,13 @@ pub struct NwnRecord {
     pub interested_party_num: Option<String>,
 
     #[cwr(title = "Writer last name", start = 28, len = 160)]
-    pub writer_last_name: String,
+    pub writer_last_name: NonRomanAlphabet,
 
     #[cwr(title = "Writer first name (optional)", start = 188, len = 160)]
-    pub writer_first_name: Option<String>,
+    pub writer_first_name: Option<NonRomanAlphabet>,
 
     #[cwr(title = "Language code (optional)", start = 348, len = 2)]
-    pub language_code: Option<String>,
+    pub language_code: Option<LookupPlaceholder>,
 }
 
 // Custom validation function for NWN record
@@ -56,14 +56,14 @@ fn nwn_custom_validate(record: &mut NwnRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Validate writer last name is not empty
-    if record.writer_last_name.trim().is_empty() {
-        warnings.push(CwrWarning { field_name: "writer_last_name", field_title: "Writer last name", source_str: std::borrow::Cow::Owned(record.writer_last_name.clone()), level: WarningLevel::Critical, description: "Writer last name cannot be empty".to_string() });
+    if record.writer_last_name.as_str().trim().is_empty() {
+        warnings.push(CwrWarning { field_name: "writer_last_name", field_title: "Writer last name", source_str: std::borrow::Cow::Owned(record.writer_last_name.as_str().to_string()), level: WarningLevel::Critical, description: "Writer last name cannot be empty".to_string() });
     }
 
     // Validate language code format if present (ISO 639-1)
     if let Some(ref lang_code) = record.language_code {
-        if !lang_code.trim().is_empty() && lang_code.len() != 2 {
-            warnings.push(CwrWarning { field_name: "language_code", field_title: "Language code (optional)", source_str: std::borrow::Cow::Owned(lang_code.clone()), level: WarningLevel::Warning, description: "Language code should be 2 characters (ISO 639-1)".to_string() });
+        if !lang_code.as_str().trim().is_empty() && lang_code.as_str().len() != 2 {
+            warnings.push(CwrWarning { field_name: "language_code", field_title: "Language code (optional)", source_str: std::borrow::Cow::Owned(lang_code.as_str().to_string()), level: WarningLevel::Warning, description: "Language code should be 2 characters (ISO 639-1)".to_string() });
         }
     }
 

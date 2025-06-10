@@ -25,19 +25,19 @@ pub struct NprRecord {
     pub performing_artist_first_name: Option<String>,
 
     #[cwr(title = "Performing artist IPI name number (optional)", start = 339, len = 11)]
-    pub performing_artist_ipi_name_num: Option<String>,
+    pub performing_artist_ipi_name_num: Option<LookupPlaceholder>,
 
     #[cwr(title = "Performing artist IPI base number (optional)", start = 350, len = 13)]
-    pub performing_artist_ipi_base_number: Option<String>,
+    pub performing_artist_ipi_base_number: Option<LookupPlaceholder>,
 
     #[cwr(title = "Language code (optional)", start = 363, len = 2)]
-    pub language_code: Option<String>,
+    pub language_code: Option<LookupPlaceholder>,
 
     #[cwr(title = "Performance language (conditional, v2.1+)", start = 365, len = 2, min_version = 2.1)]
-    pub performance_language: Option<String>,
+    pub performance_language: Option<LookupPlaceholder>,
 
     #[cwr(title = "Performance dialect (conditional, v2.1+)", start = 367, len = 3, min_version = 2.1)]
-    pub performance_dialect: Option<String>,
+    pub performance_dialect: Option<LookupPlaceholder>,
 }
 
 // Custom validation function for NPR record

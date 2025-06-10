@@ -37,25 +37,25 @@ pub struct SpuRecord {
     pub tax_id_num: Option<String>,
 
     #[cwr(title = "Publisher IPI name number (conditional)", start = 87, len = 11)]
-    pub publisher_ipi_name_num: Option<String>,
+    pub publisher_ipi_name_num: Option<LookupPlaceholder>,
 
     #[cwr(title = "Submitter agreement number (optional)", start = 98, len = 14)]
     pub submitter_agreement_number: Option<String>,
 
     #[cwr(title = "PR affiliation society number (conditional)", start = 112, len = 3)]
-    pub pr_affiliation_society_num: Option<String>,
+    pub pr_affiliation_society_num: Option<LookupPlaceholder>,
 
     #[cwr(title = "PR ownership share (conditional)", start = 115, len = 5)]
     pub pr_ownership_share: Option<OwnershipShare>,
 
     #[cwr(title = "MR society (conditional)", start = 120, len = 3)]
-    pub mr_society: Option<String>,
+    pub mr_society: Option<LookupPlaceholder>,
 
     #[cwr(title = "MR ownership share (conditional)", start = 123, len = 5)]
     pub mr_ownership_share: Option<OwnershipShare>,
 
     #[cwr(title = "SR society (conditional)", start = 128, len = 3)]
-    pub sr_society: Option<String>,
+    pub sr_society: Option<LookupPlaceholder>,
 
     #[cwr(title = "SR ownership share (conditional)", start = 131, len = 5)]
     pub sr_ownership_share: Option<OwnershipShare>,
@@ -70,7 +70,7 @@ pub struct SpuRecord {
     pub filler: Option<String>,
 
     #[cwr(title = "Publisher IPI base number (optional)", start = 139, len = 13)]
-    pub publisher_ipi_base_number: Option<String>,
+    pub publisher_ipi_base_number: Option<LookupPlaceholder>,
 
     #[cwr(title = "International standard agreement code (optional)", start = 152, len = 14)]
     pub international_standard_agreement_code: Option<String>,
@@ -79,10 +79,10 @@ pub struct SpuRecord {
     pub society_assigned_agreement_number: Option<String>,
 
     #[cwr(title = "Agreement type (optional, v2.1+)", start = 180, len = 2, min_version = 2.1)]
-    pub agreement_type: Option<String>,
+    pub agreement_type: Option<LookupPlaceholder>,
 
     #[cwr(title = "USA license indicator (1 char, optional, v2.1+)", start = 182, len = 1, min_version = 2.1)]
-    pub usa_license_ind: Option<String>,
+    pub usa_license_ind: Option<LookupPlaceholder>,
 }
 
 // Custom validation function for SPU record

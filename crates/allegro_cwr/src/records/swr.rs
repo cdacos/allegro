@@ -28,28 +28,28 @@ pub struct SwrRecord {
     pub writer_unknown_indicator: Option<Flag>,
 
     #[cwr(title = "Writer designation code (conditional)", start = 104, len = 2)]
-    pub writer_designation_code: Option<String>,
+    pub writer_designation_code: Option<LookupPlaceholder>,
 
     #[cwr(title = "Tax ID number (optional)", start = 106, len = 9)]
     pub tax_id_num: Option<String>,
 
     #[cwr(title = "Writer IPI name number (optional)", start = 115, len = 11)]
-    pub writer_ipi_name_num: Option<String>,
+    pub writer_ipi_name_num: Option<LookupPlaceholder>,
 
     #[cwr(title = "PR affiliation society number (optional)", start = 126, len = 3)]
-    pub pr_affiliation_society_num: Option<String>,
+    pub pr_affiliation_society_num: Option<LookupPlaceholder>,
 
     #[cwr(title = "PR ownership share (optional)", start = 129, len = 5)]
     pub pr_ownership_share: Option<OwnershipShare>,
 
     #[cwr(title = "MR society (optional)", start = 134, len = 3)]
-    pub mr_society: Option<String>,
+    pub mr_society: Option<LookupPlaceholder>,
 
     #[cwr(title = "MR ownership share (optional)", start = 137, len = 5)]
     pub mr_ownership_share: Option<OwnershipShare>,
 
     #[cwr(title = "SR society (optional)", start = 142, len = 3)]
-    pub sr_society: Option<String>,
+    pub sr_society: Option<LookupPlaceholder>,
 
     #[cwr(title = "SR ownership share (optional)", start = 145, len = 5)]
     pub sr_ownership_share: Option<OwnershipShare>,
@@ -67,13 +67,13 @@ pub struct SwrRecord {
     pub filler: Option<String>,
 
     #[cwr(title = "Writer IPI base number (optional)", start = 154, len = 13)]
-    pub writer_ipi_base_number: Option<String>,
+    pub writer_ipi_base_number: Option<LookupPlaceholder>,
 
     #[cwr(title = "Personal number (optional)", start = 167, len = 12)]
     pub personal_number: Option<Number>,
 
     #[cwr(title = "USA license indicator (1 char, optional, v2.1+)", start = 179, len = 1, min_version = 2.1)]
-    pub usa_license_ind: Option<String>,
+    pub usa_license_ind: Option<LookupPlaceholder>,
 }
 
 // Custom validation function for SWR record

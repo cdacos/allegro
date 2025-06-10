@@ -40,10 +40,10 @@ pub struct RecRecord {
     pub release_catalog_num: Option<String>,
 
     #[cwr(title = "EAN (optional)", start = 236, len = 13)]
-    pub ean: Option<String>,
+    pub ean: Option<LookupPlaceholder>,
 
     #[cwr(title = "ISRC (optional)", start = 249, len = 12)]
-    pub isrc: Option<String>,
+    pub isrc: Option<LookupPlaceholder>,
 
     #[cwr(title = "Recording format (1 char, optional)", start = 261, len = 1)]
     pub recording_format: Option<RecordingFormat>,
@@ -52,7 +52,7 @@ pub struct RecRecord {
     pub recording_technique: Option<RecordingTechnique>,
 
     #[cwr(title = "Media type (optional, v2.1+)", start = 263, len = 3, min_version = 2.1)]
-    pub media_type: Option<String>,
+    pub media_type: Option<LookupPlaceholder>,
 
     #[cwr(title = "Recording title (optional, v2.2+)", start = 266, len = 60, min_version = 2.2)]
     pub recording_title: Option<String>,
@@ -67,7 +67,7 @@ pub struct RecRecord {
     pub record_label: Option<String>,
 
     #[cwr(title = "ISRC validity (conditional, v2.2+)", start = 506, len = 20, min_version = 2.2)]
-    pub isrc_validity: Option<String>,
+    pub isrc_validity: Option<LookupPlaceholder>,
 
     #[cwr(title = "Submitter recording identifier (optional, v2.2+)", start = 526, len = 14, min_version = 2.2)]
     pub submitter_recording_identifier: Option<String>,

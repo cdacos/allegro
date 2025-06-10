@@ -19,7 +19,7 @@ pub struct InsRecord {
     pub number_of_voices: Option<Number>,
 
     #[cwr(title = "Standard instrumentation type (conditional)", start = 22, len = 3)]
-    pub standard_instrumentation_type: Option<String>,
+    pub standard_instrumentation_type: Option<LookupPlaceholder>,
 
     #[cwr(title = "Instrumentation description (conditional)", start = 25, len = 50)]
     pub instrumentation_description: Option<String>,

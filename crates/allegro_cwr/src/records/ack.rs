@@ -43,7 +43,7 @@ pub struct AckRecord {
     pub processing_date: Date,
 
     #[cwr(title = "Transaction status", start = 157, len = 2)]
-    pub transaction_status: String,
+    pub transaction_status: LookupPlaceholder,
 }
 
 // Custom validation function for ACK record

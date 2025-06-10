@@ -25,7 +25,7 @@ pub struct EwtRecord {
     pub iswc_of_entire_work: Option<String>,
 
     #[cwr(title = "Language code (optional)", start = 90, len = 2)]
-    pub language_code: Option<String>,
+    pub language_code: Option<LookupPlaceholder>,
 
     #[cwr(title = "Writer 1 last name (optional)", start = 92, len = 45)]
     pub writer_1_last_name: Option<String>,
@@ -37,7 +37,7 @@ pub struct EwtRecord {
     pub source: Option<String>,
 
     #[cwr(title = "Writer 1 IPI name number (optional)", start = 227, len = 11)]
-    pub writer_1_ipi_name_num: Option<String>,
+    pub writer_1_ipi_name_num: Option<LookupPlaceholder>,
 
     #[cwr(title = "Writer 1 IPI base number (optional)", start = 238, len = 13)]
     pub writer_1_ipi_base_number: Option<String>,
@@ -49,13 +49,13 @@ pub struct EwtRecord {
     pub writer_2_first_name: Option<String>,
 
     #[cwr(title = "Writer 2 IPI name number (optional)", start = 326, len = 11)]
-    pub writer_2_ipi_name_num: Option<String>,
+    pub writer_2_ipi_name_num: Option<LookupPlaceholder>,
 
     #[cwr(title = "Writer 2 IPI base number (optional)", start = 337, len = 13)]
-    pub writer_2_ipi_base_number: Option<String>,
+    pub writer_2_ipi_base_number: Option<LookupPlaceholder>,
 
     #[cwr(title = "Submitter work number (optional)", start = 350, len = 14)]
-    pub submitter_work_num: Option<String>,
+    pub submitter_work_num: Option<LookupPlaceholder>,
 }
 
 // Custom validation function for EWT record

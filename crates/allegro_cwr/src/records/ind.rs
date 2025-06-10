@@ -16,7 +16,7 @@ pub struct IndRecord {
     pub record_sequence_num: Number,
 
     #[cwr(title = "Instrument code", start = 19, len = 3)]
-    pub instrument_code: String,
+    pub instrument_code: LookupPlaceholder,
 
     #[cwr(title = "Number of players (optional)", start = 22, len = 3)]
     pub number_of_players: Option<Number>,

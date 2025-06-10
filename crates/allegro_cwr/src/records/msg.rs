@@ -16,7 +16,7 @@ pub struct MsgRecord {
     pub record_sequence_num: Number,
 
     #[cwr(title = "Message type (1 char)", start = 19, len = 1)]
-    pub message_type: String,
+    pub message_type: LookupPlaceholder,
 
     #[cwr(title = "Original record sequence number", start = 20, len = 8)]
     pub original_record_sequence_num: Number,
@@ -25,7 +25,7 @@ pub struct MsgRecord {
     pub record_type_field: String,
 
     #[cwr(title = "Message level (1 char)", start = 31, len = 1)]
-    pub message_level: String,
+    pub message_level: LookupPlaceholder,
 
     #[cwr(title = "Validation number", start = 32, len = 3)]
     pub validation_number: String,

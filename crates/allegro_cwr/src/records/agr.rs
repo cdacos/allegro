@@ -22,7 +22,7 @@ pub struct AgrRecord {
     pub international_standard_agreement_code: Option<String>,
 
     #[cwr(title = "Agreement type", start = 47, len = 2)]
-    pub agreement_type: String,
+    pub agreement_type: LookupPlaceholder,
 
     #[cwr(title = "Agreement start date YYYYMMDD", start = 49, len = 8)]
     pub agreement_start_date: Date,
@@ -52,7 +52,7 @@ pub struct AgrRecord {
     pub number_of_works: Number,
 
     #[cwr(title = "Sales/manufacture clause (1 char, conditional)", start = 104, len = 1)]
-    pub sales_manufacture_clause: Option<String>,
+    pub sales_manufacture_clause: Option<LookupPlaceholder>,
 
     #[cwr(title = "Shares change (1 char, optional)", start = 105, len = 1)]
     pub shares_change: Option<Boolean>,

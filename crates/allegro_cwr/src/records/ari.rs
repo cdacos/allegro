@@ -16,16 +16,16 @@ pub struct AriRecord {
     pub record_sequence_num: Number,
 
     #[cwr(title = "Society number", start = 19, len = 3)]
-    pub society_num: String,
+    pub society_num: LookupPlaceholder,
 
     #[cwr(title = "Work number (conditional)", start = 22, len = 14)]
     pub work_num: Option<String>,
 
     #[cwr(title = "Type of right", start = 36, len = 3)]
-    pub type_of_right: String,
+    pub type_of_right: LookupPlaceholder,
 
     #[cwr(title = "Subject code (conditional)", start = 39, len = 2)]
-    pub subject_code: Option<String>,
+    pub subject_code: Option<LookupPlaceholder>,
 
     #[cwr(title = "Note (conditional)", start = 41, len = 160)]
     pub note: Option<String>,
@@ -43,15 +43,15 @@ fn ari_custom_validate(record: &mut AriRecord) -> Vec<CwrWarning<'static>> {
     // Validate transaction sequence number is numeric
     // Validate record sequence number is numeric
     // Validate society number is numeric (3 digits)
-    if !record.society_num.chars().all(|c| c.is_ascii_digit()) || record.society_num.len() != 3 {
-        warnings.push(CwrWarning { field_name: "society_num", field_title: "Society number", source_str: std::borrow::Cow::Owned(record.society_num.clone()), level: WarningLevel::Critical, description: "Society number must be 3 numeric digits".to_string() });
+    if !record.society_num.as_str().chars().all(|c| c.is_ascii_digit()) || record.society_num.as_str().len() != 3 {
+        warnings.push(CwrWarning { field_name: "society_num", field_title: "Society number", source_str: std::borrow::Cow::Owned(record.society_num.as_str().to_string()), level: WarningLevel::Critical, description: "Society number must be 3 numeric digits".to_string() });
     }
 
     // TODO: Validate society_num against society lookup table
 
     // Validate type of right is 3 characters
-    if record.type_of_right.len() != 3 {
-        warnings.push(CwrWarning { field_name: "type_of_right", field_title: "Type of right", source_str: std::borrow::Cow::Owned(record.type_of_right.clone()), level: WarningLevel::Critical, description: "Type of right must be exactly 3 characters".to_string() });
+    if record.type_of_right.as_str().len() != 3 {
+        warnings.push(CwrWarning { field_name: "type_of_right", field_title: "Type of right", source_str: std::borrow::Cow::Owned(record.type_of_right.as_str().to_string()), level: WarningLevel::Critical, description: "Type of right must be exactly 3 characters".to_string() });
     }
 
     // TODO: Validate type_of_right against lookup table (e.g., "ALL", "PER", "MEC", "SYN", etc.)

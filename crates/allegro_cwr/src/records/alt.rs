@@ -22,7 +22,7 @@ pub struct AltRecord {
     pub title_type: TitleType,
 
     #[cwr(title = "Language code (conditional)", start = 81, len = 2)]
-    pub language_code: Option<String>,
+    pub language_code: Option<LookupPlaceholder>,
 }
 
 // Custom validation function for ALT record

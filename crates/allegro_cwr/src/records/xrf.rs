@@ -16,13 +16,13 @@ pub struct XrfRecord {
     pub record_sequence_num: Number,
 
     #[cwr(title = "Organisation code", start = 19, len = 3)]
-    pub organisation_code: String,
+    pub organisation_code: LookupPlaceholder,
 
     #[cwr(title = "Identifier", start = 22, len = 14)]
     pub identifier: String,
 
     #[cwr(title = "Identifier type (1 char)", start = 36, len = 1)]
-    pub identifier_type: String,
+    pub identifier_type: LookupPlaceholder,
 
     #[cwr(title = "Validity (1 char)", start = 37, len = 1)]
     pub validity: Flag,

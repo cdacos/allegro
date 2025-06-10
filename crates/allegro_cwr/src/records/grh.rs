@@ -22,7 +22,7 @@ pub struct GrhRecord {
     pub batch_request: Option<Number>,
 
     #[cwr(title = "Optional submission/distribution type (blank for CWR)", start = 26, len = 2)]
-    pub submission_distribution_type: Option<String>,
+    pub submission_distribution_type: Option<LookupPlaceholder>,
 }
 
 // Custom validation function for GRH record
