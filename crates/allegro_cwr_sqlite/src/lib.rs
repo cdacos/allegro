@@ -164,7 +164,7 @@ impl SqliteInsertable for allegro_cwr::CwrRegistry {
                     agr.post_term_collection_end_date.as_ref().map(|d| d.as_str()),
                     agr.date_of_signature_of_agreement.as_ref().map(|d| d.as_str()),
                     agr.number_of_works.to_sql_int(),
-                    agr.sales_manufacture_clause.as_deref(),
+                    agr.sales_manufacture_clause.as_ref().map(|c| c.as_str()),
                     opt_domain_to_string(&agr.shares_change).as_deref(),
                     opt_domain_to_string(&agr.advance_given).as_deref(),
                     agr.society_assigned_agreement_number.as_deref()
@@ -1318,10 +1318,8 @@ fn query_record_by_type(
                     },
                     sales_manufacture_clause: {
                         use crate::domain_conversions::opt_string_to_domain;
-
-                        use allegro_cwr::domain_types::LookupPlaceholder;
-
-                        opt_string_to_domain::<LookupPlaceholder>(
+                        use allegro_cwr::domain_types::SalesManufactureClause;
+                        opt_string_to_domain::<SalesManufactureClause>(
                             row.get::<_, Option<String>>("sales_manufacture_clause")?.as_deref(),
                         )
                         .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?

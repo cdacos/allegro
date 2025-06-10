@@ -230,7 +230,7 @@ pub fn parse_and_insert_agr<'a>(
                 &record.post_term_collection_end_date.as_ref().map(|d| d.as_str()).unwrap_or_default(),
                 &record.date_of_signature_of_agreement.as_ref().map(|d| d.as_str()).unwrap_or_default(),
                 &record.number_of_works.as_str(),
-                record.sales_manufacture_clause.as_deref().unwrap_or(""),
+                record.sales_manufacture_clause.as_ref().map(|c| c.as_str()).unwrap_or(""),
                 &opt_domain_to_string(&record.shares_change).unwrap_or_default(),
                 &opt_domain_to_string(&record.advance_given).unwrap_or_default(),
                 record.society_assigned_agreement_number.as_deref().unwrap_or(""),

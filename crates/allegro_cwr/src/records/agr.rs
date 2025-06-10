@@ -52,7 +52,7 @@ pub struct AgrRecord {
     pub number_of_works: Number,
 
     #[cwr(title = "Sales/manufacture clause (1 char, conditional)", start = 104, len = 1)]
-    pub sales_manufacture_clause: Option<LookupPlaceholder>,
+    pub sales_manufacture_clause: Option<SalesManufactureClause>,
 
     #[cwr(title = "Shares change (1 char, optional)", start = 105, len = 1)]
     pub shares_change: Option<Boolean>,
