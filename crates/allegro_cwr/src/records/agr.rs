@@ -22,7 +22,7 @@ pub struct AgrRecord {
     pub international_standard_agreement_code: Option<String>,
 
     #[cwr(title = "Agreement type", start = 47, len = 2)]
-    pub agreement_type: LookupPlaceholder,
+    pub agreement_type: AgreementType,
 
     #[cwr(title = "Agreement start date YYYYMMDD", start = 49, len = 8)]
     pub agreement_start_date: Date,

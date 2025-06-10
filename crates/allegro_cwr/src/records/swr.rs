@@ -28,7 +28,7 @@ pub struct SwrRecord {
     pub writer_unknown_indicator: Option<Flag>,
 
     #[cwr(title = "Writer designation code (conditional)", start = 104, len = 2)]
-    pub writer_designation_code: Option<LookupPlaceholder>,
+    pub writer_designation_code: Option<WriterDesignation>,
 
     #[cwr(title = "Tax ID number (optional)", start = 106, len = 9)]
     pub tax_id_num: Option<String>,
@@ -73,7 +73,7 @@ pub struct SwrRecord {
     pub personal_number: Option<Number>,
 
     #[cwr(title = "USA license indicator (1 char, optional, v2.1+)", start = 179, len = 1, min_version = 2.1)]
-    pub usa_license_ind: Option<LookupPlaceholder>,
+    pub usa_license_ind: Option<UsaLicenseIndicator>,
 }
 
 // Custom validation function for SWR record

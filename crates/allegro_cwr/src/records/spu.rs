@@ -79,10 +79,10 @@ pub struct SpuRecord {
     pub society_assigned_agreement_number: Option<String>,
 
     #[cwr(title = "Agreement type (optional, v2.1+)", start = 180, len = 2, min_version = 2.1)]
-    pub agreement_type: Option<LookupPlaceholder>,
+    pub agreement_type: Option<AgreementType>,
 
     #[cwr(title = "USA license indicator (1 char, optional, v2.1+)", start = 182, len = 1, min_version = 2.1)]
-    pub usa_license_ind: Option<LookupPlaceholder>,
+    pub usa_license_ind: Option<UsaLicenseIndicator>,
 }
 
 // Custom validation function for SPU record

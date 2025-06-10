@@ -229,6 +229,24 @@ impl CwrToSqlString for SocietyCode {
     }
 }
 
+impl CwrToSqlString for AgreementType {
+    fn to_sql_string(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
+impl CwrToSqlString for UsaLicenseIndicator {
+    fn to_sql_string(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
+impl CwrToSqlString for WriterDesignation {
+    fn to_sql_string(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
 // Integer conversions for numeric domain types
 impl CwrToSqlInt for OwnershipShare {
     fn to_sql_int(&self) -> i64 {
@@ -650,6 +668,27 @@ impl CwrFromSqlString for SocietyCode {
     fn from_sql_string(value: &str) -> Result<Self, String> {
         let (parsed, warnings) = SocietyCode::parse_cwr_field(value, "sql_field", "SQL Field");
         if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing SocietyCode: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
+    }
+}
+
+impl CwrFromSqlString for AgreementType {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = AgreementType::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing AgreementType: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
+    }
+}
+
+impl CwrFromSqlString for UsaLicenseIndicator {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = UsaLicenseIndicator::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing UsaLicenseIndicator: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
+    }
+}
+
+impl CwrFromSqlString for WriterDesignation {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = WriterDesignation::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing WriterDesignation: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
     }
 }
 

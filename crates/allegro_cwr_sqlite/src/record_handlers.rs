@@ -137,7 +137,7 @@ pub fn parse_and_insert_agr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.record_sequence_num.to_sql_int(),
             record.submitter_agreement_number,
             record.international_standard_agreement_code.as_deref().unwrap_or(""),
-            record.agreement_type,
+            record.agreement_type.as_str(),
             &record.agreement_start_date.as_str(),
             &record.agreement_end_date.as_ref().map(|d| d.as_str()).unwrap_or_default(),
             &record.retention_end_date.as_ref().map(|d| d.as_str()).unwrap_or_default(),
@@ -289,8 +289,8 @@ pub fn parse_and_insert_spu<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.publisher_ipi_base_number.as_deref().unwrap_or(""),
             record.international_standard_agreement_code.as_deref().unwrap_or(""),
             record.society_assigned_agreement_number.as_deref().unwrap_or(""),
-            record.agreement_type.as_deref().unwrap_or(""),
-            record.usa_license_ind.as_deref().unwrap_or(""),
+            record.agreement_type.as_ref().map(|x| x.as_str()).unwrap_or(""),
+            record.usa_license_ind.as_ref().map(|x| x.as_str()).unwrap_or(""),
         ])?;
         Ok(())
     })
@@ -335,7 +335,7 @@ pub fn parse_and_insert_swr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.writer_last_name.as_deref().unwrap_or(""),
             record.writer_first_name.as_deref().unwrap_or(""),
             &opt_domain_to_string(&record.writer_unknown_indicator).unwrap_or_default(),
-            record.writer_designation_code.as_deref().unwrap_or(""),
+            record.writer_designation_code.as_ref().map(|x| x.as_str()).unwrap_or(""),
             record.tax_id_num.as_deref().unwrap_or(""),
             record.writer_ipi_name_num.as_deref().unwrap_or(""),
             record.pr_affiliation_society_num.as_deref().unwrap_or(""),
@@ -350,7 +350,7 @@ pub fn parse_and_insert_swr<'a>(line_number: usize, tx: &'a Transaction, stmts: 
             record.filler.as_ref().map(|n| n.to_string()).as_deref().unwrap_or(""),
             record.writer_ipi_base_number.as_deref().unwrap_or(""),
             record.personal_number.as_ref().map(|n| n.to_string()).as_deref().unwrap_or(""),
-            record.usa_license_ind.as_deref().unwrap_or(""),
+            record.usa_license_ind.as_ref().map(|x| x.as_str()).unwrap_or(""),
         ])?;
         Ok(())
     })

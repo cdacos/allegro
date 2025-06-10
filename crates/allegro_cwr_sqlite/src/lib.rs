@@ -249,7 +249,7 @@ impl SqliteInsertable for allegro_cwr::CwrRegistry {
                     spu.publisher_ipi_base_number.as_deref(),
                     spu.international_standard_agreement_code.as_deref(),
                     spu.society_assigned_agreement_number.as_deref(),
-                    spu.agreement_type.as_deref(),
+                    spu.agreement_type.as_ref().map(|x| x.as_str()),
                     opt_domain_to_string(&spu.usa_license_ind).as_deref()
                 ])?;
                 Ok(tx.last_insert_rowid())
@@ -286,7 +286,7 @@ impl SqliteInsertable for allegro_cwr::CwrRegistry {
                     swr.writer_last_name.as_deref(),
                     swr.writer_first_name.as_deref(),
                     opt_domain_to_string(&swr.writer_unknown_indicator).as_deref(),
-                    swr.writer_designation_code.as_deref(),
+                    swr.writer_designation_code.as_ref().map(|x| x.as_str()),
                     swr.tax_id_num.as_deref(),
                     swr.writer_ipi_name_num.as_deref(),
                     swr.pr_affiliation_society_num.as_deref(),
@@ -1029,9 +1029,9 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     agreement_type: {
                         use crate::domain_conversions::CwrFromSqlString;
 
-                        use allegro_cwr::domain_types::LookupPlaceholder;
+                        use allegro_cwr::domain_types::AgreementType;
 
-                        LookupPlaceholder::from_sql_string(&row.get::<_, String>("agreement_type")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        AgreementType::from_sql_string(&row.get::<_, String>("agreement_type")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     agreement_start_date: {
                         use allegro_cwr::domain_types::Date;
@@ -1367,16 +1367,16 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     agreement_type: {
                         use crate::domain_conversions::opt_string_to_domain;
 
-                        use allegro_cwr::domain_types::LookupPlaceholder;
+                        use allegro_cwr::domain_types::AgreementType;
 
-                        opt_string_to_domain::<LookupPlaceholder>(row.get::<_, Option<String>>("agreement_type")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        opt_string_to_domain::<AgreementType>(row.get::<_, Option<String>>("agreement_type")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     usa_license_ind: {
                         use crate::domain_conversions::opt_string_to_domain;
 
-                        use allegro_cwr::domain_types::LookupPlaceholder;
+                        use allegro_cwr::domain_types::UsaLicenseIndicator;
 
-                        opt_string_to_domain::<LookupPlaceholder>(row.get::<_, Option<String>>("usa_license_ind")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        opt_string_to_domain::<UsaLicenseIndicator>(row.get::<_, Option<String>>("usa_license_ind")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                 };
                 Ok(spu)
@@ -1488,9 +1488,9 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     writer_designation_code: {
                         use crate::domain_conversions::opt_string_to_domain;
 
-                        use allegro_cwr::domain_types::LookupPlaceholder;
+                        use allegro_cwr::domain_types::WriterDesignation;
 
-                        opt_string_to_domain::<LookupPlaceholder>(row.get::<_, Option<String>>("writer_designation_code")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        opt_string_to_domain::<WriterDesignation>(row.get::<_, Option<String>>("writer_designation_code")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     tax_id_num: row.get::<_, Option<String>>("tax_id_num")?,
                     writer_ipi_name_num: {
@@ -1562,9 +1562,9 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     usa_license_ind: {
                         use crate::domain_conversions::opt_string_to_domain;
 
-                        use allegro_cwr::domain_types::LookupPlaceholder;
+                        use allegro_cwr::domain_types::UsaLicenseIndicator;
 
-                        opt_string_to_domain::<LookupPlaceholder>(row.get::<_, Option<String>>("usa_license_ind")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        opt_string_to_domain::<UsaLicenseIndicator>(row.get::<_, Option<String>>("usa_license_ind")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                 };
                 Ok(swr)

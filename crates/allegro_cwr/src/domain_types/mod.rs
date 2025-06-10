@@ -4,6 +4,7 @@
 //! with single responsibility principle.
 
 mod agreement_role_code;
+mod agreement_type;
 mod boolean;
 mod character_set;
 mod composite_component_count;
@@ -44,12 +45,15 @@ mod tis_numeric_code;
 mod title_type;
 mod transaction_count;
 mod transaction_type;
+mod usa_license_indicator;
 mod version_type;
 mod work_type;
 mod works_count;
+mod writer_designation;
 
 // Re-export all types to maintain compatibility with existing imports
 pub use agreement_role_code::*;
+pub use agreement_type::*;
 pub use boolean::*;
 pub use character_set::*;
 pub use composite_component_count::*;
@@ -93,6 +97,8 @@ pub use tis_numeric_code::*;
 pub use title_type::*;
 pub use transaction_count::*;
 pub use transaction_type::*;
+pub use usa_license_indicator::*;
 pub use version_type::*;
 pub use work_type::*;
 pub use works_count::*;
+pub use writer_designation::*;
