@@ -49,12 +49,6 @@ impl CwrToSqlString for Flag {
     }
 }
 
-impl CwrToSqlString for Duration {
-    fn to_sql_string(&self) -> String {
-        self.as_str()
-    }
-}
-
 impl CwrToSqlString for InclusionExclusionIndicator {
     fn to_sql_string(&self) -> String {
         self.as_str().to_string()
@@ -389,13 +383,6 @@ impl CwrFromSqlString for CurrencyCode {
     fn from_sql_string(value: &str) -> Result<Self, String> {
         let (parsed, warnings) = CurrencyCode::parse_cwr_field(value, "sql_field", "SQL Field");
         if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing CurrencyCode: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
-    }
-}
-
-impl CwrFromSqlString for Duration {
-    fn from_sql_string(value: &str) -> Result<Self, String> {
-        let (parsed, warnings) = Option::<Duration>::parse_cwr_field(value, "sql_field", "SQL Field");
-        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing Duration: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed.unwrap_or_default()) }
     }
 }
 

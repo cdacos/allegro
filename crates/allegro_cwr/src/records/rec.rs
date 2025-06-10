@@ -25,7 +25,7 @@ pub struct RecRecord {
     pub constant: String,
 
     #[cwr(title = "Release duration HHMMSS (optional)", start = 87, len = 6)]
-    pub release_duration: Option<Duration>,
+    pub release_duration: Option<Time>,
 
     #[cwr(title = "Constant - spaces", start = 93, len = 5)]
     pub constant2: String,

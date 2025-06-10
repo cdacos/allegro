@@ -1,6 +1,5 @@
 use crate::domain_types::*;
 use allegro_cwr_derive::CwrRecord;
-use chrono::Timelike;
 use serde::{Deserialize, Serialize};
 
 /// Used for NWR, REV, ISW, and EXC record types.
@@ -38,7 +37,7 @@ pub struct NwrRecord {
     pub musical_work_distribution_category: String,
 
     #[cwr(title = "Duration HHMMSS (conditional)", start = 129, len = 6)]
-    pub duration: Option<Duration>,
+    pub duration: Option<Time>,
 
     #[cwr(title = "Recorded indicator (1 char)", start = 135, len = 1)]
     pub recorded_indicator: Flag,
@@ -103,9 +102,8 @@ fn nwr_custom_validate(record: &mut NwrRecord) -> Vec<CwrWarning<'static>> {
 
     // Business rule: Duration must be > 0 if present
     if let Some(ref duration) = record.duration {
-        if let Some(ref time) = duration.0 {
-            let total_seconds = time.hour() * 3600 + time.minute() * 60 + time.second();
-            if total_seconds == 0 {
+        if let Some(seconds) = duration.duration_since_midnight() {
+            if seconds == 0.0 {
                 warnings.push(CwrWarning { field_name: "duration", field_title: "Duration HHMMSS (conditional)", source_str: std::borrow::Cow::Owned(duration.as_str()), level: WarningLevel::Warning, description: "Duration should be greater than 00:00:00 if specified".to_string() });
             }
         }

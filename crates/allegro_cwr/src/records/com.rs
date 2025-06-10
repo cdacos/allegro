@@ -28,7 +28,7 @@ pub struct ComRecord {
     pub submitter_work_num: Option<String>,
 
     #[cwr(title = "Duration HHMMSS (optional)", start = 104, len = 6)]
-    pub duration: Option<Duration>,
+    pub duration: Option<Time>,
 
     #[cwr(title = "Writer 1 last name", start = 110, len = 45)]
     pub writer_1_last_name: String,

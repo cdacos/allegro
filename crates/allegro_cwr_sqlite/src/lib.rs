@@ -953,8 +953,8 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     copyright_number: row.get::<_, Option<String>>("copyright_number")?,
                     musical_work_distribution_category: row.get::<_, String>("musical_work_distribution_category")?,
                     duration: {
-                        use allegro_cwr::domain_types::Duration;
-                        opt_string_to_domain::<Duration>(row.get::<_, Option<String>>("duration")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        use allegro_cwr::domain_types::Time;
+                        opt_string_to_domain::<Time>(row.get::<_, Option<String>>("duration")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     recorded_indicator: {
                         use allegro_cwr::domain_types::Flag;
@@ -1720,8 +1720,8 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     },
                     constant: row.get::<_, String>("constant_blanks_1")?,
                     release_duration: {
-                        use allegro_cwr::domain_types::Duration;
-                        opt_string_to_domain::<Duration>(row.get::<_, Option<String>>("release_duration")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        use allegro_cwr::domain_types::Time;
+                        opt_string_to_domain::<Time>(row.get::<_, Option<String>>("release_duration")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     constant2: row.get::<_, String>("constant_blanks_2")?,
                     album_title: row.get::<_, Option<String>>("album_title")?,
@@ -1865,9 +1865,9 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     submitter_work_num: row.get::<_, Option<String>>("submitter_work_num")?,
                     duration: {
                         use crate::domain_conversions::CwrFromSqlString;
-                        use allegro_cwr::domain_types::Duration;
+                        use allegro_cwr::domain_types::Time;
                         match row.get::<_, Option<String>>("duration")? {
-                            Some(duration_str) if !duration_str.trim().is_empty() => Some(Duration::from_sql_string(&duration_str).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?),
+                            Some(duration_str) if !duration_str.trim().is_empty() => Some(Time::from_sql_string(&duration_str).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?),
                             _ => None,
                         }
                     },
