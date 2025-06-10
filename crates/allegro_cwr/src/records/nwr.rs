@@ -46,7 +46,7 @@ pub struct NwrRecord {
     pub text_music_relationship: Option<TextMusicRelationship>,
 
     #[cwr(title = "Composite type (optional)", start = 139, len = 3)]
-    pub composite_type: Option<LookupPlaceholder>,
+    pub composite_type: Option<CompositeType>,
 
     #[cwr(title = "Version type", start = 142, len = 3)]
     pub version_type: VersionType,
@@ -67,7 +67,7 @@ pub struct NwrRecord {
     pub contact_id: Option<String>,
 
     #[cwr(title = "CWR work type (optional)", start = 194, len = 2)]
-    pub cwr_work_type: Option<LookupPlaceholder>,
+    pub cwr_work_type: Option<WorkType>,
 
     #[cwr(title = "Grand rights indicator (1 char, conditional)", start = 196, len = 1)]
     pub grand_rights_ind: Option<Flag>,

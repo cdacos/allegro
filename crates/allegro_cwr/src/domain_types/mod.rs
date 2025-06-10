@@ -7,6 +7,7 @@ mod agreement_role_code;
 mod boolean;
 mod character_set;
 mod composite_component_count;
+mod composite_type;
 mod currency_code;
 mod cwr_revision;
 mod cwr_version;
@@ -36,6 +37,7 @@ mod recording_technique;
 mod sender_id;
 mod sender_name;
 mod sender_type;
+mod society_code;
 mod text_music_relationship;
 mod time;
 mod tis_numeric_code;
@@ -43,6 +45,7 @@ mod title_type;
 mod transaction_count;
 mod transaction_type;
 mod version_type;
+mod work_type;
 mod works_count;
 
 // Re-export all types to maintain compatibility with existing imports
@@ -50,6 +53,7 @@ pub use agreement_role_code::*;
 pub use boolean::*;
 pub use character_set::*;
 pub use composite_component_count::*;
+pub use composite_type::*;
 pub use currency_code::*;
 // Re-export parsing traits and types that domain types depend on
 pub use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
@@ -81,6 +85,7 @@ pub use recording_technique::*;
 pub use sender_id::*;
 pub use sender_name::*;
 pub use sender_type::*;
+pub use society_code::*;
 pub use text_music_relationship::*;
 // pub use text::*;  // No exports from text module yet
 pub use time::*;
@@ -89,4 +94,5 @@ pub use title_type::*;
 pub use transaction_count::*;
 pub use transaction_type::*;
 pub use version_type::*;
+pub use work_type::*;
 pub use works_count::*;
