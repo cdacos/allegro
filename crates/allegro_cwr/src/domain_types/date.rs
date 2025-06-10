@@ -17,6 +17,11 @@ impl Date {
     pub fn as_str(&self) -> String {
         self.0.format("%Y%m%d").to_string()
     }
+
+    /// Convert to Unix timestamp (seconds since epoch) at midnight UTC
+    pub fn to_timestamp(&self) -> i64 {
+        self.0.and_hms_opt(0, 0, 0).unwrap().and_utc().timestamp()
+    }
 }
 
 impl CwrFieldWrite for Date {

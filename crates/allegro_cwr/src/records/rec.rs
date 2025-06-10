@@ -40,10 +40,10 @@ pub struct RecRecord {
     pub release_catalog_num: Option<String>,
 
     #[cwr(title = "EAN (optional)", start = 236, len = 13)]
-    pub ean: Option<LookupPlaceholder>,
+    pub ean: Option<Ean>,
 
     #[cwr(title = "ISRC (optional)", start = 249, len = 12)]
-    pub isrc: Option<LookupPlaceholder>,
+    pub isrc: Option<Isrc>,
 
     #[cwr(title = "Recording format (1 char, optional)", start = 261, len = 1)]
     pub recording_format: Option<RecordingFormat>,
@@ -77,27 +77,16 @@ pub struct RecRecord {
 fn rec_custom_validate(record: &mut RecRecord) -> Vec<CwrWarning<'static>> {
     let mut warnings = Vec::new();
 
-    // Business rule: ISRC format validation (if provided)
-    if let Some(ref isrc) = record.isrc {
-        let isrc_trimmed = isrc.as_str().trim();
-        if !isrc_trimmed.is_empty() && isrc_trimmed.len() != 12 {
-            warnings.push(CwrWarning { field_name: "isrc", field_title: "ISRC (optional)", source_str: std::borrow::Cow::Owned(isrc.as_str().to_string()), level: WarningLevel::Warning, description: "ISRC should be exactly 12 characters (CCXXXYYNNNNN format)".to_string() });
-        }
-    }
-
-    // Business rule: EAN format validation (if provided)
-    if let Some(ref ean) = record.ean {
-        let ean_trimmed = ean.as_str().trim();
-        if !ean_trimmed.is_empty() && (ean_trimmed.len() != 13 || !ean_trimmed.chars().all(|c| c.is_ascii_digit())) {
-            warnings.push(CwrWarning { field_name: "ean", field_title: "EAN (optional)", source_str: std::borrow::Cow::Owned(ean.as_str().to_string()), level: WarningLevel::Warning, description: "EAN should be exactly 13 numeric digits".to_string() });
+    // Business rule: Release date should not be in the future
+    if let Some(ref release_date) = record.release_date {
+        let current_timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as i64;
+        if release_date.to_timestamp() > current_timestamp {
+            warnings.push(CwrWarning { field_name: "release_date", field_title: "Release date YYYYMMDD (optional)", source_str: std::borrow::Cow::Owned(release_date.as_str()), level: WarningLevel::Warning, description: format!("Release date {} is in the future", release_date.as_str()) });
         }
     }
 
     // TODO: Additional business rules requiring broader context:
     // - Must follow a NWR/REV record (requires parsing context)
-    // - Media type codes must be valid (requires lookup table)
-    // - ISRC validity format validation (requires country code validation)
-    // - Release date should not be in the future (requires current date context)
 
     warnings
 }

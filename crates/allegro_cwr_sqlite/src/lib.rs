@@ -1970,16 +1970,16 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     ean: {
                         use crate::domain_conversions::opt_string_to_domain;
 
-                        use allegro_cwr::domain_types::LookupPlaceholder;
+                        use allegro_cwr::domain_types::Ean;
 
-                        opt_string_to_domain::<LookupPlaceholder>(row.get::<_, Option<String>>("ean")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        opt_string_to_domain::<Ean>(row.get::<_, Option<String>>("ean")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     isrc: {
                         use crate::domain_conversions::opt_string_to_domain;
 
-                        use allegro_cwr::domain_types::LookupPlaceholder;
+                        use allegro_cwr::domain_types::Isrc;
 
-                        opt_string_to_domain::<LookupPlaceholder>(row.get::<_, Option<String>>("isrc")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        opt_string_to_domain::<Isrc>(row.get::<_, Option<String>>("isrc")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     recording_format: {
                         use allegro_cwr::domain_types::RecordingFormat;
