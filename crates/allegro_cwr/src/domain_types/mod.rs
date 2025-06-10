@@ -3,7 +3,9 @@
 //! Each type has its own module following Rust idiom of many small files
 //! with single responsibility principle.
 
+mod agreement_role_code;
 mod boolean;
+mod character_set;
 mod composite_component_count;
 mod currency_code;
 mod cwr_revision;
@@ -11,24 +13,34 @@ mod cwr_version;
 mod cwr_version_number;
 mod date;
 mod edi_standard_version;
-mod enums;
 mod flag;
 mod group_count;
 mod group_id;
+mod inclusion_exclusion_indicator;
 mod number;
 mod ownership_share;
+mod post_term_collection_status;
+mod prior_royalty_status;
 mod publisher_sequence_number;
+mod publisher_type;
 mod record_count;
+mod recording_format;
+mod recording_technique;
 mod sender_id;
 mod sender_name;
+mod sender_type;
 mod text;
 mod time;
 mod tis_numeric_code;
+mod title_type;
 mod transaction_count;
+mod transaction_type;
 mod works_count;
 
 // Re-export all types to maintain compatibility with existing imports
+pub use agreement_role_code::*;
 pub use boolean::*;
+pub use character_set::*;
 pub use composite_component_count::*;
 pub use currency_code::*;
 // Re-export parsing traits and types that domain types depend on
@@ -38,18 +50,26 @@ pub use cwr_version::*;
 pub use cwr_version_number::*;
 pub use date::*;
 pub use edi_standard_version::*;
-pub use enums::*;
 pub use flag::*;
 pub use group_count::*;
 pub use group_id::*;
+pub use inclusion_exclusion_indicator::*;
 pub use number::*;
 pub use ownership_share::*;
+pub use post_term_collection_status::*;
+pub use prior_royalty_status::*;
 pub use publisher_sequence_number::*;
+pub use publisher_type::*;
 pub use record_count::*;
+pub use recording_format::*;
+pub use recording_technique::*;
 pub use sender_id::*;
 pub use sender_name::*;
+pub use sender_type::*;
 // pub use text::*;  // No exports from text module yet
 pub use time::*;
 pub use tis_numeric_code::*;
+pub use title_type::*;
 pub use transaction_count::*;
+pub use transaction_type::*;
 pub use works_count::*;
