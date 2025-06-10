@@ -1,6 +1,6 @@
 //! Time and duration types for CWR parsing
 
-use super::common::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use chrono::NaiveTime;
 use std::borrow::Cow;
 

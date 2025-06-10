@@ -1,6 +1,6 @@
 //! CWR version number for GRH record
 
-use super::common::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// CWR version number for GRH record

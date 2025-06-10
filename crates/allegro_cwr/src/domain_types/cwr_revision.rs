@@ -1,6 +1,6 @@
 //! CWR revision number type
 
-use super::common::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// CWR revision number (v2.2+)

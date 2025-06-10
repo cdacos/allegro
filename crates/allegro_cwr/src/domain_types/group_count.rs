@@ -1,6 +1,6 @@
 //! Group count for TRL record
 
-use super::common::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Group count for TRL record

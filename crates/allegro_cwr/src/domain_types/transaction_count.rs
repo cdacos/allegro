@@ -1,6 +1,6 @@
 //! Transaction count for GRT/TRL records
 
-use super::common::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Transaction count for GRT/TRL records

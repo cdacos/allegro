@@ -3,7 +3,6 @@
 //! Each type has its own module following Rust idiom of many small files
 //! with single responsibility principle.
 
-mod common;
 mod composite_component_count;
 mod currency_code;
 mod cwr_revision;
@@ -25,12 +24,14 @@ mod transaction_count;
 mod works_count;
 
 // Re-export all types to maintain compatibility with existing imports
-pub use common::*;
 pub use composite_component_count::*;
 pub use currency_code::*;
+pub use cwr_field_parse::*;
+pub use cwr_field_write::*;
 pub use cwr_revision::*;
 pub use cwr_version::*;
 pub use cwr_version_number::*;
+pub use cwr_warning::*;
 pub use date::*;
 pub use enums::*;
 pub use group_count::*;
@@ -40,6 +41,7 @@ pub use number::*;
 pub use ownership_share::*;
 pub use publisher_sequence_number::*;
 pub use record_count::*;
+pub use crate::parsing::warning_level::*;
 // pub use text::*;  // No exports from text module yet
 pub use time::*;
 pub use tis_numeric_code::*;

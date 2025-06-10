@@ -1,6 +1,6 @@
 //! Group ID for GRH/GRT records
 
-use super::common::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Group ID for GRH/GRT records

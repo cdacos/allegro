@@ -1,6 +1,6 @@
 //! Ownership share type
 
-use super::common::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Ownership share (0-100.00% represented as 0-10000)
