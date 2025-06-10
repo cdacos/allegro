@@ -91,8 +91,8 @@ fn orn_custom_validate(record: &mut OrnRecord) -> Vec<CwrWarning<'static>> {
     // Validate transaction sequence number is numeric
     // Validate record sequence number is numeric
     // Validate intended purpose is 3 characters
-    if record.intended_purpose.len() != 3 {
-        warnings.push(CwrWarning { field_name: "intended_purpose", field_title: "Intended purpose", source_str: std::borrow::Cow::Owned(record.intended_purpose.clone()), level: WarningLevel::Critical, description: "Intended purpose must be exactly 3 characters".to_string() });
+    if record.intended_purpose.as_str().len() != 3 {
+        warnings.push(CwrWarning { field_name: "intended_purpose", field_title: "Intended purpose", source_str: std::borrow::Cow::Owned(record.intended_purpose.as_str().to_string()), level: WarningLevel::Critical, description: "Intended purpose must be exactly 3 characters".to_string() });
     }
     // TODO: Validate intended_purpose against lookup table (e.g., "L" for Library, etc.)
 

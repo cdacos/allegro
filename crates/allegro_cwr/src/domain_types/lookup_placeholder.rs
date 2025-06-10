@@ -7,7 +7,7 @@ use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning};
 use std::ops::Deref;
 
 /// Placeholder for fields that need proper lookup validation
-/// 
+///
 /// This type accepts any string value without validation.
 /// It should be replaced with proper domain types that validate
 /// against lookup tables.
@@ -50,5 +50,19 @@ impl CwrFieldParse for Option<LookupPlaceholder> {
             let (placeholder, warnings) = LookupPlaceholder::parse_cwr_field(source, field_name, field_title);
             (Some(placeholder), warnings)
         }
+    }
+}
+
+#[cfg(feature = "sqlite")]
+impl rusqlite::types::ToSql for LookupPlaceholder {
+    fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
+        self.as_str().to_sql()
+    }
+}
+
+#[cfg(feature = "sqlite")]
+impl rusqlite::types::FromSql for LookupPlaceholder {
+    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
+        String::column_result(value).map(LookupPlaceholder)
     }
 }

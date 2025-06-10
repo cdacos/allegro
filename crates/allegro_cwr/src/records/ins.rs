@@ -45,11 +45,11 @@ fn ins_custom_validate(record: &mut InsRecord) -> Vec<CwrWarning<'static>> {
 
     // Validate standard instrumentation type if present
     if let Some(ref inst_type) = record.standard_instrumentation_type {
-        if !inst_type.trim().is_empty() && inst_type.len() != 3 {
+        if !inst_type.as_str().trim().is_empty() && inst_type.as_str().len() != 3 {
             warnings.push(CwrWarning {
                 field_name: "standard_instrumentation_type",
                 field_title: "Standard instrumentation type (conditional)",
-                source_str: std::borrow::Cow::Owned(inst_type.clone()),
+                source_str: std::borrow::Cow::Owned(inst_type.as_str().to_string()),
                 level: WarningLevel::Critical,
                 description: "Standard instrumentation type must be exactly 3 characters if specified".to_string(),
             });
@@ -58,7 +58,7 @@ fn ins_custom_validate(record: &mut InsRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Conditional validation: at least one of standard_instrumentation_type or instrumentation_description must be present
-    if record.standard_instrumentation_type.as_ref().map(|s| s.trim().is_empty()).unwrap_or(true) && record.instrumentation_description.as_ref().map(|s| s.trim().is_empty()).unwrap_or(true) {
+    if record.standard_instrumentation_type.as_ref().map(|s| s.as_str().trim().is_empty()).unwrap_or(true) && record.instrumentation_description.as_ref().map(|s| s.trim().is_empty()).unwrap_or(true) {
         warnings.push(CwrWarning {
             field_name: "standard_instrumentation_type",
             field_title: "Standard instrumentation type (conditional)",

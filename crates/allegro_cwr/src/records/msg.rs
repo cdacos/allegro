@@ -49,7 +49,7 @@ fn msg_custom_validate(record: &mut MsgRecord) -> Vec<CwrWarning<'static>> {
     match record.message_type.as_str() {
         "E" | "W" | "F" => {} // E=Error, W=Warning, F=Fatal
         _ => {
-            warnings.push(CwrWarning { field_name: "message_type", field_title: "Message type (1 char)", source_str: std::borrow::Cow::Owned(record.message_type.clone()), level: WarningLevel::Critical, description: "Message type must be E (Error), W (Warning), or F (Fatal)".to_string() });
+            warnings.push(CwrWarning { field_name: "message_type", field_title: "Message type (1 char)", source_str: std::borrow::Cow::Owned(record.message_type.as_str().to_string()), level: WarningLevel::Critical, description: "Message type must be E (Error), W (Warning), or F (Fatal)".to_string() });
         }
     }
 
@@ -64,7 +64,7 @@ fn msg_custom_validate(record: &mut MsgRecord) -> Vec<CwrWarning<'static>> {
     match record.message_level.as_str() {
         "R" | "G" | "T" => {} // R=Record, G=Group, T=Transaction
         _ => {
-            warnings.push(CwrWarning { field_name: "message_level", field_title: "Message level (1 char)", source_str: std::borrow::Cow::Owned(record.message_level.clone()), level: WarningLevel::Critical, description: "Message level must be R (Record), G (Group), or T (Transaction)".to_string() });
+            warnings.push(CwrWarning { field_name: "message_level", field_title: "Message level (1 char)", source_str: std::borrow::Cow::Owned(record.message_level.as_str().to_string()), level: WarningLevel::Critical, description: "Message level must be R (Record), G (Group), or T (Transaction)".to_string() });
         }
     }
 

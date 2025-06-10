@@ -233,10 +233,10 @@ fn obfuscate_record(record: CwrRegistry, mappings: &mut ObfuscationMappings) -> 
                 swr.writer_first_name = Some(mappings.obfuscate_name(first_name));
             }
             if let Some(ref ipi_name) = swr.writer_ipi_name_num {
-                swr.writer_ipi_name_num = Some(mappings.obfuscate_ipi(ipi_name));
+                swr.writer_ipi_name_num = Some(allegro_cwr::domain_types::LookupPlaceholder(mappings.obfuscate_ipi(ipi_name)));
             }
             if let Some(ref ipi_base) = swr.writer_ipi_base_number {
-                swr.writer_ipi_base_number = Some(mappings.obfuscate_ipi(ipi_base));
+                swr.writer_ipi_base_number = Some(allegro_cwr::domain_types::LookupPlaceholder(mappings.obfuscate_ipi(ipi_base)));
             }
             CwrRegistry::Swr(swr)
         }
@@ -245,10 +245,10 @@ fn obfuscate_record(record: CwrRegistry, mappings: &mut ObfuscationMappings) -> 
                 spu.publisher_name = Some(mappings.obfuscate_name(pub_name));
             }
             if let Some(ref ipi_name) = spu.publisher_ipi_name_num {
-                spu.publisher_ipi_name_num = Some(mappings.obfuscate_ipi(ipi_name));
+                spu.publisher_ipi_name_num = Some(allegro_cwr::domain_types::LookupPlaceholder(mappings.obfuscate_ipi(ipi_name)));
             }
             if let Some(ref ipi_base) = spu.publisher_ipi_base_number {
-                spu.publisher_ipi_base_number = Some(mappings.obfuscate_ipi(ipi_base));
+                spu.publisher_ipi_base_number = Some(allegro_cwr::domain_types::LookupPlaceholder(mappings.obfuscate_ipi(ipi_base)));
             }
             CwrRegistry::Spu(spu)
         }
@@ -262,10 +262,10 @@ fn obfuscate_record(record: CwrRegistry, mappings: &mut ObfuscationMappings) -> 
                 per.performing_artist_first_name = Some(mappings.obfuscate_name(first_name));
             }
             if let Some(ref ipi_name) = per.performing_artist_ipi_name_num {
-                per.performing_artist_ipi_name_num = Some(mappings.obfuscate_ipi(ipi_name));
+                per.performing_artist_ipi_name_num = Some(allegro_cwr::domain_types::LookupPlaceholder(mappings.obfuscate_ipi(ipi_name)));
             }
             if let Some(ref ipi_base) = per.performing_artist_ipi_base_number {
-                per.performing_artist_ipi_base_number = Some(mappings.obfuscate_ipi(ipi_base));
+                per.performing_artist_ipi_base_number = Some(allegro_cwr::domain_types::LookupPlaceholder(mappings.obfuscate_ipi(ipi_base)));
             }
             CwrRegistry::Per(per)
         }
@@ -309,16 +309,16 @@ fn obfuscate_record(record: CwrRegistry, mappings: &mut ObfuscationMappings) -> 
                 com.writer_2_first_name = Some(mappings.obfuscate_name(writer_2_first));
             }
             if let Some(ref ipi_name) = com.writer_1_ipi_name_num {
-                com.writer_1_ipi_name_num = Some(mappings.obfuscate_ipi(ipi_name));
+                com.writer_1_ipi_name_num = Some(allegro_cwr::domain_types::LookupPlaceholder(mappings.obfuscate_ipi(ipi_name)));
             }
             if let Some(ref ipi_name) = com.writer_2_ipi_name_num {
-                com.writer_2_ipi_name_num = Some(mappings.obfuscate_ipi(ipi_name));
+                com.writer_2_ipi_name_num = Some(allegro_cwr::domain_types::LookupPlaceholder(mappings.obfuscate_ipi(ipi_name)));
             }
             if let Some(ref ipi_base) = com.writer_1_ipi_base_number {
-                com.writer_1_ipi_base_number = Some(mappings.obfuscate_ipi(ipi_base));
+                com.writer_1_ipi_base_number = Some(allegro_cwr::domain_types::LookupPlaceholder(mappings.obfuscate_ipi(ipi_base)));
             }
             if let Some(ref ipi_base) = com.writer_2_ipi_base_number {
-                com.writer_2_ipi_base_number = Some(mappings.obfuscate_ipi(ipi_base));
+                com.writer_2_ipi_base_number = Some(allegro_cwr::domain_types::LookupPlaceholder(mappings.obfuscate_ipi(ipi_base)));
             }
             CwrRegistry::Com(com)
         }

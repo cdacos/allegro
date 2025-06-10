@@ -46,8 +46,8 @@ fn nat_custom_validate(record: &mut NatRecord) -> Vec<CwrWarning<'static>> {
 
     // Validate language code format if present (ISO 639-1)
     if let Some(ref lang_code) = record.language_code {
-        if !lang_code.trim().is_empty() && lang_code.len() != 2 {
-            warnings.push(CwrWarning { field_name: "language_code", field_title: "Language code (optional)", source_str: std::borrow::Cow::Owned(lang_code.clone()), level: WarningLevel::Warning, description: "Language code should be 2 characters (ISO 639-1)".to_string() });
+        if !lang_code.as_str().trim().is_empty() && lang_code.as_str().len() != 2 {
+            warnings.push(CwrWarning { field_name: "language_code", field_title: "Language code (optional)", source_str: std::borrow::Cow::Owned(lang_code.as_str().to_string()), level: WarningLevel::Warning, description: "Language code should be 2 characters (ISO 639-1)".to_string() });
         }
     }
 

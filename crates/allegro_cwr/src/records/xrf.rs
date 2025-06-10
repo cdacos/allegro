@@ -33,7 +33,7 @@ fn xrf_custom_validate(record: &mut XrfRecord) -> Vec<CwrWarning<'static>> {
     let mut warnings = Vec::new();
 
     // Business rule: Organisation code cannot be empty
-    if record.organisation_code.trim().is_empty() {
+    if record.organisation_code.as_str().trim().is_empty() {
         warnings.push(CwrWarning { field_name: "organisation_code", field_title: "Organisation code", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Organisation code cannot be empty".to_string() });
     }
 
@@ -43,8 +43,8 @@ fn xrf_custom_validate(record: &mut XrfRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Business rule: Identifier type validation
-    if !["T", "W", "V"].contains(&record.identifier_type.trim()) {
-        warnings.push(CwrWarning { field_name: "identifier_type", field_title: "Identifier type (1 char)", source_str: std::borrow::Cow::Owned(record.identifier_type.clone()), level: WarningLevel::Critical, description: "Identifier type must be T (Title), W (Work), or V (Version)".to_string() });
+    if !["T", "W", "V"].contains(&record.identifier_type.as_str().trim()) {
+        warnings.push(CwrWarning { field_name: "identifier_type", field_title: "Identifier type (1 char)", source_str: std::borrow::Cow::Owned(record.identifier_type.as_str().to_string()), level: WarningLevel::Critical, description: "Identifier type must be T (Title), W (Work), or V (Version)".to_string() });
     }
 
     // TODO: Additional business rules requiring broader context:

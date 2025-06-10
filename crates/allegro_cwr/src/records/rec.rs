@@ -79,17 +79,17 @@ fn rec_custom_validate(record: &mut RecRecord) -> Vec<CwrWarning<'static>> {
 
     // Business rule: ISRC format validation (if provided)
     if let Some(ref isrc) = record.isrc {
-        let isrc_trimmed = isrc.trim();
+        let isrc_trimmed = isrc.as_str().trim();
         if !isrc_trimmed.is_empty() && isrc_trimmed.len() != 12 {
-            warnings.push(CwrWarning { field_name: "isrc", field_title: "ISRC (optional)", source_str: std::borrow::Cow::Owned(isrc.clone()), level: WarningLevel::Warning, description: "ISRC should be exactly 12 characters (CCXXXYYNNNNN format)".to_string() });
+            warnings.push(CwrWarning { field_name: "isrc", field_title: "ISRC (optional)", source_str: std::borrow::Cow::Owned(isrc.as_str().to_string()), level: WarningLevel::Warning, description: "ISRC should be exactly 12 characters (CCXXXYYNNNNN format)".to_string() });
         }
     }
 
     // Business rule: EAN format validation (if provided)
     if let Some(ref ean) = record.ean {
-        let ean_trimmed = ean.trim();
+        let ean_trimmed = ean.as_str().trim();
         if !ean_trimmed.is_empty() && (ean_trimmed.len() != 13 || !ean_trimmed.chars().all(|c| c.is_ascii_digit())) {
-            warnings.push(CwrWarning { field_name: "ean", field_title: "EAN (optional)", source_str: std::borrow::Cow::Owned(ean.clone()), level: WarningLevel::Warning, description: "EAN should be exactly 13 numeric digits".to_string() });
+            warnings.push(CwrWarning { field_name: "ean", field_title: "EAN (optional)", source_str: std::borrow::Cow::Owned(ean.as_str().to_string()), level: WarningLevel::Warning, description: "EAN should be exactly 13 numeric digits".to_string() });
         }
     }
 

@@ -34,8 +34,8 @@ fn ind_custom_validate(record: &mut IndRecord) -> Vec<CwrWarning<'static>> {
     // Validate transaction sequence number is numeric
     // Validate record sequence number is numeric
     // Validate instrument code is 3 characters
-    if record.instrument_code.len() != 3 {
-        warnings.push(CwrWarning { field_name: "instrument_code", field_title: "Instrument code", source_str: std::borrow::Cow::Owned(record.instrument_code.clone()), level: WarningLevel::Critical, description: "Instrument code must be exactly 3 characters".to_string() });
+    if record.instrument_code.as_str().len() != 3 {
+        warnings.push(CwrWarning { field_name: "instrument_code", field_title: "Instrument code", source_str: std::borrow::Cow::Owned(record.instrument_code.as_str().to_string()), level: WarningLevel::Critical, description: "Instrument code must be exactly 3 characters".to_string() });
     }
 
     // TODO: Validate instrument_code against standard instrument codes table
