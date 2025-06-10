@@ -11,7 +11,7 @@ pub mod record_handlers;
 pub mod report;
 pub mod statements;
 
-use allegro_cwr::domain_types::{Number, YesNo, FlagYNU};
+use allegro_cwr::domain_types::{FlagYNU, Number, YesNo};
 use domain_conversions::{CwrFromSqlString, CwrToSqlInt, CwrToSqlString, opt_domain_to_string, opt_string_to_domain, opt_string_to_numeric};
 
 /// Trait for inserting CWR records into SQLite
