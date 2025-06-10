@@ -43,7 +43,9 @@ fn alt_custom_validate(record: &mut AltRecord) -> Vec<CwrWarning<'static>> {
     // Business rule: Language code required for translated and transliterated titles
     if matches!(
         record.title_type,
-        TitleType::TranslatedTitle | TitleType::TransliterationTrans | TitleType::TransliterationAlt
+        TitleType::OriginalTitleTranslated
+            | TitleType::OriginalTitleWithNationalCharacters
+            | TitleType::AlternativeTitleWithNationalCharacters
     ) && (record.language_code.is_none() || record.language_code.as_ref().is_none_or(|s| s.trim().is_empty()))
     {
         warnings.push(CwrWarning {

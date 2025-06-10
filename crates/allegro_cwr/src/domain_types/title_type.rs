@@ -8,31 +8,45 @@ use std::borrow::Cow;
 /// Title type for ALT record
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub enum TitleType {
-    AlternateTitle,
+    /// An alternative to an original title
+    AlternativeTitle,
+    /// The beginning of a text
+    FirstLineOfText,
+    /// A standardised title in which the elements are arranged in a pre-determined order. Normally created for classical works
     FormalTitle,
+    /// A spurious or unacceptable title sometimes mistakenly used for identification
+    IncorrectTitle,
+    /// A title given to the work by its creator(s) shown in its original language
     #[default]
     OriginalTitle,
-    TransliteratedTitle,
-    AbbreviatedTitle,
-    SearchTitle,
-    TranslatedTitle,
-    TransliterationTrans,
-    TransliterationAlt,
-    // Add more as needed
+    /// An original title translated into a different language
+    OriginalTitleTranslated,
+    /// A section of a work which is not recognized as an excerpt in its own right and does not have its own ISWC
+    PartTitle,
+    /// A title from which all initial articles and punctuation have been removed
+    RestrictedTitle,
+    /// An alternate title created to aid database searching (e.g. where special characters, puns, or slang have been replaced by standardized elements)
+    ExtraSearchTitle,
+    /// The Original title of the Work in it's original language, using 'accented' National characters
+    OriginalTitleWithNationalCharacters,
+    /// An alternatice work title in it's original language, using 'accented ' National characters
+    AlternativeTitleWithNationalCharacters,
 }
 
 impl TitleType {
     pub fn as_str(&self) -> &str {
         match self {
-            TitleType::AlternateTitle => "AT",
+            TitleType::AlternativeTitle => "AT",
+            TitleType::FirstLineOfText => "TE",
             TitleType::FormalTitle => "FT",
+            TitleType::IncorrectTitle => "IT",
             TitleType::OriginalTitle => "OT",
-            TitleType::TransliteratedTitle => "TR",
-            TitleType::AbbreviatedTitle => "AB",
-            TitleType::SearchTitle => "ST",
-            TitleType::TranslatedTitle => "TT",
-            TitleType::TransliterationTrans => "LT",
-            TitleType::TransliterationAlt => "LA",
+            TitleType::OriginalTitleTranslated => "TT",
+            TitleType::PartTitle => "PT",
+            TitleType::RestrictedTitle => "RT",
+            TitleType::ExtraSearchTitle => "ET",
+            TitleType::OriginalTitleWithNationalCharacters => "OL",
+            TitleType::AlternativeTitleWithNationalCharacters => "AL",
         }
     }
 }
@@ -49,24 +63,26 @@ impl CwrFieldParse for TitleType {
     ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
         match trimmed {
-            "AT" => (TitleType::AlternateTitle, vec![]),
+            "AT" => (TitleType::AlternativeTitle, vec![]),
+            "TE" => (TitleType::FirstLineOfText, vec![]),
             "FT" => (TitleType::FormalTitle, vec![]),
+            "IT" => (TitleType::IncorrectTitle, vec![]),
             "OT" => (TitleType::OriginalTitle, vec![]),
-            "TR" => (TitleType::TransliteratedTitle, vec![]),
-            "LT" => (TitleType::TransliterationTrans, vec![]),
-            "LA" => (TitleType::TransliterationAlt, vec![]),
-            "AB" => (TitleType::AbbreviatedTitle, vec![]),
-            "ST" => (TitleType::SearchTitle, vec![]),
-            "TT" => (TitleType::TranslatedTitle, vec![]),
+            "TT" => (TitleType::OriginalTitleTranslated, vec![]),
+            "PT" => (TitleType::PartTitle, vec![]),
+            "RT" => (TitleType::RestrictedTitle, vec![]),
+            "ET" => (TitleType::ExtraSearchTitle, vec![]),
+            "OL" => (TitleType::OriginalTitleWithNationalCharacters, vec![]),
+            "AL" => (TitleType::AlternativeTitleWithNationalCharacters, vec![]),
             _ => {
                 let warnings = vec![CwrWarning {
                     field_name,
                     field_title,
                     source_str: Cow::Owned(source.to_string()),
                     level: WarningLevel::Warning,
-                    description: format!("Unknown title type '{}', defaulting to AT", trimmed),
+                    description: format!("Unknown title type '{}', defaulting to OT", trimmed),
                 }];
-                (TitleType::AlternateTitle, warnings)
+                (TitleType::OriginalTitle, warnings)
             }
         }
     }
