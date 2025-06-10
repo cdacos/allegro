@@ -13,7 +13,7 @@ There's also a [Common Works Registration User Manual](https://members.cisac.org
 
 This is currently an evolving project that provides CWR file parsing for versions 2.0, 2.1, and 2.2.
 
-If you work in music publishing and this is useful, let me know!
+If you work in music publishing and this is of interest, let me know!
 
 ## Current Features
 
@@ -137,7 +137,7 @@ The project is organized into focused crates:
 
 ## Implementation
 
-The parsing system uses modern Rust procedural macros with the `#[derive(CwrRecord)]` attribute to automatically generate parsing logic for each record type. Record definitions are clean and declarative:
+The parsing system uses Rust procedural macros with the `#[derive(CwrRecord)]` attribute to automatically generate parsing logic for each record type. Record definitions are clean and declarative:
 
 ```rust
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, CwrRecord)]
@@ -156,4 +156,4 @@ pub struct AgrRecord {
 }
 ```
 
-The derive macro automatically generates `from_cwr_line()` parsing methods with field validation and warning collection.
+The derive macro automatically generates `from_cwr_line()` and `to_cwr_line()` parsing methods with field validation and warning collection.
