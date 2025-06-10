@@ -157,6 +157,30 @@ impl CwrToSqlString for Number {
     }
 }
 
+impl CwrToSqlString for TextMusicRelationship {
+    fn to_sql_string(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
+impl CwrToSqlString for ExcerptType {
+    fn to_sql_string(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
+impl CwrToSqlString for MusicArrangement {
+    fn to_sql_string(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
+impl CwrToSqlString for LyricAdaptation {
+    fn to_sql_string(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
 // Integer conversions for numeric domain types
 impl CwrToSqlInt for OwnershipShare {
     fn to_sql_int(&self) -> i64 {
@@ -494,6 +518,34 @@ impl CwrFromSqlString for Number {
     fn from_sql_string(value: &str) -> Result<Self, String> {
         let (parsed, warnings) = Number::parse_cwr_field(value, "sql_field", "SQL Field");
         if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing Number: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
+    }
+}
+
+impl CwrFromSqlString for TextMusicRelationship {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = TextMusicRelationship::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing TextMusicRelationship: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
+    }
+}
+
+impl CwrFromSqlString for ExcerptType {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = ExcerptType::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing ExcerptType: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
+    }
+}
+
+impl CwrFromSqlString for MusicArrangement {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = MusicArrangement::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing MusicArrangement: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
+    }
+}
+
+impl CwrFromSqlString for LyricAdaptation {
+    fn from_sql_string(value: &str) -> Result<Self, String> {
+        let (parsed, warnings) = LyricAdaptation::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing LyricAdaptation: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
     }
 }
 

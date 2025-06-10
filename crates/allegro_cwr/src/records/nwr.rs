@@ -43,7 +43,7 @@ pub struct NwrRecord {
     pub recorded_indicator: Flag,
 
     #[cwr(title = "Text music relationship (optional)", start = 136, len = 3)]
-    pub text_music_relationship: Option<String>,
+    pub text_music_relationship: Option<TextMusicRelationship>,
 
     #[cwr(title = "Composite type (optional)", start = 139, len = 3)]
     pub composite_type: Option<String>,
@@ -52,13 +52,13 @@ pub struct NwrRecord {
     pub version_type: String,
 
     #[cwr(title = "Excerpt type (optional)", start = 145, len = 3)]
-    pub excerpt_type: Option<String>,
+    pub excerpt_type: Option<ExcerptType>,
 
     #[cwr(title = "Music arrangement (conditional)", start = 148, len = 3)]
-    pub music_arrangement: Option<String>,
+    pub music_arrangement: Option<MusicArrangement>,
 
     #[cwr(title = "Lyric adaptation (conditional)", start = 151, len = 3)]
-    pub lyric_adaptation: Option<String>,
+    pub lyric_adaptation: Option<LyricAdaptation>,
 
     #[cwr(title = "Contact name (optional)", start = 154, len = 30)]
     pub contact_name: Option<String>,
@@ -111,11 +111,11 @@ fn nwr_custom_validate(record: &mut NwrRecord) -> Vec<CwrWarning<'static>> {
 
     // Business rule: Music Arrangement required if Version Type = "MOD"
     if record.version_type == "MOD" {
-        if record.music_arrangement.is_none() || record.music_arrangement.as_ref().is_none_or(|s| s.trim().is_empty()) {
+        if record.music_arrangement.is_none() || record.music_arrangement.as_ref().is_none_or(|s| s.as_str().trim().is_empty()) {
             warnings.push(CwrWarning { field_name: "music_arrangement", field_title: "Music arrangement (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Music Arrangement is required when Version Type is 'MOD'".to_string() });
         }
 
-        if record.lyric_adaptation.is_none() || record.lyric_adaptation.as_ref().is_none_or(|s| s.trim().is_empty()) {
+        if record.lyric_adaptation.is_none() || record.lyric_adaptation.as_ref().is_none_or(|s| s.as_str().trim().is_empty()) {
             warnings.push(CwrWarning { field_name: "lyric_adaptation", field_title: "Lyric adaptation (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Lyric Adaptation is required when Version Type is 'MOD'".to_string() });
         }
     }
