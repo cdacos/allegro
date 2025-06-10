@@ -255,9 +255,25 @@ pub static SOCIETY_CODES: Lazy<HashMap<&'static str, u16>> = Lazy::new(|| {
     m
 });
 
+/// Reverse lookup from numeric code to society name
+pub static SOCIETY_CODES_BY_NUMBER: Lazy<HashMap<u16, &'static str>> = Lazy::new(|| {
+    SOCIETY_CODES.iter().map(|(name, &code)| (code, *name)).collect()
+});
+
 /// Validates a society code exists in the lookup table
+/// Accepts both society name strings and numeric codes (as strings with leading zeros)
 pub fn is_valid_society_code(code: &str) -> bool {
-    SOCIETY_CODES.contains_key(code)
+    // First try as society name
+    if SOCIETY_CODES.contains_key(code) {
+        return true;
+    }
+    
+    // Try as numeric code (parse and look up in reverse mapping)
+    if let Ok(numeric_code) = code.parse::<u16>() {
+        return SOCIETY_CODES_BY_NUMBER.contains_key(&numeric_code);
+    }
+    
+    false
 }
 
 /// Gets the numeric code for a society name
