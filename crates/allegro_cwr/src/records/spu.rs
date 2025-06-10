@@ -28,7 +28,7 @@ pub struct SpuRecord {
     pub publisher_name: Option<String>,
 
     #[cwr(title = "Publisher unknown indicator (1 char, conditional)", start = 75, len = 1)]
-    pub publisher_unknown_indicator: Option<FlagYNU>,
+    pub publisher_unknown_indicator: Option<Flag>,
 
     #[cwr(title = "Publisher type (conditional)", start = 76, len = 2)]
     pub publisher_type: Option<PublisherType>,
@@ -61,10 +61,10 @@ pub struct SpuRecord {
     pub sr_ownership_share: Option<OwnershipShare>,
 
     #[cwr(title = "Special agreements indicator (1 char, optional)", start = 136, len = 1)]
-    pub special_agreements_indicator: Option<FlagYNU>,
+    pub special_agreements_indicator: Option<Flag>,
 
     #[cwr(title = "First recording refusal indicator (1 char, optional)", start = 137, len = 1)]
-    pub first_recording_refusal_ind: Option<FlagYNU>,
+    pub first_recording_refusal_ind: Option<Flag>,
 
     #[cwr(title = "Filler (1 char, optional)", start = 138, len = 1)]
     pub filler: Option<String>,
@@ -107,7 +107,7 @@ fn spu_custom_validate(record: &mut SpuRecord) -> Vec<CwrWarning<'static>> {
 
         // Publisher Unknown Indicator must be None or Unknown for SPU records
         if let Some(ref indicator) = record.publisher_unknown_indicator {
-            if !matches!(indicator, FlagYNU::Unknown) {
+            if !matches!(indicator, Flag::Unknown) {
                 warnings.push(CwrWarning {
                     field_name: "publisher_unknown_indicator",
                     field_title: "Publisher unknown indicator (1 char, conditional)",

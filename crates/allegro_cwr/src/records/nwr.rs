@@ -41,7 +41,7 @@ pub struct NwrRecord {
     pub duration: Option<Duration>,
 
     #[cwr(title = "Recorded indicator (1 char)", start = 135, len = 1)]
-    pub recorded_indicator: FlagYNU,
+    pub recorded_indicator: Flag,
 
     #[cwr(title = "Text music relationship (optional)", start = 136, len = 3)]
     pub text_music_relationship: Option<String>,
@@ -71,7 +71,7 @@ pub struct NwrRecord {
     pub cwr_work_type: Option<String>,
 
     #[cwr(title = "Grand rights indicator (1 char, conditional)", start = 196, len = 1)]
-    pub grand_rights_ind: Option<FlagYNU>,
+    pub grand_rights_ind: Option<Flag>,
 
     #[cwr(title = "Composite component count (conditional)", start = 197, len = 3)]
     pub composite_component_count: Option<CompositeComponentCount>,
@@ -80,7 +80,7 @@ pub struct NwrRecord {
     pub date_of_publication_of_printed_edition: Option<Date>,
 
     #[cwr(title = "Exceptional clause (1 char, optional)", start = 208, len = 1)]
-    pub exceptional_clause: Option<FlagYNU>,
+    pub exceptional_clause: Option<Flag>,
 
     #[cwr(title = "Opus number (optional)", start = 209, len = 25)]
     pub opus_number: Option<String>,
@@ -89,7 +89,7 @@ pub struct NwrRecord {
     pub catalogue_number: Option<String>,
 
     #[cwr(title = "Priority flag (1 char, optional, v2.1+)", start = 259, len = 1, min_version = 2.1)]
-    pub priority_flag: Option<FlagYNU>,
+    pub priority_flag: Option<Flag>,
 }
 
 // Custom validation function for NWR record

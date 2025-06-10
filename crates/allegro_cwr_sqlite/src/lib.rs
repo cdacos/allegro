@@ -11,7 +11,7 @@ pub mod record_handlers;
 pub mod report;
 pub mod statements;
 
-use allegro_cwr::domain_types::{FlagYNU, Number, YesNo};
+use allegro_cwr::domain_types::{Boolean, Flag, Number};
 use domain_conversions::{CwrFromSqlString, CwrToSqlInt, CwrToSqlString, opt_domain_to_string, opt_string_to_domain, opt_string_to_numeric};
 
 /// Trait for inserting CWR records into SQLite
@@ -957,8 +957,8 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                         opt_string_to_domain::<Duration>(row.get::<_, Option<String>>("duration")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     recorded_indicator: {
-                        use allegro_cwr::domain_types::FlagYNU;
-                        FlagYNU::from_sql_string(&row.get::<_, String>("recorded_indicator")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        use allegro_cwr::domain_types::Flag;
+                        Flag::from_sql_string(&row.get::<_, String>("recorded_indicator")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     text_music_relationship: row.get::<_, Option<String>>("text_music_relationship")?,
                     composite_type: row.get::<_, Option<String>>("composite_type")?,
@@ -970,8 +970,8 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     contact_id: row.get::<_, Option<String>>("contact_id")?,
                     cwr_work_type: row.get::<_, Option<String>>("cwr_work_type")?,
                     grand_rights_ind: {
-                        use allegro_cwr::domain_types::FlagYNU;
-                        opt_string_to_domain::<FlagYNU>(row.get::<_, Option<String>>("grand_rights_ind")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        use allegro_cwr::domain_types::Flag;
+                        opt_string_to_domain::<Flag>(row.get::<_, Option<String>>("grand_rights_ind")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     composite_component_count: {
                         let opt_int: Option<i64> = row.get::<_, Option<i64>>("composite_component_count")?;
@@ -988,14 +988,14 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                         opt_string_to_domain::<Date>(row.get::<_, Option<String>>("date_of_publication_of_printed_edition")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     exceptional_clause: {
-                        use allegro_cwr::domain_types::FlagYNU;
-                        opt_string_to_domain::<FlagYNU>(row.get::<_, Option<String>>("exceptional_clause")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        use allegro_cwr::domain_types::Flag;
+                        opt_string_to_domain::<Flag>(row.get::<_, Option<String>>("exceptional_clause")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     opus_number: row.get::<_, Option<String>>("opus_number")?,
                     catalogue_number: row.get::<_, Option<String>>("catalogue_number")?,
                     priority_flag: {
-                        use allegro_cwr::domain_types::FlagYNU;
-                        opt_string_to_domain::<FlagYNU>(row.get::<_, Option<String>>("priority_flag")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        use allegro_cwr::domain_types::Flag;
+                        opt_string_to_domain::<Flag>(row.get::<_, Option<String>>("priority_flag")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                 };
                 Ok(nwr)
@@ -1058,8 +1058,8 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                         Number::from_sql_string(&row.get::<_, String>("number_of_works")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     sales_manufacture_clause: row.get::<_, Option<String>>("sales_manufacture_clause")?,
-                    shares_change: opt_string_to_domain::<YesNo>(row.get::<_, Option<String>>("shares_change")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
-                    advance_given: opt_string_to_domain::<YesNo>(row.get::<_, Option<String>>("advance_given")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
+                    shares_change: opt_string_to_domain::<Boolean>(row.get::<_, Option<String>>("shares_change")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
+                    advance_given: opt_string_to_domain::<Boolean>(row.get::<_, Option<String>>("advance_given")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
                     society_assigned_agreement_number: row.get::<_, Option<String>>("society_assigned_agreement_number")?,
                 };
                 Ok(agr)
@@ -1237,8 +1237,8 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     interested_party_num: row.get::<_, Option<String>>("interested_party_num")?,
                     publisher_name: row.get::<_, Option<String>>("publisher_name")?,
                     publisher_unknown_indicator: {
-                        use allegro_cwr::domain_types::FlagYNU;
-                        opt_string_to_domain::<FlagYNU>(row.get::<_, Option<String>>("publisher_unknown_indicator")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        use allegro_cwr::domain_types::Flag;
+                        opt_string_to_domain::<Flag>(row.get::<_, Option<String>>("publisher_unknown_indicator")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     publisher_type: {
                         use allegro_cwr::domain_types::PublisherType;
@@ -1263,12 +1263,12 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                         opt_string_to_numeric::<OwnershipShare>(row.get::<_, Option<String>>("sr_ownership_share")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     special_agreements_indicator: {
-                        use allegro_cwr::domain_types::FlagYNU;
-                        opt_string_to_domain::<FlagYNU>(row.get::<_, Option<String>>("special_agreements_indicator")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        use allegro_cwr::domain_types::Flag;
+                        opt_string_to_domain::<Flag>(row.get::<_, Option<String>>("special_agreements_indicator")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     first_recording_refusal_ind: {
-                        use allegro_cwr::domain_types::FlagYNU;
-                        opt_string_to_domain::<FlagYNU>(row.get::<_, Option<String>>("first_recording_refusal_ind")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        use allegro_cwr::domain_types::Flag;
+                        opt_string_to_domain::<Flag>(row.get::<_, Option<String>>("first_recording_refusal_ind")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     filler: row.get::<_, Option<String>>("filler")?,
                     publisher_ipi_base_number: row.get::<_, Option<String>>("publisher_ipi_base_number")?,
@@ -1348,8 +1348,8 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                         TisNumericCode::from_sql_string(&row.get::<_, String>("tis_numeric_code")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     shares_change: {
-                        use allegro_cwr::domain_types::FlagYNU;
-                        opt_string_to_domain::<FlagYNU>(row.get::<_, Option<String>>("shares_change")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        use allegro_cwr::domain_types::Flag;
+                        opt_string_to_domain::<Flag>(row.get::<_, Option<String>>("shares_change")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     sequence_num: opt_string_to_numeric::<Number>(row.get::<_, Option<String>>("sequence_num")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
                 };
@@ -1376,7 +1376,7 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     interested_party_num: row.get::<_, Option<String>>("interested_party_num")?,
                     writer_last_name: row.get::<_, Option<String>>("writer_last_name")?,
                     writer_first_name: row.get::<_, Option<String>>("writer_first_name")?,
-                    writer_unknown_indicator: opt_string_to_domain::<FlagYNU>(row.get::<_, Option<String>>("writer_unknown_indicator")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
+                    writer_unknown_indicator: opt_string_to_domain::<Flag>(row.get::<_, Option<String>>("writer_unknown_indicator")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
                     writer_designation_code: row.get::<_, Option<String>>("writer_designation_code")?,
                     tax_id_num: row.get::<_, Option<String>>("tax_id_num")?,
                     writer_ipi_name_num: row.get::<_, Option<String>>("writer_ipi_name_num")?,
@@ -1396,16 +1396,16 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                         opt_string_to_numeric::<OwnershipShare>(row.get::<_, Option<String>>("sr_ownership_share")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     reversionary_indicator: {
-                        use allegro_cwr::domain_types::FlagYNU;
-                        opt_string_to_domain::<FlagYNU>(row.get::<_, Option<String>>("reversionary_indicator")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        use allegro_cwr::domain_types::Flag;
+                        opt_string_to_domain::<Flag>(row.get::<_, Option<String>>("reversionary_indicator")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     first_recording_refusal_ind: {
-                        use allegro_cwr::domain_types::FlagYNU;
-                        opt_string_to_domain::<FlagYNU>(row.get::<_, Option<String>>("first_recording_refusal_ind")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        use allegro_cwr::domain_types::Flag;
+                        opt_string_to_domain::<Flag>(row.get::<_, Option<String>>("first_recording_refusal_ind")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     work_for_hire_indicator: {
-                        use allegro_cwr::domain_types::FlagYNU;
-                        opt_string_to_domain::<FlagYNU>(row.get::<_, Option<String>>("work_for_hire_indicator")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        use allegro_cwr::domain_types::Flag;
+                        opt_string_to_domain::<Flag>(row.get::<_, Option<String>>("work_for_hire_indicator")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     filler: row.get::<_, Option<String>>("filler")?,
                     writer_ipi_base_number: row.get::<_, Option<String>>("writer_ipi_base_number")?,
@@ -1484,8 +1484,8 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                         TisNumericCode::from_sql_string(&row.get::<_, String>("tis_numeric_code")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     shares_change: {
-                        use allegro_cwr::domain_types::FlagYNU;
-                        opt_string_to_domain::<FlagYNU>(row.get::<_, Option<String>>("shares_change")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        use allegro_cwr::domain_types::Flag;
+                        opt_string_to_domain::<Flag>(row.get::<_, Option<String>>("shares_change")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     sequence_num: opt_string_to_numeric::<Number>(row.get::<_, Option<String>>("sequence_num")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
                 };
@@ -2014,8 +2014,8 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     identifier_type: row.get::<_, String>("identifier_type")?,
                     validity: {
                         use crate::domain_conversions::CwrFromSqlString;
-                        use allegro_cwr::domain_types::FlagYNU;
-                        FlagYNU::from_sql_string(&row.get::<_, String>("validity")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
+                        use allegro_cwr::domain_types::Flag;
+                        Flag::from_sql_string(&row.get::<_, String>("validity")?).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                 };
                 Ok(xrf)

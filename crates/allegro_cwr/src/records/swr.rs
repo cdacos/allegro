@@ -25,7 +25,7 @@ pub struct SwrRecord {
     pub writer_first_name: Option<String>,
 
     #[cwr(title = "Writer unknown indicator (1 char, conditional)", start = 103, len = 1)]
-    pub writer_unknown_indicator: Option<FlagYNU>,
+    pub writer_unknown_indicator: Option<Flag>,
 
     #[cwr(title = "Writer designation code (conditional)", start = 104, len = 2)]
     pub writer_designation_code: Option<String>,
@@ -55,13 +55,13 @@ pub struct SwrRecord {
     pub sr_ownership_share: Option<OwnershipShare>,
 
     #[cwr(title = "Reversionary indicator (1 char, optional)", start = 150, len = 1)]
-    pub reversionary_indicator: Option<FlagYNU>,
+    pub reversionary_indicator: Option<Flag>,
 
     #[cwr(title = "First recording refusal indicator (1 char, optional)", start = 151, len = 1)]
-    pub first_recording_refusal_ind: Option<FlagYNU>,
+    pub first_recording_refusal_ind: Option<Flag>,
 
     #[cwr(title = "Work for hire indicator (1 char, optional)", start = 152, len = 1)]
-    pub work_for_hire_indicator: Option<FlagYNU>,
+    pub work_for_hire_indicator: Option<Flag>,
 
     #[cwr(title = "Filler (1 char, optional)", start = 153, len = 1)]
     pub filler: Option<String>,

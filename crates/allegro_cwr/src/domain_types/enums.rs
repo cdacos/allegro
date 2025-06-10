@@ -3,54 +3,6 @@
 use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
-pub enum YesNo {
-    Yes,
-    #[default]
-    No,
-}
-
-impl YesNo {
-    pub fn as_str(&self) -> &str {
-        match self {
-            YesNo::Yes => "Y",
-            YesNo::No => "N",
-        }
-    }
-}
-
-impl CwrFieldWrite for YesNo {
-    fn to_cwr_str(&self) -> String {
-        self.as_str().to_string()
-    }
-}
-
-impl CwrFieldParse for YesNo {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
-        let trimmed = source.trim();
-        match trimmed {
-            "Y" => (YesNo::Yes, vec![]),
-            "N" => (YesNo::No, vec![]),
-            _ => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid Yes/No value '{}', defaulting to No", trimmed) }];
-                (YesNo::No, warnings)
-            }
-        }
-    }
-}
-
-impl CwrFieldParse for Option<YesNo> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
-        let trimmed = source.trim();
-        if trimmed.is_empty() {
-            (None, vec![])
-        } else {
-            let (yes_no, warnings) = YesNo::parse_cwr_field(source, field_name, field_title);
-            (Some(yes_no), warnings)
-        }
-    }
-}
-
 /// Sender type for HDR record
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub enum SenderType {
@@ -283,58 +235,6 @@ impl CwrFieldParse for PostTermCollectionStatus {
                 let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Critical, description: format!("Invalid post-term collection status '{}', must be N, O, or D", trimmed) }];
                 (PostTermCollectionStatus::None, warnings)
             }
-        }
-    }
-}
-
-/// Flag with Yes/No/Unknown values
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
-pub enum FlagYNU {
-    Yes,
-    #[default]
-    No,
-    Unknown,
-}
-
-impl FlagYNU {
-    pub fn as_str(&self) -> &str {
-        match self {
-            FlagYNU::Yes => "Y",
-            FlagYNU::No => "N",
-            FlagYNU::Unknown => "U",
-        }
-    }
-}
-
-impl CwrFieldWrite for FlagYNU {
-    fn to_cwr_str(&self) -> String {
-        self.as_str().to_string()
-    }
-}
-
-impl CwrFieldParse for FlagYNU {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
-        let trimmed = source.trim();
-        match trimmed {
-            "Y" => (FlagYNU::Yes, vec![]),
-            "N" => (FlagYNU::No, vec![]),
-            "U" => (FlagYNU::Unknown, vec![]),
-            _ => {
-                let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid Y/N/U flag value '{}', defaulting to No", trimmed) }];
-                (FlagYNU::No, warnings)
-            }
-        }
-    }
-}
-
-impl CwrFieldParse for Option<FlagYNU> {
-    fn parse_cwr_field(source: &str, field_name: &'static str, field_title: &'static str) -> (Self, Vec<CwrWarning<'static>>) {
-        let trimmed = source.trim();
-        if trimmed.is_empty() {
-            (None, vec![])
-        } else {
-            let (flag, warnings) = FlagYNU::parse_cwr_field(source, field_name, field_title);
-            (Some(flag), warnings)
         }
     }
 }

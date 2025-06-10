@@ -86,7 +86,7 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
             let mut sorted_extra: Vec<_> = extra_chars_map.iter().collect();
             sorted_extra.sort_by_key(|(key, lines)| (key.as_str(), lines.len()));
 
-            if sorted_extra.len() > 0 {
+            if !sorted_extra.is_empty() {
                 println!("\nAMBIGUOUS:");
             }
 
@@ -172,8 +172,7 @@ fn check_character_differences(original: &str, serialized: &str, record_type: &s
         // Special handling for cases where original file is shorter (missing optional fields)
         else if original.len() < serialized.len() {
             // Check if the original matches the beginning of the serialized output
-            if serialized.starts_with(original) {
-                let missing_chars = &serialized[original.len()..];
+            if let Some(missing_chars) = serialized.strip_prefix(original) {
                 // If the missing part is just spaces/padding, this is expected behavior
                 if missing_chars.chars().all(|c| c == ' ') {
                     let missing_key = format!("{}:missing_optional_fields", record_type);

@@ -43,7 +43,7 @@ impl CwrToSqlString for PublisherType {
     }
 }
 
-impl CwrToSqlString for FlagYNU {
+impl CwrToSqlString for Flag {
     fn to_sql_string(&self) -> String {
         self.as_str().to_string()
     }
@@ -145,7 +145,7 @@ impl CwrToSqlString for Time {
     }
 }
 
-impl CwrToSqlString for YesNo {
+impl CwrToSqlString for Boolean {
     fn to_sql_string(&self) -> String {
         self.as_str().to_string()
     }
@@ -308,16 +308,16 @@ impl CwrFromSqlString for TransactionType {
     }
 }
 
-impl CwrFromSqlString for YesNo {
+impl CwrFromSqlString for Boolean {
     fn from_sql_string(value: &str) -> Result<Self, String> {
-        let (parsed, warnings) = YesNo::parse_cwr_field(value, "sql_field", "SQL Field");
-        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing YesNo: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
+        let (parsed, warnings) = Boolean::parse_cwr_field(value, "sql_field", "SQL Field");
+        if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing Boolean: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
     }
 }
 
-impl CwrFromSqlString for FlagYNU {
+impl CwrFromSqlString for Flag {
     fn from_sql_string(value: &str) -> Result<Self, String> {
-        let (parsed, warnings) = FlagYNU::parse_cwr_field(value, "sql_field", "SQL Field");
+        let (parsed, warnings) = Flag::parse_cwr_field(value, "sql_field", "SQL Field");
         if warnings.iter().any(|w| w.is_critical()) { Err(format!("Critical error parsing FlagYNU: {}", warnings.iter().find(|w| w.is_critical()).unwrap().description)) } else { Ok(parsed) }
     }
 }

@@ -25,7 +25,7 @@ pub struct XrfRecord {
     pub identifier_type: String,
 
     #[cwr(title = "Validity (1 char)", start = 37, len = 1)]
-    pub validity: FlagYNU,
+    pub validity: Flag,
 }
 
 // Custom validation function for XRF record
