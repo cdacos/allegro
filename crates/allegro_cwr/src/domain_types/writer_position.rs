@@ -124,8 +124,8 @@ mod tests {
 
     #[test]
     fn test_to_cwr_str() {
-        assert_eq!(WriterPosition::First.to_cwr_str(), "1");
-        assert_eq!(WriterPosition::Second.to_cwr_str(), "2");
+        assert_eq!(WriterPosition::First.to_cwr_str(1), "1");
+        assert_eq!(WriterPosition::Second.to_cwr_str(1), "2");
     }
 
     #[test]

@@ -181,12 +181,6 @@ impl CwrToSqlString for LyricAdaptation {
     }
 }
 
-impl CwrToSqlString for LookupPlaceholder {
-    fn to_sql_string(&self) -> String {
-        self.as_str().to_string()
-    }
-}
-
 impl CwrToSqlString for NonRomanAlphabet {
     fn to_sql_string(&self) -> String {
         self.as_str().to_string()
@@ -973,20 +967,6 @@ impl CwrFromSqlString for LyricAdaptation {
         if warnings.iter().any(|w| w.is_critical()) {
             Err(format!(
                 "Critical error parsing LyricAdaptation: {}",
-                warnings.iter().find(|w| w.is_critical()).unwrap().description
-            ))
-        } else {
-            Ok(parsed)
-        }
-    }
-}
-
-impl CwrFromSqlString for LookupPlaceholder {
-    fn from_sql_string(value: &str) -> Result<Self, String> {
-        let (parsed, warnings) = LookupPlaceholder::parse_cwr_field(value, "sql_field", "SQL Field");
-        if warnings.iter().any(|w| w.is_critical()) {
-            Err(format!(
-                "Critical error parsing LookupPlaceholder: {}",
                 warnings.iter().find(|w| w.is_critical()).unwrap().description
             ))
         } else {

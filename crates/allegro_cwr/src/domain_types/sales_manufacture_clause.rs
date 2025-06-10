@@ -124,8 +124,8 @@ mod tests {
 
     #[test]
     fn test_to_cwr_str() {
-        assert_eq!(SalesManufactureClause::Sales.to_cwr_str(), "S");
-        assert_eq!(SalesManufactureClause::Manufacture.to_cwr_str(), "M");
+        assert_eq!(SalesManufactureClause::Sales.to_cwr_str(8), "S");
+        assert_eq!(SalesManufactureClause::Manufacture.to_cwr_str(8), "M");
     }
 
     #[test]

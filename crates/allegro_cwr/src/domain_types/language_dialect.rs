@@ -143,7 +143,7 @@ mod tests {
     #[test]
     fn test_cwr_field_write() {
         let dialect = LanguageDialect("ENG".to_string());
-        assert_eq!(dialect.to_cwr_str(), "ENG");
+        assert_eq!(dialect.to_cwr_str(3), "ENG");
     }
 
     #[test]

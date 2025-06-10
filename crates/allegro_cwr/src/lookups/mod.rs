@@ -15,7 +15,6 @@ pub mod music_arrangements;
 pub mod musical_work_distribution_categories;
 pub mod publisher_types;
 pub mod society_codes;
-pub mod society_codes_extended;
 pub mod society_members;
 pub mod standard_instrumentations;
 pub mod text_music_relationships;
