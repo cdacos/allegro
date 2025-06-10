@@ -75,7 +75,7 @@ fn main() {
 
     let start_time = Instant::now();
 
-    let result = allegro_cwr_obfuscator::process_cwr_obfuscation(&input_filename, config.output_filename.as_deref(), config.cwr_version);
+    let result = allegro_cwr_obfuscate::process_cwr_obfuscation(&input_filename, config.output_filename.as_deref(), config.cwr_version);
 
     let elapsed_time = start_time.elapsed();
 
@@ -93,7 +93,7 @@ fn main() {
 }
 
 fn print_help() {
-    eprintln!("Usage: cwr-obfuscator [OPTIONS] <input_filename>");
+    eprintln!("Usage: cwr-obfuscate [OPTIONS] <input_filename>");
     eprintln!();
     eprintln!("Arguments:");
     eprintln!("  <input_filename>    CWR file to obfuscate");
@@ -107,6 +107,6 @@ fn print_help() {
     eprintln!("Names, titles, IPIs, and work numbers are consistently mapped throughout the file.");
     eprintln!();
     eprintln!("Example:");
-    eprintln!("  cwr-obfuscator input.cwr");
-    eprintln!("  cwr-obfuscator -o obfuscated.cwr input.cwr");
+    eprintln!("  cwr-obfuscate input.cwr");
+    eprintln!("  cwr-obfuscate -o obfuscated.cwr input.cwr");
 }

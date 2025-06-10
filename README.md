@@ -21,17 +21,18 @@ If you work in music publishing and this is useful, let me know!
 - **Type Safety**: Domain types and procedural macros for consistent parsing and serialization
 - **Warning System**: Basic field-level warnings for malformed data
 - **Performance**: Processes ~500K records/second with full parsing and database insertion (on my Macbook Pro M4!)
-- **Round-trip Fidelity**: Edit CWR data in JSON or SQLite format and export back to valid CWR files
+- **Round-trip Fidelity**: Edit CWR data in JSON or SQLite format and export back to valid CWR files with identical formatting
  
 ### Architecture
 
 The main library (`allegro-cwr`) streams CWR lines into typed records, and vice versa. The parser is deliberately agnostic in terms of final usage.
 
-We have three handler projects that demonstrate different uses of the library:
+We have four handler projects that demonstrate different uses of the library:
 
 - **`allegro-cwr-json`**: Bidirectional conversion between CWR ↔ JSON formats (CLI wrapper: `cwr-json`)
 - **`allegro-cwr-sqlite`**: Bidirectional conversion between CWR ↔ SQLite database (with tables for each record, such as `cwr_hdr`) (CLI wrapper: `cwr-sqlite`)
-- **`allegro-cwr-obfuscator`**: Privacy-preserving obfuscation of sensitive CWR data while maintaining referential integrity (CLI wrapper: `cwr-obfuscator`)
+- **`allegro-cwr-obfuscate`**: Privacy-preserving obfuscation of sensitive CWR data while maintaining referential integrity (CLI wrapper: `cwr-obfuscate`)
+- **`allegro-cwr-validate`**: Round-trip integrity validation to ensure CWR files can be parsed and re-serialized identically (CLI wrapper: `cwr-validate`)
 
 ## TODO
 
@@ -53,14 +54,17 @@ target/release/cwr-json input_file.cwr           # CWR → JSON
 target/release/cwr-json data.json                # JSON → CWR
 
 # CWR obfuscation (privacy-preserving test data)
-target/release/cwr-obfuscator input_file.cwr     # CWR → Obfuscated CWR
+target/release/cwr-obfuscate input_file.cwr     # CWR → Obfuscated CWR
+
+# CWR validation (round-trip integrity checking)
+target/release/cwr-validate input_file.cwr       # Validate round-trip integrity
 
 # Specify output files
 target/release/cwr-sqlite -o output.db input_file.cwr       # CWR → SQLite
 target/release/cwr-sqlite -o output.cwr database.db         # SQLite → CWR
 target/release/cwr-json -o output.json input_file.cwr       # CWR → JSON
 target/release/cwr-json -o output.cwr data.json             # JSON → CWR
-target/release/cwr-obfuscator -o safe.cwr input_file.cwr    # CWR → Obfuscated CWR
+target/release/cwr-obfuscate -o safe.cwr input_file.cwr    # CWR → Obfuscated CWR
 
 # SQLite: specify file ID for multi-file databases
 target/release/cwr-sqlite --file-id 2 -o output.cwr database.db
@@ -68,17 +72,20 @@ target/release/cwr-sqlite --file-id 2 -o output.cwr database.db
 # Force specific CWR version
 target/release/cwr-sqlite --cwr 2.1 input_file.cwr
 target/release/cwr-json --cwr 2.1 input_file.cwr
-target/release/cwr-obfuscator --cwr 2.1 input_file.cwr
+target/release/cwr-obfuscate --cwr 2.1 input_file.cwr
+target/release/cwr-validate --cwr 2.1 input_file.cwr
 
 # View logging output
 RUST_LOG=info target/release/cwr-sqlite input_file.cwr
 RUST_LOG=info target/release/cwr-json input_file.cwr
-RUST_LOG=info target/release/cwr-obfuscator input_file.cwr
+RUST_LOG=info target/release/cwr-obfuscate input_file.cwr
+RUST_LOG=info target/release/cwr-validate input_file.cwr
 
 # Show help
 target/release/cwr-sqlite --help
 target/release/cwr-json --help
-target/release/cwr-obfuscator --help
+target/release/cwr-obfuscate --help
+target/release/cwr-validate --help
 ```
 
 ### Workflow Examples
@@ -95,9 +102,13 @@ target/release/cwr-json input.cwr                # Import to JSON
 target/release/cwr-json -o edited.cwr input.json # Export modified CWR
 
 # Create privacy-safe test data
-target/release/cwr-obfuscator production.cwr     # Creates production.cwr.obfuscated
+target/release/cwr-obfuscate production.cwr     # Creates production.cwr.obfuscated
 # Share obfuscated file safely - all names, titles, IPIs are fake but consistent
 target/release/cwr-sqlite production.cwr.obfuscated  # Can still analyze structure
+
+# Validate round-trip integrity (for testing)
+target/release/cwr-sqlite input.cwr              # CWR → SQLite → CWR
+diff input.cwr input.cwr.cwr                     # Should be identical
 ```
 
 ## Development
@@ -121,7 +132,8 @@ The project is organized into focused crates:
 - **`allegro_cwr_derive`** - Procedural macros for automatic record parsing generation
 - **`allegro_cwr_sqlite`** - SQLite database operations, schema management, and `cwr-sqlite` CLI binary
 - **`allegro_cwr_json`** - JSON output formatting with structured context and `cwr-json` CLI binary
-- **`allegro_cwr_obfuscator`** - Privacy-preserving obfuscation with consistent mapping and `cwr-obfuscator` CLI binary
+- **`allegro_cwr_obfuscate`** - Privacy-preserving obfuscation with consistent mapping and `cwr-obfuscate` CLI binary
+- **`allegro_cwr_validate`** - Round-trip integrity validation and CWR compliance checking with `cwr-validate` CLI binary
 
 ## Implementation
 

@@ -13,10 +13,10 @@ pub struct OrnRecord {
     pub record_type: String,
 
     #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
-    pub transaction_sequence_num: String,
+    pub transaction_sequence_num: Number,
 
     #[cwr(title = "Record sequence number", start = 11, len = 8)]
-    pub record_sequence_num: String,
+    pub record_sequence_num: Number,
 
     #[cwr(title = "Intended purpose", start = 19, len = 3)]
     pub intended_purpose: String,
@@ -28,7 +28,7 @@ pub struct OrnRecord {
     pub cd_identifier: Option<String>,
 
     #[cwr(title = "Cut number (optional)", start = 97, len = 4)]
-    pub cut_number: Option<String>,
+    pub cut_number: Option<Number>,
 
     #[cwr(title = "Library (conditional, v2.1+)", start = 101, len = 60, min_version = 2.1)]
     pub library: Option<String>,
@@ -49,10 +49,10 @@ pub struct OrnRecord {
     pub episode_num: Option<String>,
 
     #[cwr(title = "Year of production (optional, v2.1+)", start = 279, len = 4, min_version = 2.1)]
-    pub year_of_production: Option<String>,
+    pub year_of_production: Option<Number>,
 
     #[cwr(title = "AVI society code (optional, v2.1+)", start = 283, len = 3, min_version = 2.1)]
-    pub avi_society_code: Option<String>,
+    pub avi_society_code: Option<Number>,
 
     #[cwr(title = "Audio-visual number (optional, v2.1+)", start = 286, len = 15, min_version = 2.1)]
     pub audio_visual_number: Option<String>,
@@ -89,25 +89,17 @@ fn orn_custom_validate(record: &mut OrnRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Validate transaction sequence number is numeric
-    if !record.transaction_sequence_num.chars().all(|c| c.is_ascii_digit()) {
-        warnings.push(CwrWarning { field_name: "transaction_sequence_num", field_title: "Transaction sequence number", source_str: std::borrow::Cow::Owned(record.transaction_sequence_num.clone()), level: WarningLevel::Critical, description: "Transaction sequence number must be numeric".to_string() });
-    }
-
     // Validate record sequence number is numeric
-    if !record.record_sequence_num.chars().all(|c| c.is_ascii_digit()) {
-        warnings.push(CwrWarning { field_name: "record_sequence_num", field_title: "Record sequence number", source_str: std::borrow::Cow::Owned(record.record_sequence_num.clone()), level: WarningLevel::Critical, description: "Record sequence number must be numeric".to_string() });
-    }
-
     // Validate intended purpose is 3 characters
     if record.intended_purpose.len() != 3 {
         warnings.push(CwrWarning { field_name: "intended_purpose", field_title: "Intended purpose", source_str: std::borrow::Cow::Owned(record.intended_purpose.clone()), level: WarningLevel::Critical, description: "Intended purpose must be exactly 3 characters".to_string() });
     }
     // TODO: Validate intended_purpose against lookup table (e.g., "L" for Library, etc.)
 
-    // Validate cut number is numeric if present
+    // Validate cut number is reasonable if present
     if let Some(ref cut_num) = record.cut_number {
-        if !cut_num.trim().is_empty() && !cut_num.chars().all(|c| c.is_ascii_digit()) {
-            warnings.push(CwrWarning { field_name: "cut_number", field_title: "Cut number (optional)", source_str: std::borrow::Cow::Owned(cut_num.clone()), level: WarningLevel::Warning, description: "Cut number should be numeric if specified".to_string() });
+        if cut_num.0 > 9999 {
+            warnings.push(CwrWarning { field_name: "cut_number", field_title: "Cut number (optional)", source_str: std::borrow::Cow::Owned(cut_num.to_string()), level: WarningLevel::Warning, description: "Cut number should be a 4-digit number (0000-9999)".to_string() });
         }
     }
 
@@ -118,21 +110,17 @@ fn orn_custom_validate(record: &mut OrnRecord) -> Vec<CwrWarning<'static>> {
         }
     }
 
-    // Validate year of production is 4 digits if present
+    // Validate year of production is reasonable if present
     if let Some(ref year) = record.year_of_production {
-        if !year.trim().is_empty() {
-            if year.len() != 4 {
-                warnings.push(CwrWarning { field_name: "year_of_production", field_title: "Year of production (optional, v2.1+)", source_str: std::borrow::Cow::Owned(year.clone()), level: WarningLevel::Warning, description: "Year of production should be 4 digits if specified".to_string() });
-            } else if !year.chars().all(|c| c.is_ascii_digit()) {
-                warnings.push(CwrWarning { field_name: "year_of_production", field_title: "Year of production (optional, v2.1+)", source_str: std::borrow::Cow::Owned(year.clone()), level: WarningLevel::Warning, description: "Year of production should be numeric if specified".to_string() });
-            }
+        if year.0 < 1900 || year.0 > 2100 {
+            warnings.push(CwrWarning { field_name: "year_of_production", field_title: "Year of production (optional, v2.1+)", source_str: std::borrow::Cow::Owned(year.to_string()), level: WarningLevel::Warning, description: "Year of production should be a reasonable year (1900-2100)".to_string() });
         }
     }
 
-    // Validate AVI society code is 3 characters if present
+    // Validate AVI society code is reasonable if present
     if let Some(ref avi_code) = record.avi_society_code {
-        if !avi_code.trim().is_empty() && avi_code.len() != 3 {
-            warnings.push(CwrWarning { field_name: "avi_society_code", field_title: "AVI society code (optional, v2.1+)", source_str: std::borrow::Cow::Owned(avi_code.clone()), level: WarningLevel::Warning, description: "AVI society code should be 3 characters if specified".to_string() });
+        if avi_code.0 > 999 {
+            warnings.push(CwrWarning { field_name: "avi_society_code", field_title: "AVI society code (optional, v2.1+)", source_str: std::borrow::Cow::Owned(avi_code.to_string()), level: WarningLevel::Warning, description: "AVI society code should be a 3-digit number (000-999)".to_string() });
         }
         // TODO: Validate against AVI society code lookup table
     }

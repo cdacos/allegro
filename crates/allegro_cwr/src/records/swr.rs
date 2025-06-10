@@ -10,10 +10,10 @@ pub struct SwrRecord {
     pub record_type: String,
 
     #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
-    pub transaction_sequence_num: String,
+    pub transaction_sequence_num: Number,
 
     #[cwr(title = "Record sequence number", start = 11, len = 8)]
-    pub record_sequence_num: String,
+    pub record_sequence_num: Number,
 
     #[cwr(title = "Interested party number (conditional)", start = 19, len = 9)]
     pub interested_party_num: Option<String>,
@@ -25,7 +25,7 @@ pub struct SwrRecord {
     pub writer_first_name: Option<String>,
 
     #[cwr(title = "Writer unknown indicator (1 char, conditional)", start = 103, len = 1)]
-    pub writer_unknown_indicator: Option<String>,
+    pub writer_unknown_indicator: Option<FlagYNU>,
 
     #[cwr(title = "Writer designation code (conditional)", start = 104, len = 2)]
     pub writer_designation_code: Option<String>,

@@ -10,10 +10,10 @@ pub struct AriRecord {
     pub record_type: String,
 
     #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
-    pub transaction_sequence_num: String,
+    pub transaction_sequence_num: Number,
 
     #[cwr(title = "Record sequence number", start = 11, len = 8)]
-    pub record_sequence_num: String,
+    pub record_sequence_num: Number,
 
     #[cwr(title = "Society number", start = 19, len = 3)]
     pub society_num: String,
@@ -41,15 +41,7 @@ fn ari_custom_validate(record: &mut AriRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Validate transaction sequence number is numeric
-    if !record.transaction_sequence_num.chars().all(|c| c.is_ascii_digit()) {
-        warnings.push(CwrWarning { field_name: "transaction_sequence_num", field_title: "Transaction sequence number", source_str: std::borrow::Cow::Owned(record.transaction_sequence_num.clone()), level: WarningLevel::Critical, description: "Transaction sequence number must be numeric".to_string() });
-    }
-
     // Validate record sequence number is numeric
-    if !record.record_sequence_num.chars().all(|c| c.is_ascii_digit()) {
-        warnings.push(CwrWarning { field_name: "record_sequence_num", field_title: "Record sequence number", source_str: std::borrow::Cow::Owned(record.record_sequence_num.clone()), level: WarningLevel::Critical, description: "Record sequence number must be numeric".to_string() });
-    }
-
     // Validate society number is numeric (3 digits)
     if !record.society_num.chars().all(|c| c.is_ascii_digit()) || record.society_num.len() != 3 {
         warnings.push(CwrWarning { field_name: "society_num", field_title: "Society number", source_str: std::borrow::Cow::Owned(record.society_num.clone()), level: WarningLevel::Critical, description: "Society number must be 3 numeric digits".to_string() });

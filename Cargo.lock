@@ -43,7 +43,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "allegro_cwr_obfuscator"
+name = "allegro_cwr_obfuscate"
 version = "0.1.0"
 dependencies = [
  "allegro_cwr",
@@ -66,6 +66,17 @@ dependencies = [
  "log",
  "rusqlite",
  "tempfile",
+]
+
+[[package]]
+name = "allegro_cwr_validate"
+version = "0.1.0"
+dependencies = [
+ "allegro_cwr",
+ "env_logger",
+ "lexopt",
+ "log",
+ "thiserror",
 ]
 
 [[package]]

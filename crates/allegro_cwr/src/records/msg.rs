@@ -10,16 +10,16 @@ pub struct MsgRecord {
     pub record_type: String,
 
     #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
-    pub transaction_sequence_num: String,
+    pub transaction_sequence_num: Number,
 
     #[cwr(title = "Record sequence number", start = 11, len = 8)]
-    pub record_sequence_num: String,
+    pub record_sequence_num: Number,
 
     #[cwr(title = "Message type (1 char)", start = 19, len = 1)]
     pub message_type: String,
 
     #[cwr(title = "Original record sequence number", start = 20, len = 8)]
-    pub original_record_sequence_num: String,
+    pub original_record_sequence_num: Number,
 
     #[cwr(title = "Record type", start = 28, len = 3)]
     pub record_type_field: String,
@@ -44,15 +44,7 @@ fn msg_custom_validate(record: &mut MsgRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Validate transaction sequence number is numeric
-    if !record.transaction_sequence_num.chars().all(|c| c.is_ascii_digit()) {
-        warnings.push(CwrWarning { field_name: "transaction_sequence_num", field_title: "Transaction sequence number", source_str: std::borrow::Cow::Owned(record.transaction_sequence_num.clone()), level: WarningLevel::Critical, description: "Transaction sequence number must be numeric".to_string() });
-    }
-
     // Validate record sequence number is numeric
-    if !record.record_sequence_num.chars().all(|c| c.is_ascii_digit()) {
-        warnings.push(CwrWarning { field_name: "record_sequence_num", field_title: "Record sequence number", source_str: std::borrow::Cow::Owned(record.record_sequence_num.clone()), level: WarningLevel::Critical, description: "Record sequence number must be numeric".to_string() });
-    }
-
     // Validate message type
     match record.message_type.as_str() {
         "E" | "W" | "F" => {} // E=Error, W=Warning, F=Fatal
@@ -62,10 +54,6 @@ fn msg_custom_validate(record: &mut MsgRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Validate original record sequence number is numeric
-    if !record.original_record_sequence_num.chars().all(|c| c.is_ascii_digit()) {
-        warnings.push(CwrWarning { field_name: "original_record_sequence_num", field_title: "Original record sequence number", source_str: std::borrow::Cow::Owned(record.original_record_sequence_num.clone()), level: WarningLevel::Critical, description: "Original record sequence number must be numeric".to_string() });
-    }
-
     // Validate record type field (3 characters, uppercase)
     if record.record_type_field.len() != 3 {
         warnings.push(CwrWarning { field_name: "record_type_field", field_title: "Record type", source_str: std::borrow::Cow::Owned(record.record_type_field.clone()), level: WarningLevel::Critical, description: "Record type field must be exactly 3 characters".to_string() });

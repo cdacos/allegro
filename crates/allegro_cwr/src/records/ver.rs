@@ -13,10 +13,10 @@ pub struct VerRecord {
     pub record_type: String,
 
     #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
-    pub transaction_sequence_num: String,
+    pub transaction_sequence_num: Number,
 
     #[cwr(title = "Record sequence number", start = 11, len = 8)]
-    pub record_sequence_num: String,
+    pub record_sequence_num: Number,
 
     #[cwr(title = "Original work title", start = 19, len = 60)]
     pub original_work_title: String,

@@ -19,7 +19,7 @@ pub struct GrhRecord {
     pub version_number: CwrVersionNumber,
 
     #[cwr(title = "Optional batch request identifier", start = 16, len = 10)]
-    pub batch_request: Option<String>,
+    pub batch_request: Option<Number>,
 
     #[cwr(title = "Optional submission/distribution type (blank for CWR)", start = 26, len = 2)]
     pub submission_distribution_type: Option<String>,
@@ -29,14 +29,17 @@ pub struct GrhRecord {
 fn grh_custom_validate(record: &mut GrhRecord) -> Vec<CwrWarning<'static>> {
     let mut warnings = Vec::new();
 
-    // Cross-field validation: Version Number should match expected value for CWR 2.2
-    if record.version_number.as_str() != "02.20" {
+    // Cross-field validation: Version Number should match expected values
+    let version_str = record.version_number.as_str();
+    let is_valid_version = matches!(version_str, "02.00" | "02.10" | "02.20");
+
+    if !is_valid_version {
         warnings.push(CwrWarning {
             field_name: "version_number",
             field_title: "Version number for this transaction type",
-            source_str: std::borrow::Cow::Owned(record.version_number.as_str().to_string()),
+            source_str: std::borrow::Cow::Owned(version_str.to_string()),
             level: WarningLevel::Warning,
-            description: format!("Version number '{}' may not match expected '02.20' for CWR 2.2", record.version_number.as_str()),
+            description: format!("Version number '{}' is not a valid CWR version (expected: 02.00, 02.10, or 02.20)", version_str),
         });
     }
 

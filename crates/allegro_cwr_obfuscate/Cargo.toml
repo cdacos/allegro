@@ -1,10 +1,10 @@
 [package]
-name = "allegro_cwr_obfuscator"
+name = "allegro_cwr_obfuscate"
 version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "cwr-obfuscator"
+name = "cwr-obfuscate"
 path = "src/main.rs"
 
 [dependencies]

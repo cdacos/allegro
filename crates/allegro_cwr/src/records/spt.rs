@@ -10,10 +10,10 @@ pub struct SptRecord {
     pub record_type: String,
 
     #[cwr(title = "Transaction sequence number", start = 3, len = 8)]
-    pub transaction_sequence_num: String,
+    pub transaction_sequence_num: Number,
 
     #[cwr(title = "Record sequence number", start = 11, len = 8)]
-    pub record_sequence_num: String,
+    pub record_sequence_num: Number,
 
     #[cwr(title = "Interested party number", start = 19, len = 9)]
     pub interested_party_num: String,
@@ -40,7 +40,7 @@ pub struct SptRecord {
     pub shares_change: Option<FlagYNU>,
 
     #[cwr(title = "Sequence number (v2.1+)", start = 55, len = 3, min_version = 2.1)]
-    pub sequence_num: Option<String>,
+    pub sequence_num: Option<Number>,
 }
 
 // Custom validation function for SPT record

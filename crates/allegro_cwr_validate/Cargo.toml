@@ -1,0 +1,15 @@
+[package]
+name = "allegro_cwr_validate"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+allegro_cwr = { path = "../allegro_cwr" }
+thiserror = "1.0"
+log = "0.4"
+env_logger = "0.11"
+lexopt = "0.3"
+
+[[bin]]
+name = "cwr-validate"
+path = "src/main.rs"
