@@ -1,6 +1,6 @@
 //! Writer Designation
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Writer Designation (2 characters)
@@ -14,8 +14,8 @@ impl WriterDesignation {
 }
 
 impl CwrFieldWrite for WriterDesignation {
-    fn to_cwr_str(&self) -> String {
-        self.as_str().to_string()
+    fn to_cwr_str(&self, _width: usize) -> String {
+        format_text(self.as_str(), _width)
     }
 }
 

@@ -144,16 +144,7 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
                     while line.len() < #start {
                         line.push(' ');
                     }
-                    let field_str = <_ as crate::domain_types::CwrFieldWrite>::to_cwr_str(&self.#field_name);
-                    let padded = format!("{:width$}", field_str, width = #len);
-                    let field_content = padded[..#len.min(padded.len())].to_string();
-
-                    // Ensure field occupies exactly the allocated space
-                    let final_field = if field_content.len() < #len {
-                        format!("{:width$}", field_content, width = #len)
-                    } else {
-                        field_content[..#len].to_string()
-                    };
+                    let final_field = <_ as crate::parsing::CwrFieldWrite>::to_cwr_str(&self.#field_name, #len);
 
                     line.push_str(&final_field);
                 }
@@ -165,16 +156,7 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
                 while line.len() < #start {
                     line.push(' ');
                 }
-                let field_str = <_ as crate::domain_types::CwrFieldWrite>::to_cwr_str(&self.#field_name);
-                let padded = format!("{:width$}", field_str, width = #len);
-                let field_content = padded[..#len.min(padded.len())].to_string();
-
-                // Ensure field occupies exactly the allocated space
-                let final_field = if field_content.len() < #len {
-                    format!("{:width$}", field_content, width = #len)
-                } else {
-                    field_content[..#len].to_string()
-                };
+                let final_field = <_ as crate::parsing::CwrFieldWrite>::to_cwr_str(&self.#field_name, #len);
 
                 line.push_str(&final_field);
             }

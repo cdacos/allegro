@@ -12,7 +12,7 @@ pub mod report;
 pub mod statements;
 
 use allegro_cwr::domain_types::{
-    Boolean, Flag, LanguageCode, MusicalWorkDistributionCategory, Number, SocietyCode, TransactionStatus, VersionType,
+    Boolean, Flag, LanguageCode, MonetaryValue, MusicalWorkDistributionCategory, Number, SocietyCode, TransactionStatus, VersionType,
 };
 use domain_conversions::{
     CwrFromSqlString, CwrToSqlInt, CwrToSqlString, opt_domain_to_string, opt_string_to_domain, opt_string_to_numeric,
@@ -1092,7 +1092,7 @@ fn query_record_by_type(
                     total_monetary_value: {
                         match row.get::<_, Option<String>>("total_monetary_value")? {
                             Some(total_monetary_value) => {
-                                Some(Number::from_sql_string(&total_monetary_value).map_err(|e| {
+                                Some(MonetaryValue::from_sql_string(&total_monetary_value).map_err(|e| {
                                     rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text)
                                 })?)
                             }

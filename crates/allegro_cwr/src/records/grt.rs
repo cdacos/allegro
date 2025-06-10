@@ -24,7 +24,7 @@ pub struct GrtRecord {
 
     // Currency Indicator is mandatory if Total Monetary Value is provided (GR).
     #[cwr(title = "Total monetary value (optional)", start = 27, len = 10)]
-    pub total_monetary_value: Option<Number>,
+    pub total_monetary_value: Option<MonetaryValue>,
 }
 
 // Custom validation function for GRT record

@@ -1,6 +1,6 @@
 //! Ownership share type
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, CwrNumericField};
 use std::borrow::Cow;
 
 /// Ownership share (0-100.00% represented as 0-10000)
@@ -18,8 +18,14 @@ impl OwnershipShare {
 }
 
 impl CwrFieldWrite for OwnershipShare {
-    fn to_cwr_str(&self) -> String {
-        self.as_str()
+    fn to_cwr_str(&self, width: usize) -> String {
+        format_number(self.0, width)
+    }
+}
+
+impl CwrNumericField for OwnershipShare {
+    fn to_numeric_str(&self) -> String {
+        self.0.to_string()
     }
 }
 
@@ -59,7 +65,7 @@ impl CwrFieldParse for Option<OwnershipShare> {
         source: &str, field_name: &'static str, field_title: &'static str,
     ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
-        if trimmed.is_empty() || trimmed == "00000" {
+        if trimmed.is_empty() || trimmed.chars().all(|c| c == '0') {
             (None, vec![])
         } else {
             let (share, warnings) = OwnershipShare::parse_cwr_field(source, field_name, field_title);
@@ -67,3 +73,4 @@ impl CwrFieldParse for Option<OwnershipShare> {
         }
     }
 }
+

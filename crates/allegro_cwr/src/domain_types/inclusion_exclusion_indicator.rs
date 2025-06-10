@@ -2,7 +2,7 @@
 //!
 //! Indicates whether a territory is included or excluded from an agreement or right.
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Inclusion/Exclusion indicator for territory records
@@ -23,8 +23,8 @@ impl InclusionExclusionIndicator {
 }
 
 impl CwrFieldWrite for InclusionExclusionIndicator {
-    fn to_cwr_str(&self) -> String {
-        self.as_str().to_string()
+    fn to_cwr_str(&self, _width: usize) -> String {
+        format_text(self.as_str(), _width)
     }
 }
 

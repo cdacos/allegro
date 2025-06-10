@@ -4,7 +4,7 @@
 //! for fields that contain text in non-Roman alphabets (e.g., Cyrillic,
 //! Arabic, Chinese, Japanese, Korean, etc.).
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning};
+use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning};
 use std::ops::Deref;
 
 /// Non-Roman Alphabet text type
@@ -31,8 +31,8 @@ impl Deref for NonRomanAlphabet {
 }
 
 impl CwrFieldWrite for NonRomanAlphabet {
-    fn to_cwr_str(&self) -> String {
-        self.as_str().to_string()
+    fn to_cwr_str(&self, _width: usize) -> String {
+        format_text(self.as_str(), _width)
     }
 }
 

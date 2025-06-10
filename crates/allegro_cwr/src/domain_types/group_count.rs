@@ -1,6 +1,6 @@
 //! Group count for TRL record
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Group count for TRL record
@@ -14,7 +14,7 @@ impl GroupCount {
 }
 
 impl CwrFieldWrite for GroupCount {
-    fn to_cwr_str(&self) -> String {
+    fn to_cwr_str(&self, _width: usize) -> String {
         self.as_str()
     }
 }

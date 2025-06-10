@@ -1,5 +1,6 @@
 use crate::domain_types::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
+use crate::parsing::format_text;
 
 /// Flag with Yes/No/Unknown values
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
@@ -21,8 +22,8 @@ impl Flag {
 }
 
 impl CwrFieldWrite for Flag {
-    fn to_cwr_str(&self) -> String {
-        self.as_str().to_string()
+    fn to_cwr_str(&self, _width: usize) -> String {
+        format_text(self.as_str(), _width)
     }
 }
 

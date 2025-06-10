@@ -2,7 +2,7 @@
 //!
 //! Indicates the type of publisher in a CWR submission.
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Publisher type for SPU record
@@ -11,11 +11,10 @@ pub enum PublisherType {
     #[default]
     Acquirer,
     Administrator,
-    AssignorAgent,
-    SubPublisher,
-    OriginalPublisher,
     IncomeParticipant,
-    // Add more as needed
+    OriginalPublisher,
+    SubstitutedPublisher,
+    SubPublisher,
 }
 
 impl PublisherType {
@@ -23,17 +22,17 @@ impl PublisherType {
         match self {
             PublisherType::Acquirer => "AQ",
             PublisherType::Administrator => "AM",
-            PublisherType::AssignorAgent => "AS",
-            PublisherType::SubPublisher => "SP",
-            PublisherType::OriginalPublisher => "OP",
-            PublisherType::IncomeParticipant => "IP",
+            PublisherType::IncomeParticipant => "PA",
+            PublisherType::OriginalPublisher => "E",
+            PublisherType::SubstitutedPublisher => "ES",
+            PublisherType::SubPublisher => "SE",
         }
     }
 }
 
 impl CwrFieldWrite for PublisherType {
-    fn to_cwr_str(&self) -> String {
-        self.as_str().to_string()
+    fn to_cwr_str(&self, _width: usize) -> String {
+        format_text(self.as_str(), _width)
     }
 }
 
@@ -60,10 +59,10 @@ impl CwrFieldParse for PublisherType {
         match trimmed {
             "AQ" => (PublisherType::Acquirer, vec![]),
             "AM" => (PublisherType::Administrator, vec![]),
-            "AS" => (PublisherType::AssignorAgent, vec![]),
-            "SP" => (PublisherType::SubPublisher, vec![]),
-            "OP" => (PublisherType::OriginalPublisher, vec![]),
-            "IP" => (PublisherType::IncomeParticipant, vec![]),
+            "PA" => (PublisherType::IncomeParticipant, vec![]),
+            "E" => (PublisherType::OriginalPublisher, vec![]),
+            "ES" => (PublisherType::SubstitutedPublisher, vec![]),
+            "SE" => (PublisherType::SubPublisher, vec![]),
             _ => (default_type, vec![]),
         }
     }

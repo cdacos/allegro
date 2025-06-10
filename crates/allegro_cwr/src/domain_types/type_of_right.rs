@@ -1,6 +1,6 @@
 //! Type of Right
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Type of Right (3 characters)
@@ -35,8 +35,8 @@ impl TypeOfRight {
 }
 
 impl CwrFieldWrite for TypeOfRight {
-    fn to_cwr_str(&self) -> String {
-        self.as_str().to_string()
+    fn to_cwr_str(&self, _width: usize) -> String {
+        format_text(self.as_str(), _width)
     }
 }
 

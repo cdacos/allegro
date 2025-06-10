@@ -1,6 +1,6 @@
 //! Publisher sequence number
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Publisher sequence number
@@ -14,7 +14,7 @@ impl PublisherSequenceNumber {
 }
 
 impl CwrFieldWrite for PublisherSequenceNumber {
-    fn to_cwr_str(&self) -> String {
+    fn to_cwr_str(&self, _width: usize) -> String {
         self.as_str()
     }
 }

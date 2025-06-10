@@ -1,6 +1,6 @@
 //! CWR version number for GRH record
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// CWR version number for GRH record
@@ -14,8 +14,8 @@ impl CwrVersionNumber {
 }
 
 impl CwrFieldWrite for CwrVersionNumber {
-    fn to_cwr_str(&self) -> String {
-        self.as_str().to_string()
+    fn to_cwr_str(&self, width: usize) -> String {
+        format_text(self.as_str(), width)
     }
 }
 

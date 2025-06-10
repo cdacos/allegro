@@ -1,6 +1,6 @@
 //! Transaction count for GRT/TRL records
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Transaction count for GRT/TRL records
@@ -14,7 +14,7 @@ impl TransactionCount {
 }
 
 impl CwrFieldWrite for TransactionCount {
-    fn to_cwr_str(&self) -> String {
+    fn to_cwr_str(&self, _width: usize) -> String {
         self.as_str()
     }
 }

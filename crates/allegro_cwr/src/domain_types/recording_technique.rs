@@ -2,7 +2,7 @@
 //!
 //! Indicates the recording technique used for an audio recording.
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// Recording technique for REC record
@@ -25,8 +25,8 @@ impl RecordingTechnique {
 }
 
 impl CwrFieldWrite for RecordingTechnique {
-    fn to_cwr_str(&self) -> String {
-        self.as_str().to_string()
+    fn to_cwr_str(&self, _width: usize) -> String {
+        format_text(self.as_str(), _width)
     }
 }
 

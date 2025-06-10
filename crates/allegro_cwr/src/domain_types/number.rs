@@ -1,6 +1,6 @@
 //! General numeric field for sequence numbers and counts
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, CwrNumericField};
 use std::borrow::Cow;
 
 /// General numeric field for sequence numbers and counts
@@ -11,6 +11,10 @@ impl Number {
     pub fn as_str(&self) -> String {
         format!("{:08}", self.0)
     }
+
+    pub fn as_str_unpadded(&self) -> String {
+        self.0.to_string()
+    }
 }
 
 impl std::fmt::Display for Number {
@@ -20,8 +24,14 @@ impl std::fmt::Display for Number {
 }
 
 impl CwrFieldWrite for Number {
-    fn to_cwr_str(&self) -> String {
-        self.as_str()
+    fn to_cwr_str(&self, width: usize) -> String {
+        format_number(self.0, width)
+    }
+}
+
+impl CwrNumericField for Number {
+    fn to_numeric_str(&self) -> String {
+        self.0.to_string()
     }
 }
 
@@ -51,7 +61,8 @@ impl CwrFieldParse for Option<Number> {
         source: &str, field_name: &'static str, field_title: &'static str,
     ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
-        if trimmed.is_empty() || trimmed == "00000000" {
+        // Check for various "empty" patterns based on field length
+        if trimmed.is_empty() || trimmed.chars().all(|c| c == '0') {
             (None, vec![])
         } else {
             let (number, warnings) = Number::parse_cwr_field(source, field_name, field_title);
@@ -59,3 +70,4 @@ impl CwrFieldParse for Option<Number> {
         }
     }
 }
+

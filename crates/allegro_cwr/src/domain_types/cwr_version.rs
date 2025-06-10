@@ -1,6 +1,6 @@
 //! CWR version number type
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use std::borrow::Cow;
 
 /// CWR version number (v2.2+)
@@ -18,7 +18,7 @@ impl CwrVersion {
 }
 
 impl CwrFieldWrite for CwrVersion {
-    fn to_cwr_str(&self) -> String {
+    fn to_cwr_str(&self, _width: usize) -> String {
         self.as_str()
     }
 }
