@@ -105,7 +105,7 @@ impl CwrToSqlString for CwrVersionNumber {
 
 impl CwrToSqlString for CurrencyCode {
     fn to_sql_string(&self) -> String {
-        self.as_str()
+        self.as_str().to_string()
     }
 }
 
@@ -178,7 +178,7 @@ impl CwrToSqlInt for TisNumericCode {
 
 impl CwrToSqlInt for CompositeComponentCount {
     fn to_sql_int(&self) -> i64 {
-        self.0.unwrap_or(0) as i64
+        self.0 as i64
     }
 }
 

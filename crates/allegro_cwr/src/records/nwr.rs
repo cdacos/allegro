@@ -123,7 +123,7 @@ fn nwr_custom_validate(record: &mut NwrRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Business rule: Composite Component Count required for ASCAP when Composite Type is present
-    if record.composite_type.is_some() && record.composite_type.as_ref().is_some_and(|s| !s.trim().is_empty()) && (record.composite_component_count.is_none() || record.composite_component_count.as_ref().is_none_or(|c| c.0.is_none())) {
+    if record.composite_type.is_some() && record.composite_type.as_ref().is_some_and(|s| !s.trim().is_empty()) && (record.composite_component_count.is_none() || record.composite_component_count.as_ref().is_some_and(|c| c.0 == 0)) {
         warnings.push(CwrWarning {
             field_name: "composite_component_count",
             field_title: "Composite component count (conditional)",
@@ -163,7 +163,7 @@ mod roundtrip_test {
         println!("Parsed warnings: {:?}", warnings);
 
         // Generate the line back
-        let version = CwrVersion(Some(2.2));
+        let version = CwrVersion(2.2);
         let serialized = record.to_cwr_line(&version);
 
         println!("Serialized:  '{}'", serialized);

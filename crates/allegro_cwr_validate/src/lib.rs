@@ -40,7 +40,7 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
                     let original_line = &original_lines[line_index];
 
                     // Serialize the parsed record back to CWR line
-                    let version = allegro_cwr::domain_types::CwrVersion(Some(parsed_record.context.cwr_version));
+                    let version = allegro_cwr::domain_types::CwrVersion(parsed_record.context.cwr_version);
                     let serialized_line = parsed_record.record.to_cwr_line(&version);
 
                     // Check for character differences

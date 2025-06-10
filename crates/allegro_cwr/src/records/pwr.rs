@@ -66,8 +66,8 @@ mod tests {
         // Create a test PWR record
         let pwr = PwrRecord {
             record_type: "PWR".to_string(),
-            transaction_sequence_num: "00000003".to_string(),
-            record_sequence_num: "00000025".to_string(),
+            transaction_sequence_num: Number(3),
+            record_sequence_num: Number(25),
             publisher_ip_num: Some("ABKC     ".to_string()),
             publisher_name: Some("ABKCO MUSIC INC.                     ".to_string()),
             submitter_agreement_number: None,
@@ -77,9 +77,9 @@ mod tests {
         };
 
         // Test with different versions
-        let version_20 = CwrVersion(Some(2.0));
-        let version_21 = CwrVersion(Some(2.1));
-        let version_22 = CwrVersion(Some(2.2));
+        let version_20 = CwrVersion(2.0);
+        let version_21 = CwrVersion(2.1);
+        let version_22 = CwrVersion(2.2);
 
         let line_20 = pwr.to_cwr_line(&version_20);
         let line_21 = pwr.to_cwr_line(&version_21);

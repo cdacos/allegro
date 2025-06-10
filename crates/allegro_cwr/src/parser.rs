@@ -243,8 +243,8 @@ mod tests {
             creation_time: Time(NaiveTime::from_hms_opt(12, 0, 0)),
             transmission_date: Date(NaiveDate::from_ymd_opt(2005, 1, 1)),
             character_set: None,
-            version: CwrVersion(None),
-            revision: CwrRevision(None),
+            version: None,
+            revision: None,
             software_package: None,
             software_package_version: None,
         };

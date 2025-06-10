@@ -109,7 +109,7 @@ impl SqliteInsertable for allegro_cwr::CwrRegistry {
                 Ok(tx.last_insert_rowid())
             }
             allegro_cwr::CwrRegistry::Grt(grt) => {
-                statements.grt_stmt.execute(params![file_id, "GRT", grt.group_id.to_sql_int(), grt.transaction_count.to_sql_int(), grt.record_count.to_sql_int(), grt.currency_indicator.as_ref().map(|c| c.to_sql_string()), grt.total_monetary_value.as_deref()])?;
+                statements.grt_stmt.execute(params![file_id, "GRT", grt.group_id.to_sql_int(), grt.transaction_count.to_sql_int(), grt.record_count.to_sql_int(), grt.currency_indicator.as_ref().map(|c| c.to_sql_string()), grt.total_monetary_value.as_ref().map(|n| n.to_string()).as_deref()])?;
                 Ok(tx.last_insert_rowid())
             }
             allegro_cwr::CwrRegistry::Trl(trl) => {
@@ -245,7 +245,7 @@ impl SqliteInsertable for allegro_cwr::CwrRegistry {
                     spu.sr_ownership_share.as_ref().map(|s| s.to_sql_int()),
                     opt_domain_to_string(&spu.special_agreements_indicator).as_deref(),
                     opt_domain_to_string(&spu.first_recording_refusal_ind).as_deref(),
-                    spu.filler.as_deref(),
+                    spu.filler.as_ref().map(|n| n.to_string()).as_deref(),
                     spu.publisher_ipi_base_number.as_deref(),
                     spu.international_standard_agreement_code.as_deref(),
                     spu.society_assigned_agreement_number.as_deref(),
@@ -298,9 +298,9 @@ impl SqliteInsertable for allegro_cwr::CwrRegistry {
                     opt_domain_to_string(&swr.reversionary_indicator).as_deref(),
                     opt_domain_to_string(&swr.first_recording_refusal_ind).as_deref(),
                     opt_domain_to_string(&swr.work_for_hire_indicator).as_deref(),
-                    swr.filler.as_deref(),
+                    swr.filler.as_ref().map(|n| n.to_string()).as_deref(),
                     swr.writer_ipi_base_number.as_deref(),
-                    swr.personal_number.as_deref(),
+                    swr.personal_number.as_ref().map(|n| n.to_string()).as_deref(),
                     opt_domain_to_string(&swr.usa_license_ind).as_deref()
                 ])?;
                 Ok(tx.last_insert_rowid())
@@ -461,7 +461,7 @@ impl SqliteInsertable for allegro_cwr::CwrRegistry {
                     orn.cut_number.as_ref().map(|n| n.to_string()).as_deref(),
                     orn.library.as_deref(),
                     opt_domain_to_string(&orn.bltvr).as_deref(),
-                    orn.filler.as_deref(),
+                    orn.filler.as_ref().map(|n| n.to_string()).as_deref(),
                     orn.production_num.as_deref(),
                     orn.episode_title.as_deref(),
                     orn.episode_num.as_deref(),
@@ -724,7 +724,7 @@ pub fn process_sqlite_to_cwr_with_version_and_output(db_filename: &str, file_id:
     let conn = rusqlite::Connection::open(db_filename)?;
 
     // Get CWR version from the database or use hint
-    let _cwr_version = allegro_cwr::domain_types::CwrVersion(version_hint.or(Some(2.2)));
+    let _cwr_version = allegro_cwr::domain_types::CwrVersion(version_hint.or(Some(2.2)).expect("Hardcoded?!"));
 
     // Create output writer
     let mut output: Box<dyn Write> = match output_filename {
@@ -890,7 +890,12 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                             None => None,
                         }
                     },
-                    total_monetary_value: row.get::<_, Option<String>>("total_monetary_value")?,
+                    total_monetary_value: {
+                        match row.get::<_, Option<String>>("total_monetary_value")? {
+                            Some(total_monetary_value) => Some(Number::from_sql_string(&total_monetary_value).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?),
+                            None => None,
+                        }
+                    },
                 };
                 Ok(grt)
             }) {
@@ -1404,7 +1409,12 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     },
                     filler: row.get::<_, Option<String>>("filler")?,
                     writer_ipi_base_number: row.get::<_, Option<String>>("writer_ipi_base_number")?,
-                    personal_number: row.get::<_, Option<String>>("personal_number")?,
+                    personal_number: {
+                        match row.get::<_, Option<String>>("personal_number")? {
+                            Some(personal_number) => Some(Number::from_sql_string(&personal_number).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?),
+                            None => None,
+                        }
+                    },
                     usa_license_ind: row.get::<_, Option<String>>("usa_license_ind")?,
                 };
                 Ok(swr)
@@ -1761,7 +1771,12 @@ fn query_record_by_type(conn: &rusqlite::Connection, record_type: &str, record_i
                     cut_number: opt_string_to_numeric::<Number>(row.get::<_, Option<String>>("cut_number")?.as_deref()).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?,
                     library: row.get::<_, Option<String>>("library")?,
                     bltvr: row.get::<_, Option<String>>("bltvr")?,
-                    filler: row.get::<_, Option<String>>("filler")?,
+                    filler: {
+                        match row.get::<_, Option<String>>("filler")? {
+                            Some(filler) => Some(Number::from_sql_string(&filler).map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?),
+                            None => None,
+                        }
+                    },
                     production_num: row.get::<_, Option<String>>("production_num")?,
                     episode_title: row.get::<_, Option<String>>("episode_title")?,
                     episode_num: row.get::<_, Option<String>>("episode_num")?,

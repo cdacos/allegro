@@ -188,7 +188,7 @@ pub fn process_json_to_cwr_with_version_and_output(input_filename: &str, _versio
     let json_data: JsonCwrFile = serde_json::from_reader(reader)?;
 
     // Use the CWR version from context or fallback to hint
-    let cwr_version = allegro_cwr::domain_types::CwrVersion(Some(json_data.context.cwr_version));
+    let cwr_version = allegro_cwr::domain_types::CwrVersion(json_data.context.cwr_version);
 
     // Create output writer
     let mut output: Box<dyn Write> = match output_filename {

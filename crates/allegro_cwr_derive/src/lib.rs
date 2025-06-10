@@ -398,12 +398,12 @@ fn generate_registry_variant(name: &syn::Ident) -> quote::__private::TokenStream
     panic!("Could not determine registry variant for struct: {}", name_str);
 }
 
-fn extract_field_attrs(attrs: &[syn::Attribute]) -> (String, usize, usize, bool, Option<String>) {
+fn extract_field_attrs(attrs: &[syn::Attribute]) -> (String, usize, usize, bool, Option<f32>) {
     for attr in attrs {
         if attr.path().is_ident("cwr") {
             let result: Result<CwrFieldAttribute, _> = attr.parse_args();
             if let Ok(field_attr) = result {
-                let min_version = field_attr.min_version.map(|v| v.base10_parse::<f32>().unwrap().to_string());
+                let min_version = field_attr.min_version.map(|v| v.base10_parse::<f32>().unwrap());
                 return (field_attr.title.value(), field_attr.start.base10_parse().unwrap(), field_attr.len.base10_parse().unwrap(), field_attr.skip_parse, min_version);
             }
         }

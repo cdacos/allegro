@@ -189,7 +189,7 @@ pub fn process_cwr_obfuscation(input_path: &str, output_path: Option<&str>, cwr_
                 let obfuscated_record = obfuscate_record(parsed_record.record, &mut mappings);
 
                 // Convert back to CWR line and write
-                let version = allegro_cwr::domain_types::CwrVersion(Some(parsed_record.context.cwr_version));
+                let version = allegro_cwr::domain_types::CwrVersion(parsed_record.context.cwr_version);
                 let obfuscated_line = obfuscated_record.to_cwr_line(&version);
                 writeln!(writer, "{}", obfuscated_line)?;
                 record_count += 1;
