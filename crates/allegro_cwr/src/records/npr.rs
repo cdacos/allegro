@@ -37,7 +37,7 @@ pub struct NprRecord {
     pub performance_language: Option<LanguageCode>,
 
     #[cwr(title = "Performance dialect (conditional, v2.1+)", start = 367, len = 3, min_version = 2.1)]
-    pub performance_dialect: Option<LookupPlaceholder>,
+    pub performance_dialect: Option<LanguageDialect>,
 }
 
 // Custom validation function for NPR record
@@ -121,18 +121,7 @@ fn npr_custom_validate(record: &mut NprRecord) -> Vec<CwrWarning<'static>> {
 
     // Language code and performance language validation is now handled by the LanguageCode domain type
 
-    // Validate performance dialect format if present
-    if let Some(ref dialect) = record.performance_dialect {
-        if !dialect.trim().is_empty() && dialect.len() != 3 {
-            warnings.push(CwrWarning {
-                field_name: "performance_dialect",
-                field_title: "Performance dialect (conditional, v2.1+)",
-                source_str: std::borrow::Cow::Owned(dialect.to_string()),
-                level: WarningLevel::Warning,
-                description: "Performance dialect should be 3 characters if specified".to_string(),
-            });
-        }
-    }
+    // Performance dialect validation is now handled by the LanguageDialect domain type
 
     warnings
 }

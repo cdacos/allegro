@@ -46,7 +46,10 @@ impl CwrFieldParse for SalesManufactureClause {
                     field_title,
                     source_str: Cow::Owned(source.to_string()),
                     level: WarningLevel::Warning,
-                    description: format!("Invalid sales/manufacture clause '{}'. Must be 'S' (Sales) or 'M' (Manufacture), defaulting to 'S'", trimmed),
+                    description: format!(
+                        "Invalid sales/manufacture clause '{}'. Must be 'S' (Sales) or 'M' (Manufacture), defaulting to 'S'",
+                        trimmed
+                    ),
                 }];
                 (SalesManufactureClause::Sales, warnings)
             }

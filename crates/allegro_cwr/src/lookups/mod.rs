@@ -8,6 +8,7 @@ pub mod excerpt_types;
 pub mod instrument_codes;
 pub mod intended_purposes;
 pub mod language_codes;
+pub mod language_dialect_codes;
 pub mod lyric_adaptations;
 pub mod media_types;
 pub mod music_arrangements;

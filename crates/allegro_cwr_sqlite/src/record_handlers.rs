@@ -790,7 +790,7 @@ pub fn parse_and_insert_npr<'a>(
                 record.performing_artist_ipi_base_number.as_deref().unwrap_or(""),
                 record.language_code.as_deref().unwrap_or(""),
                 record.performance_language.as_ref().map(|x| x.as_str()).unwrap_or(""),
-                record.performance_dialect.as_deref().unwrap_or(""),
+                record.performance_dialect.as_ref().map(|d| d.as_str()).unwrap_or(""),
             ])?;
             Ok(())
         },

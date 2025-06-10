@@ -498,7 +498,7 @@ impl SqliteInsertable for allegro_cwr::CwrRegistry {
                     npr.performing_artist_ipi_base_number.as_deref(),
                     npr.language_code.as_deref(),
                     npr.performance_language.as_deref(),
-                    npr.performance_dialect.as_deref()
+                    npr.performance_dialect.as_ref().map(|d| d.as_str())
                 ])?;
                 Ok(tx.last_insert_rowid())
             }
@@ -2414,10 +2414,8 @@ fn query_record_by_type(
                     },
                     performance_dialect: {
                         use crate::domain_conversions::opt_string_to_domain;
-
-                        use allegro_cwr::domain_types::LookupPlaceholder;
-
-                        opt_string_to_domain::<LookupPlaceholder>(
+                        use allegro_cwr::domain_types::LanguageDialect;
+                        opt_string_to_domain::<LanguageDialect>(
                             row.get::<_, Option<String>>("performance_dialect")?.as_deref(),
                         )
                         .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
