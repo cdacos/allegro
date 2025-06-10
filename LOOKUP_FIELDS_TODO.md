@@ -22,19 +22,19 @@ This document tracks the verification and implementation of all 92 lookup fields
 - [ ] `currency_indicator` (pos 25-27) - CurrencyCode struct ✅ DONE
 
 ## AGR (Agreement) Record - 2 fields
-- [ ] `agreement_type` (pos 48-49) - String ❌ TODO (Agreement Type.csv)
+- [x] `agreement_type` (pos 48-49) - AgreementType lookup ✅ DONE
 - [ ] `sales_manufacture_clause` (pos 105) - String ❌ TODO (S/M values)
 
 ## NWR (New Work Registration) Record - 9 fields
-- [ ] `language_code` (pos 80-81) - String ❌ TODO (CIS Language Code.csv)
-- [ ] `musical_work_distribution_category` (pos 127-129) - String ❌ TODO (Musical Work Distribution Category.csv)
-- [ ] `text_music_relationship` (pos 137-139) - String ❌ TODO (Text Music Relationship.csv)
-- [ ] `composite_type` (pos 140-142) - String ❌ TODO (Composite Type.csv)
-- [ ] `version_type` (pos 143-145) - String ❌ TODO (Version Type.csv)
-- [ ] `excerpt_type` (pos 146-148) - String ❌ TODO (Excerpt Type.csv)
-- [ ] `music_arrangement` (pos 149-151) - String ❌ TODO (Music Arrangement.csv)
-- [ ] `lyric_adaptation` (pos 152-154) - String ❌ TODO (Lyric Adaptation.csv)
-- [ ] `cwr_work_type` (pos 195-196) - String ❌ TODO (Work Type.csv)
+- [x] `language_code` (pos 80-81) - LanguageCode lookup ✅ DONE
+- [x] `musical_work_distribution_category` (pos 127-129) - MusicalWorkDistributionCategory lookup ✅ DONE
+- [x] `text_music_relationship` (pos 137-139) - TextMusicRelationship lookup ✅ DONE
+- [x] `composite_type` (pos 140-142) - CompositeType lookup ✅ DONE
+- [x] `version_type` (pos 143-145) - VersionType lookup ✅ DONE
+- [x] `excerpt_type` (pos 146-148) - ExcerptType lookup ✅ DONE
+- [x] `music_arrangement` (pos 149-151) - MusicArrangement lookup ✅ DONE
+- [x] `lyric_adaptation` (pos 152-154) - LyricAdaptation lookup ✅ DONE
+- [x] `cwr_work_type` (pos 195-196) - WorkType lookup ✅ DONE
 
 ## ACK (Acknowledgement) Record - 2 fields
 - [ ] `original_transaction_type` (pos 47-49) - TransactionType enum ✅ DONE
@@ -125,16 +125,16 @@ This document tracks the verification and implementation of all 92 lookup fields
 ## REC (Recording Detail) Record - 6 fields
 - [ ] `ean` (pos 237-249) - String ❌ TODO (EAN-13 format)
 - [ ] `isrc` (pos 250-261) - String ❌ TODO (ISO 3901 format)
-- [ ] `recording_format` (pos 262) - RecordingFormat enum ✅ DONE
-- [ ] `recording_technique` (pos 263) - RecordingTechnique enum ✅ DONE
-- [ ] `media_type` (pos 264-266) - String ❌ TODO (BIEM or CISAC Media Type.csv)
+- [x] `recording_format` (pos 262) - RecordingFormat enum ✅ DONE
+- [x] `recording_technique` (pos 263) - RecordingTechnique enum ✅ DONE
+- [x] `media_type` (pos 264-266) - MediaType lookup ✅ DONE
 - [ ] `isrc_validity` (pos 507-526) - String ❌ TODO (ISRC Validity Indicator.csv)
 
 ## ORN (Work Origin) Record - 1 field
-- [ ] `intended_purpose` (pos 20-22) - String ❌ TODO (Intended Purpose.csv)
+- [x] `intended_purpose` (pos 20-22) - IntendedPurpose lookup ✅ DONE
 
 ## INS (Instrumentation Summary) Record - 1 field
-- [ ] `standard_instrumentation_type` (pos 23-25) - String ❌ TODO (Standard Instrumentation.csv)
+- [x] `standard_instrumentation_type` (pos 23-25) - StandardInstrumentation lookup ✅ DONE
 
 ## IND (Instrumentation Detail) Record - 1 field
 - [ ] `instrument_code` (pos 20-22) - String ❌ TODO (Instrument.csv)
@@ -169,9 +169,10 @@ This document tracks the verification and implementation of all 92 lookup fields
 
 ## Summary Statistics
 - **Total Fields**: 92
-- **Already Done**: ~15 (domain types exist and in use)
-- **Need Implementation**: ~77
+- **Already Done**: ~22 (domain types exist and in use)
+- **Need Implementation**: ~70
 - **Available CSV Files**: 31 lookup tables in docs/cwr/
+- **Recent Progress**: Added 7 new lookup types (TextMusicRelationship, ExcerptType, MusicArrangement, LyricAdaptation, MediaType, IntendedPurpose, StandardInstrumentation)
 
 ## Implementation Priority
 1. **High**: Core fields used in most transactions (Agreement Type, Language Code, Society Code)
