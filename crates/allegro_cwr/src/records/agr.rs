@@ -69,7 +69,7 @@ fn agr_custom_validate(record: &mut AgrRecord) -> Vec<CwrWarning<'static>> {
     let mut warnings = Vec::new();
 
     // Business rule: Prior Royalty Start Date required if Prior Royalty Status = "D"
-    if matches!(record.prior_royalty_status, PriorRoyaltyStatus::Designated) && (record.prior_royalty_start_date.is_none() || record.prior_royalty_start_date.as_ref().is_none_or(|d| d.0.is_none())) {
+    if matches!(record.prior_royalty_status, PriorRoyaltyStatus::Designated) && record.prior_royalty_start_date.is_none() {
         warnings.push(CwrWarning {
             field_name: "prior_royalty_start_date",
             field_title: "Prior royalty start date YYYYMMDD (conditional)",
@@ -80,7 +80,7 @@ fn agr_custom_validate(record: &mut AgrRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Business rule: Post-term Collection End Date required if Post-term Collection Status = "D"
-    if matches!(record.post_term_collection_status, PostTermCollectionStatus::Designated) && (record.post_term_collection_end_date.is_none() || record.post_term_collection_end_date.as_ref().is_none_or(|d| d.0.is_none())) {
+    if matches!(record.post_term_collection_status, PostTermCollectionStatus::Designated) && record.post_term_collection_end_date.is_none() {
         warnings.push(CwrWarning {
             field_name: "post_term_collection_end_date",
             field_title: "Post-term collection end date YYYYMMDD (conditional)",
@@ -91,22 +91,22 @@ fn agr_custom_validate(record: &mut AgrRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Business rule: Date validations
-    if let (Some(start_date), Some(end_date)) = (&record.agreement_start_date.0, &record.agreement_end_date.as_ref().and_then(|d| d.0.as_ref())) {
-        if end_date < &start_date {
+    if let (start_date, Some(end_date)) = (&record.agreement_start_date.0, &record.agreement_end_date.as_ref().map(|d| &d.0)) {
+        if *end_date < start_date {
             warnings.push(CwrWarning { field_name: "agreement_end_date", field_title: "Agreement end date YYYYMMDD (optional)", source_str: std::borrow::Cow::Owned(end_date.format("%Y%m%d").to_string()), level: WarningLevel::Critical, description: "Agreement End Date must be >= Agreement Start Date".to_string() });
         }
     }
 
     // Business rule: Retention End Date must be >= Agreement End Date
-    if let (Some(end_date), Some(retention_date)) = (&record.agreement_end_date.as_ref().and_then(|d| d.0.as_ref()), &record.retention_end_date.as_ref().and_then(|d| d.0.as_ref())) {
+    if let (Some(end_date), Some(retention_date)) = (&record.agreement_end_date.as_ref().map(|d| &d.0), &record.retention_end_date.as_ref().map(|d| &d.0)) {
         if retention_date < end_date {
             warnings.push(CwrWarning { field_name: "retention_end_date", field_title: "Retention end date YYYYMMDD (optional)", source_str: std::borrow::Cow::Owned(retention_date.format("%Y%m%d").to_string()), level: WarningLevel::Critical, description: "Retention End Date must be >= Agreement End Date".to_string() });
         }
     }
 
     // Business rule: Prior Royalty Start Date must be < Agreement Start Date
-    if let (Some(prior_date), Some(start_date)) = (&record.prior_royalty_start_date.as_ref().and_then(|d| d.0.as_ref()), &record.agreement_start_date.0) {
-        if prior_date >= &start_date {
+    if let (Some(prior_date), start_date) = (&record.prior_royalty_start_date.as_ref().map(|d| &d.0), &record.agreement_start_date.0) {
+        if *prior_date >= start_date {
             warnings.push(CwrWarning {
                 field_name: "prior_royalty_start_date",
                 field_title: "Prior royalty start date YYYYMMDD (conditional)",

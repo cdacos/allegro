@@ -8,9 +8,9 @@ use std::borrow::Cow;
 /// Title type for ALT record
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub enum TitleType {
-    #[default]
     AlternateTitle,
     FormalTitle,
+    #[default]
     OriginalTitle,
     TransliteratedTitle,
     AbbreviatedTitle,

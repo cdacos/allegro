@@ -4,19 +4,22 @@ use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
 use chrono::{NaiveTime, Timelike};
 use std::borrow::Cow;
 
-#[derive(Debug, Clone, PartialEq, Default, serde::Serialize, serde::Deserialize)]
-pub struct Time(pub Option<NaiveTime>);
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct Time(pub NaiveTime);
+
+impl Default for Time {
+    fn default() -> Self {
+        Time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
+    }
+}
 
 impl Time {
     pub fn as_str(&self) -> String {
-        match &self.0 {
-            Some(time) => time.format("%H%M%S").to_string(),
-            None => "000000".to_string(),
-        }
+        self.0.format("%H%M%S").to_string()
     }
 
-    pub fn duration_since_midnight(&self) -> Option<f32> {
-        self.0.map(|time| (time.hour() * 3600 + time.minute() * 60 + time.second()) as f32)
+    pub fn duration_since_midnight(&self) -> f32 {
+        (self.0.hour() * 3600 + self.0.minute() * 60 + self.0.second()) as f32
     }
 }
 
@@ -31,14 +34,14 @@ impl CwrFieldParse for Time {
         let trimmed = source.trim();
         if trimmed.len() != 6 {
             let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Time should be 6 characters HHMMSS, got {}", trimmed.len()) }];
-            return (Time(None), warnings);
+            return (Time(NaiveTime::from_hms_opt(0, 0, 0).unwrap()), warnings);
         }
 
         match NaiveTime::parse_from_str(trimmed, "%H%M%S") {
-            Ok(time) => (Time(Some(time)), vec![]),
+            Ok(time) => (Time(time), vec![]),
             Err(_) => {
                 let warnings = vec![CwrWarning { field_name, field_title, source_str: Cow::Owned(source.to_string()), level: WarningLevel::Warning, description: format!("Invalid time format: {}", trimmed) }];
-                (Time(None), warnings)
+                (Time(NaiveTime::from_hms_opt(0, 0, 0).unwrap()), warnings)
             }
         }
     }

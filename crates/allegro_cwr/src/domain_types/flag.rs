@@ -5,8 +5,8 @@ use std::borrow::Cow;
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub enum Flag {
     Yes,
-    #[default]
     No,
+    #[default]
     Unknown,
 }
 

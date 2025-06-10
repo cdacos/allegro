@@ -96,16 +96,15 @@ fn nwr_custom_validate(record: &mut NwrRecord) -> Vec<CwrWarning<'static>> {
     let mut warnings = Vec::new();
 
     // Business rule: Duration required if Musical Work Distribution Category = "SER"
-    if record.musical_work_distribution_category.as_str() == "SER" && (record.duration.is_none() || record.duration.as_ref().is_none_or(|d| d.0.is_none())) {
+    if record.musical_work_distribution_category.as_str() == "SER" && record.duration.is_none() {
         warnings.push(CwrWarning { field_name: "duration", field_title: "Duration HHMMSS (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Duration is required when Musical Work Distribution Category is 'SER'".to_string() });
     }
 
     // Business rule: Duration must be > 0 if present
     if let Some(ref duration) = record.duration {
-        if let Some(seconds) = duration.duration_since_midnight() {
-            if seconds == 0.0 {
-                warnings.push(CwrWarning { field_name: "duration", field_title: "Duration HHMMSS (conditional)", source_str: std::borrow::Cow::Owned(duration.as_str()), level: WarningLevel::Warning, description: "Duration should be greater than 00:00:00 if specified".to_string() });
-            }
+        let seconds = duration.duration_since_midnight();
+        if seconds == 0.0 {
+            warnings.push(CwrWarning { field_name: "duration", field_title: "Duration HHMMSS (conditional)", source_str: std::borrow::Cow::Owned(duration.as_str()), level: WarningLevel::Warning, description: "Duration should be greater than 00:00:00 if specified".to_string() });
         }
     }
 
