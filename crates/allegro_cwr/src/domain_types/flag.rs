@@ -1,6 +1,6 @@
 use crate::domain_types::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
-use std::borrow::Cow;
 use crate::parsing::format_text;
+use std::borrow::Cow;
 
 /// Flag with Yes/No/Unknown values
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]

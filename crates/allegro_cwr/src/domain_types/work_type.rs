@@ -1,6 +1,6 @@
 //! Work Type
 
-use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_number, format_text};
 use std::borrow::Cow;
 
 /// Work Type (2 characters)

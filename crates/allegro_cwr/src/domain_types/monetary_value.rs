@@ -2,7 +2,7 @@
 //!
 //! Represents monetary values in GRT records that should be space-padded when None
 
-use crate::parsing::{format_text, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_text};
 use std::borrow::Cow;
 
 /// Monetary value for GRT trailer records (space-padded when None)
@@ -16,9 +16,7 @@ impl MonetaryValue {
 
     /// Parse from SQL string - needed for SQLite integration
     pub fn from_sql_string(s: &str) -> Result<Self, String> {
-        s.parse::<u64>()
-            .map(MonetaryValue)
-            .map_err(|e| format!("Invalid monetary value: {}", e))
+        s.parse::<u64>().map(MonetaryValue).map_err(|e| format!("Invalid monetary value: {}", e))
     }
 }
 
@@ -69,4 +67,3 @@ impl CwrFieldParse for Option<MonetaryValue> {
         }
     }
 }
-

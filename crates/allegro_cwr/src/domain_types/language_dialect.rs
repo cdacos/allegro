@@ -1,6 +1,6 @@
 //! ISO 639-2 Language Dialect code
 
-use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_number, format_text};
 use std::borrow::Cow;
 
 /// ISO 639-2 Language Dialect code (3 characters)

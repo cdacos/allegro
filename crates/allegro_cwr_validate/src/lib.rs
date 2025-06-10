@@ -252,7 +252,7 @@ fn check_character_differences(
     if original.len() == serialized.len() {
         let mut i = 0;
         while i <= original.len().saturating_sub(8) {
-            if let (Some(orig_slice), Some(ser_slice)) = (original.get(i..i+8), serialized.get(i..i+8)) {
+            if let (Some(orig_slice), Some(ser_slice)) = (original.get(i..i + 8), serialized.get(i..i + 8)) {
                 if orig_slice == "00000000" && ser_slice == "        " {
                     let date_key = format!("{}:date_zero_padding", record_type);
                     extra_chars_map.entry(date_key).or_default().push(line_number);

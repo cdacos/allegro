@@ -2,7 +2,7 @@
 //!
 //! Indicates the role of an interested party in an agreement.
 
-use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_number, format_text};
 use std::borrow::Cow;
 
 /// Agreement role code for IPA record

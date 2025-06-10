@@ -19,7 +19,7 @@ pub fn format_text(value: &str, width: usize) -> String {
 pub trait CwrNumericField {
     /// Returns the unpadded numeric value as a string (e.g., "5" instead of "00000005")
     fn to_numeric_str(&self) -> String;
-    
+
     /// Returns true if this is an empty/None value that should be rendered as "0"
     fn is_empty_numeric(&self) -> bool {
         false

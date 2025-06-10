@@ -1,4 +1,4 @@
-use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_number, format_text};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::fmt;

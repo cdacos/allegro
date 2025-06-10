@@ -79,7 +79,7 @@ pub use composite_component_count::*;
 pub use composite_type::*;
 pub use currency_code::*;
 // Re-export parsing traits and types that domain types depend on
-pub use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+pub use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_number, format_text};
 pub use cwr_revision::*;
 pub use cwr_version::*;
 pub use cwr_version_number::*;

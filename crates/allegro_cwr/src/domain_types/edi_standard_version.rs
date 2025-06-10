@@ -1,6 +1,6 @@
 //! EDI Standard Version type for CWR parsing
 
-use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_number, format_text};
 use std::borrow::Cow;
 
 /// EDI Standard Version Number

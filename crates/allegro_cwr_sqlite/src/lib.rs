@@ -12,7 +12,8 @@ pub mod report;
 pub mod statements;
 
 use allegro_cwr::domain_types::{
-    Boolean, Flag, LanguageCode, MonetaryValue, MusicalWorkDistributionCategory, Number, SocietyCode, TransactionStatus, VersionType,
+    Boolean, Flag, LanguageCode, MonetaryValue, MusicalWorkDistributionCategory, Number, SocietyCode,
+    TransactionStatus, VersionType,
 };
 use domain_conversions::{
     CwrFromSqlString, CwrToSqlInt, CwrToSqlString, opt_domain_to_string, opt_string_to_domain, opt_string_to_numeric,

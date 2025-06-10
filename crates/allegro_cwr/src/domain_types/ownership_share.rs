@@ -1,6 +1,8 @@
 //! Ownership share type
 
-use crate::parsing::{format_text, format_number, CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, CwrNumericField};
+use crate::parsing::{
+    CwrFieldParse, CwrFieldWrite, CwrNumericField, CwrWarning, WarningLevel, format_number, format_text,
+};
 use std::borrow::Cow;
 
 /// Ownership share (0-100.00% represented as 0-10000)
@@ -73,4 +75,3 @@ impl CwrFieldParse for Option<OwnershipShare> {
         }
     }
 }
-
