@@ -19,6 +19,7 @@ dependencies = [
  "chrono",
  "log",
  "once_cell",
+ "rusqlite",
  "serde",
 ]
 

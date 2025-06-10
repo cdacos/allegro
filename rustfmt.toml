@@ -1,5 +1,5 @@
 # $ cargo fmt
-max_width = 320 # Yes, I'm fine with long lines
+max_width = 120 # Yes, I'm fine with long lines
 tab_spaces = 4
 fn_params_layout = "Compressed"
 use_small_heuristics = "Max"

@@ -24,7 +24,7 @@ pub struct GrtRecord {
 
     // Currency Indicator is mandatory if Total Monetary Value is provided (GR).
     #[cwr(title = "Total monetary value (optional)", start = 27, len = 10)]
-    pub total_monetary_value: Option<String>,
+    pub total_monetary_value: Option<MonetaryValue>,
 }
 
 // Custom validation function for GRT record
@@ -34,7 +34,7 @@ fn grt_custom_validate(record: &mut GrtRecord) -> Vec<CwrWarning<'static>> {
     // Business rule: Currency Indicator is mandatory if Total Monetary Value is provided
     // Note: These fields are marked as "ignored for CWR" in spec but validate relationship if present
     if let Some(monetary_value) = &record.total_monetary_value {
-        if !monetary_value.trim().is_empty() && record.currency_indicator.is_none() {
+        if monetary_value.0 > 0 && record.currency_indicator.is_none() {
             warnings.push(CwrWarning {
                 field_name: "currency_indicator",
                 field_title: "Currency indicator (conditional)",

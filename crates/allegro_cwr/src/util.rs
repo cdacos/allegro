@@ -67,13 +67,19 @@ pub fn get_cwr_version(filename: &str, hdr_line: &str, cli_version: Option<f32>)
         // CLI version specified
         (Some(cli_ver), Some(filename_ver), _) => {
             if cli_ver != filename_ver {
-                info!("CLI specified CWR version {} but filename suggests {}. Using CLI version {}", cli_ver, filename_ver, cli_ver);
+                info!(
+                    "CLI specified CWR version {} but filename suggests {}. Using CLI version {}",
+                    cli_ver, filename_ver, cli_ver
+                );
             }
             Ok(cli_ver)
         }
         (Some(cli_ver), None, Some(hdr_ver)) => {
             if cli_ver != hdr_ver {
-                warn!("CLI specified CWR version {} but file contains explicit version {}. Using CLI version {}", cli_ver, hdr_ver, cli_ver);
+                warn!(
+                    "CLI specified CWR version {} but file contains explicit version {}. Using CLI version {}",
+                    cli_ver, hdr_ver, cli_ver
+                );
             }
             Ok(cli_ver)
         }
@@ -82,7 +88,10 @@ pub fn get_cwr_version(filename: &str, hdr_line: &str, cli_version: Option<f32>)
         // No CLI version - use filename version if available
         (None, Some(filename_ver), Some(hdr_ver)) => {
             if filename_ver != hdr_ver {
-                info!("Filename suggests CWR version {} but file contains explicit version {}. Using filename version {}", filename_ver, hdr_ver, filename_ver);
+                info!(
+                    "Filename suggests CWR version {} but file contains explicit version {}. Using filename version {}",
+                    filename_ver, hdr_ver, filename_ver
+                );
             }
             Ok(filename_ver)
         }
@@ -114,10 +123,18 @@ fn detect_version_from_hdr(hdr_line: &str) -> Result<Option<f32>, CwrParseError>
                         if [2.0, 2.1, 2.2].contains(&version) {
                             return Ok(Some(version));
                         } else {
-                            return Err(CwrParseError::BadFormat(format!("Invalid CWR version in header: {}", version)));
+                            return Err(CwrParseError::BadFormat(format!(
+                                "Invalid CWR version in header: {}",
+                                version
+                            )));
                         }
                     }
-                    Err(_) => return Err(CwrParseError::BadFormat(format!("Invalid CWR version format in header: {}", trimmed))),
+                    Err(_) => {
+                        return Err(CwrParseError::BadFormat(format!(
+                            "Invalid CWR version format in header: {}",
+                            trimmed
+                        )));
+                    }
                 }
             }
         }

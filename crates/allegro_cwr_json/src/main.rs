@@ -21,7 +21,9 @@ fn parse_args() -> Result<Config, String> {
         match arg {
             lexopt::Arg::Long("cwr") => {
                 let version_str = get_value(&mut parser, "cwr")?;
-                let version: f32 = version_str.parse().map_err(|_| format!("Invalid CWR version '{}'. Valid versions: 2.0, 2.1, 2.2", version_str))?;
+                let version: f32 = version_str
+                    .parse()
+                    .map_err(|_| format!("Invalid CWR version '{}'. Valid versions: 2.0, 2.1, 2.2", version_str))?;
 
                 if ![2.0, 2.1, 2.2].contains(&version) {
                     return Err(format!("Unsupported CWR version '{}'. Valid versions: 2.0, 2.1, 2.2", version));
@@ -92,12 +94,18 @@ fn detect_input_format(filename: &str) -> Result<InputFormat, String> {
     } else if filename.to_lowercase().ends_with(".cwr") {
         Ok(InputFormat::Cwr)
     } else {
-        Err(format!("Cannot determine input format for '{}'. Expected CWR file (starting with 'HDR') or JSON file (starting with '{{')", filename))
+        Err(format!(
+            "Cannot determine input format for '{}'. Expected CWR file (starting with 'HDR') or JSON file (starting with '{{')",
+            filename
+        ))
     }
 }
 
 fn get_value(parser: &mut lexopt::Parser, arg_name: &str) -> Result<String, String> {
-    parser.value().map(|val| val.to_string_lossy().to_string()).map_err(|e| format!("Missing value for --{}: {}", arg_name, e))
+    parser
+        .value()
+        .map(|val| val.to_string_lossy().to_string())
+        .map_err(|e| format!("Missing value for --{}: {}", arg_name, e))
 }
 
 fn main() {
@@ -130,11 +138,19 @@ fn main() {
     let result = match input_format {
         InputFormat::Cwr => {
             // CWR -> JSON (existing functionality)
-            allegro_cwr_json::process_cwr_to_json_with_version_and_output(&input_filename, config.cwr_version, config.output_filename.as_deref())
+            allegro_cwr_json::process_cwr_to_json_with_version_and_output(
+                &input_filename,
+                config.cwr_version,
+                config.output_filename.as_deref(),
+            )
         }
         InputFormat::Json => {
             // JSON -> CWR (new functionality)
-            allegro_cwr_json::process_json_to_cwr_with_version_and_output(&input_filename, config.cwr_version, config.output_filename.as_deref())
+            allegro_cwr_json::process_json_to_cwr_with_version_and_output(
+                &input_filename,
+                config.cwr_version,
+                config.output_filename.as_deref(),
+            )
         }
     };
 
@@ -150,7 +166,12 @@ fn main() {
         }
     };
 
-    println!("Successfully processed {} CWR records from '{}' in {:.2?}", format_int_with_commas(count as i64), &input_filename, elapsed_time);
+    println!(
+        "Successfully processed {} CWR records from '{}' in {:.2?}",
+        format_int_with_commas(count as i64),
+        &input_filename,
+        elapsed_time
+    );
 }
 
 fn print_help() {
@@ -160,7 +181,9 @@ fn print_help() {
     eprintln!("  <input_filename>    CWR or JSON file to process");
     eprintln!();
     eprintln!("Options:");
-    eprintln!("      --cwr <version>      CWR version (2.0, 2.1, 2.2). Auto-detected from filename (.Vxx) or file content if not specified");
+    eprintln!(
+        "      --cwr <version>      CWR version (2.0, 2.1, 2.2). Auto-detected from filename (.Vxx) or file content if not specified"
+    );
     eprintln!("  -o, --output <file>      Output file (format determined by input: CWR→JSON or JSON→CWR)");
     eprintln!("  -h, --help               Show this help message");
     eprintln!();

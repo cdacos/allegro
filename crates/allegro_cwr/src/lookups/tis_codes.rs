@@ -3546,3 +3546,8 @@ pub fn get_all_valid_tis_codes() -> Vec<u16> {
 pub fn get_all_tis_codes() -> Vec<u16> {
     TIS_TERRITORIES.keys().copied().collect()
 }
+
+/// Checks if a TIS code exists in the territory table (regardless of usability)
+pub fn territory_exists(code: u16) -> bool {
+    TIS_TERRITORIES.contains_key(&code)
+}

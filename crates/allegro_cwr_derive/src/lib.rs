@@ -144,16 +144,7 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
                     while line.len() < #start {
                         line.push(' ');
                     }
-                    let field_str = <_ as crate::domain_types::CwrFieldWrite>::to_cwr_str(&self.#field_name);
-                    let padded = format!("{:width$}", field_str, width = #len);
-                    let field_content = padded[..#len.min(padded.len())].to_string();
-
-                    // Ensure field occupies exactly the allocated space
-                    let final_field = if field_content.len() < #len {
-                        format!("{:width$}", field_content, width = #len)
-                    } else {
-                        field_content[..#len].to_string()
-                    };
+                    let final_field = <_ as crate::parsing::CwrFieldWrite>::to_cwr_str(&self.#field_name, #len);
 
                     line.push_str(&final_field);
                 }
@@ -165,16 +156,7 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
                 while line.len() < #start {
                     line.push(' ');
                 }
-                let field_str = <_ as crate::domain_types::CwrFieldWrite>::to_cwr_str(&self.#field_name);
-                let padded = format!("{:width$}", field_str, width = #len);
-                let field_content = padded[..#len.min(padded.len())].to_string();
-
-                // Ensure field occupies exactly the allocated space
-                let final_field = if field_content.len() < #len {
-                    format!("{:width$}", field_content, width = #len)
-                } else {
-                    field_content[..#len].to_string()
-                };
+                let final_field = <_ as crate::parsing::CwrFieldWrite>::to_cwr_str(&self.#field_name, #len);
 
                 line.push_str(&final_field);
             }
@@ -398,13 +380,19 @@ fn generate_registry_variant(name: &syn::Ident) -> quote::__private::TokenStream
     panic!("Could not determine registry variant for struct: {}", name_str);
 }
 
-fn extract_field_attrs(attrs: &[syn::Attribute]) -> (String, usize, usize, bool, Option<String>) {
+fn extract_field_attrs(attrs: &[syn::Attribute]) -> (String, usize, usize, bool, Option<f32>) {
     for attr in attrs {
         if attr.path().is_ident("cwr") {
             let result: Result<CwrFieldAttribute, _> = attr.parse_args();
             if let Ok(field_attr) = result {
-                let min_version = field_attr.min_version.map(|v| v.base10_parse::<f32>().unwrap().to_string());
-                return (field_attr.title.value(), field_attr.start.base10_parse().unwrap(), field_attr.len.base10_parse().unwrap(), field_attr.skip_parse, min_version);
+                let min_version = field_attr.min_version.map(|v| v.base10_parse::<f32>().unwrap());
+                return (
+                    field_attr.title.value(),
+                    field_attr.start.base10_parse().unwrap(),
+                    field_attr.len.base10_parse().unwrap(),
+                    field_attr.skip_parse,
+                    min_version,
+                );
             }
         }
     }
@@ -503,6 +491,12 @@ impl syn::parse::Parse for CwrFieldAttribute {
             }
         }
 
-        Ok(CwrFieldAttribute { title: title.ok_or_else(|| input.error("Missing 'title' attribute"))?, start: start.ok_or_else(|| input.error("Missing 'start' attribute"))?, len: len.ok_or_else(|| input.error("Missing 'len' attribute"))?, skip_parse, min_version })
+        Ok(CwrFieldAttribute {
+            title: title.ok_or_else(|| input.error("Missing 'title' attribute"))?,
+            start: start.ok_or_else(|| input.error("Missing 'start' attribute"))?,
+            len: len.ok_or_else(|| input.error("Missing 'len' attribute"))?,
+            skip_parse,
+            min_version,
+        })
     }
 }

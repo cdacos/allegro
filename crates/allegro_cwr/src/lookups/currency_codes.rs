@@ -1,106 +1,316 @@
 //! ISO 4217 currency codes lookup table
 
 use once_cell::sync::Lazy;
-use std::collections::HashSet;
+use std::collections::HashMap;
 
-/// ISO 4217 currency codes (common subset)
-pub static CURRENCY_CODES: Lazy<HashSet<&'static str>> = Lazy::new(|| {
-    let mut s = HashSet::new();
-    s.insert("USD"); // US Dollar
-    s.insert("EUR"); // Euro
-    s.insert("GBP"); // British Pound
-    s.insert("JPY"); // Japanese Yen
-    s.insert("CHF"); // Swiss Franc
-    s.insert("CAD"); // Canadian Dollar
-    s.insert("AUD"); // Australian Dollar
-    s.insert("SEK"); // Swedish Krona
-    s.insert("NOK"); // Norwegian Krone
-    s.insert("DKK"); // Danish Krone
-    s.insert("PLN"); // Polish Zloty
-    s.insert("CZK"); // Czech Koruna
-    s.insert("HUF"); // Hungarian Forint
-    s.insert("RON"); // Romanian Leu
-    s.insert("BGN"); // Bulgarian Lev
-    s.insert("HRK"); // Croatian Kuna
-    s.insert("RUB"); // Russian Ruble
-    s.insert("TRY"); // Turkish Lira
-    s.insert("BRL"); // Brazilian Real
-    s.insert("MXN"); // Mexican Peso
-    s.insert("ARS"); // Argentine Peso
-    s.insert("CLP"); // Chilean Peso
-    s.insert("CNY"); // Chinese Yuan
-    s.insert("HKD"); // Hong Kong Dollar
-    s.insert("SGD"); // Singapore Dollar
-    s.insert("KRW"); // South Korean Won
-    s.insert("INR"); // Indian Rupee
-    s.insert("THB"); // Thai Baht
-    s.insert("MYR"); // Malaysian Ringgit
-    s.insert("IDR"); // Indonesian Rupiah
-    s.insert("PHP"); // Philippine Peso
-    s.insert("ZAR"); // South African Rand
-    s.insert("EGP"); // Egyptian Pound
-    s.insert("NGN"); // Nigerian Naira
-    s.insert("KES"); // Kenyan Shilling
-    s.insert("MAD"); // Moroccan Dirham
-    s.insert("TND"); // Tunisian Dinar
-    s.insert("ILS"); // Israeli New Shekel
-    s.insert("SAR"); // Saudi Riyal
-    s.insert("AED"); // UAE Dirham
-    s.insert("QAR"); // Qatari Riyal
-    s.insert("KWD"); // Kuwaiti Dinar
-    s.insert("BHD"); // Bahraini Dinar
-    s.insert("OMR"); // Omani Rial
-    s.insert("JOD"); // Jordanian Dinar
-    s.insert("LBP"); // Lebanese Pound
-    s.insert("NZD"); // New Zealand Dollar
-    s.insert("FJD"); // Fijian Dollar
-    s.insert("TOP"); // Tongan Pa'anga
-    s.insert("WST"); // Samoan Tala
-    s.insert("VUV"); // Vanuatu Vatu
-    s.insert("SBD"); // Solomon Islands Dollar
-    s.insert("PGK"); // Papua New Guinea Kina
-    s.insert("ISK"); // Icelandic Krona
-    s.insert("FOK"); // Faroese Króna
-    s.insert("ALL"); // Albanian Lek
-    s.insert("MKD"); // North Macedonian Denar
-    s.insert("RSD"); // Serbian Dinar
-    s.insert("BAM"); // Bosnia and Herzegovina Convertible Mark
-    s.insert("MDL"); // Moldovan Leu
-    s.insert("UAH"); // Ukrainian Hryvnia
-    s.insert("BYN"); // Belarusian Ruble
-    s.insert("GEL"); // Georgian Lari
-    s.insert("AMD"); // Armenian Dram
-    s.insert("AZN"); // Azerbaijani Manat
-    s.insert("KZT"); // Kazakhstani Tenge
-    s.insert("KGS"); // Kyrgyzstani Som
-    s.insert("UZS"); // Uzbekistani So'm
-    s.insert("TJS"); // Tajikistani Somoni
-    s.insert("TMT"); // Turkmenistani Manat
-    s.insert("AFN"); // Afghan Afghani
-    s.insert("PKR"); // Pakistani Rupee
-    s.insert("LKR"); // Sri Lankan Rupee
-    s.insert("BDT"); // Bangladeshi Taka
-    s.insert("BTN"); // Bhutanese Ngultrum
-    s.insert("MVR"); // Maldivian Rufiyaa
-    s.insert("NPR"); // Nepalese Rupee
-    s.insert("MMK"); // Myanmar Kyat
-    s.insert("LAK"); // Lao Kip
-    s.insert("KHR"); // Cambodian Riel
-    s.insert("VND"); // Vietnamese Dong
-    s.insert("BND"); // Brunei Dollar
-    s.insert("TWD"); // New Taiwan Dollar
-    s.insert("MNT"); // Mongolian Tugrik
-    s.insert("KPW"); // North Korean Won
-    // Add more as needed...
-    s
+/// ISO 4217 currency code mapping
+pub static CURRENCY_CODES: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
+    let mut m = HashMap::new();
+    m.insert("ADP", "Andorran Peseta");
+    m.insert("AED", "UAE Dirham");
+    m.insert("AFA", "Afghani");
+    m.insert("AFN", "Afghani");
+    m.insert("ALK", "Old Lek");
+    m.insert("ALL", "Lek");
+    m.insert("AMD", "Armenian Dram");
+    m.insert("ANG", "Netherlands Antillean Guilder");
+    m.insert("AOA", "Kwanza");
+    m.insert("AOK", "Kwanza");
+    m.insert("AON", "New Kwanza");
+    m.insert("AOR", "Kwanza Reajustado");
+    m.insert("ARA", "Austral");
+    m.insert("ARP", "Peso Argentino");
+    m.insert("ARS", "Argentine Peso");
+    m.insert("ARY", "Peso");
+    m.insert("ATS", "Schilling");
+    m.insert("AUD", "Australian Dollar");
+    m.insert("AWG", "Aruban Florin");
+    m.insert("AYM", "Azerbaijan Manat");
+    m.insert("AZM", "Azerbaijanian Manat");
+    m.insert("AZN", "Azerbaijan Manat");
+    m.insert("BAD", "Dinar");
+    m.insert("BAM", "Convertible Mark");
+    m.insert("BBD", "Barbados Dollar");
+    m.insert("BDT", "Taka");
+    m.insert("BEC", "Convertible Franc");
+    m.insert("BEF", "Belgian Franc");
+    m.insert("BEL", "Financial Franc");
+    m.insert("BGJ", "Lev A/52");
+    m.insert("BGK", "Lev A/62");
+    m.insert("BGL", "Lev");
+    m.insert("BGN", "Bulgarian Lev");
+    m.insert("BHD", "Bahraini Dinar");
+    m.insert("BIF", "Burundi Franc");
+    m.insert("BMD", "Bermudian Dollar");
+    m.insert("BND", "Brunei Dollar");
+    m.insert("BOB", "Boliviano");
+    m.insert("BOP", "Peso boliviano");
+    m.insert("BOV", "Mvdol");
+    m.insert("BRB", "Cruzeiro");
+    m.insert("BRC", "Cruzado");
+    m.insert("BRE", "Cruzeiro");
+    m.insert("BRL", "Brazilian Real");
+    m.insert("BRN", "New Cruzado");
+    m.insert("BRR", "Cruzeiro Real");
+    m.insert("BSD", "Bahamian Dollar");
+    m.insert("BTN", "Ngultrum");
+    m.insert("BUK", "Kyat");
+    m.insert("BWP", "Pula");
+    m.insert("BYB", "Belarusian Ruble");
+    m.insert("BYN", "Belarusian Ruble");
+    m.insert("BYR", "Belarusian Ruble");
+    m.insert("BZD", "Belize Dollar");
+    m.insert("CAD", "Canadian Dollar");
+    m.insert("CDF", "Congolese Franc");
+    m.insert("CHC", "WIR Franc (for electronic)");
+    m.insert("CHE", "WIR Euro");
+    m.insert("CHF", "Swiss Franc");
+    m.insert("CHW", "WIR Franc");
+    m.insert("CLF", "Unidad de Fomento");
+    m.insert("CLP", "Chilean Peso");
+    m.insert("CNY", "Yuan Renminbi");
+    m.insert("COP", "Colombian Peso");
+    m.insert("COU", "Unidad de Valor Real");
+    m.insert("CRC", "Costa Rican Colon");
+    m.insert("CSD", "Serbian Dinar");
+    m.insert("CSJ", "Krona A/53");
+    m.insert("CSK", "Koruna");
+    m.insert("CUC", "Peso Convertible");
+    m.insert("CUP", "Cuban Peso");
+    m.insert("CVE", "Cabo Verde Escudo");
+    m.insert("CYP", "Cyprus Pound");
+    m.insert("CZK", "Czech Koruna");
+    m.insert("DDM", "Mark der DDR");
+    m.insert("DEM", "Deutsche Mark");
+    m.insert("DJF", "Djibouti Franc");
+    m.insert("DKK", "Danish Krone");
+    m.insert("DOP", "Dominican Peso");
+    m.insert("DZD", "Algerian Dinar");
+    m.insert("ECS", "Sucre");
+    m.insert("ECV", "Unidad de Valor Constante (UVC)");
+    m.insert("EEK", "Kroon");
+    m.insert("EGP", "Egyptian Pound");
+    m.insert("ERN", "Nakfa");
+    m.insert("ESA", "Spanish Peseta");
+    m.insert("ESB", "\"A\" Account (convertible Peseta Account)");
+    m.insert("ESP", "Spanish Peseta");
+    m.insert("ETB", "Ethiopian Birr");
+    m.insert("EUR", "Euro");
+    m.insert("FIM", "Markka");
+    m.insert("FJD", "Fiji Dollar");
+    m.insert("FKP", "Falkland Islands Pound");
+    m.insert("FRF", "French Franc");
+    m.insert("GBP", "Pound Sterling");
+    m.insert("GEK", "Georgian Coupon");
+    m.insert("GEL", "Lari");
+    m.insert("GHC", "Cedi");
+    m.insert("GHP", "Ghana Cedi");
+    m.insert("GHS", "Ghana Cedi");
+    m.insert("GIP", "Gibraltar Pound");
+    m.insert("GMD", "Dalasi");
+    m.insert("GNE", "Syli");
+    m.insert("GNF", "Guinean Franc");
+    m.insert("GNS", "Syli");
+    m.insert("GQE", "Ekwele");
+    m.insert("GRD", "Drachma");
+    m.insert("GTQ", "Quetzal");
+    m.insert("GWE", "Guinea Escudo");
+    m.insert("GWP", "Guinea-Bissau Peso");
+    m.insert("GYD", "Guyana Dollar");
+    m.insert("HKD", "Hong Kong Dollar");
+    m.insert("HNL", "Lempira");
+    m.insert("HRD", "Croatian Dinar");
+    m.insert("HRK", "Kuna");
+    m.insert("HTG", "Gourde");
+    m.insert("HUF", "Forint");
+    m.insert("IDR", "Rupiah");
+    m.insert("IEP", "Irish Pound");
+    m.insert("ILP", "Pound");
+    m.insert("ILR", "Old Shekel");
+    m.insert("ILS", "New Israeli Sheqel");
+    m.insert("INR", "Indian Rupee");
+    m.insert("IQD", "Iraqi Dinar");
+    m.insert("IRR", "Iranian Rial");
+    m.insert("ISJ", "Old Krona");
+    m.insert("ISK", "Iceland Krona");
+    m.insert("ITL", "Italian Lira");
+    m.insert("JMD", "Jamaican Dollar");
+    m.insert("JOD", "Jordanian Dinar");
+    m.insert("JPY", "Yen");
+    m.insert("KES", "Kenyan Shilling");
+    m.insert("KGS", "Som");
+    m.insert("KHR", "Riel");
+    m.insert("KMF", "Comorian Franc");
+    m.insert("KPW", "North Korean Won");
+    m.insert("KRW", "Won");
+    m.insert("KWD", "Kuwaiti Dinar");
+    m.insert("KYD", "Cayman Islands Dollar");
+    m.insert("KZT", "Tenge");
+    m.insert("LAJ", "Pathet Lao Kip");
+    m.insert("LAK", "Lao Kip");
+    m.insert("LBP", "Lebanese Pound");
+    m.insert("LKR", "Sri Lanka Rupee");
+    m.insert("LRD", "Liberian Dollar");
+    m.insert("LSL", "Loti");
+    m.insert("LSM", "Loti");
+    m.insert("LTL", "Lithuanian Litas");
+    m.insert("LTT", "Talonas");
+    m.insert("LUC", "Luxembourg Convertible Franc");
+    m.insert("LUF", "Luxembourg Franc");
+    m.insert("LUL", "Luxembourg Financial Franc");
+    m.insert("LVL", "Latvian Lats");
+    m.insert("LVR", "Latvian Ruble");
+    m.insert("LYD", "Libyan Dinar");
+    m.insert("MAD", "Moroccan Dirham");
+    m.insert("MDL", "Moldovan Leu");
+    m.insert("MGA", "Malagasy Ariary");
+    m.insert("MGF", "Malagasy Franc");
+    m.insert("MKD", "Denar");
+    m.insert("MLF", "Mali Franc");
+    m.insert("MMK", "Kyat");
+    m.insert("MNT", "Tugrik");
+    m.insert("MOP", "Pataca");
+    m.insert("MRO", "Ouguiya");
+    m.insert("MRU", "Ouguiya");
+    m.insert("MTL", "Maltese Lira");
+    m.insert("MTP", "Maltese Pound");
+    m.insert("MUR", "Mauritius Rupee");
+    m.insert("MVQ", "Maldive Rupee");
+    m.insert("MVR", "Rufiyaa");
+    m.insert("MWK", "Kwacha");
+    m.insert("MXN", "Mexican Peso");
+    m.insert("MXP", "Mexican Peso");
+    m.insert("MXV", "Mexican Unidad de Inversion (UDI)");
+    m.insert("MYR", "Malaysian Ringgit");
+    m.insert("MZE", "Mozambique Escudo");
+    m.insert("MZM", "Mozambique Metical");
+    m.insert("MZN", "Mozambique Metical");
+    m.insert("NAD", "Namibia Dollar");
+    m.insert("NGN", "Naira");
+    m.insert("NIC", "Cordoba");
+    m.insert("NIO", "Cordoba Oro");
+    m.insert("NLG", "Netherlands Guilder");
+    m.insert("NOK", "Norwegian Krone");
+    m.insert("NPR", "Nepalese Rupee");
+    m.insert("NZD", "New Zealand Dollar");
+    m.insert("OMR", "Rial Omani");
+    m.insert("PAB", "Balboa");
+    m.insert("PEH", "Sol");
+    m.insert("PEI", "Inti");
+    m.insert("PEN", "Nuevo Sol");
+    m.insert("PES", "Sol");
+    m.insert("PGK", "Kina");
+    m.insert("PHP", "Philippine Peso");
+    m.insert("PKR", "Pakistan Rupee");
+    m.insert("PLN", "Zloty");
+    m.insert("PLZ", "Zloty");
+    m.insert("PTE", "Portuguese Escudo");
+    m.insert("PYG", "Guarani");
+    m.insert("QAR", "Qatari Rial");
+    m.insert("RHD", "Rhodesian Dollar");
+    m.insert("ROK", "Leu A/52");
+    m.insert("ROL", "Old Leu");
+    m.insert("RON", "New Romanian Leu");
+    m.insert("RSD", "Serbian Dinar");
+    m.insert("RUB", "Russian Ruble");
+    m.insert("RUR", "Russian Ruble");
+    m.insert("RWF", "Rwanda Franc");
+    m.insert("SAR", "Saudi Riyal");
+    m.insert("SBD", "Solomon Islands Dollar");
+    m.insert("SCR", "Seychelles Rupee");
+    m.insert("SDD", "Sudanese Dinar");
+    m.insert("SDG", "Sudanese Pound");
+    m.insert("SDP", "Sudanese Pound");
+    m.insert("SEK", "Swedish Krona");
+    m.insert("SGD", "Singapore Dollar");
+    m.insert("SHP", "Saint Helena Pound");
+    m.insert("SIT", "Tolar");
+    m.insert("SKK", "Slovak Koruna");
+    m.insert("SLE", "Leone");
+    m.insert("SLL", "Leone");
+    m.insert("SOS", "Somali Shilling");
+    m.insert("SRD", "Surinam Dollar");
+    m.insert("SRG", "Surinam Guilder");
+    m.insert("SSP", "South Sudanese Pound");
+    m.insert("STD", "Dobra");
+    m.insert("STN", "Dobra");
+    m.insert("SUR", "Rouble");
+    m.insert("SVC", "El Salvador Colon");
+    m.insert("SYP", "Syrian Pound");
+    m.insert("SZL", "Lilangeni");
+    m.insert("THB", "Baht");
+    m.insert("TJR", "Tajik Ruble");
+    m.insert("TJS", "Somoni");
+    m.insert("TMM", "Turkmenistan Manat");
+    m.insert("TMT", "Turkmenistan New Manat");
+    m.insert("TND", "Tunisian Dinar");
+    m.insert("TOP", "Pa'anga");
+    m.insert("TPE", "Timor Escudo");
+    m.insert("TRL", "Old Turkish Lira");
+    m.insert("TRY", "New Turkish Lira");
+    m.insert("TTD", "Trinidad and Tobago Dollar");
+    m.insert("TWD", "New Taiwan Dollar");
+    m.insert("TZS", "Tanzanian Shilling");
+    m.insert("UAH", "Hryvnia");
+    m.insert("UAK", "Karbovanet");
+    m.insert("UGS", "Uganda Shilling");
+    m.insert("UGW", "Old Shilling");
+    m.insert("UGX", "Uganda Shilling");
+    m.insert("USD", "US Dollar");
+    m.insert("USN", "US Dollar (Next day)");
+    m.insert("USS", "US Dollar (Same day)");
+    m.insert("UYI", "Uruguay Peso en Unidades Indexadas (UI)");
+    m.insert("UYN", "Old Uruguay Peso");
+    m.insert("UYP", "Uruguayan Peso");
+    m.insert("UYU", "Peso Uruguayo");
+    m.insert("UYW", "Unidad Previsional");
+    m.insert("UZS", "Uzbekistan Sum");
+    m.insert("VEB", "Bolivar");
+    m.insert("VED", "Bolívar Soberano");
+    m.insert("VEF", "Bolívar");
+    m.insert("VES", "Bolívar Soberano");
+    m.insert("VNC", "Old Dong");
+    m.insert("VND", "Dong");
+    m.insert("VUV", "Vatu");
+    m.insert("WST", "Tala");
+    m.insert("XAG", "Silver");
+    m.insert("XAU", "Gold");
+    m.insert("XPD", "Palladium");
+    m.insert("XPT", "Platinum");
+    m.insert("YDD", "Yemeni Dinar");
+    m.insert("YER", "Yemeni Rial");
+    m.insert("YUD", "New Yugoslavian Dinar");
+    m.insert("YUM", "New Dinar");
+    m.insert("YUN", "Yugoslavian Dinar");
+    m.insert("ZAL", "Financial Rand");
+    m.insert("ZAR", "Rand");
+    m.insert("ZMK", "Zambian Kwacha");
+    m.insert("ZMW", "Zambian Kwacha");
+    m.insert("ZRN", "New Zaire");
+    m.insert("ZRZ", "Zaire");
+    m.insert("ZWC", "Rhodesian Dollar");
+    m.insert("ZWD", "Zimbabwe Dollar");
+    m.insert("ZWG", "Zimbabwe Gold");
+    m.insert("ZWL", "Zimbabwe Dollar");
+    m.insert("ZWN", "Zimbabwe Dollar (new)");
+    m.insert("ZWR", "Zimbabwe Dollar");
+    m
 });
 
 /// Validates an ISO 4217 currency code
+#[must_use]
 pub fn is_valid_currency_code(code: &str) -> bool {
-    CURRENCY_CODES.contains(code)
+    CURRENCY_CODES.contains_key(code)
+}
+
+/// Gets the currency name for a currency code
+#[must_use]
+pub fn get_currency_name(code: &str) -> Option<&'static str> {
+    CURRENCY_CODES.get(code).copied()
 }
 
 /// Gets all valid currency codes
+#[must_use]
 pub fn get_all_currency_codes() -> Vec<&'static str> {
-    CURRENCY_CODES.iter().copied().collect()
+    CURRENCY_CODES.keys().copied().collect()
 }

@@ -34,16 +34,34 @@ fn trl_custom_validate(record: &mut TrlRecord) -> Vec<CwrWarning<'static>> {
 
     // Basic sanity checks
     if record.group_count.0 == 0 {
-        warnings.push(CwrWarning { field_name: "group_count", field_title: "Group count", source_str: std::borrow::Cow::Owned(record.group_count.as_str()), level: WarningLevel::Warning, description: "Group count is 0, which may indicate no content in file".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "group_count",
+            field_title: "Group count",
+            source_str: std::borrow::Cow::Owned(record.group_count.as_str()),
+            level: WarningLevel::Warning,
+            description: "Group count is 0, which may indicate no content in file".to_string(),
+        });
     }
 
     if record.transaction_count.0 == 0 {
-        warnings.push(CwrWarning { field_name: "transaction_count", field_title: "Transaction count", source_str: std::borrow::Cow::Owned(record.transaction_count.as_str()), level: WarningLevel::Warning, description: "Transaction count is 0, which may indicate no content in file".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "transaction_count",
+            field_title: "Transaction count",
+            source_str: std::borrow::Cow::Owned(record.transaction_count.as_str()),
+            level: WarningLevel::Warning,
+            description: "Transaction count is 0, which may indicate no content in file".to_string(),
+        });
     }
 
     // Record count should be at least 2 (HDR + TRL)
     if record.record_count.0 < 2 {
-        warnings.push(CwrWarning { field_name: "record_count", field_title: "Record count", source_str: std::borrow::Cow::Owned(record.record_count.as_str()), level: WarningLevel::Critical, description: "Record count must be at least 2 (HDR + TRL records)".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "record_count",
+            field_title: "Record count",
+            source_str: std::borrow::Cow::Owned(record.record_count.as_str()),
+            level: WarningLevel::Critical,
+            description: "Record count must be at least 2 (HDR + TRL records)".to_string(),
+        });
     }
 
     warnings

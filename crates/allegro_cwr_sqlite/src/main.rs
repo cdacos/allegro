@@ -31,7 +31,9 @@ fn parse_args() -> Result<Config, String> {
             }
             lexopt::Arg::Long("cwr") => {
                 let version_str = get_value(&mut parser, "cwr")?;
-                let version: f32 = version_str.parse().map_err(|_| format!("Invalid CWR version '{}'. Valid versions: 2.0, 2.1, 2.2", version_str))?;
+                let version: f32 = version_str
+                    .parse()
+                    .map_err(|_| format!("Invalid CWR version '{}'. Valid versions: 2.0, 2.1, 2.2", version_str))?;
 
                 if ![2.0, 2.1, 2.2].contains(&version) {
                     return Err(format!("Unsupported CWR version '{}'. Valid versions: 2.0, 2.1, 2.2", version));
@@ -41,7 +43,9 @@ fn parse_args() -> Result<Config, String> {
             }
             lexopt::Arg::Long("file-id") => {
                 let file_id_str = get_value(&mut parser, "file-id")?;
-                let file_id: i64 = file_id_str.parse().map_err(|_| format!("Invalid file ID '{}'. Must be a positive integer", file_id_str))?;
+                let file_id: i64 = file_id_str
+                    .parse()
+                    .map_err(|_| format!("Invalid file ID '{}'. Must be a positive integer", file_id_str))?;
 
                 if file_id <= 0 {
                     return Err(format!("Invalid file ID '{}'. Must be a positive integer", file_id));
@@ -97,16 +101,21 @@ fn detect_input_format(filename: &str) -> Result<InputFormat, String> {
 fn get_most_recent_file_id(db_filename: &str) -> Result<i64, Box<dyn std::error::Error>> {
     let conn = rusqlite::Connection::open(db_filename)?;
 
-    let file_id: i64 = conn.query_row("SELECT file_id FROM file ORDER BY imported_on DESC LIMIT 1", [], |row| row.get(0)).map_err(|e| match e {
-        rusqlite::Error::QueryReturnedNoRows => "No files found in database".to_string(),
-        _ => format!("Database error: {}", e),
-    })?;
+    let file_id: i64 = conn
+        .query_row("SELECT file_id FROM file ORDER BY imported_on DESC LIMIT 1", [], |row| row.get(0))
+        .map_err(|e| match e {
+            rusqlite::Error::QueryReturnedNoRows => "No files found in database".to_string(),
+            _ => format!("Database error: {}", e),
+        })?;
 
     Ok(file_id)
 }
 
 fn get_value(parser: &mut lexopt::Parser, arg_name: &str) -> Result<String, String> {
-    parser.value().map(|val| val.to_string_lossy().to_string()).map_err(|e| format!("Missing value for --{}: {}", arg_name, e))
+    parser
+        .value()
+        .map(|val| val.to_string_lossy().to_string())
+        .map_err(|e| format!("Missing value for --{}: {}", arg_name, e))
 }
 
 fn main() {
@@ -142,10 +151,15 @@ fn main() {
             let db_filename = allegro_cwr_sqlite::determine_db_filename(&input_filename, config.output_path.as_deref());
             info!("Using database filename: '{}'", db_filename);
 
-            match allegro_cwr_sqlite::process_cwr_to_sqlite_with_version(&input_filename, &db_filename, config.cwr_version) {
+            match allegro_cwr_sqlite::process_cwr_to_sqlite_with_version(
+                &input_filename,
+                &db_filename,
+                config.cwr_version,
+            ) {
                 Ok((file_id, count, report)) => {
                     println!("{}", report);
-                    if let Err(e) = allegro_cwr_sqlite::report::report_summary(&db_filename, file_id, OutputFormat::Sql) {
+                    if let Err(e) = allegro_cwr_sqlite::report::report_summary(&db_filename, file_id, OutputFormat::Sql)
+                    {
                         eprintln!("Warning: Could not generate detailed report: {}", e);
                     }
                     Ok(count)
@@ -168,7 +182,12 @@ fn main() {
             };
 
             match file_id {
-                Ok(id) => allegro_cwr_sqlite::process_sqlite_to_cwr_with_version_and_output(&input_filename, id, config.cwr_version, config.output_path.as_deref()),
+                Ok(id) => allegro_cwr_sqlite::process_sqlite_to_cwr_with_version_and_output(
+                    &input_filename,
+                    id,
+                    config.cwr_version,
+                    config.output_path.as_deref(),
+                ),
                 Err(e) => Err(e),
             }
         }
@@ -186,7 +205,12 @@ fn main() {
         }
     };
 
-    println!("Successfully processed {} CWR records from '{}' in {:.2?}", format_int_with_commas(count as i64), &input_filename, elapsed_time);
+    println!(
+        "Successfully processed {} CWR records from '{}' in {:.2?}",
+        format_int_with_commas(count as i64),
+        &input_filename,
+        elapsed_time
+    );
 }
 
 fn print_help() {
@@ -197,7 +221,9 @@ fn print_help() {
     eprintln!();
     eprintln!("Options:");
     eprintln!("  -o, --output <file>      Output file path (SQLite database or CWR file)");
-    eprintln!("      --cwr <version>      CWR version (2.0, 2.1, 2.2). Auto-detected from filename (.Vxx) or file content if not specified");
+    eprintln!(
+        "      --cwr <version>      CWR version (2.0, 2.1, 2.2). Auto-detected from filename (.Vxx) or file content if not specified"
+    );
     eprintln!("      --file-id <id>       File ID to export from SQLite database (defaults to most recent)");
     eprintln!("  -h, --help               Show this help message");
     eprintln!();

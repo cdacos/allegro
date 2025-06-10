@@ -18,7 +18,9 @@ fn parse_args() -> Result<Config, String> {
         match arg {
             lexopt::Arg::Long("cwr") => {
                 let version_str = get_value(&mut parser, "cwr")?;
-                let version: f32 = version_str.parse().map_err(|_| format!("Invalid CWR version '{}'. Valid versions: 2.0, 2.1, 2.2", version_str))?;
+                let version: f32 = version_str
+                    .parse()
+                    .map_err(|_| format!("Invalid CWR version '{}'. Valid versions: 2.0, 2.1, 2.2", version_str))?;
 
                 if ![2.0, 2.1, 2.2].contains(&version) {
                     return Err(format!("Unsupported CWR version '{}'. Valid versions: 2.0, 2.1, 2.2", version));
@@ -54,7 +56,10 @@ fn parse_args() -> Result<Config, String> {
 }
 
 fn get_value(parser: &mut lexopt::Parser, arg_name: &str) -> Result<String, String> {
-    parser.value().map(|val| val.to_string_lossy().to_string()).map_err(|e| format!("Missing value for --{}: {}", arg_name, e))
+    parser
+        .value()
+        .map(|val| val.to_string_lossy().to_string())
+        .map_err(|e| format!("Missing value for --{}: {}", arg_name, e))
 }
 
 fn main() {
@@ -75,7 +80,11 @@ fn main() {
 
     let start_time = Instant::now();
 
-    let result = allegro_cwr_obfuscate::process_cwr_obfuscation(&input_filename, config.output_filename.as_deref(), config.cwr_version);
+    let result = allegro_cwr_obfuscate::process_cwr_obfuscation(
+        &input_filename,
+        config.output_filename.as_deref(),
+        config.cwr_version,
+    );
 
     let elapsed_time = start_time.elapsed();
 
@@ -89,7 +98,12 @@ fn main() {
         }
     };
 
-    println!("Successfully obfuscated {} CWR records from '{}' in {:.2?}", allegro_cwr::format_int_with_commas(count as i64), &input_filename, elapsed_time);
+    println!(
+        "Successfully obfuscated {} CWR records from '{}' in {:.2?}",
+        allegro_cwr::format_int_with_commas(count as i64),
+        &input_filename,
+        elapsed_time
+    );
 }
 
 fn print_help() {

@@ -22,10 +22,10 @@ pub struct PerRecord {
     pub performing_artist_first_name: Option<String>,
 
     #[cwr(title = "Performing artist IPI name number (optional)", start = 94, len = 11)]
-    pub performing_artist_ipi_name_num: Option<String>,
+    pub performing_artist_ipi_name_num: Option<IpiNameNumber>,
 
     #[cwr(title = "Performing artist IPI base number (optional)", start = 105, len = 13)]
-    pub performing_artist_ipi_base_number: Option<String>,
+    pub performing_artist_ipi_base_number: Option<IpiBaseNumber>,
 }
 
 // Custom validation function for PER record
@@ -34,7 +34,13 @@ fn per_custom_validate(record: &mut PerRecord) -> Vec<CwrWarning<'static>> {
 
     // Business rule: Performing artist last name cannot be empty
     if record.performing_artist_last_name.trim().is_empty() {
-        warnings.push(CwrWarning { field_name: "performing_artist_last_name", field_title: "Performing artist last name", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "Performing artist last name cannot be empty".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "performing_artist_last_name",
+            field_title: "Performing artist last name",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Critical,
+            description: "Performing artist last name cannot be empty".to_string(),
+        });
     }
 
     // TODO: Additional business rules requiring broader context:

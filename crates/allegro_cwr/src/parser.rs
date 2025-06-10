@@ -23,7 +23,9 @@ pub struct ParsedRecord {
 
 /// Parses a single CWR line and returns the parsed record
 fn parse_cwr_line(line: &str, line_number: usize, context: &ParsingContext) -> Result<ParsedRecord, CwrParseError> {
-    let record_type = line.get(0..3).ok_or_else(|| CwrParseError::BadFormat(format!("Line {} is too short (less than 3 chars)", line_number)))?;
+    let record_type = line
+        .get(0..3)
+        .ok_or_else(|| CwrParseError::BadFormat(format!("Line {} is too short (less than 3 chars)", line_number)))?;
 
     let (record, warnings) = crate::cwr_registry::parse_by_record_type(record_type, line)?;
 
@@ -31,12 +33,16 @@ fn parse_cwr_line(line: &str, line_number: usize, context: &ParsingContext) -> R
 }
 
 /// Returns an iterator that processes CWR lines and yields parsed records
-pub fn process_cwr_stream(input_filename: &str) -> Result<impl Iterator<Item = Result<ParsedRecord, CwrParseError>>, CwrParseError> {
+pub fn process_cwr_stream(
+    input_filename: &str,
+) -> Result<impl Iterator<Item = Result<ParsedRecord, CwrParseError>>, CwrParseError> {
     process_cwr_stream_with_version(input_filename, None)
 }
 
 /// Returns an iterator that processes CWR lines and yields parsed records with optional version hint
-pub fn process_cwr_stream_with_version(input_filename: &str, version_hint: Option<f32>) -> Result<impl Iterator<Item = Result<ParsedRecord, CwrParseError>>, CwrParseError> {
+pub fn process_cwr_stream_with_version(
+    input_filename: &str, version_hint: Option<f32>,
+) -> Result<impl Iterator<Item = Result<ParsedRecord, CwrParseError>>, CwrParseError> {
     let file = File::open(input_filename)?;
     let mut reader = BufReader::new(file);
 
@@ -49,7 +55,10 @@ pub fn process_cwr_stream_with_version(input_filename: &str, version_hint: Optio
     let hdr_line = first_line.trim_end();
 
     if !hdr_line.starts_with("HDR") {
-        return Err(CwrParseError::BadFormat(format!("File does not start with HDR record. Found: '{}'", hdr_line.get(0..std::cmp::min(hdr_line.len(), 50)).unwrap_or(""))));
+        return Err(CwrParseError::BadFormat(format!(
+            "File does not start with HDR record. Found: '{}'",
+            hdr_line.get(0..std::cmp::min(hdr_line.len(), 50)).unwrap_or("")
+        )));
     }
 
     let cwr_version = get_cwr_version(input_filename, hdr_line, version_hint)?;
@@ -125,7 +134,8 @@ mod tests {
     #[test]
     fn test_get_cwr_version_filename_vs_hdr() {
         // Filename version should override HDR version when no CLI version
-        let mut hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221".to_string();
+        let mut hdr_line =
+            "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221".to_string();
         while hdr_line.len() < 101 {
             hdr_line.push(' ');
         }
@@ -140,7 +150,8 @@ mod tests {
     #[test]
     fn test_get_cwr_version_explicit_v22() {
         // Create a v2.2 line with explicit version at position 101-104
-        let mut hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221".to_string();
+        let mut hdr_line =
+            "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221".to_string();
         // Pad to position 101
         while hdr_line.len() < 101 {
             hdr_line.push(' ');
@@ -156,7 +167,8 @@ mod tests {
     #[test]
     fn test_get_cwr_version_explicit_conflicts_with_cli() {
         // Test warning when explicit version conflicts with CLI version
-        let mut hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221".to_string();
+        let mut hdr_line =
+            "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221".to_string();
         while hdr_line.len() < 101 {
             hdr_line.push(' ');
         }
@@ -172,7 +184,8 @@ mod tests {
     #[test]
     fn test_get_cwr_version_invalid_explicit() {
         // Invalid explicit version should return error
-        let mut hdr_line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221".to_string();
+        let mut hdr_line =
+            "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221".to_string();
         while hdr_line.len() < 101 {
             hdr_line.push(' ');
         }
@@ -239,12 +252,12 @@ mod tests {
             sender_id: SenderId("BMI".to_string()),
             sender_name: SenderName("BMI MUSIC".to_string()),
             edi_standard_version_number: EdiStandardVersion("01.10".to_string()),
-            creation_date: Date(NaiveDate::from_ymd_opt(2005, 1, 1)),
-            creation_time: Time(NaiveTime::from_hms_opt(12, 0, 0)),
-            transmission_date: Date(NaiveDate::from_ymd_opt(2005, 1, 1)),
+            creation_date: Date(NaiveDate::from_ymd_opt(2005, 1, 1).unwrap()),
+            creation_time: Time(NaiveTime::from_hms_opt(12, 0, 0).unwrap()),
+            transmission_date: Date(NaiveDate::from_ymd_opt(2005, 1, 1).unwrap()),
             character_set: None,
-            version: CwrVersion(None),
-            revision: CwrRevision(None),
+            version: None,
+            revision: None,
             software_package: None,
             software_package_version: None,
         };
@@ -254,7 +267,10 @@ mod tests {
 
     fn create_temp_cwr_file(content: &str) -> Result<String, std::io::Error> {
         let temp_dir = std::env::temp_dir();
-        let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|_| std::io::Error::other("System time error"))?.as_nanos();
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_err(|_| std::io::Error::other("System time error"))?
+            .as_nanos();
         let thread_id = std::thread::current().id();
         let file_path = temp_dir.join(format!("test_{}_{:?}.cwr", timestamp, thread_id));
         let mut file = File::create(&file_path)?;

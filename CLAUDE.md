@@ -27,6 +27,7 @@
 - **Automated Checks** - Run `cargo fmt` and `cargo clippy` after every working change
 - **Commit Message** - Propose a single-line commit message after every working change
 - **Warning-Free Code** - Avoid compiler and clippy warnings; ask for clarification if uncertain about best practices
+- **Use tools and scripts!** - Use tools (`rg`, `sed`, etc) and scripts (`python3`) to perform mass updates wherever possible
 
 ## Testing Strategy
 - **Test Data** - Use `.me/` folder for real CWR sample files (add to .gitignore)

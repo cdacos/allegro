@@ -19,10 +19,10 @@ pub struct IpaRecord {
     pub agreement_role_code: AgreementRoleCode,
 
     #[cwr(title = "Interested party IPI name number (optional)", start = 21, len = 11)]
-    pub interested_party_ipi_name_num: Option<String>,
+    pub interested_party_ipi_name_num: Option<IpiNameNumber>,
 
     #[cwr(title = "IPI base number (optional)", start = 32, len = 13)]
-    pub ipi_base_number: Option<String>,
+    pub ipi_base_number: Option<IpiBaseNumber>,
 
     #[cwr(title = "Interested party number", start = 45, len = 9)]
     pub interested_party_num: String,
@@ -34,19 +34,19 @@ pub struct IpaRecord {
     pub interested_party_writer_first_name: Option<String>,
 
     #[cwr(title = "PR affiliation society (conditional)", start = 129, len = 3)]
-    pub pr_affiliation_society: Option<String>,
+    pub pr_affiliation_society: Option<SocietyCode>,
 
     #[cwr(title = "PR share (conditional)", start = 132, len = 5)]
     pub pr_share: Option<OwnershipShare>,
 
     #[cwr(title = "MR affiliation society (conditional)", start = 137, len = 3)]
-    pub mr_affiliation_society: Option<String>,
+    pub mr_affiliation_society: Option<SocietyCode>,
 
     #[cwr(title = "MR share (conditional)", start = 140, len = 5)]
     pub mr_share: Option<OwnershipShare>,
 
     #[cwr(title = "SR affiliation society (conditional)", start = 145, len = 3)]
-    pub sr_affiliation_society: Option<String>,
+    pub sr_affiliation_society: Option<SocietyCode>,
 
     #[cwr(title = "SR share (conditional)", start = 148, len = 5)]
     pub sr_share: Option<OwnershipShare>,
@@ -62,24 +62,60 @@ fn ipa_custom_validate(record: &mut IpaRecord) -> Vec<CwrWarning<'static>> {
     let sr_share = record.sr_share.as_ref().map_or(0, |s| s.0);
 
     if pr_share == 0 && mr_share == 0 && sr_share == 0 {
-        warnings.push(CwrWarning { field_name: "pr_share", field_title: "PR share (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "At least one of PR, MR, or SR share must be > 0".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "pr_share",
+            field_title: "PR share (conditional)",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Critical,
+            description: "At least one of PR, MR, or SR share must be > 0".to_string(),
+        });
     }
 
     // Business rule: If share > 0, corresponding society must be provided
-    if pr_share > 0 && (record.pr_affiliation_society.is_none() || record.pr_affiliation_society.as_ref().is_none_or(|s| s.trim().is_empty())) {
-        warnings.push(CwrWarning { field_name: "pr_affiliation_society", field_title: "PR affiliation society (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "PR affiliation society is required when PR share > 0".to_string() });
+    if pr_share > 0
+        && (record.pr_affiliation_society.is_none()
+            || record.pr_affiliation_society.as_ref().is_none_or(|s| s.as_str().trim().is_empty()))
+    {
+        warnings.push(CwrWarning {
+            field_name: "pr_affiliation_society",
+            field_title: "PR affiliation society (conditional)",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Critical,
+            description: "PR affiliation society is required when PR share > 0".to_string(),
+        });
     }
 
-    if mr_share > 0 && (record.mr_affiliation_society.is_none() || record.mr_affiliation_society.as_ref().is_none_or(|s| s.trim().is_empty())) {
-        warnings.push(CwrWarning { field_name: "mr_affiliation_society", field_title: "MR affiliation society (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "MR affiliation society is required when MR share > 0".to_string() });
+    if mr_share > 0
+        && (record.mr_affiliation_society.is_none()
+            || record.mr_affiliation_society.as_ref().is_none_or(|s| s.as_str().trim().is_empty()))
+    {
+        warnings.push(CwrWarning {
+            field_name: "mr_affiliation_society",
+            field_title: "MR affiliation society (conditional)",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Critical,
+            description: "MR affiliation society is required when MR share > 0".to_string(),
+        });
     }
 
-    if sr_share > 0 && (record.sr_affiliation_society.is_none() || record.sr_affiliation_society.as_ref().is_none_or(|s| s.trim().is_empty())) {
-        warnings.push(CwrWarning { field_name: "sr_affiliation_society", field_title: "SR affiliation society (conditional)", source_str: std::borrow::Cow::Borrowed(""), level: WarningLevel::Critical, description: "SR affiliation society is required when SR share > 0".to_string() });
+    if sr_share > 0
+        && (record.sr_affiliation_society.is_none()
+            || record.sr_affiliation_society.as_ref().is_none_or(|s| s.as_str().trim().is_empty()))
+    {
+        warnings.push(CwrWarning {
+            field_name: "sr_affiliation_society",
+            field_title: "SR affiliation society (conditional)",
+            source_str: std::borrow::Cow::Borrowed(""),
+            level: WarningLevel::Critical,
+            description: "SR affiliation society is required when SR share > 0".to_string(),
+        });
     }
 
     // Business rule: Writer first name only allowed for OS/OG agreements with assignor role
-    if matches!(record.agreement_role_code, AgreementRoleCode::Acquirer) && record.interested_party_writer_first_name.is_some() && !record.interested_party_writer_first_name.as_ref().is_none_or(|s| s.trim().is_empty()) {
+    if matches!(record.agreement_role_code, AgreementRoleCode::Acquirer)
+        && record.interested_party_writer_first_name.is_some()
+        && !record.interested_party_writer_first_name.as_ref().is_none_or(|s| s.trim().is_empty())
+    {
         warnings.push(CwrWarning {
             field_name: "interested_party_writer_first_name",
             field_title: "Interested party writer first name (optional)",

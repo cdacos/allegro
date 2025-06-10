@@ -24,7 +24,8 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
     let original_lines: Vec<String> = std::fs::read_to_string(input_path)?.lines().map(|s| s.to_string()).collect();
 
     // Use the allegro_cwr streaming parser
-    let record_stream = process_cwr_stream_with_version(input_path, cwr_version).map_err(|e| RoundtripError::CwrParsing(format!("Failed to open CWR file: {}", e)))?;
+    let record_stream = process_cwr_stream_with_version(input_path, cwr_version)
+        .map_err(|e| RoundtripError::CwrParsing(format!("Failed to open CWR file: {}", e)))?;
 
     for parsed_result in record_stream {
         match parsed_result {
@@ -40,11 +41,19 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
                     let original_line = &original_lines[line_index];
 
                     // Serialize the parsed record back to CWR line
-                    let version = allegro_cwr::domain_types::CwrVersion(Some(parsed_record.context.cwr_version));
+                    let version = allegro_cwr::domain_types::CwrVersion(parsed_record.context.cwr_version);
                     let serialized_line = parsed_record.record.to_cwr_line(&version);
 
                     // Check for character differences
-                    check_character_differences(original_line, &serialized_line, parsed_record.record.record_type(), parsed_record.line_number, &mut diff_map, &mut diff_examples, &mut extra_chars_map);
+                    check_character_differences(
+                        original_line,
+                        &serialized_line,
+                        parsed_record.record.record_type(),
+                        parsed_record.line_number,
+                        &mut diff_map,
+                        &mut diff_examples,
+                        &mut extra_chars_map,
+                    );
                 }
 
                 // Collect warnings from this record
@@ -76,7 +85,15 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
             sorted_warnings.sort_by(|a, b| b.1.len().cmp(&a.1.len()).then(a.0.cmp(b.0)));
 
             for (warning, line_numbers) in sorted_warnings {
-                let display_lines = if line_numbers.len() <= 5 { format!("lines {:?}", line_numbers) } else { format!("{} occurrences (first few: {})", line_numbers.len(), line_numbers.iter().take(3).map(|n| n.to_string()).collect::<Vec<_>>().join(", ")) };
+                let display_lines = if line_numbers.len() <= 5 {
+                    format!("lines {:?}", line_numbers)
+                } else {
+                    format!(
+                        "{} occurrences (first few: {})",
+                        line_numbers.len(),
+                        line_numbers.iter().take(3).map(|n| n.to_string()).collect::<Vec<_>>().join(", ")
+                    )
+                };
                 println!("{}: {}", warning, display_lines);
             }
         }
@@ -86,7 +103,7 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
             let mut sorted_extra: Vec<_> = extra_chars_map.iter().collect();
             sorted_extra.sort_by_key(|(key, lines)| (key.as_str(), lines.len()));
 
-            if sorted_extra.len() > 0 {
+            if !sorted_extra.is_empty() {
                 println!("\nAMBIGUOUS:");
             }
 
@@ -94,10 +111,26 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
                 let parts: Vec<&str> = extra_key.split(':').collect();
                 let record_type = parts[0];
                 let extra_info = parts.get(1).unwrap_or(&"?");
-                let display_lines = if line_numbers.len() <= 5 { format!("lines {:?}", line_numbers) } else { format!("{} occurrences (first few: {})", line_numbers.len(), line_numbers.iter().take(3).map(|n| n.to_string()).collect::<Vec<_>>().join(", ")) };
+                let display_lines = if line_numbers.len() <= 5 {
+                    format!("lines {:?}", line_numbers)
+                } else {
+                    format!(
+                        "{} occurrences (first few: {})",
+                        line_numbers.len(),
+                        line_numbers.iter().take(3).map(|n| n.to_string()).collect::<Vec<_>>().join(", ")
+                    )
+                };
 
                 if *extra_info == "missing_optional_fields" {
-                    println!("{}: missing optional fields (serializer adds proper padding): {}", record_type, display_lines);
+                    println!(
+                        "{}: missing optional fields (serializer adds proper padding): {}",
+                        record_type, display_lines
+                    );
+                } else if *extra_info == "date_zero_padding" {
+                    println!(
+                        "{}: date fields with '00000000' treated as None (ambiguous: could be invalid date or empty field): {}",
+                        record_type, display_lines
+                    );
                 } else {
                     println!("{}: records with extra '{}': {}", record_type, extra_info, display_lines);
                 }
@@ -107,12 +140,20 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
     }
 
     if !diff_map.is_empty() {
-        println!("ROUNDTRIP FAILED: Found {} distinct diff types across {} total errors:", diff_map.len(), diff_map.values().map(|v| v.len()).sum::<usize>());
+        println!(
+            "ROUNDTRIP FAILED: Found {} distinct diff types across {} total errors:",
+            diff_map.len(),
+            diff_map.values().map(|v| v.len()).sum::<usize>()
+        );
         let mut sorted_diffs: Vec<_> = diff_map.iter().collect();
         sorted_diffs.sort_by_key(|(key, _)| key.as_str());
 
         for (diff_key, line_numbers) in sorted_diffs {
-            let display_lines = if line_numbers.len() <= 5 { format!("{:?}", line_numbers) } else { format!("[{}, {}, {}, ...]", line_numbers[0], line_numbers[1], line_numbers[2]) };
+            let display_lines = if line_numbers.len() <= 5 {
+                format!("{:?}", line_numbers)
+            } else {
+                format!("[{}, {}, {}, ...]", line_numbers[0], line_numbers[1], line_numbers[2])
+            };
             println!("  {}: {} occurrences on lines {}", diff_key, line_numbers.len(), display_lines);
 
             // Show visual diff for the first example
@@ -143,7 +184,10 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
                 eprintln!();
             }
         }
-        return Err(RoundtripError::CwrParsing(format!("Round-trip integrity check failed with {} distinct error types", diff_map.len())));
+        return Err(RoundtripError::CwrParsing(format!(
+            "Round-trip integrity check failed with {} distinct error types",
+            diff_map.len()
+        )));
     }
 
     println!("ROUNDTRIP PASSED: All {} records maintain round-trip integrity", record_count);
@@ -151,7 +195,11 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
 }
 
 /// Check for character differences between original and round-trip serialized lines
-fn check_character_differences(original: &str, serialized: &str, record_type: &str, line_number: usize, diff_map: &mut HashMap<String, Vec<usize>>, diff_examples: &mut HashMap<String, (String, String, usize)>, extra_chars_map: &mut HashMap<String, Vec<usize>>) {
+fn check_character_differences(
+    original: &str, serialized: &str, record_type: &str, line_number: usize,
+    diff_map: &mut HashMap<String, Vec<usize>>, diff_examples: &mut HashMap<String, (String, String, usize)>,
+    extra_chars_map: &mut HashMap<String, Vec<usize>>,
+) {
     // Check length difference first
     if original.len() != serialized.len() {
         // Special handling for cases where original file is longer than CWR spec allows
@@ -172,8 +220,7 @@ fn check_character_differences(original: &str, serialized: &str, record_type: &s
         // Special handling for cases where original file is shorter (missing optional fields)
         else if original.len() < serialized.len() {
             // Check if the original matches the beginning of the serialized output
-            if serialized.starts_with(original) {
-                let missing_chars = &serialized[original.len()..];
+            if let Some(missing_chars) = serialized.strip_prefix(original) {
                 // If the missing part is just spaces/padding, this is expected behavior
                 if missing_chars.chars().all(|c| c == ' ') {
                     let missing_key = format!("{}:missing_optional_fields", record_type);
@@ -183,12 +230,37 @@ fn check_character_differences(original: &str, serialized: &str, record_type: &s
             }
         }
 
-        let explanation = if original.len() > serialized.len() { " - source file may have extra characters beyond CWR specification" } else { " - source file missing version-specific fields, serializer adds required padding" };
-        let diff_key = format!("record: {}, LENGTH_MISMATCH (original: {}, serialized: {}){}", record_type, original.len(), serialized.len(), explanation);
+        let explanation = if original.len() > serialized.len() {
+            " - source file may have extra characters beyond CWR specification"
+        } else {
+            " - source file missing version-specific fields, serializer adds required padding"
+        };
+        let diff_key = format!(
+            "record: {}, LENGTH_MISMATCH (original: {}, serialized: {}){}",
+            record_type,
+            original.len(),
+            serialized.len(),
+            explanation
+        );
         diff_map.entry(diff_key.clone()).or_default().push(line_number);
         // Store example if this is the first occurrence
         diff_examples.entry(diff_key).or_insert_with(|| (original.to_string(), serialized.to_string(), line_number));
         return;
+    }
+
+    // Check for date zero-padding ambiguity: "00000000" in original becomes spaces in serialized
+    if original.len() == serialized.len() {
+        let mut i = 0;
+        while i <= original.len().saturating_sub(8) {
+            if let (Some(orig_slice), Some(ser_slice)) = (original.get(i..i + 8), serialized.get(i..i + 8)) {
+                if orig_slice == "00000000" && ser_slice == "        " {
+                    let date_key = format!("{}:date_zero_padding", record_type);
+                    extra_chars_map.entry(date_key).or_default().push(line_number);
+                    return; // Don't treat this as an error, it's expected behavior
+                }
+            }
+            i += 1;
+        }
     }
 
     let original_chars: Vec<char> = original.chars().collect();
@@ -199,7 +271,9 @@ fn check_character_differences(original: &str, serialized: &str, record_type: &s
             let diff_key = format!("record: {}, index: {}", record_type, index);
             diff_map.entry(diff_key.clone()).or_default().push(line_number);
             // Store example if this is the first occurrence
-            diff_examples.entry(diff_key).or_insert_with(|| (original.to_string(), serialized.to_string(), line_number));
+            diff_examples
+                .entry(diff_key)
+                .or_insert_with(|| (original.to_string(), serialized.to_string(), line_number));
         }
     }
 }

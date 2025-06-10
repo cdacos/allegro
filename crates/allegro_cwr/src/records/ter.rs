@@ -32,7 +32,13 @@ fn ter_custom_validate(record: &mut TerRecord) -> Vec<CwrWarning<'static>> {
 
     // Basic validation: TIS code should be reasonable
     if record.tis_numeric_code.0 > 9999 {
-        warnings.push(CwrWarning { field_name: "tis_numeric_code", field_title: "TIS Numeric Code", source_str: std::borrow::Cow::Owned(record.tis_numeric_code.as_str()), level: WarningLevel::Warning, description: "TIS Numeric Code seems unusually high, please verify".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "tis_numeric_code",
+            field_title: "TIS Numeric Code",
+            source_str: std::borrow::Cow::Owned(record.tis_numeric_code.as_str()),
+            level: WarningLevel::Warning,
+            description: "TIS Numeric Code seems unusually high, please verify".to_string(),
+        });
     }
 
     warnings

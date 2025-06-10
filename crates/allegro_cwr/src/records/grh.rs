@@ -39,14 +39,23 @@ fn grh_custom_validate(record: &mut GrhRecord) -> Vec<CwrWarning<'static>> {
             field_title: "Version number for this transaction type",
             source_str: std::borrow::Cow::Owned(version_str.to_string()),
             level: WarningLevel::Warning,
-            description: format!("Version number '{}' is not a valid CWR version (expected: 02.00, 02.10, or 02.20)", version_str),
+            description: format!(
+                "Version number '{}' is not a valid CWR version (expected: 02.00, 02.10, or 02.20)",
+                version_str
+            ),
         });
     }
 
     // Business rule: Group ID should start at 1 and increment sequentially
     // Note: Full validation requires context of previous groups in file
     if record.group_id.0 == 0 {
-        warnings.push(CwrWarning { field_name: "group_id", field_title: "Group identifier within the transmission", source_str: std::borrow::Cow::Owned(record.group_id.as_str()), level: WarningLevel::Critical, description: "Group ID must start at 1, not 0".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "group_id",
+            field_title: "Group identifier within the transmission",
+            source_str: std::borrow::Cow::Owned(record.group_id.as_str()),
+            level: WarningLevel::Critical,
+            description: "Group ID must start at 1, not 0".to_string(),
+        });
     }
 
     warnings

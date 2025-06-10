@@ -25,19 +25,19 @@ pub struct NprRecord {
     pub performing_artist_first_name: Option<String>,
 
     #[cwr(title = "Performing artist IPI name number (optional)", start = 339, len = 11)]
-    pub performing_artist_ipi_name_num: Option<String>,
+    pub performing_artist_ipi_name_num: Option<IpiNameNumber>,
 
     #[cwr(title = "Performing artist IPI base number (optional)", start = 350, len = 13)]
-    pub performing_artist_ipi_base_number: Option<String>,
+    pub performing_artist_ipi_base_number: Option<IpiBaseNumber>,
 
     #[cwr(title = "Language code (optional)", start = 363, len = 2)]
-    pub language_code: Option<String>,
+    pub language_code: Option<LanguageCode>,
 
     #[cwr(title = "Performance language (conditional, v2.1+)", start = 365, len = 2, min_version = 2.1)]
-    pub performance_language: Option<String>,
+    pub performance_language: Option<LanguageCode>,
 
     #[cwr(title = "Performance dialect (conditional, v2.1+)", start = 367, len = 3, min_version = 2.1)]
-    pub performance_dialect: Option<String>,
+    pub performance_dialect: Option<LanguageDialect>,
 }
 
 // Custom validation function for NPR record
@@ -46,7 +46,13 @@ fn npr_custom_validate(record: &mut NprRecord) -> Vec<CwrWarning<'static>> {
 
     // Validate record type
     if record.record_type != "NPR" {
-        warnings.push(CwrWarning { field_name: "record_type", field_title: "Always 'NPR'", source_str: std::borrow::Cow::Owned(record.record_type.clone()), level: WarningLevel::Critical, description: "Record type must be 'NPR'".to_string() });
+        warnings.push(CwrWarning {
+            field_name: "record_type",
+            field_title: "Always 'NPR'",
+            source_str: std::borrow::Cow::Owned(record.record_type.clone()),
+            level: WarningLevel::Critical,
+            description: "Record type must be 'NPR'".to_string(),
+        });
     }
 
     // Validate transaction sequence number is numeric
@@ -54,61 +60,68 @@ fn npr_custom_validate(record: &mut NprRecord) -> Vec<CwrWarning<'static>> {
     // Validate performing artist name (conditional but required if present)
     if let Some(ref name) = record.performing_artist_name {
         if name.trim().is_empty() {
-            warnings.push(CwrWarning { field_name: "performing_artist_name", field_title: "Performing artist name (conditional)", source_str: std::borrow::Cow::Owned(name.clone()), level: WarningLevel::Warning, description: "Performing artist name should not be empty if specified".to_string() });
+            warnings.push(CwrWarning {
+                field_name: "performing_artist_name",
+                field_title: "Performing artist name (conditional)",
+                source_str: std::borrow::Cow::Owned(name.clone()),
+                level: WarningLevel::Warning,
+                description: "Performing artist name should not be empty if specified".to_string(),
+            });
         }
     }
 
     // Validate IPI name number format if present
     if let Some(ref ipi_name) = record.performing_artist_ipi_name_num {
-        if !ipi_name.trim().is_empty() {
-            if ipi_name.len() != 11 {
-                warnings.push(CwrWarning { field_name: "performing_artist_ipi_name_num", field_title: "Performing artist IPI name number (optional)", source_str: std::borrow::Cow::Owned(ipi_name.clone()), level: WarningLevel::Warning, description: "IPI name number should be 11 characters if specified".to_string() });
+        if !ipi_name.as_str().trim().is_empty() {
+            if ipi_name.as_str().len() != 11 {
+                warnings.push(CwrWarning {
+                    field_name: "performing_artist_ipi_name_num",
+                    field_title: "Performing artist IPI name number (optional)",
+                    source_str: std::borrow::Cow::Owned(ipi_name.as_str().to_string()),
+                    level: WarningLevel::Warning,
+                    description: "IPI name number should be 11 characters if specified".to_string(),
+                });
             }
-            if !ipi_name.chars().all(|c| c.is_ascii_digit()) {
-                warnings.push(CwrWarning { field_name: "performing_artist_ipi_name_num", field_title: "Performing artist IPI name number (optional)", source_str: std::borrow::Cow::Owned(ipi_name.clone()), level: WarningLevel::Warning, description: "IPI name number should be numeric".to_string() });
+            if !ipi_name.as_str().chars().all(|c| c.is_ascii_digit()) {
+                warnings.push(CwrWarning {
+                    field_name: "performing_artist_ipi_name_num",
+                    field_title: "Performing artist IPI name number (optional)",
+                    source_str: std::borrow::Cow::Owned(ipi_name.as_str().to_string()),
+                    level: WarningLevel::Warning,
+                    description: "IPI name number should be numeric".to_string(),
+                });
             }
         }
     }
 
     // Validate IPI base number format if present
     if let Some(ref ipi_base) = record.performing_artist_ipi_base_number {
-        if !ipi_base.trim().is_empty() {
-            if ipi_base.len() != 13 {
+        if !ipi_base.as_str().trim().is_empty() {
+            if ipi_base.as_str().len() != 13 {
                 warnings.push(CwrWarning {
                     field_name: "performing_artist_ipi_base_number",
                     field_title: "Performing artist IPI base number (optional)",
-                    source_str: std::borrow::Cow::Owned(ipi_base.clone()),
+                    source_str: std::borrow::Cow::Owned(ipi_base.as_str().to_string()),
                     level: WarningLevel::Warning,
                     description: "IPI base number should be 13 characters if specified".to_string(),
                 });
             }
             // IPI base numbers are typically alphanumeric
-            if !ipi_base.chars().all(|c| c.is_ascii_alphanumeric()) {
-                warnings.push(CwrWarning { field_name: "performing_artist_ipi_base_number", field_title: "Performing artist IPI base number (optional)", source_str: std::borrow::Cow::Owned(ipi_base.clone()), level: WarningLevel::Warning, description: "IPI base number should be alphanumeric".to_string() });
+            if !ipi_base.as_str().chars().all(|c| c.is_ascii_alphanumeric()) {
+                warnings.push(CwrWarning {
+                    field_name: "performing_artist_ipi_base_number",
+                    field_title: "Performing artist IPI base number (optional)",
+                    source_str: std::borrow::Cow::Owned(ipi_base.as_str().to_string()),
+                    level: WarningLevel::Warning,
+                    description: "IPI base number should be alphanumeric".to_string(),
+                });
             }
         }
     }
 
-    // Validate language code format if present (ISO 639-1)
-    if let Some(ref lang_code) = record.language_code {
-        if !lang_code.trim().is_empty() && lang_code.len() != 2 {
-            warnings.push(CwrWarning { field_name: "language_code", field_title: "Language code (optional)", source_str: std::borrow::Cow::Owned(lang_code.clone()), level: WarningLevel::Warning, description: "Language code should be 2 characters (ISO 639-1)".to_string() });
-        }
-    }
+    // Language code and performance language validation is now handled by the LanguageCode domain type
 
-    // Validate performance language format if present (ISO 639-1)
-    if let Some(ref perf_lang) = record.performance_language {
-        if !perf_lang.trim().is_empty() && perf_lang.len() != 2 {
-            warnings.push(CwrWarning { field_name: "performance_language", field_title: "Performance language (conditional, v2.1+)", source_str: std::borrow::Cow::Owned(perf_lang.clone()), level: WarningLevel::Warning, description: "Performance language should be 2 characters (ISO 639-1)".to_string() });
-        }
-    }
-
-    // Validate performance dialect format if present
-    if let Some(ref dialect) = record.performance_dialect {
-        if !dialect.trim().is_empty() && dialect.len() != 3 {
-            warnings.push(CwrWarning { field_name: "performance_dialect", field_title: "Performance dialect (conditional, v2.1+)", source_str: std::borrow::Cow::Owned(dialect.clone()), level: WarningLevel::Warning, description: "Performance dialect should be 3 characters if specified".to_string() });
-        }
-    }
+    // Performance dialect validation is now handled by the LanguageDialect domain type
 
     warnings
 }

@@ -62,15 +62,36 @@ fn hdr_custom_validate(record: &mut HdrRecord) -> Vec<CwrWarning<'static>> {
 
             // Validate IPI format (should be numeric, 9-11 digits)
             if !sender_id_str.chars().all(|c| c.is_ascii_digit()) {
-                warnings.push(CwrWarning { field_name: "sender_id", field_title: "Sender ID", source_str: std::borrow::Cow::Owned(sender_id_str.to_string()), level: WarningLevel::Warning, description: format!("Sender ID should be numeric IPI for sender type {}", record.sender_type.as_str()) });
+                warnings.push(CwrWarning {
+                    field_name: "sender_id",
+                    field_title: "Sender ID",
+                    source_str: std::borrow::Cow::Owned(sender_id_str.to_string()),
+                    level: WarningLevel::Warning,
+                    description: format!(
+                        "Sender ID should be numeric IPI for sender type {}",
+                        record.sender_type.as_str()
+                    ),
+                });
             } else if sender_id_str.len() < 9 || sender_id_str.len() > 11 {
-                warnings.push(CwrWarning { field_name: "sender_id", field_title: "Sender ID", source_str: std::borrow::Cow::Owned(sender_id_str.to_string()), level: WarningLevel::Warning, description: format!("IPI should be 9-11 digits, got {} digits", sender_id_str.len()) });
+                warnings.push(CwrWarning {
+                    field_name: "sender_id",
+                    field_title: "Sender ID",
+                    source_str: std::borrow::Cow::Owned(sender_id_str.to_string()),
+                    level: WarningLevel::Warning,
+                    description: format!("IPI should be 9-11 digits, got {} digits", sender_id_str.len()),
+                });
             }
 
             // Note: Full validation against CWR Sender ID and Codes Table would require
             // additional lookup tables not currently available in the CSV files
             if sender_name_str.is_empty() {
-                warnings.push(CwrWarning { field_name: "sender_name", field_title: "Sender name", source_str: std::borrow::Cow::Owned(sender_name_str.to_string()), level: WarningLevel::Critical, description: "Sender name is required for Publisher/Administrative Agency/Writer".to_string() });
+                warnings.push(CwrWarning {
+                    field_name: "sender_name",
+                    field_title: "Sender name",
+                    source_str: std::borrow::Cow::Owned(sender_name_str.to_string()),
+                    level: WarningLevel::Critical,
+                    description: "Sender name is required for Publisher/Administrative Agency/Writer".to_string(),
+                });
             }
         }
         SenderType::Society => {
@@ -82,7 +103,16 @@ fn hdr_custom_validate(record: &mut HdrRecord) -> Vec<CwrWarning<'static>> {
             if !is_valid_society_code(sender_id_str) {
                 // Maybe it's a transmitter code?
                 if !is_valid_transmitter_code(sender_id_str) {
-                    warnings.push(CwrWarning { field_name: "sender_id", field_title: "Sender ID", source_str: std::borrow::Cow::Owned(sender_id_str.to_string()), level: WarningLevel::Warning, description: format!("Sender ID '{}' not found in society codes or transmitter codes tables", sender_id_str) });
+                    warnings.push(CwrWarning {
+                        field_name: "sender_id",
+                        field_title: "Sender ID",
+                        source_str: std::borrow::Cow::Owned(sender_id_str.to_string()),
+                        level: WarningLevel::Warning,
+                        description: format!(
+                            "Sender ID '{}' not found in society codes or transmitter codes tables",
+                            sender_id_str
+                        ),
+                    });
                 } else {
                     // It's a valid transmitter code, check if name matches
                     if let Some(expected_name) = get_society_name_for_transmitter(sender_id_str) {
@@ -92,7 +122,10 @@ fn hdr_custom_validate(record: &mut HdrRecord) -> Vec<CwrWarning<'static>> {
                                 field_title: "Sender name",
                                 source_str: std::borrow::Cow::Owned(sender_name_str.to_string()),
                                 level: WarningLevel::Warning,
-                                description: format!("Sender name '{}' does not match expected name '{}' for transmitter code '{}'", sender_name_str, expected_name, sender_id_str),
+                                description: format!(
+                                    "Sender name '{}' does not match expected name '{}' for transmitter code '{}'",
+                                    sender_name_str, expected_name, sender_id_str
+                                ),
                             });
                         }
                     }
@@ -100,7 +133,13 @@ fn hdr_custom_validate(record: &mut HdrRecord) -> Vec<CwrWarning<'static>> {
             } else {
                 // It's a valid society code, validate sender_name consistency
                 if sender_name_str.is_empty() {
-                    warnings.push(CwrWarning { field_name: "sender_name", field_title: "Sender name", source_str: std::borrow::Cow::Owned(sender_name_str.to_string()), level: WarningLevel::Warning, description: "Sender name should be provided for society sender type".to_string() });
+                    warnings.push(CwrWarning {
+                        field_name: "sender_name",
+                        field_title: "Sender name",
+                        source_str: std::borrow::Cow::Owned(sender_name_str.to_string()),
+                        level: WarningLevel::Warning,
+                        description: "Sender name should be provided for society sender type".to_string(),
+                    });
                 } else {
                     // Check if sender_name matches the society code
                     if !is_valid_society_code(sender_name_str) {
@@ -122,13 +161,32 @@ fn hdr_custom_validate(record: &mut HdrRecord) -> Vec<CwrWarning<'static>> {
             let combined_id = format!("{}{}", prefix, sender_id_str);
 
             if !combined_id.chars().all(|c| c.is_ascii_digit()) {
-                warnings.push(CwrWarning { field_name: "sender_id", field_title: "Sender ID", source_str: std::borrow::Cow::Owned(combined_id.clone()), level: WarningLevel::Critical, description: "Combined sender type prefix + sender ID must be numeric for IPNN > 9 digits".to_string() });
+                warnings.push(CwrWarning {
+                    field_name: "sender_id",
+                    field_title: "Sender ID",
+                    source_str: std::borrow::Cow::Owned(combined_id.clone()),
+                    level: WarningLevel::Critical,
+                    description: "Combined sender type prefix + sender ID must be numeric for IPNN > 9 digits"
+                        .to_string(),
+                });
             } else if combined_id.len() < 10 || combined_id.len() > 12 {
-                warnings.push(CwrWarning { field_name: "sender_id", field_title: "Sender ID", source_str: std::borrow::Cow::Owned(combined_id), level: WarningLevel::Warning, description: "Combined IPI should be 10-12 digits for numeric prefix case".to_string() });
+                warnings.push(CwrWarning {
+                    field_name: "sender_id",
+                    field_title: "Sender ID",
+                    source_str: std::borrow::Cow::Owned(combined_id),
+                    level: WarningLevel::Warning,
+                    description: "Combined IPI should be 10-12 digits for numeric prefix case".to_string(),
+                });
             }
 
             if sender_name_str.is_empty() {
-                warnings.push(CwrWarning { field_name: "sender_name", field_title: "Sender name", source_str: std::borrow::Cow::Owned(sender_name_str.to_string()), level: WarningLevel::Critical, description: "Sender name is required for numeric prefix IPI".to_string() });
+                warnings.push(CwrWarning {
+                    field_name: "sender_name",
+                    field_title: "Sender name",
+                    source_str: std::borrow::Cow::Owned(sender_name_str.to_string()),
+                    level: WarningLevel::Critical,
+                    description: "Sender name is required for numeric prefix IPI".to_string(),
+                });
             }
         }
     }
