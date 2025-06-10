@@ -66,7 +66,7 @@ impl CwrFieldParse for Option<Time> {
         source: &str, field_name: &'static str, field_title: &'static str,
     ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
-        if trimmed.is_empty() || trimmed == "000000" {
+        if trimmed.is_empty() || trimmed.chars().all(|c| c.is_whitespace()) {
             (None, vec![])
         } else {
             let (parsed_time, warnings) = Time::parse_cwr_field(source, field_name, field_title);

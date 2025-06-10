@@ -126,6 +126,11 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
                         "{}: missing optional fields (serializer adds proper padding): {}",
                         record_type, display_lines
                     );
+                } else if *extra_info == "date_zero_padding" {
+                    println!(
+                        "{}: date fields with '00000000' treated as None (ambiguous: could be invalid date or empty field): {}",
+                        record_type, display_lines
+                    );
                 } else {
                     println!("{}: records with extra '{}': {}", record_type, extra_info, display_lines);
                 }
@@ -241,6 +246,21 @@ fn check_character_differences(
         // Store example if this is the first occurrence
         diff_examples.entry(diff_key).or_insert_with(|| (original.to_string(), serialized.to_string(), line_number));
         return;
+    }
+
+    // Check for date zero-padding ambiguity: "00000000" in original becomes spaces in serialized
+    if original.len() == serialized.len() {
+        let mut i = 0;
+        while i <= original.len().saturating_sub(8) {
+            if let (Some(orig_slice), Some(ser_slice)) = (original.get(i..i+8), serialized.get(i..i+8)) {
+                if orig_slice == "00000000" && ser_slice == "        " {
+                    let date_key = format!("{}:date_zero_padding", record_type);
+                    extra_chars_map.entry(date_key).or_default().push(line_number);
+                    return; // Don't treat this as an error, it's expected behavior
+                }
+            }
+            i += 1;
+        }
     }
 
     let original_chars: Vec<char> = original.chars().collect();

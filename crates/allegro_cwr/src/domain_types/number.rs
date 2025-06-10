@@ -61,8 +61,8 @@ impl CwrFieldParse for Option<Number> {
         source: &str, field_name: &'static str, field_title: &'static str,
     ) -> (Self, Vec<CwrWarning<'static>>) {
         let trimmed = source.trim();
-        // Check for various "empty" patterns based on field length
-        if trimmed.is_empty() || trimmed.chars().all(|c| c == '0') {
+        // Check for empty patterns - only truly empty or space-filled fields should be None
+        if trimmed.is_empty() || trimmed.chars().all(|c| c.is_whitespace()) {
             (None, vec![])
         } else {
             let (number, warnings) = Number::parse_cwr_field(source, field_name, field_title);
