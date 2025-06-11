@@ -1,9 +1,12 @@
 use std::process;
 use std::time::Instant;
 
-use allegro_cwr::parser::is_cwr_file;
 use allegro_cwr::OutputFormat;
-use allegro_cwr_cli::{BaseConfig, get_output_filename_for_multiple_files, get_value, init_logging_and_parse_args, process_stdin_with_temp_file};
+use allegro_cwr::parser::is_cwr_file;
+use allegro_cwr_cli::{
+    BaseConfig, get_output_filename_for_multiple_files, get_value, init_logging_and_parse_args,
+    process_stdin_with_temp_file,
+};
 use log::info;
 
 #[derive(Default)]
@@ -189,7 +192,9 @@ fn process_files(config: &Config, start_time: Instant) {
     }
 }
 
-fn process_file(config: &Config, input_filename: &str, is_cwr: bool, output_filename: Option<&str>) -> Result<usize, Box<dyn std::error::Error>> {
+fn process_file(
+    config: &Config, input_filename: &str, is_cwr: bool, output_filename: Option<&str>,
+) -> Result<usize, Box<dyn std::error::Error>> {
     if is_cwr {
         // CWR -> SQLite (existing functionality)
         let db_filename = allegro_cwr_sqlite::determine_db_filename(input_filename, output_filename);

@@ -2,7 +2,6 @@ use std::process;
 use std::time::Instant;
 
 use allegro_cwr_cli::{get_value, init_logging_and_parse_args, process_stdin_with_temp_file, BaseConfig};
-use log::info;
 
 #[derive(Default)]
 struct Config {
@@ -78,8 +77,8 @@ fn process_stdin(config: &Config, start_time: Instant) {
 }
 
 fn process_files(config: &Config, start_time: Instant) {
-    let mut total_count = 0u64;
-    let mut processed_files = 0usize;
+    let mut total_count = 0;
+    let mut processed_files = 0;
     let mut failed_files = Vec::new();
 
     for filename in &config.base.input_files {
@@ -89,7 +88,7 @@ fn process_files(config: &Config, start_time: Instant) {
 
         match result {
             Ok(count) => {
-                total_count += count as u64;
+                total_count += count;
                 processed_files += 1;
                 if config.base.input_files.len() > 1 {
                     println!("{}: {} records", filename, allegro_cwr::format_int_with_commas(count as i64));
