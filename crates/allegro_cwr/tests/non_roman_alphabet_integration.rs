@@ -23,7 +23,7 @@ fn test_npn_with_non_ascii_publisher_name() {
     test_line.push_str("café 音楽出版社"); // publisher_name starts at (30)
 
     // Pad publisher name field to full width (480 chars)
-    let name_bytes = "café 音楽出版社".as_bytes().len();
+    let name_bytes = "café 音楽出版社".len();
     test_line.push_str(&" ".repeat(480 - name_bytes));
     test_line.push_str("EN"); // language_code (510-511)
 
@@ -47,12 +47,12 @@ fn test_npa_with_non_ascii_names() {
     test_line.push_str("José María González"); // interested_party_name starts at (28)
 
     // Pad first name field to full width (160 chars)
-    let name1_bytes = "José María González".as_bytes().len();
+    let name1_bytes = "José María González".len();
     test_line.push_str(&" ".repeat(160 - name1_bytes));
     test_line.push_str("María José"); // interested_party_writer_first_name starts at (188)
 
     // Pad second name field to full width (160 chars)
-    let name2_bytes = "María José".as_bytes().len();
+    let name2_bytes = "María José".len();
     test_line.push_str(&" ".repeat(160 - name2_bytes));
     test_line.push_str("EN"); // language_code (348-349)
 
@@ -89,12 +89,12 @@ fn test_npr_with_non_ascii_performer_names() {
     test_line.push_str("André Müller"); // performing_artist_name starts at (19)
 
     // Pad first name field to full width (160 chars)
-    let name1_bytes = "André Müller".as_bytes().len();
+    let name1_bytes = "André Müller".len();
     test_line.push_str(&" ".repeat(160 - name1_bytes));
     test_line.push_str("Björk Guðmundsdóttir"); // performing_artist_first_name starts at (179)
 
     // Pad second name field to full width (160 chars)
-    let name2_bytes = "Björk Guðmundsdóttir".as_bytes().len();
+    let name2_bytes = "Björk Guðmundsdóttir".len();
     test_line.push_str(&" ".repeat(160 - name2_bytes));
 
     // Add remaining optional fields with minimal data
@@ -128,7 +128,7 @@ fn test_ascii_field_still_validates() {
     test_line.push_str("NORMAL PUBLISHER NAME"); // publisher_name starts at (30)
 
     // Pad publisher name field to full width (480 chars)
-    let name_bytes = "NORMAL PUBLISHER NAME".as_bytes().len();
+    let name_bytes = "NORMAL PUBLISHER NAME".len();
     test_line.push_str(&" ".repeat(480 - name_bytes));
     test_line.push_str("EN"); // language_code (510-511)
 
@@ -155,7 +155,7 @@ fn test_nat_multibyte_field_alignment_bug() {
     // Title field starts at position 19, length 640
     test_line.push_str("EVIDÊNCIA"); // Title with multi-byte char (10 bytes, 9 chars)
     // Pad to 640 bytes total for title field
-    test_line.push_str(&" ".repeat(640 - "EVIDÊNCIA".as_bytes().len()));
+    test_line.push_str(&" ".repeat(640 - "EVIDÊNCIA".len()));
 
     // Title type at position 659, length 2 - this should be "OT"
     test_line.push_str("OT");
@@ -200,7 +200,7 @@ fn test_nwn_multibyte_field_alignment_bug() {
 
     // Writer last name at position 28, length 160
     test_line.push_str("VALENÇA, ALCEU PAIVA"); // Contains "Ç" multi-byte char
-    let name_bytes = "VALENÇA, ALCEU PAIVA".as_bytes().len();
+    let name_bytes = "VALENÇA, ALCEU PAIVA".len();
     test_line.push_str(&" ".repeat(160 - name_bytes));
 
     // Writer first name at position 188, length 160 (optional, empty)

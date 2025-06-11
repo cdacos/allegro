@@ -25,7 +25,7 @@ impl Deref for TextMusicRelationship {
 
 impl CwrFieldWrite for TextMusicRelationship {
     fn to_cwr_field_bytes(&self, width: usize, character_set: &CharacterSet) -> Vec<u8> {
-        format_text_to_cwr_bytes(&self.as_str(), width, character_set)
+        format_text_to_cwr_bytes(self.as_str(), width, character_set)
     }
 }
 
