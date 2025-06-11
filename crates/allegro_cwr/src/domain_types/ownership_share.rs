@@ -19,8 +19,8 @@ impl OwnershipShare {
 }
 
 impl CwrFieldWrite for OwnershipShare {
-    fn to_cwr_field_bytes(&self, width: usize, _character_set: &CharacterSet) -> Vec<u8> {
-        string_to_cwr_bytes(&format_number(self.0, width), _character_set)
+    fn to_cwr_field_bytes(&self, width: usize, character_set: &CharacterSet) -> Vec<u8> {
+        string_to_cwr_bytes(&format_number(self.0, width), character_set)
     }
 }
 

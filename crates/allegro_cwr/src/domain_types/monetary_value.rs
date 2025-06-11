@@ -3,7 +3,7 @@
 //! Represents monetary values in GRT records that should be space-padded when None
 
 use crate::domain_types::CharacterSet;
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_text_to_cwr_bytes};
 use std::borrow::Cow;
 
 /// Monetary value for GRT trailer records (space-padded when None)
@@ -28,8 +28,8 @@ impl std::fmt::Display for MonetaryValue {
 }
 
 impl CwrFieldWrite for MonetaryValue {
-    fn to_cwr_field_bytes(&self, width: usize, _character_set: &CharacterSet) -> Vec<u8> {
-        format!("{:0width$}", self.0, width = width).into_bytes()
+    fn to_cwr_field_bytes(&self, width: usize, character_set: &CharacterSet) -> Vec<u8> {
+        format_text_to_cwr_bytes(format!("{:0width$}", self.0, width = width).as_str(), width, character_set)
     }
 }
 
