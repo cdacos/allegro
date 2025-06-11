@@ -1,6 +1,7 @@
 use std::process;
 use std::time::Instant;
 
+use allegro_cwr::parser::is_cwr_file;
 use allegro_cwr_cli::{
     get_output_filename_with_default_extension, get_value, init_logging_and_parse_args, process_stdin_with_temp_file,
     BaseConfig,
@@ -64,15 +65,31 @@ fn process_stdin(config: &Config, start_time: Instant) {
     process_stdin_with_temp_file(
         "cwr_obfuscate_stdin",
         |temp_path, start_time| {
-            let result = if let Some(output_file) = &config.output_filename {
-                allegro_cwr_obfuscate::process_cwr_obfuscation(temp_path, Some(output_file), config.base.cwr_version)
-            } else {
-                use std::io;
-                allegro_cwr_obfuscate::process_cwr_obfuscation_to_writer(
-                    temp_path,
-                    io::stdout(),
-                    config.base.cwr_version,
-                )
+            let is_cwr = match is_cwr_file(temp_path) {
+                Ok(is_cwr) => is_cwr,
+                Err(e) => {
+                    eprintln!("Error reading file: {}", e);
+                    process::exit(1);
+                }
+            };
+
+            if !is_cwr {
+                eprintln!("Error: Input from stdin is not a CWR file. Obfuscation only works with CWR files.");
+                process::exit(1);
+            }
+
+            let result = match config.output_filename.as_deref() {
+                Some(output_file) => {
+                    allegro_cwr_obfuscate::process_cwr_obfuscation(temp_path, Some(output_file), config.base.cwr_version)
+                }
+                None => {
+                    use std::io;
+                    allegro_cwr_obfuscate::process_cwr_obfuscation_to_writer(
+                        temp_path,
+                        io::stdout(),
+                        config.base.cwr_version,
+                    )
+                }
             };
             let elapsed_time = start_time.elapsed();
 
@@ -100,7 +117,22 @@ fn process_files(config: &Config, start_time: Instant) {
     let mut failed_files = Vec::new();
 
     for input_filename in &config.base.input_files {
-        info!("Obfuscating CWR file: {}", input_filename);
+        info!("Processing CWR file: {}", input_filename);
+
+        let is_cwr = match is_cwr_file(input_filename) {
+            Ok(is_cwr) => is_cwr,
+            Err(e) => {
+                eprintln!("Error reading file '{}': {}", input_filename, e);
+                failed_files.push(input_filename.clone());
+                continue;
+            }
+        };
+
+        if !is_cwr {
+            eprintln!("Error: File '{}' is not a CWR file. Obfuscation only works with CWR files.", input_filename);
+            failed_files.push(input_filename.clone());
+            continue;
+        }
 
         let output_filename = get_output_filename_with_default_extension(
             config.output_filename.as_deref(),
@@ -110,11 +142,19 @@ fn process_files(config: &Config, start_time: Instant) {
             "obfuscated",
         );
 
-        let result = allegro_cwr_obfuscate::process_cwr_obfuscation(
-            input_filename,
-            output_filename.as_deref(),
-            config.base.cwr_version,
-        );
+        let result = match output_filename.as_deref() {
+            Some(output_file) => {
+                allegro_cwr_obfuscate::process_cwr_obfuscation(input_filename, Some(output_file), config.base.cwr_version)
+            }
+            None => {
+                use std::io;
+                allegro_cwr_obfuscate::process_cwr_obfuscation_to_writer(
+                    input_filename,
+                    io::stdout(),
+                    config.base.cwr_version,
+                )
+            }
+        };
 
         match result {
             Ok(count) => {
@@ -144,14 +184,14 @@ fn process_files(config: &Config, start_time: Instant) {
         }
 
         println!(
-            "Obfuscated {} CWR records from '{}' in {:.2?}",
+            "Successfully obfuscated {} CWR records from '{}' in {:.2?}",
             allegro_cwr::format_int_with_commas(total_records as i64),
             &config.base.input_files[0],
             elapsed_time
         );
     } else {
         println!(
-            "Obfuscated {} CWR records from {} files in {:.2?}",
+            "Successfully obfuscated {} CWR records from {} files in {:.2?}",
             allegro_cwr::format_int_with_commas(total_records as i64),
             files_processed,
             elapsed_time
@@ -170,8 +210,9 @@ fn print_help() {
     eprintln!("      --cwr <version>      CWR version (2.0, 2.1, 2.2). Auto-detected from filename (.Vxx) or file content if not specified");
     eprintln!("  -h, --help               Show this help message");
     eprintln!();
-    eprintln!("Obfuscates sensitive information in CWR files while maintaining referential integrity.");
+    eprintln!("Privacy-preserving obfuscation of sensitive CWR data while maintaining referential integrity.");
     eprintln!("Names, titles, IPIs, and work numbers are consistently mapped throughout the file.");
+    eprintln!("Input format auto-detected (only CWR files are supported for obfuscation).");
     eprintln!();
     eprintln!("Examples:");
     eprintln!("  cwr-obfuscate input.cwr                       # Obfuscate single CWR file");

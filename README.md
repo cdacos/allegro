@@ -58,6 +58,15 @@ All CLI tools follow consistent file naming conventions:
 - **With `-o`**: Creates numbered output files (`output.1`, `output.2`, etc.)
 - **Without `-o`**: Generates default output files with appropriate extensions
 
+**Input Format Detection:**
+- **cwr-json** and **cwr-sqlite**: Auto-detect format and convert bidirectionally (CWR ↔ JSON/SQLite)
+- **cwr-obfuscate**: Auto-detects and validates CWR format (only CWR files supported)
+- **cwr-validate**: Validates CWR format and round-trip integrity
+
+**Default Output Behavior:**
+- **Text formats** (JSON, CWR): Single files without `-o` write to stdout (suitable for piping)
+- **Binary formats** (SQLite): Single files without `-o` create output files (databases can't be piped to stdout)
+
 ### Basic Usage
 
 ```bash
@@ -70,7 +79,7 @@ target/release/cwr-json input_file.cwr           # → stdout (JSON)
 target/release/cwr-json data.json                # → stdout (CWR)
 
 # CWR obfuscation (privacy-preserving test data)
-target/release/cwr-obfuscate input_file.cwr      # → input_file.cwr.obfuscated
+target/release/cwr-obfuscate input_file.cwr      # → stdout (obfuscated CWR)
 
 # CWR validation (round-trip integrity checking)
 target/release/cwr-validate input_file.cwr       # Validate round-trip integrity
