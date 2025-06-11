@@ -122,12 +122,10 @@ impl<R: Read> Iterator for AsciiLineIterator<R> {
     }
 }
 
-#[allow(dead_code)]
 pub struct AsciiWriter<W: Write> {
     inner: W,
 }
 
-#[allow(dead_code)]
 impl<W: Write> AsciiWriter<W> {
     pub fn new(inner: W) -> Self {
         Self { inner }
