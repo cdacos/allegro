@@ -1,4 +1,5 @@
 use crate::error::CwrParseError;
+use crate::parsing::CwrFieldParse;
 use crate::util::get_cwr_version;
 use std::io::{BufRead, BufReader, Read, Write};
 
@@ -6,6 +7,7 @@ use std::io::{BufRead, BufReader, Read, Write};
 pub struct CwrHeaderInfo {
     pub header_line: String,
     pub version: f32,
+    pub character_set: Option<crate::domain_types::CharacterSet>,
 }
 
 pub struct AsciiStreamSniffer<R: Read> {
@@ -91,7 +93,24 @@ impl<R: Read> AsciiStreamSniffer<R> {
         let line = self.read_and_validate_header_line()?;
         let version = get_cwr_version(filename, &line, cli_version)?;
 
-        let header_info = CwrHeaderInfo { header_line: line, version };
+        // Extract character set from HDR record if version >= 2.1
+        let character_set = if version >= 2.1 && line.len() > 100 {
+            let charset_field = line.get(86..101).unwrap_or("").trim();
+            if charset_field.is_empty() {
+                None
+            } else {
+                let (charset, _) = <Option<crate::domain_types::CharacterSet>>::parse_cwr_field(
+                    charset_field,
+                    "character_set",
+                    "Character set",
+                );
+                charset
+            }
+        } else {
+            None
+        };
+
+        let header_info = CwrHeaderInfo { header_line: line, version, character_set };
 
         self.cached_header_info = Some(header_info);
         Ok(self.cached_header_info.as_ref().unwrap())

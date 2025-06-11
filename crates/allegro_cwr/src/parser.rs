@@ -81,7 +81,7 @@ pub fn process_cwr_stream_with_version(
     let cwr_version = header_info.version;
     info!("Determined CWR version: {}", cwr_version);
 
-    let context = ParsingContext { cwr_version, file_id: 0, character_set: None };
+    let context = ParsingContext { cwr_version, file_id: 0, character_set: header_info.character_set.clone() };
 
     // Create a new reader for the full iteration
     let file = File::open(input_filename)?;
