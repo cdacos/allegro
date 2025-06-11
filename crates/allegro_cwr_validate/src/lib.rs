@@ -31,8 +31,9 @@ pub fn check_roundtrip_integrity_with_output(
 
 /// Check round-trip integrity and write normalized output to a writer
 pub fn check_roundtrip_integrity_to_writer<W: Write>(
-    input_path: &str, cwr_version: Option<f32>, charset_override: Option<&str>, mut writer: W,
+    input_path: &str, cwr_version: Option<f32>, charset_override: Option<&str>, writer: W,
 ) -> Result<usize, RoundtripError> {
+    let mut ascii_writer = allegro_cwr::AsciiWriter::new(writer);
     let mut record_count = 0;
     let mut diff_map: HashMap<String, Vec<usize>> = HashMap::new();
     let mut diff_examples: HashMap<String, (String, String, usize)> = HashMap::new();
@@ -70,7 +71,9 @@ pub fn check_roundtrip_integrity_to_writer<W: Write>(
                 };
 
                 let serialized_line = record_to_write.to_cwr_line_without_newline(&version);
-                writeln!(writer, "{}", serialized_line)?;
+                ascii_writer
+                    .write_line(&serialized_line)
+                    .map_err(|e| RoundtripError::CwrParsing(format!("ASCII writing error: {}", e)))?;
 
                 if line_index < original_lines.len() {
                     let original_line = &original_lines[line_index];

@@ -1,8 +1,9 @@
 //! Integration tests for CRLF line endings in CWR output
 //!
 //! The CWR specification requires that all lines end with CRLF (\r\n).
-//! These tests verify that the to_cwr_line method produces output with proper line endings.
+//! These tests verify that the AsciiWriter produces output with proper line endings.
 
+use allegro_cwr::AsciiWriter;
 use allegro_cwr::domain_types::{CwrVersion, Number, PublisherSequenceNumber};
 use allegro_cwr::records::hdr::HdrRecord;
 use allegro_cwr::records::nwr::NwrRecord;
@@ -23,12 +24,18 @@ fn test_pwr_record_has_crlf_ending() {
     };
 
     let version = CwrVersion(2.2);
-    let output = pwr.to_cwr_line_without_newline(&version);
+    let line_without_newline = pwr.to_cwr_line_without_newline(&version);
+
+    let mut output = Vec::new();
+    let mut writer = AsciiWriter::new(&mut output);
+    writer.write_line(&line_without_newline).expect("Write should succeed");
+
+    let written = String::from_utf8(output).expect("Output should be valid UTF-8");
 
     assert!(
-        output.ends_with("\r\n"),
+        written.ends_with("\r\n"),
         "PWR record output should end with CRLF (\\r\\n), but got: {:?}",
-        output.chars().rev().take(5).collect::<String>().chars().rev().collect::<String>()
+        written.chars().rev().take(5).collect::<String>().chars().rev().collect::<String>()
     );
 }
 
@@ -39,12 +46,18 @@ fn test_hdr_record_has_crlf_ending() {
     let (hdr, _warnings) = HdrRecord::parse(test_data);
 
     let version = CwrVersion(2.2);
-    let output = hdr.to_cwr_line_without_newline(&version);
+    let line_without_newline = hdr.to_cwr_line_without_newline(&version);
+
+    let mut output = Vec::new();
+    let mut writer = AsciiWriter::new(&mut output);
+    writer.write_line(&line_without_newline).expect("Write should succeed");
+
+    let written = String::from_utf8(output).expect("Output should be valid UTF-8");
 
     assert!(
-        output.ends_with("\r\n"),
+        written.ends_with("\r\n"),
         "HDR record output should end with CRLF (\\r\\n), but got: {:?}",
-        output.chars().rev().take(5).collect::<String>().chars().rev().collect::<String>()
+        written.chars().rev().take(5).collect::<String>().chars().rev().collect::<String>()
     );
 }
 
@@ -55,12 +68,18 @@ fn test_nwr_record_has_crlf_ending() {
     let (nwr, _warnings) = NwrRecord::parse(test_data);
 
     let version = CwrVersion(2.2);
-    let output = nwr.to_cwr_line_without_newline(&version);
+    let line_without_newline = nwr.to_cwr_line_without_newline(&version);
+
+    let mut output = Vec::new();
+    let mut writer = AsciiWriter::new(&mut output);
+    writer.write_line(&line_without_newline).expect("Write should succeed");
+
+    let written = String::from_utf8(output).expect("Output should be valid UTF-8");
 
     assert!(
-        output.ends_with("\r\n"),
+        written.ends_with("\r\n"),
         "NWR record output should end with CRLF (\\r\\n), but got: {:?}",
-        output.chars().rev().take(5).collect::<String>().chars().rev().collect::<String>()
+        written.chars().rev().take(5).collect::<String>().chars().rev().collect::<String>()
     );
 }
 
@@ -93,12 +112,18 @@ fn test_multiple_records_all_have_crlf_endings() {
         (nwr.to_cwr_line_without_newline(&version), "NWR"),
     ];
 
-    for (output, record_type) in records_and_names {
+    for (line_without_newline, record_type) in records_and_names {
+        let mut output = Vec::new();
+        let mut writer = AsciiWriter::new(&mut output);
+        writer.write_line(&line_without_newline).expect("Write should succeed");
+
+        let written = String::from_utf8(output).expect("Output should be valid UTF-8");
+
         assert!(
-            output.ends_with("\r\n"),
+            written.ends_with("\r\n"),
             "{} record output should end with CRLF (\\r\\n), but got: {:?}",
             record_type,
-            output.chars().rev().take(5).collect::<String>().chars().rev().collect::<String>()
+            written.chars().rev().take(5).collect::<String>().chars().rev().collect::<String>()
         );
     }
 }
