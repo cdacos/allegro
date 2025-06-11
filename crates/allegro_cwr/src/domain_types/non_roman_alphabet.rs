@@ -92,25 +92,25 @@ mod tests {
     fn test_byte_width_preservation_with_multibyte_utf8() {
         // Test the specific bug: multi-byte UTF-8 characters in NonRomanAlphabet fields
         // should maintain exact byte width to preserve field alignment in CWR format
-        
+
         // "EVIDÊNCIA" contains "Ê" which is 2 bytes in UTF-8 but 1 character
         let text_with_multibyte = NonRomanAlphabet("EVIDÊNCIA".to_string());
-        
+
         // The field should be padded to exact byte width, not character width
         let width = 20;
         let formatted = text_with_multibyte.to_cwr_str(width);
-        
+
         // Should be exactly 20 bytes (not 20 characters)
         assert_eq!(formatted.as_bytes().len(), width);
-        
+
         // Should contain the original text plus spaces
         assert!(formatted.starts_with("EVIDÊNCIA"));
         assert!(formatted.ends_with(' '));
-        
+
         // Verify the character vs byte difference: "EVIDÊNCIA" is 9 chars but 10 bytes
         assert_eq!("EVIDÊNCIA".chars().count(), 9);
         assert_eq!("EVIDÊNCIA".as_bytes().len(), 10);
-        
+
         // So formatted should be "EVIDÊNCIA" (10 bytes) + 10 spaces = 20 bytes total
         assert_eq!(formatted, "EVIDÊNCIA          ");
     }
@@ -119,14 +119,14 @@ mod tests {
     fn test_byte_width_truncation_with_multibyte_utf8() {
         // Test truncation maintains byte boundaries to avoid corrupting UTF-8
         let long_text = NonRomanAlphabet("EVIDÊNCIAAAAAAAAAAAAA".to_string());
-        
+
         // Truncate to 10 bytes (should not break UTF-8 sequence)
         let formatted = long_text.to_cwr_str(10);
         assert_eq!(formatted.as_bytes().len(), 10);
-        
+
         // Should be valid UTF-8
         assert!(std::str::from_utf8(formatted.as_bytes()).is_ok());
-        
+
         // Should contain "EVIDÊNCIA" (exactly 10 bytes)
         assert_eq!(formatted, "EVIDÊNCIA");
     }
@@ -136,7 +136,7 @@ mod tests {
         // ASCII text should work exactly as before
         let ascii_text = NonRomanAlphabet("HELLO".to_string());
         let formatted = ascii_text.to_cwr_str(10);
-        
+
         assert_eq!(formatted.as_bytes().len(), 10);
         assert_eq!(formatted, "HELLO     ");
     }
@@ -145,18 +145,14 @@ mod tests {
     fn test_roundtrip_integrity_with_multibyte() {
         // This tests the original bug: parse and serialize should be identical
         let original_field = "EVIDÊNCIA          "; // 10 bytes + 10 spaces = 20 bytes
-        
+
         // Parse the field
-        let (parsed, warnings) = NonRomanAlphabet::parse_cwr_field(
-            original_field, 
-            "test_field", 
-            "Test Field"
-        );
+        let (parsed, warnings) = NonRomanAlphabet::parse_cwr_field(original_field, "test_field", "Test Field");
         assert!(warnings.is_empty());
-        
+
         // Serialize back
         let serialized = parsed.to_cwr_str(20);
-        
+
         // Should be identical (this was the bug - they were different before)
         assert_eq!(serialized, original_field);
         assert_eq!(serialized.as_bytes().len(), original_field.as_bytes().len());
