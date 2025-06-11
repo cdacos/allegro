@@ -13,6 +13,8 @@ pub enum TypeOfRight {
     Performing,
     /// Synchronisation Right - The right to include and combine a work in timed relation with other works
     Synchronisation,
+    /// All Rights
+    All,
 }
 
 impl TypeOfRight {
@@ -21,6 +23,7 @@ impl TypeOfRight {
             TypeOfRight::Mechanical => "MEC",
             TypeOfRight::Performing => "PER",
             TypeOfRight::Synchronisation => "SYN",
+            TypeOfRight::All => "ALL",
         }
     }
 
@@ -29,6 +32,7 @@ impl TypeOfRight {
             "MEC" => Some(TypeOfRight::Mechanical),
             "PER" => Some(TypeOfRight::Performing),
             "SYN" => Some(TypeOfRight::Synchronisation),
+            "ALL" => Some(TypeOfRight::All),
             _ => None,
         }
     }
