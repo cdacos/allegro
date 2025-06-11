@@ -89,7 +89,7 @@ where
 }
 
 /// Finds the next available filename by incrementing the index
-fn find_next_available_filename(base_name: &str, start_index: usize) -> String {
+pub fn find_next_available_filename(base_name: &str, start_index: usize) -> String {
     let mut index = start_index;
     loop {
         let candidate = format!("{}.{}", base_name, index);
@@ -100,24 +100,57 @@ fn find_next_available_filename(base_name: &str, start_index: usize) -> String {
     }
 }
 
-/// Determines the output filename for a given input file when processing multiple files
-/// If there are multiple input files and an output filename is specified, finds the next available
-/// filename by incrementing the index until a non-existing file is found
-/// Otherwise returns the original output filename or None
+/// Generates a default output filename based on input filename and extension
+/// Finds the next available filename to avoid overwriting existing files
+pub fn generate_default_output_filename(input_filename: &str, extension: &str) -> String {
+    let base_name = format!("{}.{}", input_filename, extension);
+    if !std::path::Path::new(&base_name).exists() {
+        base_name
+    } else {
+        find_next_available_filename(&base_name, 1)
+    }
+}
+
+/// Determines the output filename for a given input file when processing files
+/// For single files: uses the exact filename (overwrites if exists) or None if no output specified
+/// For multiple files: finds the next available filename by incrementing the index, or generates default if no output specified
+/// Returns the output filename or None if no output filename was specified and single file
 pub fn get_output_filename_for_multiple_files(
     base_output_filename: Option<&str>, input_file_count: usize, current_file_index: usize,
 ) -> Option<String> {
     match (base_output_filename, input_file_count > 1) {
         (Some(base_name), true) => {
+            // Multiple files with -o: use incremental naming
             Some(find_next_available_filename(base_name, current_file_index + 1))
         }
         (Some(base_name), false) => {
-            if std::path::Path::new(base_name).exists() {
-                Some(find_next_available_filename(base_name, 1))
-            } else {
-                Some(base_name.to_string())
-            }
+            // Single file with -o: use exact filename (overwrite if exists)
+            Some(base_name.to_string())
         }
         (None, _) => None,
+    }
+}
+
+/// Determines the output filename, generating defaults for multiple files when no -o specified
+/// For single files without -o: returns None (stdout/default behavior)
+/// For multiple files without -o: generates default output filenames with the given extension
+/// For files with -o: uses get_output_filename_for_multiple_files logic
+pub fn get_output_filename_with_default_extension(
+    base_output_filename: Option<&str>, input_filename: &str, input_file_count: usize, current_file_index: usize,
+    default_extension: &str,
+) -> Option<String> {
+    match (base_output_filename, input_file_count > 1) {
+        (Some(_), _) => {
+            // Use existing logic when -o is specified
+            get_output_filename_for_multiple_files(base_output_filename, input_file_count, current_file_index)
+        }
+        (None, true) => {
+            // Multiple files without -o: generate default output filename
+            Some(generate_default_output_filename(input_filename, default_extension))
+        }
+        (None, false) => {
+            // Single file without -o: use default behavior (stdout/etc)
+            None
+        }
     }
 }

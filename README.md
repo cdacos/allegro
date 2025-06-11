@@ -44,28 +44,60 @@ We have four handler projects that demonstrate different uses of the library:
 ```bash
 # Build the project
 cargo build --release
+```
 
+### File Naming Behavior
+
+All CLI tools follow consistent file naming conventions:
+
+**Single File Processing:**
+- **With `-o`**: Overwrites the specified output file
+- **Without `-o`**: Uses tool-specific defaults (stdout for JSON, auto-generated for SQLite/obfuscate)
+
+**Multiple File Processing:**  
+- **With `-o`**: Creates numbered output files (`output.1`, `output.2`, etc.)
+- **Without `-o`**: Generates default output files with appropriate extensions
+
+### Basic Usage
+
+```bash
 # CWR ↔ SQLite conversion (auto-detects format)
-target/release/cwr-sqlite input_file.cwr         # CWR → SQLite
-target/release/cwr-sqlite database.db            # SQLite → CWR
+target/release/cwr-sqlite input_file.cwr         # → input_file.cwr.db
+target/release/cwr-sqlite database.db            # → stdout (CWR)
 
 # CWR ↔ JSON conversion (auto-detects format)  
-target/release/cwr-json input_file.cwr           # CWR → JSON
-target/release/cwr-json data.json                # JSON → CWR
+target/release/cwr-json input_file.cwr           # → stdout (JSON)
+target/release/cwr-json data.json                # → stdout (CWR)
 
 # CWR obfuscation (privacy-preserving test data)
-target/release/cwr-obfuscate input_file.cwr     # CWR → Obfuscated CWR
+target/release/cwr-obfuscate input_file.cwr      # → input_file.cwr.obfuscated
 
 # CWR validation (round-trip integrity checking)
 target/release/cwr-validate input_file.cwr       # Validate round-trip integrity
+```
 
-# Specify output files
-target/release/cwr-sqlite -o output.db input_file.cwr       # CWR → SQLite
-target/release/cwr-sqlite -o output.cwr database.db         # SQLite → CWR
-target/release/cwr-json -o output.json input_file.cwr       # CWR → JSON
-target/release/cwr-json -o output.cwr data.json             # JSON → CWR
-target/release/cwr-obfuscate -o safe.cwr input_file.cwr    # CWR → Obfuscated CWR
+### Output File Control
 
+```bash
+# Single file with custom output (overwrites existing files)
+target/release/cwr-sqlite -o output.db input_file.cwr   # → output.db
+target/release/cwr-json -o output.json input_file.cwr   # → output.json
+target/release/cwr-obfuscate -o safe.cwr input_file.cwr # → safe.cwr
+
+# Multiple files with custom output (numbered files)
+target/release/cwr-sqlite -o db *.cwr            # → db.1, db.2, db.3, ...
+target/release/cwr-json -o result.json *.cwr     # → result.json.1, result.json.2, ...
+target/release/cwr-obfuscate -o clean.cwr *.cwr  # → clean.cwr.1, clean.cwr.2, ...
+
+# Multiple files without -o (auto-generated names)
+target/release/cwr-sqlite file1.cwr file2.cwr    # → file1.cwr.db, file2.cwr.db
+target/release/cwr-json file1.cwr file2.cwr      # → file1.cwr.json, file2.cwr.json
+target/release/cwr-obfuscate file1.cwr file2.cwr # → file1.cwr.obfuscated, file2.cwr.obfuscated
+```
+
+### Advanced Options
+
+```bash
 # SQLite: specify file ID for multi-file databases
 target/release/cwr-sqlite --file-id 2 -o output.cwr database.db
 
@@ -92,23 +124,29 @@ target/release/cwr-validate --help
 
 ```bash
 # Edit CWR data via SQLite
-target/release/cwr-sqlite input.cwr              # Import to SQLite
+target/release/cwr-sqlite input.cwr              # → input.cwr.db
 sqlite3 input.cwr.db "UPDATE cwr_hdr SET sender_name = 'NEW PUBLISHER';"
-target/release/cwr-sqlite -o edited.cwr input.cwr.db  # Export modified CWR
+target/release/cwr-sqlite -o edited.cwr input.cwr.db  # → edited.cwr
 
 # Edit CWR data via JSON
-target/release/cwr-json input.cwr                # Import to JSON  
+target/release/cwr-json -o input.json input.cwr  # → input.json
 # Edit the JSON file with your preferred editor
-target/release/cwr-json -o edited.cwr input.json # Export modified CWR
+target/release/cwr-json -o edited.cwr input.json # → edited.cwr
+
+# Process multiple files efficiently
+target/release/cwr-sqlite *.cwr                  # → file1.cwr.db, file2.cwr.db, ...
+target/release/cwr-json *.cwr                    # → file1.cwr.json, file2.cwr.json, ...
+target/release/cwr-obfuscate *.cwr               # → file1.cwr.obfuscated, file2.cwr.obfuscated, ...
 
 # Create privacy-safe test data
-target/release/cwr-obfuscate production.cwr     # Creates production.cwr.obfuscated
+target/release/cwr-obfuscate production.cwr      # → production.cwr.obfuscated
 # Share obfuscated file safely - all names, titles, IPIs are fake but consistent
-target/release/cwr-sqlite production.cwr.obfuscated  # Can still analyze structure
+target/release/cwr-sqlite production.cwr.obfuscated  # → production.cwr.obfuscated.db
 
 # Validate round-trip integrity (for testing)
-target/release/cwr-sqlite input.cwr              # CWR → SQLite → CWR
-diff input.cwr input.cwr.cwr                     # Should be identical
+target/release/cwr-sqlite input.cwr              # → input.cwr.db
+target/release/cwr-sqlite -o roundtrip.cwr input.cwr.db  # → roundtrip.cwr
+diff input.cwr roundtrip.cwr                     # Should be identical
 ```
 
 ## Development

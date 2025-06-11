@@ -2,7 +2,7 @@ use std::process;
 use std::time::Instant;
 
 use allegro_cwr_cli::{
-    get_output_filename_for_multiple_files, get_value, init_logging_and_parse_args, process_stdin_with_temp_file,
+    get_output_filename_with_default_extension, get_value, init_logging_and_parse_args, process_stdin_with_temp_file,
     BaseConfig,
 };
 use log::info;
@@ -102,10 +102,12 @@ fn process_files(config: &Config, start_time: Instant) {
     for input_filename in &config.base.input_files {
         info!("Obfuscating CWR file: {}", input_filename);
 
-        let output_filename = get_output_filename_for_multiple_files(
+        let output_filename = get_output_filename_with_default_extension(
             config.output_filename.as_deref(),
+            input_filename,
             config.base.input_files.len(),
             files_processed,
+            "obfuscated",
         );
 
         let result = allegro_cwr_obfuscate::process_cwr_obfuscation(

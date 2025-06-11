@@ -1,7 +1,7 @@
 use crate::error::CwrDbError;
+use allegro_cwr_cli::find_next_available_filename;
 use log::info;
 use rusqlite::Connection;
-use std::path::Path;
 
 /// Main database manager for CWR operations
 pub struct CwrDatabase {
@@ -27,18 +27,18 @@ impl CwrDatabase {
 }
 
 /// Determines database filename based on input and optional output path
+/// This function is for single-file processing when no -o is specified
 pub fn determine_db_filename(input_filename: &str, output_path: Option<&str>) -> String {
     match output_path {
         Some(path) => path.to_string(),
         None => {
-            // Find next available filename with increment
-            let mut n = 0;
-            let mut db_filename = format!("{}.db", input_filename);
-            while Path::new(&db_filename).exists() {
-                n += 1;
-                db_filename = format!("{}.{}.db", input_filename, n);
+            // For auto-generated database filenames, we want to avoid overwriting existing files
+            let base_name = format!("{}.db", input_filename);
+            if !std::path::Path::new(&base_name).exists() {
+                base_name
+            } else {
+                find_next_available_filename(&base_name, 1)
             }
-            db_filename
         }
     }
 }
