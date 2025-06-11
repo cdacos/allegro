@@ -3,6 +3,16 @@ use crate::parsing::CwrFieldParse;
 use crate::util::get_cwr_version;
 use std::io::{BufRead, BufReader, Read, Write};
 
+fn should_validate_ascii(character_set: &Option<crate::domain_types::CharacterSet>) -> bool {
+    use crate::domain_types::CharacterSet;
+    match character_set {
+        None | Some(CharacterSet::ASCII) => true,
+        Some(CharacterSet::UTF8) | Some(CharacterSet::Unicode) => false,
+        Some(CharacterSet::TraditionalBig5) | Some(CharacterSet::SimplifiedGb) => false,
+        Some(CharacterSet::Unknown(_)) => true, // Be conservative with unknown sets
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct CwrHeaderInfo {
     pub header_line: String,
@@ -156,16 +166,6 @@ struct AsciiLineIterator<R: Read> {
 }
 
 impl<R: Read> AsciiLineIterator<R> {
-    fn should_validate_ascii(&self) -> bool {
-        use crate::domain_types::CharacterSet;
-        match &self.character_set {
-            None | Some(CharacterSet::ASCII) => true,
-            Some(CharacterSet::UTF8) | Some(CharacterSet::Unicode) => false,
-            Some(CharacterSet::TraditionalBig5) | Some(CharacterSet::SimplifiedGb) => false,
-            Some(CharacterSet::Unknown(_)) => true, // Be conservative with unknown sets
-        }
-    }
-
     fn detect_bom(&self, bytes: &[u8]) -> (Option<String>, usize) {
         if bytes.len() >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF {
             (Some("UTF-8".to_string()), 3)
@@ -205,7 +205,7 @@ impl<R: Read> Iterator for AsciiLineIterator<R> {
 
                 // Validate character encoding based on character set (skip BOM bytes if present)
                 let content_bytes = &line_bytes[content_start..];
-                if self.should_validate_ascii() {
+                if should_validate_ascii(&self.character_set) {
                     for (pos, byte) in content_bytes.iter().enumerate() {
                         if *byte > 127 {
                             return Some(Err(CwrParseError::NonAsciiInput {
@@ -251,7 +251,7 @@ impl<W: Write> AsciiWriter<W> {
 
     pub fn write_line(&mut self, utf8_line: &str) -> Result<(), CwrParseError> {
         // Validate character encoding based on character set
-        if self.should_validate_ascii() {
+        if should_validate_ascii(&self.character_set) {
             for (pos, ch) in utf8_line.char_indices() {
                 if !ch.is_ascii() {
                     return Err(CwrParseError::NonAsciiOutput { char: ch, position: pos });
@@ -263,16 +263,6 @@ impl<W: Write> AsciiWriter<W> {
         self.inner.write_all(utf8_line.as_bytes())?;
         self.inner.write_all(b"\r\n")?;
         Ok(())
-    }
-
-    fn should_validate_ascii(&self) -> bool {
-        use crate::domain_types::CharacterSet;
-        match &self.character_set {
-            None | Some(CharacterSet::ASCII) => true,
-            Some(CharacterSet::UTF8) | Some(CharacterSet::Unicode) => false,
-            Some(CharacterSet::TraditionalBig5) | Some(CharacterSet::SimplifiedGb) => false,
-            Some(CharacterSet::Unknown(_)) => true, // Be conservative with unknown sets
-        }
     }
 }
 
