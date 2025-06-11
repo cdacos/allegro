@@ -5,7 +5,7 @@ use std::time::Instant;
 
 use allegro_cwr::{OutputFormat, format_int_with_commas};
 use allegro_cwr_cli::{BaseConfig, get_value, init_logging_and_parse_args, process_stdin_with_temp_file};
-use log::{error, info};
+use log::info;
 
 #[derive(Default)]
 struct Config {
@@ -100,9 +100,8 @@ fn get_most_recent_file_id(db_filename: &str) -> Result<i64, Box<dyn std::error:
 
 fn main() {
     let config = init_logging_and_parse_args(|| {
-        parse_args().map_err(|e| {
+        parse_args().inspect_err(|_| {
             print_help();
-            e
         })
     });
 

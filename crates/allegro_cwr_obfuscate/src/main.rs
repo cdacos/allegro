@@ -43,9 +43,8 @@ fn parse_args() -> Result<Config, String> {
 
 fn main() {
     let config = init_logging_and_parse_args(|| {
-        parse_args().map_err(|e| {
+        parse_args().inspect_err(|_| {
             print_help();
-            e
         })
     });
 
