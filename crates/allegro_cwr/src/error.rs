@@ -8,6 +8,7 @@ pub enum CwrParseError {
     NonAsciiInput { line_num: usize, byte_pos: usize, byte_value: u8 },
     NonAsciiOutput { char: char, position: usize },
     InvalidHeader { found_bytes: Vec<u8> },
+    BomDetected { bom_type: String },
 }
 
 #[derive(Debug)]
@@ -36,6 +37,9 @@ impl std::fmt::Display for CwrParseError {
             CwrParseError::InvalidHeader { found_bytes } => {
                 write!(f, "Invalid CWR header, expected 'HDR' but found: {:?}", found_bytes)
             }
+            CwrParseError::BomDetected { bom_type } => {
+                write!(f, "BOM detected: {} (CWR files should be ASCII only)", bom_type)
+            }
         }
     }
 }
@@ -47,7 +51,8 @@ impl std::error::Error for CwrParseError {
             CwrParseError::BadFormat(_)
             | CwrParseError::NonAsciiInput { .. }
             | CwrParseError::NonAsciiOutput { .. }
-            | CwrParseError::InvalidHeader { .. } => None,
+            | CwrParseError::InvalidHeader { .. }
+            | CwrParseError::BomDetected { .. } => None,
         }
     }
 }

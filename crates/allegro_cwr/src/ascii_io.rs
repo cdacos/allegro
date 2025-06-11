@@ -26,14 +26,36 @@ impl<R: Read> AsciiStreamSniffer<R> {
             return Err(CwrParseError::InvalidHeader { found_bytes: vec![] });
         }
 
-        // Validate ASCII in header line
-        for (pos, byte) in first_line.as_bytes().iter().enumerate() {
+        let line_bytes = first_line.as_bytes();
+
+        // Check for BOM at start of file
+        let (bom_detected, content_start) = self.detect_bom(line_bytes);
+        if bom_detected.is_some() {
+            // Log the BOM detection but continue parsing
+            eprintln!("BOM detected in CWR file: {} (CWR files should be ASCII only)", bom_detected.as_ref().unwrap());
+        }
+
+        // Get the line content after any BOM
+        let content_bytes = &line_bytes[content_start..];
+        let line_content = if content_start > 0 {
+            std::str::from_utf8(content_bytes)
+                .map_err(|_| CwrParseError::BadFormat("Invalid UTF-8 after BOM".to_string()))?
+        } else {
+            &first_line
+        };
+
+        // Validate ASCII in header line (after BOM removal)
+        for (pos, byte) in content_bytes.iter().enumerate() {
             if *byte > 127 {
-                return Err(CwrParseError::NonAsciiInput { line_num: 1, byte_pos: pos, byte_value: *byte });
+                return Err(CwrParseError::NonAsciiInput {
+                    line_num: 1,
+                    byte_pos: pos + content_start,
+                    byte_value: *byte,
+                });
             }
         }
 
-        let line = first_line.trim_end();
+        let line = line_content.trim_end();
         if !line.starts_with("HDR") {
             return Err(CwrParseError::InvalidHeader {
                 found_bytes: line.chars().take(3).collect::<String>().into_bytes(),
@@ -41,6 +63,22 @@ impl<R: Read> AsciiStreamSniffer<R> {
         }
 
         Ok(line.to_string())
+    }
+
+    fn detect_bom(&self, bytes: &[u8]) -> (Option<String>, usize) {
+        if bytes.len() >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF {
+            (Some("UTF-8".to_string()), 3)
+        } else if bytes.len() >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE {
+            (Some("UTF-16 LE".to_string()), 2)
+        } else if bytes.len() >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF {
+            (Some("UTF-16 BE".to_string()), 2)
+        } else if bytes.len() >= 4 && bytes[0] == 0xFF && bytes[1] == 0xFE && bytes[2] == 0x00 && bytes[3] == 0x00 {
+            (Some("UTF-32 LE".to_string()), 4)
+        } else if bytes.len() >= 4 && bytes[0] == 0x00 && bytes[1] == 0x00 && bytes[2] == 0xFE && bytes[3] == 0xFF {
+            (Some("UTF-32 BE".to_string()), 4)
+        } else {
+            (None, 0)
+        }
     }
 
     pub fn validate_and_detect_version(
@@ -92,6 +130,24 @@ struct AsciiLineIterator<R: Read> {
     line_num: usize,
 }
 
+impl<R: Read> AsciiLineIterator<R> {
+    fn detect_bom(&self, bytes: &[u8]) -> (Option<String>, usize) {
+        if bytes.len() >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF {
+            (Some("UTF-8".to_string()), 3)
+        } else if bytes.len() >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE {
+            (Some("UTF-16 LE".to_string()), 2)
+        } else if bytes.len() >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF {
+            (Some("UTF-16 BE".to_string()), 2)
+        } else if bytes.len() >= 4 && bytes[0] == 0xFF && bytes[1] == 0xFE && bytes[2] == 0x00 && bytes[3] == 0x00 {
+            (Some("UTF-32 LE".to_string()), 4)
+        } else if bytes.len() >= 4 && bytes[0] == 0x00 && bytes[1] == 0x00 && bytes[2] == 0xFE && bytes[3] == 0xFF {
+            (Some("UTF-32 BE".to_string()), 4)
+        } else {
+            (None, 0)
+        }
+    }
+}
+
 impl<R: Read> Iterator for AsciiLineIterator<R> {
     type Item = Result<String, CwrParseError>;
 
@@ -102,19 +158,39 @@ impl<R: Read> Iterator for AsciiLineIterator<R> {
         match self.buf_reader.read_line(&mut line) {
             Ok(0) => None, // EOF
             Ok(_) => {
-                // Validate ASCII
-                for (pos, byte) in line.as_bytes().iter().enumerate() {
+                let line_bytes = line.as_bytes();
+
+                // Check for BOM on first line only (silently handle it)
+                let content_start = if self.line_num == 1 {
+                    let (_, bom_bytes) = self.detect_bom(line_bytes);
+                    bom_bytes
+                } else {
+                    0
+                };
+
+                // Validate ASCII (skip BOM bytes if present)
+                let content_bytes = &line_bytes[content_start..];
+                for (pos, byte) in content_bytes.iter().enumerate() {
                     if *byte > 127 {
                         return Some(Err(CwrParseError::NonAsciiInput {
                             line_num: self.line_num,
-                            byte_pos: pos,
+                            byte_pos: pos + content_start,
                             byte_value: *byte,
                         }));
                     }
                 }
 
-                // Remove trailing newline characters
-                let trimmed = line.trim_end();
+                // Get content after BOM (if any) and remove trailing newlines
+                let line_content = if content_start > 0 {
+                    match std::str::from_utf8(content_bytes) {
+                        Ok(s) => s,
+                        Err(_) => return Some(Err(CwrParseError::BadFormat("Invalid UTF-8 after BOM".to_string()))),
+                    }
+                } else {
+                    &line
+                };
+
+                let trimmed = line_content.trim_end();
                 Some(Ok(trimmed.to_string()))
             }
             Err(e) => Some(Err(CwrParseError::Io(e))),
