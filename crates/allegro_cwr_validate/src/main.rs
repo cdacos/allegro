@@ -1,7 +1,7 @@
 use std::process;
 use std::time::Instant;
 
-use allegro_cwr_cli::{BaseConfig, get_value, process_stdin_with_temp_file, init_logging_and_parse_args};
+use allegro_cwr_cli::{get_value, init_logging_and_parse_args, process_stdin_with_temp_file, BaseConfig};
 
 #[derive(Default)]
 struct Config {
@@ -34,7 +34,6 @@ fn parse_args() -> Result<Config, String> {
     config.base.finalize();
     Ok(config)
 }
-
 
 fn main() {
     let config = init_logging_and_parse_args(|| {

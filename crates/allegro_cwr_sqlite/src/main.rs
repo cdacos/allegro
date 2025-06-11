@@ -4,7 +4,7 @@ use std::process;
 use std::time::Instant;
 
 use allegro_cwr::{OutputFormat, format_int_with_commas};
-use allegro_cwr_cli::{BaseConfig, get_value, process_stdin_with_temp_file, init_logging_and_parse_args};
+use allegro_cwr_cli::{BaseConfig, get_value, init_logging_and_parse_args, process_stdin_with_temp_file};
 use log::{error, info};
 
 #[derive(Default)]
@@ -97,7 +97,6 @@ fn get_most_recent_file_id(db_filename: &str) -> Result<i64, Box<dyn std::error:
 
     Ok(file_id)
 }
-
 
 fn main() {
     let config = init_logging_and_parse_args(|| {
@@ -213,11 +212,14 @@ fn process_files(config: &Config, start_time: Instant) {
     }
 }
 
-fn process_file(config: &Config, input_filename: &str, input_format: InputFormat) -> Result<usize, Box<dyn std::error::Error>> {
+fn process_file(
+    config: &Config, input_filename: &str, input_format: InputFormat,
+) -> Result<usize, Box<dyn std::error::Error>> {
     match input_format {
         InputFormat::Cwr => {
             // CWR -> SQLite (existing functionality)
-            let db_filename = allegro_cwr_sqlite::determine_db_filename(input_filename, config.output_filename.as_deref());
+            let db_filename =
+                allegro_cwr_sqlite::determine_db_filename(input_filename, config.output_filename.as_deref());
             info!("Using database filename: '{}'", db_filename);
 
             match allegro_cwr_sqlite::process_cwr_to_sqlite_with_version(
@@ -271,7 +273,9 @@ fn print_help() {
     eprintln!();
     eprintln!("Options:");
     eprintln!("  -o, --output <file>      Output file path (SQLite database or CWR file)");
-    eprintln!("      --cwr <version>      CWR version (2.0, 2.1, 2.2). Auto-detected from filename (.Vxx) or file content if not specified");
+    eprintln!(
+        "      --cwr <version>      CWR version (2.0, 2.1, 2.2). Auto-detected from filename (.Vxx) or file content if not specified"
+    );
     eprintln!("      --file-id <id>       File ID to export from SQLite database (defaults to most recent)");
     eprintln!("  -h, --help               Show this help message");
     eprintln!();

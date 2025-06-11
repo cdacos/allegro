@@ -1,7 +1,7 @@
 use std::process;
 use std::time::Instant;
 
-use allegro_cwr_cli::{BaseConfig, get_value, process_stdin_with_temp_file, init_logging_and_parse_args};
+use allegro_cwr_cli::{get_value, init_logging_and_parse_args, process_stdin_with_temp_file, BaseConfig};
 use log::info;
 
 #[derive(Default)]
@@ -41,7 +41,6 @@ fn parse_args() -> Result<Config, String> {
     Ok(config)
 }
 
-
 fn main() {
     let config = init_logging_and_parse_args(|| {
         parse_args().map_err(|e| {
@@ -67,7 +66,11 @@ fn process_stdin(config: &Config, start_time: Instant) {
                 allegro_cwr_obfuscate::process_cwr_obfuscation(temp_path, Some(output_file), config.base.cwr_version)
             } else {
                 use std::io;
-                allegro_cwr_obfuscate::process_cwr_obfuscation_to_writer(temp_path, io::stdout(), config.base.cwr_version)
+                allegro_cwr_obfuscate::process_cwr_obfuscation_to_writer(
+                    temp_path,
+                    io::stdout(),
+                    config.base.cwr_version,
+                )
             };
             let elapsed_time = start_time.elapsed();
 

@@ -48,11 +48,7 @@ pub fn get_value(parser: &mut lexopt::Parser, arg_name: &str) -> Result<String, 
         .map_err(|e| format!("Missing value for --{}: {}", arg_name, e))
 }
 
-pub fn process_stdin_with_temp_file<F, T>(
-    temp_file_prefix: &str,
-    processor: F,
-    start_time: Instant,
-) -> T
+pub fn process_stdin_with_temp_file<F, T>(temp_file_prefix: &str, processor: F, start_time: Instant) -> T
 where
     F: FnOnce(&str, Instant) -> T,
 {
