@@ -1,8 +1,16 @@
 //! Trait for converting CWR fields to their string representation for writing
 
+use crate::domain_types::CharacterSet;
+
 /// Trait for converting CWR fields to their string representation for writing
 pub trait CwrFieldWrite {
     fn to_cwr_str(&self, width: usize) -> String;
+
+    /// Convert field to bytes using the specified character set
+    /// Default implementation uses ASCII encoding
+    fn to_cwr_field_bytes(&self, width: usize, _character_set: &CharacterSet) -> Vec<u8> {
+        self.to_cwr_str(width).into_bytes()
+    }
 }
 
 /// Helper function for formatting numeric values with zero-padding

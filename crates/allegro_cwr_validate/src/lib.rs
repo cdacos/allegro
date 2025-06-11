@@ -33,13 +33,14 @@ pub fn check_roundtrip_integrity_with_output(
 pub fn check_roundtrip_integrity_to_writer<W: Write>(
     input_path: &str, cwr_version: Option<f32>, charset_override: Option<&str>, writer: W,
 ) -> Result<usize, RoundtripError> {
-    let mut ascii_writer = allegro_cwr::AsciiWriter::new(writer);
+    let mut writer = writer;
     let mut record_count = 0;
     let mut diff_map: HashMap<String, Vec<usize>> = HashMap::new();
     let mut diff_examples: HashMap<String, (String, String, usize)> = HashMap::new();
     let mut extra_chars_map: HashMap<String, Vec<usize>> = HashMap::new();
     let mut detected_version: Option<f32> = None;
     let mut warning_counts: HashMap<String, Vec<usize>> = HashMap::new();
+    let mut character_set: Option<CharacterSet> = None;
 
     let original_lines: Vec<String> = std::fs::read_to_string(input_path)?.lines().map(|s| s.to_string()).collect();
 
@@ -51,6 +52,7 @@ pub fn check_roundtrip_integrity_to_writer<W: Write>(
             Ok(parsed_record) => {
                 if detected_version.is_none() {
                     detected_version = Some(parsed_record.context.cwr_version);
+                    character_set = parsed_record.context.character_set.clone();
                     println!("Detected CWR version: {}", parsed_record.context.cwr_version);
                 }
 
@@ -70,10 +72,27 @@ pub fn check_roundtrip_integrity_to_writer<W: Write>(
                     parsed_record.record.clone()
                 };
 
-                let serialized_line = record_to_write.to_cwr_line_without_newline(&version);
-                ascii_writer
-                    .write_line(&serialized_line)
-                    .map_err(|e| RoundtripError::CwrParsing(format!("ASCII writing error: {}", e)))?;
+                // Use character set from context, or default to ASCII
+                let charset_for_encoding = character_set.as_ref().unwrap_or(&CharacterSet::ASCII);
+                let serialized_bytes = record_to_write.to_cwr_record_bytes(&version, charset_for_encoding);
+
+                // Convert bytes to string for writing (assuming the file system encoding matches the character set)
+                let serialized_line = match charset_for_encoding {
+                    CharacterSet::ASCII => {
+                        // For ASCII, ensure all bytes are valid ASCII
+                        if serialized_bytes.iter().all(|&b| b <= 127) {
+                            String::from_utf8_lossy(&serialized_bytes).to_string()
+                        } else {
+                            return Err(RoundtripError::CwrParsing("Non-ASCII bytes found in ASCII mode".to_string()));
+                        }
+                    }
+                    _ => {
+                        // For UTF-8 and other character sets, convert bytes to string
+                        String::from_utf8_lossy(&serialized_bytes).to_string()
+                    }
+                };
+
+                writeln!(writer, "{}", serialized_line)?;
 
                 if line_index < original_lines.len() {
                     let original_line = &original_lines[line_index];
@@ -139,9 +158,12 @@ pub fn check_roundtrip_integrity_with_charset(
                 if line_index < original_lines.len() {
                     let original_line = &original_lines[line_index];
 
-                    // Serialize the parsed record back to CWR line
+                    // Serialize the parsed record back to CWR line using byte-based API
                     let version = allegro_cwr::domain_types::CwrVersion(parsed_record.context.cwr_version);
-                    let serialized_line = parsed_record.record.to_cwr_line_without_newline(&version);
+                    let charset_for_encoding =
+                        parsed_record.context.character_set.as_ref().unwrap_or(&CharacterSet::ASCII);
+                    let serialized_bytes = parsed_record.record.to_cwr_record_bytes(&version, charset_for_encoding);
+                    let serialized_line = String::from_utf8_lossy(&serialized_bytes).to_string();
 
                     // Check for character differences
                     check_character_differences(

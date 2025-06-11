@@ -4,6 +4,7 @@
 //! for fields that contain text in non-Roman alphabets (e.g., Cyrillic,
 //! Arabic, Chinese, Japanese, Korean, etc.).
 
+use crate::domain_types::CharacterSet;
 use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning};
 use std::ops::Deref;
 
@@ -43,6 +44,57 @@ impl CwrFieldWrite for NonRomanAlphabet {
             let mut result = self.as_str().to_string();
             result.push_str(&" ".repeat(width - bytes.len()));
             result
+        }
+    }
+
+    fn to_cwr_field_bytes(&self, width: usize, character_set: &CharacterSet) -> Vec<u8> {
+        match character_set {
+            CharacterSet::ASCII => {
+                // For ASCII, convert to ASCII bytes and handle non-ASCII chars
+                let mut bytes = Vec::new();
+                for ch in self.as_str().chars() {
+                    if ch.is_ascii() {
+                        bytes.push(ch as u8);
+                    } else {
+                        // Replace non-ASCII with '?' for ASCII compatibility
+                        bytes.push(b'?');
+                    }
+                }
+
+                if bytes.len() >= width {
+                    bytes.truncate(width);
+                } else {
+                    bytes.resize(width, b' ');
+                }
+                bytes
+            }
+            CharacterSet::UTF8 => {
+                // For UTF-8, use the string's natural UTF-8 encoding
+                let utf8_bytes = self.as_str().as_bytes();
+                if utf8_bytes.len() >= width {
+                    // Truncate to exact byte width, being careful not to break UTF-8 sequences
+                    let mut truncated = &utf8_bytes[..width];
+                    while std::str::from_utf8(truncated).is_err() && !truncated.is_empty() {
+                        truncated = &truncated[..truncated.len() - 1];
+                    }
+                    let mut result = truncated.to_vec();
+                    result.resize(width, b' ');
+                    result
+                } else {
+                    let mut result = utf8_bytes.to_vec();
+                    result.resize(width, b' ');
+                    result
+                }
+            }
+            CharacterSet::TraditionalBig5 | CharacterSet::SimplifiedGb | CharacterSet::Unicode => {
+                // For other character sets, fall back to UTF-8 for now
+                // In a real implementation, you'd use proper encoding libraries
+                self.to_cwr_field_bytes(width, &CharacterSet::UTF8)
+            }
+            CharacterSet::Unknown(_) => {
+                // For unknown character sets, default to UTF-8
+                self.to_cwr_field_bytes(width, &CharacterSet::UTF8)
+            }
         }
     }
 }
