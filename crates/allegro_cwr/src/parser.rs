@@ -13,6 +13,7 @@ use std::io;
 pub struct ParsingContext {
     pub cwr_version: f32,
     pub file_id: i64,
+    pub character_set: Option<crate::domain_types::CharacterSet>,
 }
 
 /// Represents a parsed CWR record with its metadata
@@ -80,7 +81,7 @@ pub fn process_cwr_stream_with_version(
     let cwr_version = header_info.version;
     info!("Determined CWR version: {}", cwr_version);
 
-    let context = ParsingContext { cwr_version, file_id: 0 };
+    let context = ParsingContext { cwr_version, file_id: 0, character_set: None };
 
     // Create a new reader for the full iteration
     let file = File::open(input_filename)?;
@@ -221,7 +222,7 @@ mod tests {
 
     #[test]
     fn test_parse_cwr_line_too_short() {
-        let context = ParsingContext { cwr_version: 2.2, file_id: 0 };
+        let context = ParsingContext { cwr_version: 2.2, file_id: 0, character_set: None };
         let result = parse_cwr_line("AB", 1, &context);
         assert!(result.is_err());
         match result {
@@ -234,7 +235,7 @@ mod tests {
 
     #[test]
     fn test_parse_cwr_line_unknown_record_type() {
-        let context = ParsingContext { cwr_version: 2.2, file_id: 0 };
+        let context = ParsingContext { cwr_version: 2.2, file_id: 0, character_set: None };
         let result = parse_cwr_line("XYZ00000001000000012005010112000000001000000001NWR", 1, &context);
         assert!(result.is_err());
         match result {
@@ -247,7 +248,7 @@ mod tests {
 
     #[test]
     fn test_parse_cwr_line_valid_hdr() {
-        let context = ParsingContext { cwr_version: 2.0, file_id: 0 };
+        let context = ParsingContext { cwr_version: 2.0, file_id: 0, character_set: None };
         // Real HDR line from TestSample.V21
         let line = "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221";
         let result = parse_cwr_line(line, 1, &context);
