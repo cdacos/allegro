@@ -79,9 +79,11 @@ fn process_stdin(config: &Config, start_time: Instant) {
             }
 
             let result = match config.output_filename.as_deref() {
-                Some(output_file) => {
-                    allegro_cwr_obfuscate::process_cwr_obfuscation(temp_path, Some(output_file), config.base.cwr_version)
-                }
+                Some(output_file) => allegro_cwr_obfuscate::process_cwr_obfuscation(
+                    temp_path,
+                    Some(output_file),
+                    config.base.cwr_version,
+                ),
                 None => {
                     use std::io;
                     allegro_cwr_obfuscate::process_cwr_obfuscation_to_writer(
@@ -143,9 +145,11 @@ fn process_files(config: &Config, start_time: Instant) {
         );
 
         let result = match output_filename.as_deref() {
-            Some(output_file) => {
-                allegro_cwr_obfuscate::process_cwr_obfuscation(input_filename, Some(output_file), config.base.cwr_version)
-            }
+            Some(output_file) => allegro_cwr_obfuscate::process_cwr_obfuscation(
+                input_filename,
+                Some(output_file),
+                config.base.cwr_version,
+            ),
             None => {
                 use std::io;
                 allegro_cwr_obfuscate::process_cwr_obfuscation_to_writer(
