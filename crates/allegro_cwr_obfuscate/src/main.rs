@@ -92,6 +92,7 @@ fn process_stdin(config: &Config, start_time: Instant) {
 fn process_files(config: &Config, start_time: Instant) {
     let mut total_records = 0;
     let mut files_processed = 0;
+    let mut failed_files = Vec::new();
 
     for input_filename in &config.base.input_files {
         info!("Obfuscating CWR file: {}", input_filename);
@@ -115,27 +116,37 @@ fn process_files(config: &Config, start_time: Instant) {
                 total_records += count;
                 files_processed += 1;
                 info!("Processed {} records from '{}'", count, input_filename);
+                if config.base.input_files.len() > 1 {
+                    println!("{}: {} records", input_filename, allegro_cwr::format_int_with_commas(count as i64));
+                }
             }
             Err(e) => {
                 eprintln!("Error processing file '{}': {}", input_filename, e);
-                process::exit(1);
+                failed_files.push(input_filename.clone());
             }
         }
+
+        println!();
     }
 
     let elapsed_time = start_time.elapsed();
     info!("Processing completed");
 
-    if files_processed == 1 {
+    if config.base.input_files.len() == 1 {
+        if !failed_files.is_empty() {
+            eprintln!("Failed to process {} file(s): {}", failed_files.len(), failed_files.join(", "));
+            process::exit(1);
+        }
+
         println!(
-            "Successfully obfuscated {} CWR records from '{}' in {:.2?}",
+            "Obfuscated {} CWR records from '{}' in {:.2?}",
             allegro_cwr::format_int_with_commas(total_records as i64),
             &config.base.input_files[0],
             elapsed_time
         );
     } else {
         println!(
-            "Successfully obfuscated {} CWR records from {} files in {:.2?}",
+            "Obfuscated {} CWR records from {} files in {:.2?}",
             allegro_cwr::format_int_with_commas(total_records as i64),
             files_processed,
             elapsed_time
