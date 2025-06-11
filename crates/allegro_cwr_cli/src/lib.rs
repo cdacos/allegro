@@ -88,15 +88,36 @@ where
     }
 }
 
+/// Finds the next available filename by incrementing the index
+fn find_next_available_filename(base_name: &str, start_index: usize) -> String {
+    let mut index = start_index;
+    loop {
+        let candidate = format!("{}.{}", base_name, index);
+        if !std::path::Path::new(&candidate).exists() {
+            return candidate;
+        }
+        index += 1;
+    }
+}
+
 /// Determines the output filename for a given input file when processing multiple files
-/// If there are multiple input files and an output filename is specified, appends an index
+/// If there are multiple input files and an output filename is specified, finds the next available
+/// filename by incrementing the index until a non-existing file is found
 /// Otherwise returns the original output filename or None
 pub fn get_output_filename_for_multiple_files(
     base_output_filename: Option<&str>, input_file_count: usize, current_file_index: usize,
 ) -> Option<String> {
     match (base_output_filename, input_file_count > 1) {
-        (Some(base_name), true) => Some(format!("{}.{}", base_name, current_file_index + 1)),
-        (Some(base_name), false) => Some(base_name.to_string()),
+        (Some(base_name), true) => {
+            Some(find_next_available_filename(base_name, current_file_index + 1))
+        }
+        (Some(base_name), false) => {
+            if std::path::Path::new(base_name).exists() {
+                Some(find_next_available_filename(base_name, 1))
+            } else {
+                Some(base_name.to_string())
+            }
+        }
         (None, _) => None,
     }
 }
