@@ -2,8 +2,8 @@ use std::process;
 use std::time::Instant;
 
 use allegro_cwr::parser::is_cwr_file;
-use allegro_cwr::{OutputFormat, format_int_with_commas};
-use allegro_cwr_cli::{BaseConfig, get_value, init_logging_and_parse_args, process_stdin_with_temp_file};
+use allegro_cwr::OutputFormat;
+use allegro_cwr_cli::{BaseConfig, get_output_filename_for_multiple_files, get_value, init_logging_and_parse_args, process_stdin_with_temp_file};
 use log::info;
 
 #[derive(Default)]
@@ -97,7 +97,7 @@ fn process_stdin(config: &Config, start_time: Instant) {
                 }
             };
 
-            let result = process_file(config, temp_path, is_cwr);
+            let result = process_file(config, temp_path, is_cwr, config.output_filename.as_deref());
             let elapsed_time = start_time.elapsed();
 
             let count = match result {
@@ -110,7 +110,7 @@ fn process_stdin(config: &Config, start_time: Instant) {
 
             println!(
                 "Successfully processed {} CWR records from stdin in {:.2?}",
-                format_int_with_commas(count as i64),
+                allegro_cwr::format_int_with_commas(count as i64),
                 elapsed_time
             );
         },
@@ -138,7 +138,13 @@ fn process_files(config: &Config, start_time: Instant) {
         let format_name = if is_cwr { "CWR" } else { "SQLite" };
         println!("Processing input file: {} (detected format: {})", input_filename, format_name);
 
-        let result = process_file(config, input_filename, is_cwr);
+        let output_filename = get_output_filename_for_multiple_files(
+            config.output_filename.as_deref(),
+            config.base.input_files.len(),
+            files_processed,
+        );
+
+        let result = process_file(config, input_filename, is_cwr, output_filename.as_deref());
 
         match result {
             Ok(count) => {
@@ -146,7 +152,7 @@ fn process_files(config: &Config, start_time: Instant) {
                 files_processed += 1;
                 info!("Processed {} records from '{}'", count, input_filename);
                 if config.base.input_files.len() > 1 {
-                    println!("{}: {} records", input_filename, format_int_with_commas(count as i64));
+                    println!("{}: {} records", input_filename, allegro_cwr::format_int_with_commas(count as i64));
                 }
             }
             Err(e) => {
@@ -169,24 +175,24 @@ fn process_files(config: &Config, start_time: Instant) {
 
         println!(
             "Successfully processed {} CWR records from '{}' in {:.2?}",
-            format_int_with_commas(total_records as i64),
+            allegro_cwr::format_int_with_commas(total_records as i64),
             &config.base.input_files[0],
             elapsed_time
         );
     } else {
         println!(
             "Successfully processed {} CWR records from {} files in {:.2?}",
-            format_int_with_commas(total_records as i64),
+            allegro_cwr::format_int_with_commas(total_records as i64),
             files_processed,
             elapsed_time
         );
     }
 }
 
-fn process_file(config: &Config, input_filename: &str, is_cwr: bool) -> Result<usize, Box<dyn std::error::Error>> {
+fn process_file(config: &Config, input_filename: &str, is_cwr: bool, output_filename: Option<&str>) -> Result<usize, Box<dyn std::error::Error>> {
     if is_cwr {
         // CWR -> SQLite (existing functionality)
-        let db_filename = allegro_cwr_sqlite::determine_db_filename(input_filename, config.output_filename.as_deref());
+        let db_filename = allegro_cwr_sqlite::determine_db_filename(input_filename, output_filename);
         info!("Using database filename: '{}'", db_filename);
 
         match allegro_cwr_sqlite::process_cwr_to_sqlite_with_version(
@@ -222,7 +228,7 @@ fn process_file(config: &Config, input_filename: &str, is_cwr: bool) -> Result<u
                 input_filename,
                 id,
                 config.base.cwr_version,
-                config.output_filename.as_deref(),
+                output_filename,
             ),
             Err(e) => Err(e),
         }
