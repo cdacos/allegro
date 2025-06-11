@@ -92,7 +92,11 @@ where
 pub fn find_next_available_filename(base_name: &str, start_index: usize) -> String {
     let mut index = start_index;
     loop {
-        let candidate = format!("{}.{}", base_name, index);
+        let candidate = if let Some(dot_pos) = base_name.rfind('.') {
+            format!("{}.{}{}", &base_name[..dot_pos], index, &base_name[dot_pos..])
+        } else {
+            format!("{}.{}", base_name, index)
+        };
         if !std::path::Path::new(&candidate).exists() {
             return candidate;
         }
@@ -152,5 +156,45 @@ pub fn get_output_filename_with_default_extension(
             // Single file without -o: use default behavior (stdout/etc)
             None
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_find_next_available_filename_with_extension() {
+        // Test with extension - should insert index before extension
+        let result = find_next_available_filename("test.json", 1);
+        assert_eq!(result, "test.1.json");
+    }
+
+    #[test]
+    fn test_find_next_available_filename_no_extension() {
+        // Test without extension - should append index
+        let result = find_next_available_filename("test", 1);
+        assert_eq!(result, "test.1");
+    }
+
+    #[test]
+    fn test_find_next_available_filename_multiple_dots() {
+        // Test with multiple dots - should use rightmost dot
+        let result = find_next_available_filename("my.test.json", 1);
+        assert_eq!(result, "my.test.1.json");
+    }
+
+    #[test]
+    fn test_find_next_available_filename_dot_at_start() {
+        // Test with dot at start - rfind finds the dot, so it inserts before it
+        let result = find_next_available_filename(".config", 1);
+        assert_eq!(result, ".1.config");
+    }
+
+    #[test]
+    fn test_find_next_available_filename_hidden_file_with_extension() {
+        // Test hidden file with extension
+        let result = find_next_available_filename(".test.json", 1);
+        assert_eq!(result, ".test.1.json");
     }
 }
