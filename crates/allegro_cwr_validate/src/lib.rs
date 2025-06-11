@@ -69,7 +69,7 @@ pub fn check_roundtrip_integrity_to_writer<W: Write>(
                     parsed_record.record.clone()
                 };
 
-                let serialized_line = record_to_write.to_cwr_line(&version);
+                let serialized_line = record_to_write.to_cwr_line_without_newline(&version);
                 writeln!(writer, "{}", serialized_line)?;
 
                 if line_index < original_lines.len() {
@@ -138,7 +138,7 @@ pub fn check_roundtrip_integrity_with_charset(
 
                     // Serialize the parsed record back to CWR line
                     let version = allegro_cwr::domain_types::CwrVersion(parsed_record.context.cwr_version);
-                    let serialized_line = parsed_record.record.to_cwr_line(&version);
+                    let serialized_line = parsed_record.record.to_cwr_line_without_newline(&version);
 
                     // Check for character differences
                     check_character_differences(

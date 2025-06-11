@@ -215,7 +215,7 @@ pub fn process_json_to_cwr_with_version_and_output(
     // Write each record as a CWR line
     let mut count = 0;
     for json_record in json_data.records {
-        let cwr_line = json_record.record.to_cwr_line(&cwr_version);
+        let cwr_line = json_record.record.to_cwr_line_without_newline(&cwr_version);
         ascii_writer.write_line(&cwr_line)?;
         count += 1;
     }

@@ -192,7 +192,7 @@ mod roundtrip_test {
 
         // Generate the line back
         let version = CwrVersion(2.2);
-        let serialized = record.to_cwr_line(&version);
+        let serialized = record.to_cwr_line_without_newline(&version);
 
         println!("Serialized:  '{}'", serialized);
 

@@ -23,7 +23,7 @@ fn test_pwr_record_has_crlf_ending() {
     };
 
     let version = CwrVersion(2.2);
-    let output = pwr.to_cwr_line(&version);
+    let output = pwr.to_cwr_line_without_newline(&version);
 
     assert!(
         output.ends_with("\r\n"),
@@ -39,7 +39,7 @@ fn test_hdr_record_has_crlf_ending() {
     let (hdr, _warnings) = HdrRecord::parse(test_data);
 
     let version = CwrVersion(2.2);
-    let output = hdr.to_cwr_line(&version);
+    let output = hdr.to_cwr_line_without_newline(&version);
 
     assert!(
         output.ends_with("\r\n"),
@@ -55,7 +55,7 @@ fn test_nwr_record_has_crlf_ending() {
     let (nwr, _warnings) = NwrRecord::parse(test_data);
 
     let version = CwrVersion(2.2);
-    let output = nwr.to_cwr_line(&version);
+    let output = nwr.to_cwr_line_without_newline(&version);
 
     assert!(
         output.ends_with("\r\n"),
@@ -88,9 +88,9 @@ fn test_multiple_records_all_have_crlf_endings() {
     let version = CwrVersion(2.2);
 
     let records_and_names = vec![
-        (pwr.to_cwr_line(&version), "PWR"),
-        (hdr.to_cwr_line(&version), "HDR"),
-        (nwr.to_cwr_line(&version), "NWR"),
+        (pwr.to_cwr_line_without_newline(&version), "PWR"),
+        (hdr.to_cwr_line_without_newline(&version), "HDR"),
+        (nwr.to_cwr_line_without_newline(&version), "NWR"),
     ];
 
     for (output, record_type) in records_and_names {

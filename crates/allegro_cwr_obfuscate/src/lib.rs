@@ -194,7 +194,7 @@ pub fn process_cwr_obfuscation(
 
                 // Convert back to CWR line and write
                 let version = allegro_cwr::domain_types::CwrVersion(parsed_record.context.cwr_version);
-                let obfuscated_line = obfuscated_record.to_cwr_line(&version);
+                let obfuscated_line = obfuscated_record.to_cwr_line_without_newline(&version);
                 writer
                     .write_line(&obfuscated_line)
                     .map_err(|e| ObfuscationError::CwrParsing(format!("ASCII writing error: {}", e)))?;
@@ -232,7 +232,7 @@ pub fn process_cwr_obfuscation_to_writer<W: Write>(
 
                 // Convert back to CWR line and write
                 let version = allegro_cwr::domain_types::CwrVersion(parsed_record.context.cwr_version);
-                let obfuscated_line = obfuscated_record.to_cwr_line(&version);
+                let obfuscated_line = obfuscated_record.to_cwr_line_without_newline(&version);
                 ascii_writer
                     .write_line(&obfuscated_line)
                     .map_err(|e| ObfuscationError::CwrParsing(format!("ASCII writing error: {}", e)))?;

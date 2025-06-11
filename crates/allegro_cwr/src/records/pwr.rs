@@ -89,9 +89,9 @@ mod tests {
         let version_21 = CwrVersion(2.1);
         let version_22 = CwrVersion(2.2);
 
-        let line_20 = pwr.to_cwr_line(&version_20);
-        let line_21 = pwr.to_cwr_line(&version_21);
-        let line_22 = pwr.to_cwr_line(&version_22);
+        let line_20 = pwr.to_cwr_line_without_newline(&version_20);
+        let line_21 = pwr.to_cwr_line_without_newline(&version_21);
+        let line_22 = pwr.to_cwr_line_without_newline(&version_22);
 
         println!("Version 2.0 line: {} (length: {})", line_20, line_20.len());
         println!("Version 2.1 line: {} (length: {})", line_21, line_21.len());

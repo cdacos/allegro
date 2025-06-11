@@ -249,7 +249,7 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
             }
 
             /// Generate CWR line from record with version-aware field writing
-            pub fn to_cwr_line(&self, version: &crate::domain_types::CwrVersion) -> String {
+            pub fn to_cwr_line_without_newline(&self, version: &crate::domain_types::CwrVersion) -> String {
                 let mut line = String::new();
 
                 #(#field_writers)*

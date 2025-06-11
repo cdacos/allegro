@@ -167,7 +167,7 @@ fn test_nat_multibyte_field_alignment_bug() {
 
     // The roundtrip serialization should produce exactly the same string
     let version = CwrVersion(2.1);
-    let serialized = record.to_cwr_line(&version);
+    let serialized = record.to_cwr_line_without_newline(&version);
 
     // Before the fix, this would fail due to field misalignment
     assert_eq!(serialized, test_line, "Round-trip serialization should be identical");
@@ -210,7 +210,7 @@ fn test_nwn_multibyte_field_alignment_bug() {
     // Parse and test round-trip
     let (record, warnings) = NwnRecord::parse(&test_line);
     let version = CwrVersion(2.1);
-    let serialized = record.to_cwr_line(&version);
+    let serialized = record.to_cwr_line_without_newline(&version);
 
     // Should round-trip perfectly
     assert_eq!(serialized, test_line, "NWN round-trip should be identical");

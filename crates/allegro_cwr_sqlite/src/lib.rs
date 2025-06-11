@@ -927,7 +927,7 @@ pub fn process_sqlite_to_cwr_with_version_and_output(
 
         // Query and reconstruct the actual record from database fields
         if let Some(cwr_record) = query_record_by_type(&conn, &record_type, record_id)? {
-            let cwr_line = cwr_record.to_cwr_line(&_cwr_version);
+            let cwr_line = cwr_record.to_cwr_line_without_newline(&_cwr_version);
             ascii_writer.write_line(&cwr_line)?;
             count += 1; // Only count successfully reconstructed records
         }
