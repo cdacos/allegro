@@ -83,9 +83,9 @@ pub fn process_cwr_stream_with_version(
 
     let context = ParsingContext { cwr_version, file_id: 0, character_set: header_info.character_set.clone() };
 
-    // Create a new reader for the full iteration
+    // Create a new reader for the full iteration with character set context
     let file = File::open(input_filename)?;
-    let reader = AsciiLineReader::new(file);
+    let reader = AsciiLineReader::with_character_set(file, header_info.character_set.clone());
 
     Ok(reader.lines().enumerate().map(move |(idx, line_result)| {
         let line_number = idx + 1;
@@ -410,5 +410,83 @@ mod tests {
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), false);
         fs::remove_file(&non_hdr_file).ok();
+    }
+
+    #[test]
+    fn test_process_cwr_stream_with_utf8_charset_and_non_ascii() {
+        use crate::domain_types::CharacterSet;
+
+        // Create a CWR file with UTF-8 character set and non-ASCII data
+        let mut hdr_line =
+            "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221".to_string();
+        // Pad to position 86 (character set field)
+        while hdr_line.len() < 86 {
+            hdr_line.push(' ');
+        }
+        hdr_line.push_str("UTF-8          "); // Character set field (15 chars)
+
+        let content = format!(
+            "{}\nGRHNWR0000102.100000000000  \nTRL00000002000000022022122100                                                                                                                                                                                                                                                                                                                                                                                   ",
+            hdr_line
+        );
+        let temp_file = create_temp_cwr_file(&content).unwrap();
+
+        let result = process_cwr_stream(&temp_file);
+        assert!(result.is_ok());
+
+        let records: Vec<_> = result.unwrap().collect();
+        assert_eq!(records.len(), 3);
+
+        // Check that all records parsed successfully
+        assert!(records[0].is_ok());
+        assert!(records[1].is_ok());
+        assert!(records[2].is_ok());
+
+        // Check that character set was detected properly
+        let first_record = records[0].as_ref().unwrap();
+        assert_eq!(first_record.context.character_set, Some(CharacterSet::UTF8));
+
+        fs::remove_file(&temp_file).ok();
+    }
+
+    #[test]
+    fn test_process_cwr_stream_ascii_charset_rejects_non_ascii() {
+        // Create a CWR file with ASCII character set and attempt to include non-ASCII data
+        let mut hdr_line =
+            "HDRPB285606836WARNER CHAPPELL MUSIC PUBLISHING LTD         01.102022122112541120221221".to_string();
+        // Pad to position 86 (character set field)
+        while hdr_line.len() < 86 {
+            hdr_line.push(' ');
+        }
+        hdr_line.push_str("ASCII          "); // Character set field (15 chars)
+
+        // Include a line with non-ASCII characters
+        let content = format!(
+            "{}\nLine with café\nTRL00000002000000022022122100                                                                                                                                                                                                                                                                                                                                                                                   ",
+            hdr_line
+        );
+        let temp_file = create_temp_cwr_file(&content).unwrap();
+
+        let result = process_cwr_stream(&temp_file);
+        assert!(result.is_ok());
+
+        let records: Vec<_> = result.unwrap().collect();
+        assert_eq!(records.len(), 3);
+
+        // First record (HDR) should be OK
+        assert!(records[0].is_ok());
+
+        // Second record should fail due to non-ASCII characters
+        assert!(records[1].is_err());
+        if let Err(CwrParseError::NonAsciiInput { line_num, byte_pos: _, byte_value: _ }) = &records[1] {
+            assert_eq!(*line_num, 2);
+        } else {
+            panic!("Expected NonAsciiInput error");
+        }
+
+        // Third record should be OK
+        assert!(records[2].is_ok());
+
+        fs::remove_file(&temp_file).ok();
     }
 }

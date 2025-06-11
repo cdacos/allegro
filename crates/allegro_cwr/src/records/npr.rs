@@ -19,10 +19,10 @@ pub struct NprRecord {
     pub record_sequence_num: Number,
 
     #[cwr(title = "Performing artist name (conditional)", start = 19, len = 160)]
-    pub performing_artist_name: Option<String>,
+    pub performing_artist_name: Option<NonRomanAlphabet>,
 
     #[cwr(title = "Performing artist first name (optional)", start = 179, len = 160)]
-    pub performing_artist_first_name: Option<String>,
+    pub performing_artist_first_name: Option<NonRomanAlphabet>,
 
     #[cwr(title = "Performing artist IPI name number (optional)", start = 339, len = 11)]
     pub performing_artist_ipi_name_num: Option<IpiNameNumber>,
@@ -59,11 +59,11 @@ fn npr_custom_validate(record: &mut NprRecord) -> Vec<CwrWarning<'static>> {
     // Validate record sequence number is numeric
     // Validate performing artist name (conditional but required if present)
     if let Some(ref name) = record.performing_artist_name {
-        if name.trim().is_empty() {
+        if name.as_str().trim().is_empty() {
             warnings.push(CwrWarning {
                 field_name: "performing_artist_name",
                 field_title: "Performing artist name (conditional)",
-                source_str: std::borrow::Cow::Owned(name.clone()),
+                source_str: std::borrow::Cow::Owned(name.as_str().to_string()),
                 level: WarningLevel::Warning,
                 description: "Performing artist name should not be empty if specified".to_string(),
             });

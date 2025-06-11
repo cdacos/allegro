@@ -1548,8 +1548,12 @@ fn query_record_by_type(
                             .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     interested_party_num: row.get::<_, Option<String>>("interested_party_num")?,
-                    interested_party_name: row.get::<_, String>("interested_party_name")?,
-                    interested_party_writer_first_name: row.get::<_, String>("interested_party_writer_first_name")?,
+                    interested_party_name: allegro_cwr::domain_types::NonRomanAlphabet(
+                        row.get::<_, String>("interested_party_name")?,
+                    ),
+                    interested_party_writer_first_name: allegro_cwr::domain_types::NonRomanAlphabet(
+                        row.get::<_, String>("interested_party_writer_first_name")?,
+                    ),
                     language_code: {
                         use crate::domain_conversions::opt_string_to_domain;
 
@@ -1731,7 +1735,9 @@ fn query_record_by_type(
                             .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
                     interested_party_num: row.get::<_, String>("interested_party_num")?,
-                    publisher_name: row.get::<_, String>("publisher_name")?,
+                    publisher_name: allegro_cwr::domain_types::NonRomanAlphabet(
+                        row.get::<_, String>("publisher_name")?,
+                    ),
                     language_code: {
                         use crate::domain_conversions::opt_string_to_domain;
 
@@ -2153,7 +2159,7 @@ fn query_record_by_type(
                         Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?)
                             .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
-                    title: row.get::<_, String>("title")?,
+                    title: allegro_cwr::domain_types::NonRomanAlphabet(row.get::<_, String>("title")?),
                     title_type: {
                         use allegro_cwr::domain_types::TitleType;
                         TitleType::from_sql_string(&row.get::<_, String>("title_type")?)
@@ -2376,8 +2382,12 @@ fn query_record_by_type(
                         Number::from_sql_string(&row.get::<_, String>("record_sequence_num")?)
                             .map_err(|e| rusqlite::Error::InvalidColumnType(0, e, rusqlite::types::Type::Text))?
                     },
-                    performing_artist_name: row.get::<_, Option<String>>("performing_artist_name")?,
-                    performing_artist_first_name: row.get::<_, Option<String>>("performing_artist_first_name")?,
+                    performing_artist_name: row
+                        .get::<_, Option<String>>("performing_artist_name")?
+                        .map(allegro_cwr::domain_types::NonRomanAlphabet),
+                    performing_artist_first_name: row
+                        .get::<_, Option<String>>("performing_artist_first_name")?
+                        .map(allegro_cwr::domain_types::NonRomanAlphabet),
                     performing_artist_ipi_name_num: {
                         use crate::domain_conversions::opt_string_to_domain;
 

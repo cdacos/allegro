@@ -33,3 +33,44 @@ impl CwrFieldParse for Option<String> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_string_parse_basic() {
+        let source = "Test string";
+        let (result, warnings) = String::parse_cwr_field(source, "test_field", "Test Field");
+
+        assert_eq!(result, "Test string");
+        assert!(warnings.is_empty());
+    }
+
+    #[test]
+    fn test_string_parse_empty() {
+        let source = "   ";
+        let (result, warnings) = String::parse_cwr_field(source, "test_field", "Test Field");
+
+        assert_eq!(result, "");
+        assert!(warnings.is_empty());
+    }
+
+    #[test]
+    fn test_option_string_parse_with_value() {
+        let source = "Test value";
+        let (result, warnings) = Option::<String>::parse_cwr_field(source, "test_field", "Test Field");
+
+        assert_eq!(result, Some("Test value".to_string()));
+        assert!(warnings.is_empty());
+    }
+
+    #[test]
+    fn test_option_string_parse_empty() {
+        let source = "   ";
+        let (result, warnings) = Option::<String>::parse_cwr_field(source, "test_field", "Test Field");
+
+        assert_eq!(result, None);
+        assert!(warnings.is_empty());
+    }
+}

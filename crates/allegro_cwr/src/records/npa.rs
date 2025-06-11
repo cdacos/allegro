@@ -22,10 +22,10 @@ pub struct NpaRecord {
     pub interested_party_num: Option<String>,
 
     #[cwr(title = "Interested party name", start = 28, len = 160)]
-    pub interested_party_name: String,
+    pub interested_party_name: NonRomanAlphabet,
 
     #[cwr(title = "Interested party writer first name", start = 188, len = 160)]
-    pub interested_party_writer_first_name: String,
+    pub interested_party_writer_first_name: NonRomanAlphabet,
 
     #[cwr(title = "Language code (optional)", start = 348, len = 2)]
     pub language_code: Option<LanguageCode>,
@@ -74,11 +74,11 @@ fn npa_custom_validate(record: &mut NpaRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Validate interested party name is not empty
-    if record.interested_party_name.trim().is_empty() {
+    if record.interested_party_name.as_str().trim().is_empty() {
         warnings.push(CwrWarning {
             field_name: "interested_party_name",
             field_title: "Interested party name",
-            source_str: std::borrow::Cow::Owned(record.interested_party_name.clone()),
+            source_str: std::borrow::Cow::Owned(record.interested_party_name.as_str().to_string()),
             level: WarningLevel::Critical,
             description: "Interested party name cannot be empty".to_string(),
         });
