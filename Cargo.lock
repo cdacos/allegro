@@ -24,6 +24,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "allegro_cwr_cli"
+version = "0.1.0"
+dependencies = [
+ "env_logger",
+ "lexopt",
+ "log",
+]
+
+[[package]]
 name = "allegro_cwr_derive"
 version = "0.1.0"
 dependencies = [
@@ -48,6 +57,7 @@ name = "allegro_cwr_obfuscate"
 version = "0.1.0"
 dependencies = [
  "allegro_cwr",
+ "allegro_cwr_cli",
  "anyhow",
  "env_logger",
  "lexopt",
@@ -74,6 +84,7 @@ name = "allegro_cwr_validate"
 version = "0.1.0"
 dependencies = [
  "allegro_cwr",
+ "allegro_cwr_cli",
  "env_logger",
  "lexopt",
  "log",

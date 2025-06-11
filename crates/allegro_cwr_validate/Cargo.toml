@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 allegro_cwr = { path = "../allegro_cwr" }
+allegro_cwr_cli = { path = "../allegro_cwr_cli" }
 thiserror = "1.0"
 log = "0.4"
 env_logger = "0.11"
