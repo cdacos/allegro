@@ -167,7 +167,7 @@ fn test_nat_multibyte_field_alignment_bug() {
 
     // The roundtrip serialization should produce exactly the same string
     let version = CwrVersion(2.1);
-    let character_set = allegro_cwr::domain_types::CharacterSet::ASCII;
+    let character_set = allegro_cwr::domain_types::CharacterSet::UTF8;
     let serialized_bytes = record.to_cwr_record_bytes(&version, &character_set);
     let serialized = String::from_utf8_lossy(&serialized_bytes).to_string();
 
@@ -212,7 +212,7 @@ fn test_nwn_multibyte_field_alignment_bug() {
     // Parse and test round-trip
     let (record, warnings) = NwnRecord::parse(&test_line);
     let version = CwrVersion(2.1);
-    let character_set = allegro_cwr::domain_types::CharacterSet::ASCII;
+    let character_set = allegro_cwr::domain_types::CharacterSet::UTF8;
     let serialized_bytes = record.to_cwr_record_bytes(&version, &character_set);
     let serialized = String::from_utf8_lossy(&serialized_bytes).to_string();
 
