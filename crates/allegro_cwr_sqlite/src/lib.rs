@@ -893,11 +893,12 @@ pub fn process_sqlite_to_cwr_with_version_and_output(
     // Get CWR version from the database or use hint
     let _cwr_version = allegro_cwr::domain_types::CwrVersion(version_hint.or(Some(2.2)).expect("Hardcoded?!"));
 
-    // Create output writer
-    let mut output: Box<dyn Write> = match output_filename {
+    // Create output writer with ASCII validation
+    let output: Box<dyn Write> = match output_filename {
         Some(filename) => Box::new(File::create(filename)?),
         None => Box::new(io::stdout()),
     };
+    let mut ascii_writer = allegro_cwr::AsciiWriter::new(output);
 
     // For demonstration, let's implement a simple approach using the stored record lines
     // In a full implementation, we would query each record type and reconstruct the CWR lines
@@ -927,13 +928,13 @@ pub fn process_sqlite_to_cwr_with_version_and_output(
         // Query and reconstruct the actual record from database fields
         if let Some(cwr_record) = query_record_by_type(&conn, &record_type, record_id)? {
             let cwr_line = cwr_record.to_cwr_line(&_cwr_version);
-            writeln!(output, "{}", cwr_line)?;
+            ascii_writer.write_line(&cwr_line)?;
             count += 1; // Only count successfully reconstructed records
         }
         // Skip records that couldn't be reconstructed (not yet implemented)
     }
 
-    output.flush()?;
+    // AsciiWriter doesn't need explicit flush - it writes directly
     Ok(count)
 }
 

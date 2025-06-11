@@ -205,20 +205,21 @@ pub fn process_json_to_cwr_with_version_and_output(
     // Use the CWR version from context or fallback to hint
     let cwr_version = allegro_cwr::domain_types::CwrVersion(json_data.context.cwr_version);
 
-    // Create output writer
-    let mut output: Box<dyn Write> = match output_filename {
+    // Create output writer with ASCII validation
+    let output: Box<dyn Write> = match output_filename {
         Some(filename) => Box::new(File::create(filename)?),
         None => Box::new(io::stdout()),
     };
+    let mut ascii_writer = allegro_cwr::AsciiWriter::new(output);
 
     // Write each record as a CWR line
     let mut count = 0;
     for json_record in json_data.records {
         let cwr_line = json_record.record.to_cwr_line(&cwr_version);
-        writeln!(output, "{}", cwr_line)?;
+        ascii_writer.write_line(&cwr_line)?;
         count += 1;
     }
 
-    output.flush()?;
+    // AsciiWriter doesn't need explicit flush - it writes directly
     Ok(count)
 }

@@ -176,7 +176,8 @@ pub fn process_cwr_obfuscation(
     let default_output = format!("{}.obfuscated", input_path);
     let output_path = output_path.unwrap_or(&default_output);
     let output_file = File::create(output_path)?;
-    let mut writer = BufWriter::new(output_file);
+    let buffered_writer = BufWriter::new(output_file);
+    let mut writer = allegro_cwr::AsciiWriter::new(buffered_writer);
 
     let mut mappings = ObfuscationMappings::new();
     let mut record_count = 0;
@@ -194,7 +195,9 @@ pub fn process_cwr_obfuscation(
                 // Convert back to CWR line and write
                 let version = allegro_cwr::domain_types::CwrVersion(parsed_record.context.cwr_version);
                 let obfuscated_line = obfuscated_record.to_cwr_line(&version);
-                writeln!(writer, "{}", obfuscated_line)?;
+                writer
+                    .write_line(&obfuscated_line)
+                    .map_err(|e| ObfuscationError::CwrParsing(format!("ASCII writing error: {}", e)))?;
                 record_count += 1;
             }
             Err(e) => {
@@ -203,7 +206,7 @@ pub fn process_cwr_obfuscation(
         }
     }
 
-    writer.flush()?;
+    // AsciiWriter doesn't need explicit flush - it writes directly
     println!("Successfully obfuscated {} records to '{}'", record_count, output_path);
 
     Ok(record_count)
@@ -211,8 +214,9 @@ pub fn process_cwr_obfuscation(
 
 /// Process CWR data and obfuscate to stdout or specified output
 pub fn process_cwr_obfuscation_to_writer<W: Write>(
-    input_path: &str, mut writer: W, cwr_version: Option<f32>,
+    input_path: &str, writer: W, cwr_version: Option<f32>,
 ) -> Result<usize, ObfuscationError> {
+    let mut ascii_writer = allegro_cwr::AsciiWriter::new(writer);
     let mut mappings = ObfuscationMappings::new();
     let mut record_count = 0;
 
@@ -229,7 +233,9 @@ pub fn process_cwr_obfuscation_to_writer<W: Write>(
                 // Convert back to CWR line and write
                 let version = allegro_cwr::domain_types::CwrVersion(parsed_record.context.cwr_version);
                 let obfuscated_line = obfuscated_record.to_cwr_line(&version);
-                writeln!(writer, "{}", obfuscated_line)?;
+                ascii_writer
+                    .write_line(&obfuscated_line)
+                    .map_err(|e| ObfuscationError::CwrParsing(format!("ASCII writing error: {}", e)))?;
                 record_count += 1;
             }
             Err(e) => {
@@ -238,7 +244,7 @@ pub fn process_cwr_obfuscation_to_writer<W: Write>(
         }
     }
 
-    writer.flush()?;
+    // AsciiWriter doesn't need explicit flush - it writes directly
     Ok(record_count)
 }
 
