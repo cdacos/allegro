@@ -927,7 +927,9 @@ pub fn process_sqlite_to_cwr_with_version_and_output(
 
         // Query and reconstruct the actual record from database fields
         if let Some(cwr_record) = query_record_by_type(&conn, &record_type, record_id)? {
-            let cwr_line = cwr_record.to_cwr_line_without_newline(&_cwr_version);
+            let character_set = allegro_cwr::domain_types::CharacterSet::ASCII;
+            let cwr_bytes = cwr_record.to_cwr_record_bytes(&_cwr_version, &character_set);
+            let cwr_line = String::from_utf8_lossy(&cwr_bytes).to_string();
             ascii_writer.write_line(&cwr_line)?;
             count += 1; // Only count successfully reconstructed records
         }

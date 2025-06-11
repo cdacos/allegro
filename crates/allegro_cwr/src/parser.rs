@@ -462,7 +462,7 @@ mod tests {
         let hdr_file = create_temp_cwr_file(hdr_content).unwrap();
         let result = is_cwr_file(&hdr_file);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), true);
+        assert!(result.unwrap());
         fs::remove_file(&hdr_file).ok();
 
         // Test with non-HDR file
@@ -470,7 +470,7 @@ mod tests {
         let non_hdr_file = create_temp_cwr_file(non_hdr_content).unwrap();
         let result = is_cwr_file(&non_hdr_file);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), false);
+        assert!(!result.unwrap());
         fs::remove_file(&non_hdr_file).ok();
     }
 

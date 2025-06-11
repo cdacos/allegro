@@ -24,7 +24,9 @@ fn test_pwr_record_has_crlf_ending() {
     };
 
     let version = CwrVersion(2.2);
-    let line_without_newline = pwr.to_cwr_line_without_newline(&version);
+    let character_set = allegro_cwr::domain_types::CharacterSet::ASCII;
+    let pwr_bytes = pwr.to_cwr_record_bytes(&version, &character_set);
+    let line_without_newline = String::from_utf8_lossy(&pwr_bytes).to_string();
 
     let mut output = Vec::new();
     let mut writer = AsciiWriter::new(&mut output);
@@ -46,7 +48,9 @@ fn test_hdr_record_has_crlf_ending() {
     let (hdr, _warnings) = HdrRecord::parse(test_data);
 
     let version = CwrVersion(2.2);
-    let line_without_newline = hdr.to_cwr_line_without_newline(&version);
+    let character_set = allegro_cwr::domain_types::CharacterSet::ASCII;
+    let hdr_bytes = hdr.to_cwr_record_bytes(&version, &character_set);
+    let line_without_newline = String::from_utf8_lossy(&hdr_bytes).to_string();
 
     let mut output = Vec::new();
     let mut writer = AsciiWriter::new(&mut output);
@@ -68,7 +72,9 @@ fn test_nwr_record_has_crlf_ending() {
     let (nwr, _warnings) = NwrRecord::parse(test_data);
 
     let version = CwrVersion(2.2);
-    let line_without_newline = nwr.to_cwr_line_without_newline(&version);
+    let character_set = allegro_cwr::domain_types::CharacterSet::ASCII;
+    let nwr_bytes = nwr.to_cwr_record_bytes(&version, &character_set);
+    let line_without_newline = String::from_utf8_lossy(&nwr_bytes).to_string();
 
     let mut output = Vec::new();
     let mut writer = AsciiWriter::new(&mut output);
@@ -105,11 +111,12 @@ fn test_multiple_records_all_have_crlf_endings() {
     let (nwr, _) = NwrRecord::parse(nwr_test_data);
 
     let version = CwrVersion(2.2);
+    let character_set = allegro_cwr::domain_types::CharacterSet::ASCII;
 
     let records_and_names = vec![
-        (pwr.to_cwr_line_without_newline(&version), "PWR"),
-        (hdr.to_cwr_line_without_newline(&version), "HDR"),
-        (nwr.to_cwr_line_without_newline(&version), "NWR"),
+        (String::from_utf8_lossy(&pwr.to_cwr_record_bytes(&version, &character_set)).to_string(), "PWR"),
+        (String::from_utf8_lossy(&hdr.to_cwr_record_bytes(&version, &character_set)).to_string(), "HDR"),
+        (String::from_utf8_lossy(&nwr.to_cwr_record_bytes(&version, &character_set)).to_string(), "NWR"),
     ];
 
     for (line_without_newline, record_type) in records_and_names {

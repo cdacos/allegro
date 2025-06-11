@@ -215,7 +215,9 @@ pub fn process_json_to_cwr_with_version_and_output(
     // Write each record as a CWR line
     let mut count = 0;
     for json_record in json_data.records {
-        let cwr_line = json_record.record.to_cwr_line_without_newline(&cwr_version);
+        let character_set = allegro_cwr::domain_types::CharacterSet::ASCII;
+        let cwr_bytes = json_record.record.to_cwr_record_bytes(&cwr_version, &character_set);
+        let cwr_line = String::from_utf8_lossy(&cwr_bytes).to_string();
         ascii_writer.write_line(&cwr_line)?;
         count += 1;
     }

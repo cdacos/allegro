@@ -32,21 +32,6 @@ impl Deref for NonRomanAlphabet {
 }
 
 impl CwrFieldWrite for NonRomanAlphabet {
-    fn to_cwr_str(&self, width: usize) -> String {
-        // For NonRomanAlphabet fields, we need to maintain exact byte width
-        // to preserve field alignment in the fixed-width CWR format
-        let bytes = self.as_str().as_bytes();
-        if bytes.len() >= width {
-            // Truncate to exact byte width if too long
-            String::from_utf8_lossy(&bytes[..width]).to_string()
-        } else {
-            // Pad with spaces to exact byte width if too short
-            let mut result = self.as_str().to_string();
-            result.push_str(&" ".repeat(width - bytes.len()));
-            result
-        }
-    }
-
     fn to_cwr_field_bytes(&self, width: usize, character_set: &CharacterSet) -> Vec<u8> {
         match character_set {
             CharacterSet::ASCII => {
@@ -87,12 +72,12 @@ impl CwrFieldWrite for NonRomanAlphabet {
                 }
             }
             CharacterSet::TraditionalBig5 | CharacterSet::SimplifiedGb | CharacterSet::Unicode => {
-                // For other character sets, fall back to UTF-8 for now
+                // TODO: For other character sets, fall back to UTF-8 for now
                 // In a real implementation, you'd use proper encoding libraries
                 self.to_cwr_field_bytes(width, &CharacterSet::UTF8)
             }
             CharacterSet::Unknown(_) => {
-                // For unknown character sets, default to UTF-8
+                // TODO: For unknown character sets, default to UTF-8
                 self.to_cwr_field_bytes(width, &CharacterSet::UTF8)
             }
         }
@@ -136,10 +121,10 @@ mod tests {
 
         // The field should be padded to exact byte width, not character width
         let width = 20;
-        let formatted = text_with_multibyte.to_cwr_str(width);
+        let formatted = String::from_utf8(text_with_multibyte.to_cwr_field_bytes(width, &CharacterSet::UTF8)).unwrap();
 
         // Should be exactly 20 bytes (not 20 characters)
-        assert_eq!(formatted.as_bytes().len(), width);
+        assert_eq!(formatted.len(), width);
 
         // Should contain the original text plus spaces
         assert!(formatted.starts_with("EVIDÊNCIA"));
@@ -147,7 +132,7 @@ mod tests {
 
         // Verify the character vs byte difference: "EVIDÊNCIA" is 9 chars but 10 bytes
         assert_eq!("EVIDÊNCIA".chars().count(), 9);
-        assert_eq!("EVIDÊNCIA".as_bytes().len(), 10);
+        assert_eq!("EVIDÊNCIA".len(), 10);
 
         // So formatted should be "EVIDÊNCIA" (10 bytes) + 10 spaces = 20 bytes total
         assert_eq!(formatted, "EVIDÊNCIA          ");
@@ -159,8 +144,8 @@ mod tests {
         let long_text = NonRomanAlphabet("EVIDÊNCIAAAAAAAAAAAAA".to_string());
 
         // Truncate to 10 bytes (should not break UTF-8 sequence)
-        let formatted = long_text.to_cwr_str(10);
-        assert_eq!(formatted.as_bytes().len(), 10);
+        let formatted = String::from_utf8(long_text.to_cwr_field_bytes(10, &CharacterSet::UTF8)).unwrap();
+        assert_eq!(formatted.len(), 10);
 
         // Should be valid UTF-8
         assert!(std::str::from_utf8(formatted.as_bytes()).is_ok());
@@ -173,9 +158,9 @@ mod tests {
     fn test_ascii_text_unchanged() {
         // ASCII text should work exactly as before
         let ascii_text = NonRomanAlphabet("HELLO".to_string());
-        let formatted = ascii_text.to_cwr_str(10);
+        let formatted = String::from_utf8(ascii_text.to_cwr_field_bytes(10, &CharacterSet::ASCII)).unwrap();
 
-        assert_eq!(formatted.as_bytes().len(), 10);
+        assert_eq!(formatted.len(), 10);
         assert_eq!(formatted, "HELLO     ");
     }
 
@@ -189,10 +174,10 @@ mod tests {
         assert!(warnings.is_empty());
 
         // Serialize back
-        let serialized = parsed.to_cwr_str(20);
+        let serialized = String::from_utf8(parsed.to_cwr_field_bytes(20, &CharacterSet::UTF8)).unwrap();
 
         // Should be identical (this was the bug - they were different before)
         assert_eq!(serialized, original_field);
-        assert_eq!(serialized.as_bytes().len(), original_field.as_bytes().len());
+        assert_eq!(serialized.len(), original_field.len());
     }
 }

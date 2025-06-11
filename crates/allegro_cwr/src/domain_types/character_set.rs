@@ -29,8 +29,8 @@ impl CharacterSet {
 }
 
 impl CwrFieldWrite for CharacterSet {
-    fn to_cwr_str(&self, _width: usize) -> String {
-        format_text(self.as_str(), _width)
+    fn to_cwr_field_bytes(&self, _width: usize, _character_set: &CharacterSet) -> Vec<u8> {
+        format_text(self.as_str(), _width).into_bytes()
     }
 }
 

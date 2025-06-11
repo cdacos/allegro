@@ -167,7 +167,9 @@ fn test_nat_multibyte_field_alignment_bug() {
 
     // The roundtrip serialization should produce exactly the same string
     let version = CwrVersion(2.1);
-    let serialized = record.to_cwr_line_without_newline(&version);
+    let character_set = allegro_cwr::domain_types::CharacterSet::ASCII;
+    let serialized_bytes = record.to_cwr_record_bytes(&version, &character_set);
+    let serialized = String::from_utf8_lossy(&serialized_bytes).to_string();
 
     // Before the fix, this would fail due to field misalignment
     assert_eq!(serialized, test_line, "Round-trip serialization should be identical");
@@ -210,7 +212,9 @@ fn test_nwn_multibyte_field_alignment_bug() {
     // Parse and test round-trip
     let (record, warnings) = NwnRecord::parse(&test_line);
     let version = CwrVersion(2.1);
-    let serialized = record.to_cwr_line_without_newline(&version);
+    let character_set = allegro_cwr::domain_types::CharacterSet::ASCII;
+    let serialized_bytes = record.to_cwr_record_bytes(&version, &character_set);
+    let serialized = String::from_utf8_lossy(&serialized_bytes).to_string();
 
     // Should round-trip perfectly
     assert_eq!(serialized, test_line, "NWN round-trip should be identical");

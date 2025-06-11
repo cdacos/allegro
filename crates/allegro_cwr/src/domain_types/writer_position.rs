@@ -1,3 +1,4 @@
+use crate::domain_types::CharacterSet;
 use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_text};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -27,8 +28,8 @@ impl fmt::Display for WriterPosition {
 }
 
 impl CwrFieldWrite for WriterPosition {
-    fn to_cwr_str(&self, _width: usize) -> String {
-        format_text(self.as_str(), _width)
+    fn to_cwr_field_bytes(&self, _width: usize, _character_set: &CharacterSet) -> Vec<u8> {
+        format_text(self.as_str(), _width).into_bytes()
     }
 }
 
@@ -123,9 +124,10 @@ mod tests {
     }
 
     #[test]
-    fn test_to_cwr_str() {
-        assert_eq!(WriterPosition::First.to_cwr_str(1), "1");
-        assert_eq!(WriterPosition::Second.to_cwr_str(1), "2");
+    fn test_to_cwr_field_bytes() {
+        use crate::domain_types::CharacterSet;
+        assert_eq!(WriterPosition::First.to_cwr_field_bytes(1, &CharacterSet::ASCII), b"1");
+        assert_eq!(WriterPosition::Second.to_cwr_field_bytes(1, &CharacterSet::ASCII), b"2");
     }
 
     #[test]

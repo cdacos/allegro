@@ -1,5 +1,6 @@
 //! CWR version number for GRH record
 
+use crate::domain_types::CharacterSet;
 use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_text};
 use std::borrow::Cow;
 
@@ -14,8 +15,8 @@ impl CwrVersionNumber {
 }
 
 impl CwrFieldWrite for CwrVersionNumber {
-    fn to_cwr_str(&self, width: usize) -> String {
-        format_text(self.as_str(), width)
+    fn to_cwr_field_bytes(&self, width: usize, _character_set: &CharacterSet) -> Vec<u8> {
+        format_text(self.as_str(), width).into_bytes()
     }
 }
 

@@ -1,3 +1,4 @@
+use crate::domain_types::CharacterSet;
 use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_text};
 use std::borrow::Cow;
 
@@ -18,8 +19,8 @@ impl Boolean {
 }
 
 impl CwrFieldWrite for Boolean {
-    fn to_cwr_str(&self, _width: usize) -> String {
-        format_text(self.as_str(), _width)
+    fn to_cwr_field_bytes(&self, _width: usize, _character_set: &CharacterSet) -> Vec<u8> {
+        format_text(self.as_str(), _width).into_bytes()
     }
 }
 

@@ -1,6 +1,7 @@
 //! Ownership share type
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrNumericField, CwrWarning, WarningLevel, format_number};
+use crate::domain_types::CharacterSet;
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrNumericField, CwrWarning, WarningLevel, format_number, string_to_cwr_bytes};
 use std::borrow::Cow;
 
 /// Ownership share (0-100.00% represented as 0-10000)
@@ -18,8 +19,8 @@ impl OwnershipShare {
 }
 
 impl CwrFieldWrite for OwnershipShare {
-    fn to_cwr_str(&self, width: usize) -> String {
-        format_number(self.0, width)
+    fn to_cwr_field_bytes(&self, width: usize, _character_set: &CharacterSet) -> Vec<u8> {
+        string_to_cwr_bytes(&format_number(self.0, width), _character_set)
     }
 }
 
