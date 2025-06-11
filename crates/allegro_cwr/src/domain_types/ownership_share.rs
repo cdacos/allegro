@@ -1,7 +1,9 @@
 //! Ownership share type
 
 use crate::domain_types::CharacterSet;
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrNumericField, CwrWarning, WarningLevel, format_number, string_to_cwr_bytes};
+use crate::parsing::{
+    CwrFieldParse, CwrFieldWrite, CwrNumericField, CwrWarning, WarningLevel, format_number, string_to_cwr_bytes,
+};
 use std::borrow::Cow;
 
 /// Ownership share (0-100.00% represented as 0-10000)
