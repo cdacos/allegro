@@ -1,8 +1,7 @@
-use std::fs::File;
-use std::io::Read;
 use std::process;
 use std::time::Instant;
 
+use allegro_cwr::parser::is_cwr_file;
 use allegro_cwr_cli::{BaseConfig, get_value, init_logging_and_parse_args, process_stdin_with_temp_file};
 use log::info;
 
@@ -43,49 +42,6 @@ fn parse_args() -> Result<Config, String> {
     Ok(config)
 }
 
-#[derive(Debug, PartialEq)]
-enum InputFormat {
-    Cwr,
-    Json,
-}
-
-fn detect_input_format(filename: &str) -> Result<InputFormat, String> {
-    let mut file = File::open(filename).map_err(|e| format!("Cannot open file '{}': {}", filename, e))?;
-
-    let mut buffer = [0u8; 16];
-    let bytes_read = file.read(&mut buffer).map_err(|e| format!("Cannot read file '{}': {}", filename, e))?;
-
-    if bytes_read == 0 {
-        return Err("File is empty".to_string());
-    }
-
-    // Convert to string for easier analysis, handling non-UTF8 gracefully
-    let content = String::from_utf8_lossy(&buffer[..bytes_read]);
-
-    // Check for CWR format: starts with "HDR"
-    if content.starts_with("HDR") {
-        return Ok(InputFormat::Cwr);
-    }
-
-    // Check for JSON format: starts with '{' (possibly after whitespace)
-    let trimmed = content.trim_start();
-    if trimmed.starts_with('{') {
-        return Ok(InputFormat::Json);
-    }
-
-    // Fallback: try file extension
-    if filename.to_lowercase().ends_with(".json") {
-        Ok(InputFormat::Json)
-    } else if filename.to_lowercase().ends_with(".cwr") {
-        Ok(InputFormat::Cwr)
-    } else {
-        Err(format!(
-            "Cannot determine input format for '{}'. Expected CWR file (starting with 'HDR') or JSON file (starting with '{{')",
-            filename
-        ))
-    }
-}
-
 fn main() {
     let config = init_logging_and_parse_args(|| {
         parse_args().inspect_err(|_| {
@@ -106,25 +62,26 @@ fn process_stdin(config: &Config, start_time: Instant) {
     process_stdin_with_temp_file(
         "cwr_json_stdin",
         |temp_path, start_time| {
-            let input_format = match detect_input_format(temp_path) {
-                Ok(format) => format,
+            let is_cwr = match is_cwr_file(temp_path) {
+                Ok(is_cwr) => is_cwr,
                 Err(e) => {
-                    eprintln!("Format detection error: {}", e);
+                    eprintln!("Error reading file: {}", e);
                     process::exit(1);
                 }
             };
 
-            let result = match input_format {
-                InputFormat::Cwr => allegro_cwr_json::process_cwr_to_json_with_version_and_output(
+            let result = if is_cwr {
+                allegro_cwr_json::process_cwr_to_json_with_version_and_output(
                     temp_path,
                     config.base.cwr_version,
                     config.output_filename.as_deref(),
-                ),
-                InputFormat::Json => allegro_cwr_json::process_json_to_cwr_with_version_and_output(
+                )
+            } else {
+                allegro_cwr_json::process_json_to_cwr_with_version_and_output(
                     temp_path,
                     config.base.cwr_version,
                     config.output_filename.as_deref(),
-                ),
+                )
             };
             let elapsed_time = start_time.elapsed();
 
@@ -154,10 +111,10 @@ fn process_files(config: &Config, start_time: Instant) {
     for input_filename in &config.base.input_files {
         info!("Processing CWR/JSON file: {}", input_filename);
 
-        let input_format = match detect_input_format(input_filename) {
-            Ok(format) => format,
+        let is_cwr = match is_cwr_file(input_filename) {
+            Ok(is_cwr) => is_cwr,
             Err(e) => {
-                eprintln!("Format detection error for '{}': {}", input_filename, e);
+                eprintln!("Error reading file '{}': {}", input_filename, e);
                 failed_files.push(input_filename.clone());
                 continue;
             }
@@ -170,17 +127,18 @@ fn process_files(config: &Config, start_time: Instant) {
             config.output_filename.clone()
         };
 
-        let result = match input_format {
-            InputFormat::Cwr => allegro_cwr_json::process_cwr_to_json_with_version_and_output(
+        let result = if is_cwr {
+            allegro_cwr_json::process_cwr_to_json_with_version_and_output(
                 input_filename,
                 config.base.cwr_version,
                 output_filename.as_deref(),
-            ),
-            InputFormat::Json => allegro_cwr_json::process_json_to_cwr_with_version_and_output(
+            )
+        } else {
+            allegro_cwr_json::process_json_to_cwr_with_version_and_output(
                 input_filename,
                 config.base.cwr_version,
                 output_filename.as_deref(),
-            ),
+            )
         };
 
         match result {

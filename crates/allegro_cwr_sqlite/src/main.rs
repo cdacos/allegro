@@ -1,8 +1,7 @@
-use std::fs::File;
-use std::io::Read;
 use std::process;
 use std::time::Instant;
 
+use allegro_cwr::parser::is_cwr_file;
 use allegro_cwr::{OutputFormat, format_int_with_commas};
 use allegro_cwr_cli::{BaseConfig, get_value, init_logging_and_parse_args, process_stdin_with_temp_file};
 use log::info;
@@ -12,12 +11,6 @@ struct Config {
     base: BaseConfig,
     output_filename: Option<String>,
     file_id: Option<i64>,
-}
-
-#[derive(Debug, PartialEq)]
-enum InputFormat {
-    Cwr,
-    Sqlite,
 }
 
 fn parse_args() -> Result<Config, String> {
@@ -63,28 +56,6 @@ fn parse_args() -> Result<Config, String> {
     Ok(config)
 }
 
-fn detect_input_format(filename: &str) -> Result<InputFormat, String> {
-    let mut file = File::open(filename).map_err(|e| format!("Cannot open file '{}': {}", filename, e))?;
-
-    let mut buffer = [0u8; 16];
-    let bytes_read = file.read(&mut buffer).map_err(|e| format!("Cannot read file '{}': {}", filename, e))?;
-
-    if bytes_read == 0 {
-        return Err("File is empty".to_string());
-    }
-
-    // Convert to string for easier analysis, handling non-UTF8 gracefully
-    let content = String::from_utf8_lossy(&buffer[..bytes_read]);
-
-    // Check for CWR format: starts with "HDR"
-    if content.starts_with("HDR") {
-        return Ok(InputFormat::Cwr);
-    }
-
-    // Everything else is treated as SQLite database
-    Ok(InputFormat::Sqlite)
-}
-
 fn get_most_recent_file_id(db_filename: &str) -> Result<i64, Box<dyn std::error::Error>> {
     let conn = rusqlite::Connection::open(db_filename)?;
 
@@ -118,15 +89,15 @@ fn process_stdin(config: &Config, start_time: Instant) {
     process_stdin_with_temp_file(
         "cwr_sqlite_stdin",
         |temp_path, start_time| {
-            let input_format = match detect_input_format(temp_path) {
-                Ok(format) => format,
+            let is_cwr = match is_cwr_file(temp_path) {
+                Ok(is_cwr) => is_cwr,
                 Err(e) => {
-                    eprintln!("Format detection error: {}", e);
+                    eprintln!("Error reading file: {}", e);
                     process::exit(1);
                 }
             };
 
-            let result = process_file(config, temp_path, input_format);
+            let result = process_file(config, temp_path, is_cwr);
             let elapsed_time = start_time.elapsed();
 
             let count = match result {
@@ -155,18 +126,19 @@ fn process_files(config: &Config, start_time: Instant) {
     for input_filename in &config.base.input_files {
         info!("Processing CWR file: {}", input_filename);
 
-        let input_format = match detect_input_format(input_filename) {
-            Ok(format) => format,
+        let is_cwr = match is_cwr_file(input_filename) {
+            Ok(is_cwr) => is_cwr,
             Err(e) => {
-                eprintln!("Format detection error for '{}': {}", input_filename, e);
+                eprintln!("Error reading file '{}': {}", input_filename, e);
                 failed_files.push(input_filename.clone());
                 continue;
             }
         };
 
-        println!("Processing input file: {} (detected format: {:?})", input_filename, input_format);
+        let format_name = if is_cwr { "CWR" } else { "SQLite" };
+        println!("Processing input file: {} (detected format: {})", input_filename, format_name);
 
-        let result = process_file(config, input_filename, input_format);
+        let result = process_file(config, input_filename, is_cwr);
 
         match result {
             Ok(count) => {
@@ -211,55 +183,48 @@ fn process_files(config: &Config, start_time: Instant) {
     }
 }
 
-fn process_file(
-    config: &Config, input_filename: &str, input_format: InputFormat,
-) -> Result<usize, Box<dyn std::error::Error>> {
-    match input_format {
-        InputFormat::Cwr => {
-            // CWR -> SQLite (existing functionality)
-            let db_filename =
-                allegro_cwr_sqlite::determine_db_filename(input_filename, config.output_filename.as_deref());
-            info!("Using database filename: '{}'", db_filename);
+fn process_file(config: &Config, input_filename: &str, is_cwr: bool) -> Result<usize, Box<dyn std::error::Error>> {
+    if is_cwr {
+        // CWR -> SQLite (existing functionality)
+        let db_filename = allegro_cwr_sqlite::determine_db_filename(input_filename, config.output_filename.as_deref());
+        info!("Using database filename: '{}'", db_filename);
 
-            match allegro_cwr_sqlite::process_cwr_to_sqlite_with_version(
-                input_filename,
-                &db_filename,
-                config.base.cwr_version,
-            ) {
-                Ok((file_id, count, report)) => {
-                    println!("{}", report);
-                    if let Err(e) = allegro_cwr_sqlite::report::report_summary(&db_filename, file_id, OutputFormat::Sql)
-                    {
-                        eprintln!("Warning: Could not generate detailed report: {}", e);
-                    }
-                    Ok(count)
+        match allegro_cwr_sqlite::process_cwr_to_sqlite_with_version(
+            input_filename,
+            &db_filename,
+            config.base.cwr_version,
+        ) {
+            Ok((file_id, count, report)) => {
+                println!("{}", report);
+                if let Err(e) = allegro_cwr_sqlite::report::report_summary(&db_filename, file_id, OutputFormat::Sql) {
+                    eprintln!("Warning: Could not generate detailed report: {}", e);
                 }
-                Err(e) => Err(e),
+                Ok(count)
             }
+            Err(e) => Err(e),
         }
-        InputFormat::Sqlite => {
-            // SQLite -> CWR (new functionality)
-            // Use specified file_id or get the most recent one
-            let file_id = match config.file_id {
-                Some(id) => {
-                    info!("Using specified file ID: {}", id);
-                    Ok(id)
-                }
-                None => {
-                    info!("No file ID specified, using most recent file from database");
-                    get_most_recent_file_id(input_filename)
-                }
-            };
-
-            match file_id {
-                Ok(id) => allegro_cwr_sqlite::process_sqlite_to_cwr_with_version_and_output(
-                    input_filename,
-                    id,
-                    config.base.cwr_version,
-                    config.output_filename.as_deref(),
-                ),
-                Err(e) => Err(e),
+    } else {
+        // SQLite -> CWR (new functionality)
+        // Use specified file_id or get the most recent one
+        let file_id = match config.file_id {
+            Some(id) => {
+                info!("Using specified file ID: {}", id);
+                Ok(id)
             }
+            None => {
+                info!("No file ID specified, using most recent file from database");
+                get_most_recent_file_id(input_filename)
+            }
+        };
+
+        match file_id {
+            Ok(id) => allegro_cwr_sqlite::process_sqlite_to_cwr_with_version_and_output(
+                input_filename,
+                id,
+                config.base.cwr_version,
+                config.output_filename.as_deref(),
+            ),
+            Err(e) => Err(e),
         }
     }
 }
