@@ -197,9 +197,6 @@ pub fn parse_and_insert_alt<'a>(
     )
 }
 
-// Generate stubs for remaining record types - using the same pattern
-// This dramatically reduces the code from 1200+ lines to ~40 lines per record type
-
 // AGR - Agreement Transaction
 pub fn parse_and_insert_agr<'a>(
     line_number: usize, tx: &'a Transaction, stmts: &'a mut PreparedStatements, context: &ParsingContext,

@@ -85,16 +85,7 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
             sorted_warnings.sort_by(|a, b| b.1.len().cmp(&a.1.len()).then(a.0.cmp(b.0)));
 
             for (warning, line_numbers) in sorted_warnings {
-                let display_lines = if line_numbers.len() <= 5 {
-                    format!("lines {:?}", line_numbers)
-                } else {
-                    format!(
-                        "{} occurrences (first few: {})",
-                        line_numbers.len(),
-                        line_numbers.iter().take(3).map(|n| n.to_string()).collect::<Vec<_>>().join(", ")
-                    )
-                };
-                println!("{}: {}", warning, display_lines);
+                println!("{}: {}", warning, display_incidences(line_numbers));
             }
         }
 
@@ -111,15 +102,7 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
                 let parts: Vec<&str> = extra_key.split(':').collect();
                 let record_type = parts[0];
                 let extra_info = parts.get(1).unwrap_or(&"?");
-                let display_lines = if line_numbers.len() <= 5 {
-                    format!("lines {:?}", line_numbers)
-                } else {
-                    format!(
-                        "{} occurrences (first few: {})",
-                        line_numbers.len(),
-                        line_numbers.iter().take(3).map(|n| n.to_string()).collect::<Vec<_>>().join(", ")
-                    )
-                };
+                let display_lines = display_incidences(line_numbers);
 
                 if *extra_info == "missing_optional_fields" {
                     println!(
@@ -192,6 +175,23 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
 
     println!("ROUNDTRIP PASSED: All {} records maintain round-trip integrity", record_count);
     Ok(record_count)
+}
+
+fn display_incidences(line_numbers: &Vec<usize>) -> String {
+    let display_lines = if line_numbers.len() <= 5 {
+        format!(
+            "{} occurrences ({})",
+            line_numbers.len(),
+            line_numbers.iter().map(|n| n.to_string()).collect::<Vec<_>>().join(", ")
+        )
+    } else {
+        format!(
+            "{} occurrences (first few: {})",
+            line_numbers.len(),
+            line_numbers.iter().take(3).map(|n| n.to_string()).collect::<Vec<_>>().join(", ")
+        )
+    };
+    display_lines
 }
 
 /// Check for character differences between original and round-trip serialized lines
