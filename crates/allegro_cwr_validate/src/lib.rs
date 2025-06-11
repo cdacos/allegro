@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use allegro_cwr::process_cwr_stream_with_version;
+use allegro_cwr::process_cwr_stream_with_version_and_charset;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -13,6 +13,13 @@ pub enum RoundtripError {
 
 /// Check round-trip integrity by parsing CWR records and serializing them back
 pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> Result<usize, RoundtripError> {
+    check_roundtrip_integrity_with_charset(input_path, cwr_version, None)
+}
+
+/// Check round-trip integrity with optional character set override
+pub fn check_roundtrip_integrity_with_charset(
+    input_path: &str, cwr_version: Option<f32>, charset_override: Option<&str>,
+) -> Result<usize, RoundtripError> {
     let mut record_count = 0;
     let mut diff_map: HashMap<String, Vec<usize>> = HashMap::new(); // key: diff description, value: line numbers
     let mut diff_examples: HashMap<String, (String, String, usize)> = HashMap::new(); // key: diff description, value: (original, serialized, line_number)
@@ -23,8 +30,8 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
     // Read original lines for comparison
     let original_lines: Vec<String> = std::fs::read_to_string(input_path)?.lines().map(|s| s.to_string()).collect();
 
-    // Use the allegro_cwr streaming parser
-    let record_stream = process_cwr_stream_with_version(input_path, cwr_version)
+    // Use the allegro_cwr streaming parser with character set override if needed
+    let record_stream = process_cwr_stream_with_version_and_charset(input_path, cwr_version, charset_override)
         .map_err(|e| RoundtripError::CwrParsing(format!("Failed to open CWR file: {}", e)))?;
 
     for parsed_result in record_stream {

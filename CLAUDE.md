@@ -22,10 +22,10 @@
 - **ASCII** - CWR spec only supports ASCII, so all reading and writing need to use this encoding!
 
 ## Dependencies & Tools
+- **ALWAYS CLEAN UP** - All `cargo tests` should pass (unless they are new and the features have not been implemented), then fix any `cargo clippy` issues, then `cargo fmt`
 - **"Dependency Restraint** - Prefer fewer, proven dependencies over many small ones; implement simple functionality yourself rather than adding dependencies
 - **Core Dependencies** - `log` for logging, `thiserror` for error types, `anyhow` for applications
 - **Parsing Approach** - CWR is fixed-width EDI format, string splitting is the obvious approach
-- **Automated Checks** - Run `cargo fmt` and `cargo clippy` after every working change
 - **Commit Message** - Propose a single-line commit message after every working change
 - **Warning-Free Code** - Avoid compiler and clippy warnings; ask for clarification if uncertain about best practices
 - **Use tools and scripts!** - Use tools (`rg`, `sed`, etc) and scripts (`python3`) to perform mass updates wherever possible

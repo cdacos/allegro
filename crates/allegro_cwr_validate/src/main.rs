@@ -6,6 +6,7 @@ use allegro_cwr_cli::{get_value, init_logging_and_parse_args, process_stdin_with
 #[derive(Default)]
 struct Config {
     base: BaseConfig,
+    charset_override: Option<String>,
 }
 
 fn parse_args() -> Result<Config, String> {
@@ -17,6 +18,10 @@ fn parse_args() -> Result<Config, String> {
             lexopt::Arg::Long("cwr") => {
                 let version_str = get_value(&mut parser, "cwr")?;
                 config.base.set_cwr_version(&version_str)?;
+            }
+            lexopt::Arg::Long("charset") => {
+                let charset_str = get_value(&mut parser, "charset")?;
+                config.charset_override = Some(charset_str);
             }
             lexopt::Arg::Value(val) => {
                 config.base.add_input_file(val.to_string_lossy().to_string());
@@ -55,7 +60,11 @@ fn process_stdin(config: &Config, start_time: Instant) {
     process_stdin_with_temp_file(
         "cwr_validate_stdin",
         |temp_path, start_time| {
-            let result = allegro_cwr_validate::check_roundtrip_integrity(temp_path, config.base.cwr_version);
+            let result = allegro_cwr_validate::check_roundtrip_integrity_with_charset(
+                temp_path,
+                config.base.cwr_version,
+                config.charset_override.as_deref(),
+            );
             let elapsed_time = start_time.elapsed();
 
             let count = match result {
@@ -84,7 +93,11 @@ fn process_files(config: &Config, start_time: Instant) {
     for filename in &config.base.input_files {
         println!("Validating CWR file: {}", filename);
 
-        let result = allegro_cwr_validate::check_roundtrip_integrity(filename, config.base.cwr_version);
+        let result = allegro_cwr_validate::check_roundtrip_integrity_with_charset(
+            filename,
+            config.base.cwr_version,
+            config.charset_override.as_deref(),
+        );
 
         match result {
             Ok(count) => {
@@ -135,6 +148,7 @@ fn print_help() {
     eprintln!();
     eprintln!("Options:");
     eprintln!("      --cwr <version>      CWR version (2.0, 2.1, 2.2). Auto-detected from filename (.Vxx) or file content if not specified");
+    eprintln!("      --charset <charset>  Override character set when missing in HDR record (e.g., UTF-8, ASCII)");
     eprintln!("  -h, --help               Show this help message");
     eprintln!();
     eprintln!("Examples:");

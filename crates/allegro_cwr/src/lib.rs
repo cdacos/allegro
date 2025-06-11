@@ -45,6 +45,7 @@ pub use crate::cwr_registry::{CwrRegistry, get_all_record_type_codes};
 pub use crate::error::CwrParseError;
 pub use crate::parser::{
     ParsedRecord, ParsingContext, is_cwr_file, process_cwr_stream, process_cwr_stream_with_version,
+    process_cwr_stream_with_version_and_charset,
 };
 pub use crate::records::*;
 pub use crate::util::{extract_version_from_filename, format_int_with_commas};

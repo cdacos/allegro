@@ -57,6 +57,68 @@ pub fn process_cwr_stream(
     process_cwr_stream_with_version(input_filename, None)
 }
 
+/// Returns an iterator that processes CWR lines and yields parsed records with optional version hint and character set override
+pub fn process_cwr_stream_with_version_and_charset(
+    input_filename: &str, version_hint: Option<f32>, charset_override: Option<&str>,
+) -> Result<impl Iterator<Item = Result<ParsedRecord, CwrParseError>>, CwrParseError> {
+    // Validate header and detect version in one operation!
+    let file = File::open(input_filename)?;
+    let mut sniffer = AsciiStreamSniffer::new(file);
+    let mut header_info = match sniffer.validate_and_detect_version(input_filename, version_hint) {
+        Err(CwrParseError::InvalidHeader { found_bytes }) if found_bytes.is_empty() => {
+            return Err(CwrParseError::BadFormat("File is empty".to_string()));
+        }
+        Err(CwrParseError::InvalidHeader { found_bytes }) => {
+            return Err(CwrParseError::BadFormat(format!(
+                "File does not start with HDR record. Found: {:?}",
+                String::from_utf8_lossy(&found_bytes)
+            )));
+        }
+        Err(e) => return Err(e),
+        Ok(info) => info.clone(),
+    };
+
+    // Override character set if provided
+    if let Some(charset_str) = charset_override {
+        use crate::parsing::CwrFieldParse;
+        let (charset_opt, _) = <Option<crate::domain_types::CharacterSet>>::parse_cwr_field(
+            charset_str,
+            "character_set_override",
+            "Character set override",
+        );
+        header_info.character_set = charset_opt;
+        info!("Character set overridden to: {:?}", header_info.character_set);
+    }
+
+    let cwr_version = header_info.version;
+    info!("Determined CWR version: {}", cwr_version);
+
+    let context = ParsingContext { cwr_version, file_id: 0, character_set: header_info.character_set.clone() };
+
+    // Create a new reader for the full iteration with character set context
+    let file = File::open(input_filename)?;
+    let reader = AsciiLineReader::with_character_set(file, header_info.character_set.clone());
+
+    Ok(reader.lines().enumerate().map(move |(idx, line_result)| {
+        let line_number = idx + 1;
+        match line_result {
+            Ok(line) => {
+                if line.is_empty() || line.trim().is_empty() {
+                    Err(CwrParseError::BadFormat(format!("Line {} is empty", line_number)))
+                } else if line.len() < 3 {
+                    Err(CwrParseError::BadFormat(format!("Line {} is too short (less than 3 chars)", line_number)))
+                } else {
+                    parse_cwr_line(&line, line_number, &context)
+                }
+            }
+            Err(parse_err) => {
+                error!("Parse error at line {}: {}", line_number, parse_err);
+                Err(parse_err)
+            }
+        }
+    }))
+}
+
 /// Returns an iterator that processes CWR lines and yields parsed records with optional version hint
 pub fn process_cwr_stream_with_version(
     input_filename: &str, version_hint: Option<f32>,
