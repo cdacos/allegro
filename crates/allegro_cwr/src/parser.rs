@@ -4,7 +4,7 @@ use crate::util::get_cwr_version;
 use log::{error, info};
 use std::fs::File;
 use std::io;
-use std::io::{BufRead, BufReader, Seek};
+use std::io::{BufRead, BufReader, Read, Seek};
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct ParsingContext {
@@ -19,6 +19,21 @@ pub struct ParsedRecord {
     pub record: CwrRegistry,
     pub context: ParsingContext,
     pub warnings: Vec<String>,
+}
+
+/// Checks if a file is a CWR file by reading the first 3 bytes
+/// Returns true if the file starts with "HDR", false otherwise
+/// Returns an error if the file cannot be read or is too small
+pub fn is_cwr_file(filename: &str) -> Result<bool, io::Error> {
+    let mut file = File::open(filename)?;
+    let mut buffer = [0u8; 3];
+    let bytes_read = file.read(&mut buffer)?;
+
+    if bytes_read < 3 {
+        return Ok(false);
+    }
+
+    Ok(&buffer == b"HDR")
 }
 
 /// Parses a single CWR line and returns the parsed record

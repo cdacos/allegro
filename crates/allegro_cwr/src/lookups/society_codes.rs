@@ -6,6 +6,7 @@ use std::collections::HashMap;
 /// Society codes mapping from society name to numeric code
 pub static SOCIETY_CODES: Lazy<HashMap<&'static str, u16>> = Lazy::new(|| {
     let mut m = HashMap::new();
+    m.insert("DP", 0); // Public domain -- NB!
     m.insert("ACUM", 1); // Israel
     m.insert("ADDAF", 2); // Brazil
     m.insert("AEPI", 3); // Greece
@@ -104,6 +105,7 @@ pub static SOCIETY_CODES: Lazy<HashMap<&'static str, u16>> = Lazy::new(|| {
     m.insert("COTT", 96); // Trinidad And Tobago
     m.insert("ZAIKS", 97); // Poland
     m.insert("ZIMURA", 98); // Zimbabwe
+    m.insert("NS", 99); // No society -- NB!
     m.insert("SOCAN", 101); // Canada
     m.insert("NASCAM", 102); // Namibia
     m.insert("ACDAM", 103); // Cuba

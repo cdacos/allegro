@@ -8,6 +8,7 @@ description = "SQLite database operations for CWR (Common Works Registration) fi
 [dependencies]
 rusqlite = { version = "0.36.0", features = ["bundled", "serde_json"] }
 allegro_cwr = { path = "../allegro_cwr", features = ["sqlite"] }
+allegro_cwr_cli = { path = "../allegro_cwr_cli" }
 log = "0.4"
 lexopt = "0.3.1"
 env_logger = "0.11"
