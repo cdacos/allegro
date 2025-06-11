@@ -87,3 +87,16 @@ where
         }
     }
 }
+
+/// Determines the output filename for a given input file when processing multiple files
+/// If there are multiple input files and an output filename is specified, appends an index
+/// Otherwise returns the original output filename or None
+pub fn get_output_filename_for_multiple_files(
+    base_output_filename: Option<&str>, input_file_count: usize, current_file_index: usize,
+) -> Option<String> {
+    match (base_output_filename, input_file_count > 1) {
+        (Some(base_name), true) => Some(format!("{}.{}", base_name, current_file_index + 1)),
+        (Some(base_name), false) => Some(base_name.to_string()),
+        (None, _) => None,
+    }
+}

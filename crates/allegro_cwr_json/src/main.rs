@@ -2,7 +2,10 @@ use std::process;
 use std::time::Instant;
 
 use allegro_cwr::parser::is_cwr_file;
-use allegro_cwr_cli::{BaseConfig, get_value, init_logging_and_parse_args, process_stdin_with_temp_file};
+use allegro_cwr_cli::{
+    BaseConfig, get_output_filename_for_multiple_files, get_value, init_logging_and_parse_args,
+    process_stdin_with_temp_file,
+};
 use log::info;
 
 #[derive(Default)]
@@ -120,12 +123,11 @@ fn process_files(config: &Config, start_time: Instant) {
             }
         };
 
-        let output_filename = if config.base.input_files.len() > 1 && config.output_filename.is_some() {
-            let base_name = config.output_filename.as_ref().unwrap();
-            Some(format!("{}.{}", base_name, files_processed + 1))
-        } else {
-            config.output_filename.clone()
-        };
+        let output_filename = get_output_filename_for_multiple_files(
+            config.output_filename.as_deref(),
+            config.base.input_files.len(),
+            files_processed,
+        );
 
         let result = if is_cwr {
             allegro_cwr_json::process_cwr_to_json_with_version_and_output(
