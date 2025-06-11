@@ -29,6 +29,7 @@
 - **Commit Message** - Propose a single-line commit message after every working change
 - **Warning-Free Code** - Avoid compiler and clippy warnings; ask for clarification if uncertain about best practices
 - **Use tools and scripts!** - Use tools (`rg`, `sed`, etc) and scripts (`python3`) to perform mass updates wherever possible
+- **DO NOT ADD rusqlite** - If you add rusqlite as a dependency to allegro_cwr you will make me cry.
 
 ## Testing Strategy
 - **Test Data** - Use `.me/` folder for real CWR sample files (add to .gitignore)

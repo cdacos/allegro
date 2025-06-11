@@ -70,20 +70,6 @@ impl CwrFieldParse for Option<NonRomanAlphabet> {
     }
 }
 
-#[cfg(feature = "sqlite")]
-impl rusqlite::types::ToSql for NonRomanAlphabet {
-    fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
-        self.as_str().to_sql()
-    }
-}
-
-#[cfg(feature = "sqlite")]
-impl rusqlite::types::FromSql for NonRomanAlphabet {
-    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
-        String::column_result(value).map(NonRomanAlphabet)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

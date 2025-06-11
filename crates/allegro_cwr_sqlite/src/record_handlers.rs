@@ -396,8 +396,8 @@ pub fn parse_and_insert_npa<'a>(
                 record.transaction_sequence_num.to_sql_int(),
                 record.record_sequence_num.to_sql_int(),
                 record.interested_party_num,
-                record.interested_party_name,
-                &record.interested_party_writer_first_name,
+                record.interested_party_name.to_sql_string(),
+                record.interested_party_writer_first_name.to_sql_string(),
                 record.language_code.as_deref().unwrap_or(""),
             ])?;
             Ok(())
@@ -469,7 +469,7 @@ pub fn parse_and_insert_npn<'a>(
                 record.record_sequence_num.to_sql_int(),
                 record.publisher_sequence_num.to_sql_int(),
                 record.interested_party_num,
-                record.publisher_name,
+                record.publisher_name.to_sql_string(),
                 record.language_code.as_deref().unwrap_or(""),
             ])?;
             Ok(())
@@ -570,7 +570,7 @@ pub fn parse_and_insert_nwn<'a>(
                 record.transaction_sequence_num.to_sql_int(),
                 record.record_sequence_num.to_sql_int(),
                 record.interested_party_num,
-                record.writer_last_name,
+                record.writer_last_name.to_sql_string(),
                 record.writer_first_name.as_deref().unwrap_or(""),
                 record.language_code.as_deref().unwrap_or(""),
             ])?;
@@ -656,7 +656,7 @@ pub fn parse_and_insert_nat<'a>(
                 record.record_type.to_sql_string(),
                 record.transaction_sequence_num.to_sql_int(),
                 record.record_sequence_num.to_sql_int(),
-                record.title,
+                record.title.to_sql_string(),
                 record.title_type.to_sql_string(),
                 record.language_code.as_deref().unwrap_or(""),
             ])?;
@@ -781,7 +781,7 @@ pub fn parse_and_insert_npr<'a>(
                 record.record_type.to_sql_string(),
                 record.transaction_sequence_num.to_sql_int(),
                 record.record_sequence_num.to_sql_int(),
-                record.performing_artist_name,
+                record.performing_artist_name.as_ref().map(|n| n.to_sql_string()).unwrap_or_default(),
                 record.performing_artist_first_name.as_deref().unwrap_or(""),
                 record.performing_artist_ipi_name_num.as_deref().unwrap_or(""),
                 record.performing_artist_ipi_base_number.as_deref().unwrap_or(""),
@@ -1035,8 +1035,8 @@ pub fn parse_and_insert_now<'a>(
                 record.record_type.to_sql_string(),
                 record.transaction_sequence_num.to_sql_int(),
                 record.record_sequence_num.to_sql_int(),
-                record.writer_name,
-                &record.writer_first_name,
+                record.writer_name.to_sql_string(),
+                record.writer_first_name.to_sql_string(),
                 record.language_code.as_deref().unwrap_or(""),
                 record.writer_position.as_ref().map(|p| p.as_str()).unwrap_or(""),
             ])?;
