@@ -45,6 +45,7 @@ name = "allegro_cwr_json"
 version = "0.1.0"
 dependencies = [
  "allegro_cwr",
+ "allegro_cwr_cli",
  "env_logger",
  "lexopt",
  "log",
