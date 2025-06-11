@@ -2,6 +2,7 @@ use std::process;
 use std::time::Instant;
 
 use allegro_cwr_cli::{get_value, init_logging_and_parse_args, process_stdin_with_temp_file, BaseConfig};
+use log::info;
 
 #[derive(Default)]
 struct Config {
@@ -112,14 +113,14 @@ fn process_files(config: &Config, start_time: Instant) {
         }
 
         println!(
-            "Checked {} CWR records from '{}' in {:.2?}",
+            "Validated {} CWR records from '{}' in {:.2?}",
             allegro_cwr::format_int_with_commas(total_count as i64),
             &config.base.input_files[0],
             elapsed_time
         );
     } else {
         println!(
-            "Checked {} CWR records from {} files in {:.2?}",
+            "Validated {} CWR records from {} files in {:.2?}",
             allegro_cwr::format_int_with_commas(total_count as i64),
             processed_files,
             elapsed_time

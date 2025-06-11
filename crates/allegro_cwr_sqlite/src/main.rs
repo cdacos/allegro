@@ -3,10 +3,7 @@ use std::time::Instant;
 
 use allegro_cwr::parser::is_cwr_file;
 use allegro_cwr::{OutputFormat, format_int_with_commas};
-use allegro_cwr_cli::{
-    BaseConfig, get_value, init_logging_and_parse_args,
-    process_stdin_with_temp_file,
-};
+use allegro_cwr_cli::{BaseConfig, get_value, init_logging_and_parse_args, process_stdin_with_temp_file};
 use log::info;
 
 #[derive(Default)]

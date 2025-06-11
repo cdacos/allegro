@@ -112,7 +112,7 @@ fn process_files(config: &Config, start_time: Instant) {
     let mut failed_files = Vec::new();
 
     for input_filename in &config.base.input_files {
-        info!("Processing CWR/JSON file: {}", input_filename);
+        info!("Processing CWR file: {}", input_filename);
 
         let is_cwr = match is_cwr_file(input_filename) {
             Ok(is_cwr) => is_cwr,
