@@ -153,4 +153,97 @@ mod tests {
         assert_eq!(record.record_type, "NPN");
         assert_eq!(record.publisher_name.as_str().trim(), "NORMAL PUBLISHER NAME");
     }
+
+    #[test]
+    fn test_nat_multibyte_field_alignment_bug() {
+        // This test reproduces the exact bug from carlos.cwr:
+        // Multi-byte UTF-8 characters in NonRomanAlphabet fields causing field misalignment
+        
+        // Simulate the problematic line from carlos.cwr (line 517)
+        // "EVIDÊNCIA" contains "Ê" which is 2 bytes but 1 character
+        let mut test_line = String::new();
+        test_line.push_str("NAT"); // record_type (0-2)
+        test_line.push_str("00000058"); // transaction_seq (3-10)
+        test_line.push_str("00000001"); // record_seq (11-18)
+        
+        // Title field starts at position 19, length 640
+        test_line.push_str("EVIDÊNCIA"); // Title with multi-byte char (10 bytes, 9 chars)
+        // Pad to 640 bytes total for title field
+        test_line.push_str(&" ".repeat(640 - "EVIDÊNCIA".as_bytes().len()));
+        
+        // Title type at position 659, length 2 - this should be "OT"
+        test_line.push_str("OT");
+        // Language code at position 661, length 2 - this should be "PT"  
+        test_line.push_str("PT");
+        
+        // Parse the record
+        let (record, warnings) = NatRecord::parse(&test_line);
+        
+        // The roundtrip serialization should produce exactly the same string
+        let version = crate::domain_types::CwrVersion(2.1);
+        let serialized = record.to_cwr_line(&version);
+        
+        println!("Original:   '{}'", test_line);
+        println!("Serialized: '{}'", serialized);
+        println!("Original len: {}, Serialized len: {}", test_line.len(), serialized.len());
+        
+        // Before the fix, this would fail due to field misalignment
+        assert_eq!(serialized, test_line, "Round-trip serialization should be identical");
+        assert_eq!(serialized.len(), test_line.len(), "Byte lengths should match");
+        
+        // Verify the fields were parsed correctly
+        assert_eq!(record.title.as_str().trim(), "EVIDÊNCIA");
+        assert_eq!(record.title_type.as_str(), "OT");
+        if let Some(ref lang) = record.language_code {
+            assert_eq!(lang.as_str(), "PT");
+        }
+        
+        // Should not have critical warnings
+        let critical_warnings: Vec<_> = warnings.iter().filter(|w| w.is_critical()).collect();
+        assert!(critical_warnings.is_empty(), "Should not have critical warnings");
+    }
+
+    #[test]
+    fn test_nwn_multibyte_field_alignment_bug() {
+        // Test the NWN record alignment issue from carlos.cwr
+        // Similar to NAT but with writer names containing multi-byte characters
+        
+        let mut test_line = String::new();
+        test_line.push_str("NWN"); // record_type (0-2)
+        test_line.push_str("00000074"); // transaction_seq (3-10)
+        test_line.push_str("00000006"); // record_seq (11-18)
+        test_line.push_str("27976    "); // interested_party_num (19-27), 9 chars
+        
+        // Writer last name at position 28, length 160
+        test_line.push_str("VALENÇA, ALCEU PAIVA"); // Contains "Ç" multi-byte char
+        let name_bytes = "VALENÇA, ALCEU PAIVA".as_bytes().len();
+        test_line.push_str(&" ".repeat(160 - name_bytes));
+        
+        // Writer first name at position 188, length 160 (optional, empty)
+        test_line.push_str(&" ".repeat(160));
+        
+        // Language code at position 348, length 2
+        test_line.push_str("PT");
+        
+        // Parse and test round-trip
+        let (record, warnings) = crate::records::nwn::NwnRecord::parse(&test_line);
+        let version = crate::domain_types::CwrVersion(2.1);
+        let serialized = record.to_cwr_line(&version);
+        
+        println!("NWN Original:   '{}'", test_line);
+        println!("NWN Serialized: '{}'", serialized);
+        
+        // Should round-trip perfectly
+        assert_eq!(serialized, test_line, "NWN round-trip should be identical");
+        assert_eq!(serialized.len(), test_line.len(), "NWN byte lengths should match");
+        
+        // Verify parsing
+        assert_eq!(record.writer_last_name.as_str().trim(), "VALENÇA, ALCEU PAIVA");
+        if let Some(ref lang) = record.language_code {
+            assert_eq!(lang.as_str(), "PT");
+        }
+        
+        let critical_warnings: Vec<_> = warnings.iter().filter(|w| w.is_critical()).collect();
+        assert!(critical_warnings.is_empty(), "NWN should not have critical warnings");
+    }
 }
