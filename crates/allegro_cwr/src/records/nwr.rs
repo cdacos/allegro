@@ -192,7 +192,9 @@ mod roundtrip_test {
 
         // Generate the line back
         let version = CwrVersion(2.2);
-        let serialized = record.to_cwr_line(&version);
+        let character_set = CharacterSet::ASCII;
+        let serialized_bytes = record.to_cwr_record_bytes(&version, &character_set);
+        let serialized = String::from_utf8_lossy(&serialized_bytes).to_string();
 
         println!("Serialized:  '{}'", serialized);
 

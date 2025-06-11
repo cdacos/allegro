@@ -19,7 +19,7 @@ pub struct NatRecord {
     pub record_sequence_num: Number,
 
     #[cwr(title = "Title", start = 19, len = 640)]
-    pub title: String,
+    pub title: NonRomanAlphabet,
 
     #[cwr(title = "Title type", start = 659, len = 2)]
     pub title_type: TitleType,
@@ -46,11 +46,11 @@ fn nat_custom_validate(record: &mut NatRecord) -> Vec<CwrWarning<'static>> {
     // Validate transaction sequence number is numeric
     // Validate record sequence number is numeric
     // Validate title is not empty
-    if record.title.trim().is_empty() {
+    if record.title.as_str().trim().is_empty() {
         warnings.push(CwrWarning {
             field_name: "title",
             field_title: "Title",
-            source_str: std::borrow::Cow::Owned(record.title.clone()),
+            source_str: std::borrow::Cow::Owned(record.title.as_str().to_string()),
             level: WarningLevel::Critical,
             description: "Title cannot be empty".to_string(),
         });

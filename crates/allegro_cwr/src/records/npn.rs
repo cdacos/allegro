@@ -25,7 +25,7 @@ pub struct NpnRecord {
     pub interested_party_num: String,
 
     #[cwr(title = "Publisher name", start = 30, len = 480)]
-    pub publisher_name: String,
+    pub publisher_name: NonRomanAlphabet,
 
     #[cwr(title = "Language code (optional)", start = 510, len = 2)]
     pub language_code: Option<LanguageCode>,
@@ -71,11 +71,11 @@ fn npn_custom_validate(record: &mut NpnRecord) -> Vec<CwrWarning<'static>> {
     }
 
     // Validate publisher name is not empty
-    if record.publisher_name.trim().is_empty() {
+    if record.publisher_name.as_str().trim().is_empty() {
         warnings.push(CwrWarning {
             field_name: "publisher_name",
             field_title: "Publisher name",
-            source_str: std::borrow::Cow::Owned(record.publisher_name.clone()),
+            source_str: std::borrow::Cow::Owned(record.publisher_name.as_str().to_string()),
             level: WarningLevel::Critical,
             description: "Publisher name cannot be empty".to_string(),
         });

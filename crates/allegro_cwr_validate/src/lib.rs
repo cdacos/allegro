@@ -1,6 +1,7 @@
 use std::collections::HashMap;
+use std::io::Write;
 
-use allegro_cwr::process_cwr_stream_with_version;
+use allegro_cwr::{cwr_registry::CwrRegistry, domain_types::CharacterSet, process_cwr_stream_with_version_and_charset};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -13,6 +14,123 @@ pub enum RoundtripError {
 
 /// Check round-trip integrity by parsing CWR records and serializing them back
 pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> Result<usize, RoundtripError> {
+    check_roundtrip_integrity_with_charset(input_path, cwr_version, None)
+}
+
+/// Check round-trip integrity and optionally write normalized output to a file
+pub fn check_roundtrip_integrity_with_output(
+    input_path: &str, cwr_version: Option<f32>, charset_override: Option<&str>, output_path: Option<&str>,
+) -> Result<usize, RoundtripError> {
+    if let Some(output_file) = output_path {
+        let file = std::fs::File::create(output_file)?;
+        check_roundtrip_integrity_to_writer(input_path, cwr_version, charset_override, file)
+    } else {
+        check_roundtrip_integrity_with_charset(input_path, cwr_version, charset_override)
+    }
+}
+
+/// Check round-trip integrity and write normalized output to a writer
+pub fn check_roundtrip_integrity_to_writer<W: Write>(
+    input_path: &str, cwr_version: Option<f32>, charset_override: Option<&str>, writer: W,
+) -> Result<usize, RoundtripError> {
+    let mut writer = writer;
+    let mut record_count = 0;
+    let mut diff_map: HashMap<String, Vec<usize>> = HashMap::new();
+    let mut diff_examples: HashMap<String, (String, String, usize)> = HashMap::new();
+    let mut extra_chars_map: HashMap<String, Vec<usize>> = HashMap::new();
+    let mut detected_version: Option<f32> = None;
+    let mut warning_counts: HashMap<String, Vec<usize>> = HashMap::new();
+    let mut character_set: Option<CharacterSet> = None;
+
+    let original_lines: Vec<String> = std::fs::read_to_string(input_path)?.lines().map(|s| s.to_string()).collect();
+
+    let record_stream = process_cwr_stream_with_version_and_charset(input_path, cwr_version, charset_override)
+        .map_err(|e| RoundtripError::CwrParsing(format!("Failed to open CWR file: {}", e)))?;
+
+    for parsed_result in record_stream {
+        match parsed_result {
+            Ok(parsed_record) => {
+                if detected_version.is_none() {
+                    detected_version = Some(parsed_record.context.cwr_version);
+                    character_set = parsed_record.context.character_set.clone();
+                    println!("Detected CWR version: {}", parsed_record.context.cwr_version);
+                }
+
+                let line_index = parsed_record.line_number - 1;
+                let version = allegro_cwr::domain_types::CwrVersion(parsed_record.context.cwr_version);
+
+                // Check if this is an HDR record and charset override is provided
+                let record_to_write = if let Some(charset_str) = charset_override {
+                    match parsed_record.record.clone() {
+                        CwrRegistry::Hdr(mut hdr_record) => {
+                            hdr_record.character_set = Some(parse_charset_override(charset_str));
+                            CwrRegistry::Hdr(hdr_record)
+                        }
+                        other => other,
+                    }
+                } else {
+                    parsed_record.record.clone()
+                };
+
+                // Use character set from context, or default to ASCII
+                let charset_for_encoding = character_set.as_ref().unwrap_or(&CharacterSet::ASCII);
+                let serialized_bytes = record_to_write.to_cwr_record_bytes(&version, charset_for_encoding);
+
+                // Convert bytes to string for writing (assuming the file system encoding matches the character set)
+                let serialized_line = match charset_for_encoding {
+                    CharacterSet::ASCII => {
+                        // For ASCII, ensure all bytes are valid ASCII
+                        if serialized_bytes.iter().all(|&b| b <= 127) {
+                            String::from_utf8_lossy(&serialized_bytes).to_string()
+                        } else {
+                            return Err(RoundtripError::CwrParsing("Non-ASCII bytes found in ASCII mode".to_string()));
+                        }
+                    }
+                    _ => {
+                        // For UTF-8 and other character sets, convert bytes to string
+                        String::from_utf8_lossy(&serialized_bytes).to_string()
+                    }
+                };
+
+                writeln!(writer, "{}", serialized_line)?;
+
+                if line_index < original_lines.len() {
+                    let original_line = &original_lines[line_index];
+
+                    check_character_differences(
+                        original_line,
+                        &serialized_line,
+                        parsed_record.record.record_type(),
+                        parsed_record.line_number,
+                        &mut diff_map,
+                        &mut diff_examples,
+                        &mut extra_chars_map,
+                    );
+                }
+
+                for warning in &parsed_record.warnings {
+                    let record_type = parsed_record.record.record_type();
+                    let formatted_warning = format!("{}: {}", record_type, warning);
+                    warning_counts.entry(formatted_warning).or_default().push(parsed_record.line_number);
+                }
+
+                record_count += 1;
+            }
+            Err(e) => {
+                return Err(RoundtripError::CwrParsing(format!("Parse error: {}", e)));
+            }
+        }
+    }
+    println!();
+
+    report_validation_results(&warning_counts, &extra_chars_map, &diff_map, &diff_examples, record_count)?;
+    Ok(record_count)
+}
+
+/// Check round-trip integrity with optional character set override
+pub fn check_roundtrip_integrity_with_charset(
+    input_path: &str, cwr_version: Option<f32>, charset_override: Option<&str>,
+) -> Result<usize, RoundtripError> {
     let mut record_count = 0;
     let mut diff_map: HashMap<String, Vec<usize>> = HashMap::new(); // key: diff description, value: line numbers
     let mut diff_examples: HashMap<String, (String, String, usize)> = HashMap::new(); // key: diff description, value: (original, serialized, line_number)
@@ -23,8 +141,8 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
     // Read original lines for comparison
     let original_lines: Vec<String> = std::fs::read_to_string(input_path)?.lines().map(|s| s.to_string()).collect();
 
-    // Use the allegro_cwr streaming parser
-    let record_stream = process_cwr_stream_with_version(input_path, cwr_version)
+    // Use the allegro_cwr streaming parser with character set override if needed
+    let record_stream = process_cwr_stream_with_version_and_charset(input_path, cwr_version, charset_override)
         .map_err(|e| RoundtripError::CwrParsing(format!("Failed to open CWR file: {}", e)))?;
 
     for parsed_result in record_stream {
@@ -40,9 +158,12 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
                 if line_index < original_lines.len() {
                     let original_line = &original_lines[line_index];
 
-                    // Serialize the parsed record back to CWR line
+                    // Serialize the parsed record back to CWR line using byte-based API
                     let version = allegro_cwr::domain_types::CwrVersion(parsed_record.context.cwr_version);
-                    let serialized_line = parsed_record.record.to_cwr_line(&version);
+                    let charset_for_encoding =
+                        parsed_record.context.character_set.as_ref().unwrap_or(&CharacterSet::ASCII);
+                    let serialized_bytes = parsed_record.record.to_cwr_record_bytes(&version, charset_for_encoding);
+                    let serialized_line = String::from_utf8_lossy(&serialized_bytes).to_string();
 
                     // Check for character differences
                     check_character_differences(
@@ -73,6 +194,14 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
     }
     println!();
 
+    report_validation_results(&warning_counts, &extra_chars_map, &diff_map, &diff_examples, record_count)
+}
+
+fn report_validation_results(
+    warning_counts: &HashMap<String, Vec<usize>>, extra_chars_map: &HashMap<String, Vec<usize>>,
+    diff_map: &HashMap<String, Vec<usize>>, diff_examples: &HashMap<String, (String, String, usize)>,
+    record_count: usize,
+) -> Result<usize, RoundtripError> {
     // Report all warnings in a consolidated section
     if !warning_counts.is_empty() || !extra_chars_map.is_empty() {
         let total_issues = warning_counts.len() + extra_chars_map.len();
@@ -175,6 +304,17 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
 
     println!("ROUNDTRIP PASSED: All {} records maintain round-trip integrity", record_count);
     Ok(record_count)
+}
+
+fn parse_charset_override(charset_str: &str) -> CharacterSet {
+    match charset_str.to_uppercase().as_str() {
+        "ASCII" => CharacterSet::ASCII,
+        "UTF-8" | "UTF8" => CharacterSet::UTF8,
+        "UNICODE" => CharacterSet::Unicode,
+        "TRADITIONAL BIG5" | "BIG5" => CharacterSet::TraditionalBig5,
+        "SIMPLIFIED GB" | "GB" => CharacterSet::SimplifiedGb,
+        _ => CharacterSet::Unknown(charset_str.to_string()),
+    }
 }
 
 fn display_incidences(line_numbers: &[usize]) -> String {

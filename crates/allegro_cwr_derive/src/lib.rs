@@ -131,8 +131,8 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
 
     let field_names = fields.iter().map(|f| &f.ident);
 
-    // Generate field writers for to_cwr_line method
-    let field_writers = fields.iter().map(|field| {
+    // Generate field writers for byte-based method
+    let field_writers_bytes = fields.iter().map(|field| {
         let field_name = field.ident.as_ref().unwrap();
         let (_title, start, len, _skip_parse, min_version) = extract_field_attrs(&field.attrs);
 
@@ -141,24 +141,22 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
             quote! {
                 if version.supports_version(#min_ver) {
                     // Ensure we're at the right position
-                    while line.len() < #start {
-                        line.push(' ');
+                    while result.len() < #start {
+                        result.push(b' ');
                     }
-                    let final_field = <_ as crate::parsing::CwrFieldWrite>::to_cwr_str(&self.#field_name, #len);
-
-                    line.push_str(&final_field);
+                    let field_bytes = <_ as crate::parsing::CwrFieldWrite>::to_cwr_field_bytes(&self.#field_name, #len, character_set);
+                    result.extend(field_bytes);
                 }
             }
         } else {
             // Always include this field
             quote! {
                 // Ensure we're at the right position
-                while line.len() < #start {
-                    line.push(' ');
+                while result.len() < #start {
+                    result.push(b' ');
                 }
-                let final_field = <_ as crate::parsing::CwrFieldWrite>::to_cwr_str(&self.#field_name, #len);
-
-                line.push_str(&final_field);
+                let field_bytes = <_ as crate::parsing::CwrFieldWrite>::to_cwr_field_bytes(&self.#field_name, #len, character_set);
+                result.extend(field_bytes);
             }
         }
     });
@@ -248,15 +246,14 @@ pub fn derive_cwr_record(input: TokenStream) -> TokenStream {
                 })
             }
 
-            /// Generate CWR line from record with version-aware field writing
-            pub fn to_cwr_line(&self, version: &crate::domain_types::CwrVersion) -> String {
-                let mut line = String::new();
+            /// Generate CWR record as bytes with proper character set encoding
+            pub fn to_cwr_record_bytes(&self, version: &crate::domain_types::CwrVersion, character_set: &crate::domain_types::CharacterSet) -> Vec<u8> {
+                let mut result = Vec::new();
 
-                #(#field_writers)*
+                #(#field_writers_bytes)*
 
-                line
+                result
             }
-
         }
 
         // Generate RecordType trait implementation

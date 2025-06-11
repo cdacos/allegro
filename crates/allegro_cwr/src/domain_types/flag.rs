@@ -1,5 +1,6 @@
+use crate::domain_types::CharacterSet;
 use crate::domain_types::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
-use crate::parsing::format_text;
+use crate::parsing::format_text_to_cwr_bytes;
 use std::borrow::Cow;
 
 /// Flag with Yes/No/Unknown values
@@ -22,8 +23,8 @@ impl Flag {
 }
 
 impl CwrFieldWrite for Flag {
-    fn to_cwr_str(&self, _width: usize) -> String {
-        format_text(self.as_str(), _width)
+    fn to_cwr_field_bytes(&self, width: usize, character_set: &CharacterSet) -> Vec<u8> {
+        format_text_to_cwr_bytes(self.as_str(), width, character_set)
     }
 }
 

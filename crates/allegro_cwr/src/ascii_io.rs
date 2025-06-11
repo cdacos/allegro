@@ -1,11 +1,23 @@
 use crate::error::CwrParseError;
+use crate::parsing::CwrFieldParse;
 use crate::util::get_cwr_version;
 use std::io::{BufRead, BufReader, Read, Write};
+
+fn should_validate_ascii(character_set: &Option<crate::domain_types::CharacterSet>) -> bool {
+    use crate::domain_types::CharacterSet;
+    match character_set {
+        None | Some(CharacterSet::ASCII) => true,
+        Some(CharacterSet::UTF8) | Some(CharacterSet::Unicode) => false,
+        Some(CharacterSet::TraditionalBig5) | Some(CharacterSet::SimplifiedGb) => false,
+        Some(CharacterSet::Unknown(_)) => true, // Be conservative with unknown sets
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct CwrHeaderInfo {
     pub header_line: String,
     pub version: f32,
+    pub character_set: Option<crate::domain_types::CharacterSet>,
 }
 
 pub struct AsciiStreamSniffer<R: Read> {
@@ -55,7 +67,7 @@ impl<R: Read> AsciiStreamSniffer<R> {
             }
         }
 
-        let line = line_content.trim_end();
+        let line = line_content.trim_end_matches('\n').trim_end_matches('\r');
         if !line.starts_with("HDR") {
             return Err(CwrParseError::InvalidHeader {
                 found_bytes: line.chars().take(3).collect::<String>().into_bytes(),
@@ -91,7 +103,24 @@ impl<R: Read> AsciiStreamSniffer<R> {
         let line = self.read_and_validate_header_line()?;
         let version = get_cwr_version(filename, &line, cli_version)?;
 
-        let header_info = CwrHeaderInfo { header_line: line, version };
+        // Extract character set from HDR record if version >= 2.1
+        let character_set = if version >= 2.1 && line.len() >= 101 {
+            let charset_field = line.get(86..101).unwrap_or("").trim();
+            if charset_field.is_empty() {
+                None
+            } else {
+                let (charset, _) = <Option<crate::domain_types::CharacterSet>>::parse_cwr_field(
+                    charset_field,
+                    "character_set",
+                    "Character set",
+                );
+                charset
+            }
+        } else {
+            None
+        };
+
+        let header_info = CwrHeaderInfo { header_line: line, version, character_set };
 
         self.cached_header_info = Some(header_info);
         Ok(self.cached_header_info.as_ref().unwrap())
@@ -113,21 +142,27 @@ impl<R: Read> AsciiStreamSniffer<R> {
 
 pub struct AsciiLineReader<R: Read> {
     buf_reader: BufReader<R>,
+    character_set: Option<crate::domain_types::CharacterSet>,
 }
 
 impl<R: Read> AsciiLineReader<R> {
     pub fn new(inner: R) -> Self {
-        Self { buf_reader: BufReader::new(inner) }
+        Self { buf_reader: BufReader::new(inner), character_set: None }
+    }
+
+    pub fn with_character_set(inner: R, character_set: Option<crate::domain_types::CharacterSet>) -> Self {
+        Self { buf_reader: BufReader::new(inner), character_set }
     }
 
     pub fn lines(self) -> impl Iterator<Item = Result<String, CwrParseError>> {
-        AsciiLineIterator { buf_reader: self.buf_reader, line_num: 0 }
+        AsciiLineIterator { buf_reader: self.buf_reader, line_num: 0, character_set: self.character_set }
     }
 }
 
 struct AsciiLineIterator<R: Read> {
     buf_reader: BufReader<R>,
     line_num: usize,
+    character_set: Option<crate::domain_types::CharacterSet>,
 }
 
 impl<R: Read> AsciiLineIterator<R> {
@@ -168,15 +203,17 @@ impl<R: Read> Iterator for AsciiLineIterator<R> {
                     0
                 };
 
-                // Validate ASCII (skip BOM bytes if present)
+                // Validate character encoding based on character set (skip BOM bytes if present)
                 let content_bytes = &line_bytes[content_start..];
-                for (pos, byte) in content_bytes.iter().enumerate() {
-                    if *byte > 127 {
-                        return Some(Err(CwrParseError::NonAsciiInput {
-                            line_num: self.line_num,
-                            byte_pos: pos + content_start,
-                            byte_value: *byte,
-                        }));
+                if should_validate_ascii(&self.character_set) {
+                    for (pos, byte) in content_bytes.iter().enumerate() {
+                        if *byte > 127 {
+                            return Some(Err(CwrParseError::NonAsciiInput {
+                                line_num: self.line_num,
+                                byte_pos: pos + content_start,
+                                byte_value: *byte,
+                            }));
+                        }
                     }
                 }
 
@@ -190,7 +227,7 @@ impl<R: Read> Iterator for AsciiLineIterator<R> {
                     &line
                 };
 
-                let trimmed = line_content.trim_end();
+                let trimmed = line_content.trim_end_matches('\n').trim_end_matches('\r');
                 Some(Ok(trimmed.to_string()))
             }
             Err(e) => Some(Err(CwrParseError::Io(e))),
@@ -200,24 +237,134 @@ impl<R: Read> Iterator for AsciiLineIterator<R> {
 
 pub struct AsciiWriter<W: Write> {
     inner: W,
+    character_set: Option<crate::domain_types::CharacterSet>,
 }
 
 impl<W: Write> AsciiWriter<W> {
     pub fn new(inner: W) -> Self {
-        Self { inner }
+        Self { inner, character_set: None }
+    }
+
+    pub fn with_character_set(inner: W, character_set: Option<crate::domain_types::CharacterSet>) -> Self {
+        Self { inner, character_set }
     }
 
     pub fn write_line(&mut self, utf8_line: &str) -> Result<(), CwrParseError> {
-        // Validate all chars are ASCII
-        for (pos, ch) in utf8_line.char_indices() {
-            if !ch.is_ascii() {
-                return Err(CwrParseError::NonAsciiOutput { char: ch, position: pos });
+        // Validate character encoding based on character set
+        if should_validate_ascii(&self.character_set) {
+            for (pos, ch) in utf8_line.char_indices() {
+                if !ch.is_ascii() {
+                    return Err(CwrParseError::NonAsciiOutput { char: ch, position: pos });
+                }
             }
         }
 
-        // Write as ASCII bytes + \r\n
+        // Write as UTF-8 bytes + \r\n (UTF-8 is backwards compatible with ASCII)
         self.inner.write_all(utf8_line.as_bytes())?;
         self.inner.write_all(b"\r\n")?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::domain_types::CharacterSet;
+    use std::io::Cursor;
+
+    #[test]
+    fn test_ascii_line_reader_with_ascii_charset() {
+        let data = "HDR01\r\nASCII LINE\r\n";
+        let cursor = Cursor::new(data.as_bytes());
+        let reader = AsciiLineReader::with_character_set(cursor, Some(CharacterSet::ASCII));
+
+        let lines: Result<Vec<_>, _> = reader.lines().collect();
+        assert!(lines.is_ok());
+        let lines = lines.unwrap();
+        assert_eq!(lines.len(), 2);
+        assert_eq!(lines[0], "HDR01");
+        assert_eq!(lines[1], "ASCII LINE");
+    }
+
+    #[test]
+    fn test_ascii_line_reader_with_utf8_charset_allows_non_ascii() {
+        let data = "HDR01\r\nLINE WITH UNICODE: café\r\n";
+        let cursor = Cursor::new(data.as_bytes());
+        let reader = AsciiLineReader::with_character_set(cursor, Some(CharacterSet::UTF8));
+
+        let lines: Result<Vec<_>, _> = reader.lines().collect();
+        assert!(lines.is_ok());
+        let lines = lines.unwrap();
+        assert_eq!(lines.len(), 2);
+        assert_eq!(lines[0], "HDR01");
+        assert_eq!(lines[1], "LINE WITH UNICODE: café");
+    }
+
+    #[test]
+    fn test_ascii_line_reader_with_ascii_charset_rejects_non_ascii() {
+        let data = "HDR01\r\nLINE WITH UNICODE: café\r\n";
+        let cursor = Cursor::new(data.as_bytes());
+        let reader = AsciiLineReader::with_character_set(cursor, Some(CharacterSet::ASCII));
+
+        let lines: Vec<_> = reader.lines().collect();
+        assert_eq!(lines.len(), 2);
+        assert!(lines[0].is_ok());
+        assert!(lines[1].is_err());
+
+        if let Err(CwrParseError::NonAsciiInput { line_num, byte_pos: _, byte_value: _ }) = &lines[1] {
+            assert_eq!(*line_num, 2);
+        } else {
+            panic!("Expected NonAsciiInput error");
+        }
+    }
+
+    #[test]
+    fn test_ascii_writer_with_ascii_charset() {
+        let mut output = Vec::new();
+        let mut writer = AsciiWriter::with_character_set(&mut output, Some(CharacterSet::ASCII));
+
+        assert!(writer.write_line("ASCII LINE").is_ok());
+        assert!(writer.write_line("Line with unicode: café").is_err());
+
+        let written = String::from_utf8(output).unwrap();
+        assert_eq!(written, "ASCII LINE\r\n");
+    }
+
+    #[test]
+    fn test_ascii_writer_with_utf8_charset() {
+        let mut output = Vec::new();
+        let mut writer = AsciiWriter::with_character_set(&mut output, Some(CharacterSet::UTF8));
+
+        assert!(writer.write_line("ASCII LINE").is_ok());
+        assert!(writer.write_line("Line with unicode: café").is_ok());
+
+        let written = String::from_utf8(output).unwrap();
+        assert_eq!(written, "ASCII LINE\r\nLine with unicode: café\r\n");
+    }
+
+    #[test]
+    fn test_ascii_writer_with_unicode_charset() {
+        let mut output = Vec::new();
+        let mut writer = AsciiWriter::with_character_set(&mut output, Some(CharacterSet::Unicode));
+
+        assert!(writer.write_line("ASCII LINE").is_ok());
+        assert!(writer.write_line("Line with unicode: café").is_ok());
+        assert!(writer.write_line("Line with Chinese: 你好").is_ok());
+
+        let written = String::from_utf8(output).unwrap();
+        assert_eq!(written, "ASCII LINE\r\nLine with unicode: café\r\nLine with Chinese: 你好\r\n");
+    }
+
+    #[test]
+    fn test_ascii_writer_with_unknown_charset_conservative() {
+        let mut output = Vec::new();
+        let mut writer =
+            AsciiWriter::with_character_set(&mut output, Some(CharacterSet::Unknown("ISO-8859-1".to_string())));
+
+        assert!(writer.write_line("ASCII LINE").is_ok());
+        assert!(writer.write_line("Line with unicode: café").is_err());
+
+        let written = String::from_utf8(output).unwrap();
+        assert_eq!(written, "ASCII LINE\r\n");
     }
 }

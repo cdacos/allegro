@@ -1,6 +1,7 @@
 //! Composite component count for NWR record
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel};
+use crate::domain_types::CharacterSet;
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_text_to_cwr_bytes};
 use std::borrow::Cow;
 
 /// Composite component count for NWR record
@@ -14,8 +15,8 @@ impl CompositeComponentCount {
 }
 
 impl CwrFieldWrite for CompositeComponentCount {
-    fn to_cwr_str(&self, _width: usize) -> String {
-        self.as_str()
+    fn to_cwr_field_bytes(&self, width: usize, character_set: &CharacterSet) -> Vec<u8> {
+        format_text_to_cwr_bytes(&self.as_str(), width, character_set)
     }
 }
 

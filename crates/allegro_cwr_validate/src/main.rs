@@ -1,11 +1,16 @@
 use std::process;
 use std::time::Instant;
 
-use allegro_cwr_cli::{get_value, init_logging_and_parse_args, process_stdin_with_temp_file, BaseConfig};
+use allegro_cwr_cli::{
+    get_output_filename_with_default_extension, get_value, init_logging_and_parse_args, process_stdin_with_temp_file,
+    BaseConfig,
+};
 
 #[derive(Default)]
 struct Config {
     base: BaseConfig,
+    charset_override: Option<String>,
+    output_filename: Option<String>,
 }
 
 fn parse_args() -> Result<Config, String> {
@@ -17,6 +22,14 @@ fn parse_args() -> Result<Config, String> {
             lexopt::Arg::Long("cwr") => {
                 let version_str = get_value(&mut parser, "cwr")?;
                 config.base.set_cwr_version(&version_str)?;
+            }
+            lexopt::Arg::Long("charset") => {
+                let charset_str = get_value(&mut parser, "charset")?;
+                config.charset_override = Some(charset_str);
+            }
+            lexopt::Arg::Short('o') | lexopt::Arg::Long("output") => {
+                let output_filename = get_value(&mut parser, "output")?;
+                config.output_filename = Some(output_filename);
             }
             lexopt::Arg::Value(val) => {
                 config.base.add_input_file(val.to_string_lossy().to_string());
@@ -55,7 +68,19 @@ fn process_stdin(config: &Config, start_time: Instant) {
     process_stdin_with_temp_file(
         "cwr_validate_stdin",
         |temp_path, start_time| {
-            let result = allegro_cwr_validate::check_roundtrip_integrity(temp_path, config.base.cwr_version);
+            let result = match config.output_filename.as_deref() {
+                Some(output_file) => allegro_cwr_validate::check_roundtrip_integrity_with_output(
+                    temp_path,
+                    config.base.cwr_version,
+                    config.charset_override.as_deref(),
+                    Some(output_file),
+                ),
+                None => allegro_cwr_validate::check_roundtrip_integrity_with_charset(
+                    temp_path,
+                    config.base.cwr_version,
+                    config.charset_override.as_deref(),
+                ),
+            };
             let elapsed_time = start_time.elapsed();
 
             let count = match result {
@@ -66,8 +91,10 @@ fn process_stdin(config: &Config, start_time: Instant) {
                 }
             };
 
+            let action = if config.output_filename.is_some() { "validated" } else { "checked" };
             println!(
-                "Successfully checked {} CWR records from stdin in {:.2?}",
+                "Successfully {} {} CWR records from stdin in {:.2?}",
+                action,
                 allegro_cwr::format_int_with_commas(count as i64),
                 elapsed_time
             );
@@ -84,7 +111,20 @@ fn process_files(config: &Config, start_time: Instant) {
     for filename in &config.base.input_files {
         println!("Validating CWR file: {}", filename);
 
-        let result = allegro_cwr_validate::check_roundtrip_integrity(filename, config.base.cwr_version);
+        let output_filename = get_output_filename_with_default_extension(
+            config.output_filename.as_deref(),
+            filename,
+            config.base.input_files.len(),
+            processed_files,
+            "validated",
+        );
+
+        let result = allegro_cwr_validate::check_roundtrip_integrity_with_output(
+            filename,
+            config.base.cwr_version,
+            config.charset_override.as_deref(),
+            output_filename.as_deref(),
+        );
 
         match result {
             Ok(count) => {
@@ -134,12 +174,15 @@ fn print_help() {
     eprintln!("  [FILES...]          CWR files to check for validity. If no files specified, reads from stdin");
     eprintln!();
     eprintln!("Options:");
+    eprintln!("  -o, --output <file>      Output file path (defaults to <input>.validated or stdout for stdin)");
     eprintln!("      --cwr <version>      CWR version (2.0, 2.1, 2.2). Auto-detected from filename (.Vxx) or file content if not specified");
+    eprintln!("      --charset <charset>  Override character set when missing in HDR record (e.g., UTF-8, ASCII)");
     eprintln!("  -h, --help               Show this help message");
     eprintln!();
     eprintln!("Examples:");
     eprintln!("  cwr-validate input.cwr                    # Check single CWR file");
     eprintln!("  cwr-validate *.cwr                        # Check multiple CWR files");
+    eprintln!("  cwr-validate -o normalized.cwr input.cwr  # Validate and write normalized output");
     eprintln!("  cwr-validate --cwr 2.2 input.cwr          # Force CWR version 2.2");
     eprintln!("  cat input.cwr | cwr-validate              # Process CWR data from stdin");
     eprintln!("  find . -name '*.cwr' | xargs cwr-validate # Process all CWR files recursively");

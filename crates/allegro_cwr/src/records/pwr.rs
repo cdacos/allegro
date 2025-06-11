@@ -89,9 +89,14 @@ mod tests {
         let version_21 = CwrVersion(2.1);
         let version_22 = CwrVersion(2.2);
 
-        let line_20 = pwr.to_cwr_line(&version_20);
-        let line_21 = pwr.to_cwr_line(&version_21);
-        let line_22 = pwr.to_cwr_line(&version_22);
+        let character_set = CharacterSet::ASCII;
+        let line_20_bytes = pwr.to_cwr_record_bytes(&version_20, &character_set);
+        let line_21_bytes = pwr.to_cwr_record_bytes(&version_21, &character_set);
+        let line_22_bytes = pwr.to_cwr_record_bytes(&version_22, &character_set);
+
+        let line_20 = String::from_utf8_lossy(&line_20_bytes).to_string();
+        let line_21 = String::from_utf8_lossy(&line_21_bytes).to_string();
+        let line_22 = String::from_utf8_lossy(&line_22_bytes).to_string();
 
         println!("Version 2.0 line: {} (length: {})", line_20, line_20.len());
         println!("Version 2.1 line: {} (length: {})", line_21, line_21.len());

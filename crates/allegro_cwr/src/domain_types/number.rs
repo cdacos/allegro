@@ -1,6 +1,9 @@
 //! General numeric field for sequence numbers and counts
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrNumericField, CwrWarning, WarningLevel, format_number};
+use crate::domain_types::CharacterSet;
+use crate::parsing::{
+    CwrFieldParse, CwrFieldWrite, CwrNumericField, CwrWarning, WarningLevel, format_number, string_to_cwr_bytes,
+};
 use std::borrow::Cow;
 
 /// General numeric field for sequence numbers and counts
@@ -24,8 +27,8 @@ impl std::fmt::Display for Number {
 }
 
 impl CwrFieldWrite for Number {
-    fn to_cwr_str(&self, width: usize) -> String {
-        format_number(self.0, width)
+    fn to_cwr_field_bytes(&self, width: usize, character_set: &CharacterSet) -> Vec<u8> {
+        string_to_cwr_bytes(&format_number(self.0, width), character_set)
     }
 }
 

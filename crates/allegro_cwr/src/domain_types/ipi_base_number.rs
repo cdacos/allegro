@@ -1,6 +1,7 @@
 //! IPI Base Number
 
-use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_text};
+use crate::domain_types::CharacterSet;
+use crate::parsing::{CwrFieldParse, CwrFieldWrite, CwrWarning, WarningLevel, format_text_to_cwr_bytes};
 use std::borrow::Cow;
 use std::ops::Deref;
 
@@ -32,8 +33,8 @@ impl Deref for IpiBaseNumber {
 }
 
 impl CwrFieldWrite for IpiBaseNumber {
-    fn to_cwr_str(&self, _width: usize) -> String {
-        format_text(self.as_str(), _width)
+    fn to_cwr_field_bytes(&self, width: usize, character_set: &CharacterSet) -> Vec<u8> {
+        format_text_to_cwr_bytes(self.as_str(), width, character_set)
     }
 }
 
