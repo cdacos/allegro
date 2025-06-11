@@ -70,9 +70,21 @@ pub fn process_cwr_stream_with_version(
     let hdr_line = first_line.trim_end();
 
     if !hdr_line.starts_with("HDR") {
+        // Get the first 14 characters (or less if line is shorter) as bytes for hex display
+        let first_chars = hdr_line.chars().take(16).collect::<String>();
+        let first_bytes = first_chars.as_bytes();
+        let hex_display = first_bytes
+            .iter()
+            .map(|b| format!("{:02X}", b))
+            .collect::<Vec<_>>()
+            .join(" ");
+        
+        // Detect likely encoding
+        let encoding_hint = detect_encoding(first_bytes);
+        
         return Err(CwrParseError::BadFormat(format!(
-            "File does not start with HDR record. Found: '{}'",
-            hdr_line.get(0..std::cmp::min(hdr_line.len(), 50)).unwrap_or("")
+            "File does not start with HDR record. Expected: 48 44 52 (HDR). Found first {} bytes: {} (as string: '{}'). {}",
+            first_bytes.len(), hex_display, first_chars, encoding_hint
         )));
     }
 
@@ -389,4 +401,50 @@ mod tests {
         assert_eq!(first_record.record.record_type(), "HDR");
         assert_eq!(first_record.context.cwr_version, 2.1);
     }
+}
+
+/// Detect likely character encoding based on byte patterns
+fn detect_encoding(bytes: &[u8]) -> String {
+    if bytes.len() < 3 {
+        return "Unknown encoding (file too short)".to_string();
+    }
+    
+    // UTF-8 BOM
+    if bytes.starts_with(&[0xEF, 0xBB, 0xBF]) {
+        return "Likely UTF-8 with BOM. CWR files must be ASCII encoded.".to_string();
+    }
+    
+    // UTF-16 BE BOM
+    if bytes.starts_with(&[0xFE, 0xFF]) {
+        return "Likely UTF-16 Big Endian with BOM. CWR files must be ASCII encoded.".to_string();
+    }
+    
+    // UTF-16 LE BOM
+    if bytes.starts_with(&[0xFF, 0xFE]) {
+        return "Likely UTF-16 Little Endian with BOM. CWR files must be ASCII encoded.".to_string();
+    }
+    
+    // Check for UTF-16 without BOM (alternating null bytes)
+    if bytes.len() >= 6 {
+        let has_alternating_nulls = bytes.iter()
+            .enumerate()
+            .take(6)
+            .any(|(i, &b)| (i % 2 == 1 && b == 0) || (i % 2 == 0 && b == 0));
+        
+        if has_alternating_nulls {
+            return "Likely UTF-16 without BOM. CWR files must be ASCII encoded.".to_string();
+        }
+    }
+    
+    // Check if all bytes are valid ASCII (0-127)
+    if bytes.iter().all(|&b| b <= 127) {
+        return "File appears to be ASCII encoded but doesn't start with HDR.".to_string();
+    }
+    
+    // Check for common Windows-1252 characters
+    if bytes.iter().any(|&b| matches!(b, 0x80..=0x9F | 0xA0..=0xFF)) {
+        return "Likely Windows-1252 or ISO-8859-1 encoding. CWR files must be ASCII encoded.".to_string();
+    }
+    
+    "Unknown encoding. CWR files must be ASCII encoded.".to_string()
 }
