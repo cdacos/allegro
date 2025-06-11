@@ -177,7 +177,7 @@ pub fn check_roundtrip_integrity(input_path: &str, cwr_version: Option<f32>) -> 
     Ok(record_count)
 }
 
-fn display_incidences(line_numbers: &Vec<usize>) -> String {
+fn display_incidences(line_numbers: &[usize]) -> String {
     let display_lines = if line_numbers.len() <= 5 {
         format!(
             "{} occurrences ({})",

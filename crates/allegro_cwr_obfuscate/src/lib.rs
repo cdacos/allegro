@@ -209,6 +209,39 @@ pub fn process_cwr_obfuscation(
     Ok(record_count)
 }
 
+/// Process CWR data and obfuscate to stdout or specified output
+pub fn process_cwr_obfuscation_to_writer<W: Write>(
+    input_path: &str, mut writer: W, cwr_version: Option<f32>,
+) -> Result<usize, ObfuscationError> {
+    let mut mappings = ObfuscationMappings::new();
+    let mut record_count = 0;
+
+    // Use the allegro_cwr streaming parser
+    let record_stream = process_cwr_stream_with_version(input_path, cwr_version)
+        .map_err(|e| ObfuscationError::CwrParsing(format!("Failed to open CWR file: {}", e)))?;
+
+    for parsed_result in record_stream {
+        match parsed_result {
+            Ok(parsed_record) => {
+                // Obfuscate the record
+                let obfuscated_record = obfuscate_record(parsed_record.record, &mut mappings);
+
+                // Convert back to CWR line and write
+                let version = allegro_cwr::domain_types::CwrVersion(parsed_record.context.cwr_version);
+                let obfuscated_line = obfuscated_record.to_cwr_line(&version);
+                writeln!(writer, "{}", obfuscated_line)?;
+                record_count += 1;
+            }
+            Err(e) => {
+                return Err(ObfuscationError::CwrParsing(format!("Parse error: {}", e)));
+            }
+        }
+    }
+
+    writer.flush()?;
+    Ok(record_count)
+}
+
 /// Obfuscate sensitive information in a CWR record
 fn obfuscate_record(record: CwrRegistry, mappings: &mut ObfuscationMappings) -> CwrRegistry {
     match record {
