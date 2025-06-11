@@ -5,6 +5,9 @@ use std::io;
 pub enum CwrParseError {
     Io(io::Error),
     BadFormat(String),
+    NonAsciiInput { line_num: usize, byte_pos: usize, byte_value: u8 },
+    NonAsciiOutput { char: char, position: usize },
+    InvalidHeader { found_bytes: Vec<u8> },
 }
 
 #[derive(Debug)]
@@ -24,6 +27,15 @@ impl std::fmt::Display for CwrParseError {
         match self {
             CwrParseError::Io(err) => write!(f, "IO Error: {}", err),
             CwrParseError::BadFormat(msg) => write!(f, "{}", msg),
+            CwrParseError::NonAsciiInput { line_num, byte_pos, byte_value } => {
+                write!(f, "Non-ASCII byte 0x{:02X} at line {}, position {}", byte_value, line_num, byte_pos)
+            }
+            CwrParseError::NonAsciiOutput { char, position } => {
+                write!(f, "Non-ASCII character '{}' at position {}", char, position)
+            }
+            CwrParseError::InvalidHeader { found_bytes } => {
+                write!(f, "Invalid CWR header, expected 'HDR' but found: {:?}", found_bytes)
+            }
         }
     }
 }
@@ -32,7 +44,10 @@ impl std::error::Error for CwrParseError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             CwrParseError::Io(err) => Some(err),
-            CwrParseError::BadFormat(_) => None,
+            CwrParseError::BadFormat(_)
+            | CwrParseError::NonAsciiInput { .. }
+            | CwrParseError::NonAsciiOutput { .. }
+            | CwrParseError::InvalidHeader { .. } => None,
         }
     }
 }

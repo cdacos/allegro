@@ -1,10 +1,13 @@
+use crate::ascii_io::{AsciiLineReader, AsciiStreamSniffer};
 use crate::cwr_registry::CwrRegistry;
 use crate::error::CwrParseError;
-use crate::util::get_cwr_version;
 use log::{error, info};
 use std::fs::File;
+
+#[cfg(test)]
+use crate::util::get_cwr_version;
+#[cfg(test)]
 use std::io;
-use std::io::{BufRead, BufReader, Read, Seek};
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct ParsingContext {
@@ -21,19 +24,18 @@ pub struct ParsedRecord {
     pub warnings: Vec<String>,
 }
 
-/// Checks if a file is a CWR file by reading the first 3 bytes
+/// Checks if a file is a CWR file by validating the header
 /// Returns true if the file starts with "HDR", false otherwise
-/// Returns an error if the file cannot be read or is too small
-pub fn is_cwr_file(filename: &str) -> Result<bool, io::Error> {
-    let mut file = File::open(filename)?;
-    let mut buffer = [0u8; 3];
-    let bytes_read = file.read(&mut buffer)?;
+/// Returns an error if the file cannot be read or has invalid content
+pub fn is_cwr_file(filename: &str) -> Result<bool, CwrParseError> {
+    let file = File::open(filename)?;
+    let mut sniffer = AsciiStreamSniffer::new(file);
 
-    if bytes_read < 3 {
-        return Ok(false);
+    match sniffer.validate_cwr_header() {
+        Ok(()) => Ok(true),
+        Err(CwrParseError::InvalidHeader { .. }) => Ok(false),
+        Err(e) => Err(e),
     }
-
-    Ok(&buffer == b"HDR")
 }
 
 /// Parses a single CWR line and returns the parsed record
@@ -58,43 +60,31 @@ pub fn process_cwr_stream(
 pub fn process_cwr_stream_with_version(
     input_filename: &str, version_hint: Option<f32>,
 ) -> Result<impl Iterator<Item = Result<ParsedRecord, CwrParseError>>, CwrParseError> {
+    // Validate header and detect version in one operation!
     let file = File::open(input_filename)?;
-    let mut reader = BufReader::new(file);
+    let mut sniffer = AsciiStreamSniffer::new(file);
+    let header_info = match sniffer.validate_and_detect_version(input_filename, version_hint) {
+        Err(CwrParseError::InvalidHeader { found_bytes }) if found_bytes.is_empty() => {
+            return Err(CwrParseError::BadFormat("File is empty".to_string()));
+        }
+        Err(CwrParseError::InvalidHeader { found_bytes }) => {
+            return Err(CwrParseError::BadFormat(format!(
+                "File does not start with HDR record. Found: {:?}",
+                String::from_utf8_lossy(&found_bytes)
+            )));
+        }
+        Err(e) => return Err(e),
+        Ok(info) => info.clone(),
+    };
 
-    // Read the first line to determine CWR version
-    let mut first_line = String::new();
-    let bytes_read = reader.read_line(&mut first_line)?;
-    if bytes_read == 0 {
-        return Err(CwrParseError::BadFormat("File is empty".to_string()));
-    }
-    let hdr_line = first_line.trim_end();
-
-    if !hdr_line.starts_with("HDR") {
-        // Get the first 14 characters (or less if line is shorter) as bytes for hex display
-        let first_chars = hdr_line.chars().take(16).collect::<String>();
-        let first_bytes = first_chars.as_bytes();
-        let hex_display = first_bytes
-            .iter()
-            .map(|b| format!("{:02X}", b))
-            .collect::<Vec<_>>()
-            .join(" ");
-        
-        // Detect likely encoding
-        let encoding_hint = detect_encoding(first_bytes);
-        
-        return Err(CwrParseError::BadFormat(format!(
-            "File does not start with HDR record. Expected: 48 44 52 (HDR). Found first {} bytes: {} (as string: '{}'). {}",
-            first_bytes.len(), hex_display, first_chars, encoding_hint
-        )));
-    }
-
-    let cwr_version = get_cwr_version(input_filename, hdr_line, version_hint)?;
+    let cwr_version = header_info.version;
     info!("Determined CWR version: {}", cwr_version);
 
     let context = ParsingContext { cwr_version, file_id: 0 };
 
-    // Reset to start of file
-    reader.seek(io::SeekFrom::Start(0))?;
+    // Create a new reader for the full iteration
+    let file = File::open(input_filename)?;
+    let reader = AsciiLineReader::new(file);
 
     Ok(reader.lines().enumerate().map(move |(idx, line_result)| {
         let line_number = idx + 1;
@@ -108,9 +98,9 @@ pub fn process_cwr_stream_with_version(
                     parse_cwr_line(&line, line_number, &context)
                 }
             }
-            Err(io_err) => {
-                error!("IO error reading line {}: {}", line_number, io_err);
-                Err(CwrParseError::Io(io_err))
+            Err(parse_err) => {
+                error!("Parse error at line {}: {}", line_number, parse_err);
+                Err(parse_err)
             }
         }
     }))
@@ -292,11 +282,11 @@ mod tests {
         assert_eq!(cwr_record.record_type(), "HDR");
     }
 
-    fn create_temp_cwr_file(content: &str) -> Result<String, std::io::Error> {
+    fn create_temp_cwr_file(content: &str) -> Result<String, io::Error> {
         let temp_dir = std::env::temp_dir();
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .map_err(|_| std::io::Error::other("System time error"))?
+            .map_err(|_| io::Error::other("System time error"))?
             .as_nanos();
         let thread_id = std::thread::current().id();
         let file_path = temp_dir.join(format!("test_{}_{:?}.cwr", timestamp, thread_id));
@@ -401,50 +391,23 @@ mod tests {
         assert_eq!(first_record.record.record_type(), "HDR");
         assert_eq!(first_record.context.cwr_version, 2.1);
     }
-}
 
-/// Detect likely character encoding based on byte patterns
-fn detect_encoding(bytes: &[u8]) -> String {
-    if bytes.len() < 3 {
-        return "Unknown encoding (file too short)".to_string();
+    #[test]
+    fn test_is_cwr_file() {
+        // Test with HDR file
+        let hdr_content = "HDRTEST";
+        let hdr_file = create_temp_cwr_file(hdr_content).unwrap();
+        let result = is_cwr_file(&hdr_file);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), true);
+        fs::remove_file(&hdr_file).ok();
+
+        // Test with non-HDR file
+        let non_hdr_content = "NOT A CWR FILE";
+        let non_hdr_file = create_temp_cwr_file(non_hdr_content).unwrap();
+        let result = is_cwr_file(&non_hdr_file);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), false);
+        fs::remove_file(&non_hdr_file).ok();
     }
-    
-    // UTF-8 BOM
-    if bytes.starts_with(&[0xEF, 0xBB, 0xBF]) {
-        return "Likely UTF-8 with BOM. CWR files must be ASCII encoded.".to_string();
-    }
-    
-    // UTF-16 BE BOM
-    if bytes.starts_with(&[0xFE, 0xFF]) {
-        return "Likely UTF-16 Big Endian with BOM. CWR files must be ASCII encoded.".to_string();
-    }
-    
-    // UTF-16 LE BOM
-    if bytes.starts_with(&[0xFF, 0xFE]) {
-        return "Likely UTF-16 Little Endian with BOM. CWR files must be ASCII encoded.".to_string();
-    }
-    
-    // Check for UTF-16 without BOM (alternating null bytes)
-    if bytes.len() >= 6 {
-        let has_alternating_nulls = bytes.iter()
-            .enumerate()
-            .take(6)
-            .any(|(i, &b)| (i % 2 == 1 && b == 0) || (i % 2 == 0 && b == 0));
-        
-        if has_alternating_nulls {
-            return "Likely UTF-16 without BOM. CWR files must be ASCII encoded.".to_string();
-        }
-    }
-    
-    // Check if all bytes are valid ASCII (0-127)
-    if bytes.iter().all(|&b| b <= 127) {
-        return "File appears to be ASCII encoded but doesn't start with HDR.".to_string();
-    }
-    
-    // Check for common Windows-1252 characters
-    if bytes.iter().any(|&b| matches!(b, 0x80..=0x9F | 0xA0..=0xFF)) {
-        return "Likely Windows-1252 or ISO-8859-1 encoding. CWR files must be ASCII encoded.".to_string();
-    }
-    
-    "Unknown encoding. CWR files must be ASCII encoded.".to_string()
 }

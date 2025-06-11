@@ -19,6 +19,7 @@
 - **Safe Sync Code** - No unsafe or async code is anticipated for CWR file processing
 - **Performance** - Avoid decisions that significantly degrade performance; profile critical paths when optimizing
 - **CWR Domain** - CWR spec changes infrequently; optimize for correctness over flexibility, ensure strict CWR 2.2 compliance
+- **ASCII** - CWR spec only supports ASCII, so all reading and writing need to use this encoding!
 
 ## Dependencies & Tools
 - **"Dependency Restraint** - Prefer fewer, proven dependencies over many small ones; implement simple functionality yourself rather than adding dependencies

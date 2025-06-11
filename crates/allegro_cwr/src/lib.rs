@@ -3,6 +3,7 @@
 //! This library provides core functionality to parse CWR files. For database storage,
 //! see the `allegro_cwr_sqlite` crate. For JSON output, see the `allegro_cwr_json` crate.
 
+mod ascii_io;
 mod cwr_handler;
 pub mod cwr_registry;
 pub mod domain_types;
@@ -39,9 +40,12 @@ impl std::str::FromStr for OutputFormat {
 }
 
 // Re-export commonly used items
+pub use crate::ascii_io::{AsciiLineReader, AsciiStreamSniffer, AsciiWriter, CwrHeaderInfo};
 pub use crate::cwr_registry::{CwrRegistry, get_all_record_type_codes};
 pub use crate::error::CwrParseError;
-pub use crate::parser::{ParsedRecord, ParsingContext, process_cwr_stream, process_cwr_stream_with_version};
+pub use crate::parser::{
+    ParsedRecord, ParsingContext, is_cwr_file, process_cwr_stream, process_cwr_stream_with_version,
+};
 pub use crate::records::*;
 pub use crate::util::{extract_version_from_filename, format_int_with_commas};
 
